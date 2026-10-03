@@ -146,8 +146,13 @@ jobs:
         working-directory: love-android
         run: |
           # App identity
-          sed -i '/^app\.name_byte_array=/d; /^#\?app\.name=/d; /^app\.application_id=/d; /^app\.orientation=/d; /^app\.version_code=/d; /^app\.version_name=/d' gradle.properties
+          sed -i '/^app\.name_byte_array=/d; /^#\?app\.name=/d; /^app\.application_id=/d; /^app\.orientation=/d; /^app\.version_code=/d; /^app\.version_name=/d; /^org\.gradle\.jvmargs=/d' gradle.properties
           {
+            # Gradle's own heap. love-android sets none, so it gets the 512 MB
+            # default -- and merging the dex files of the ads and billing SDKs
+            # for the APK and the bundle in one run runs out of it. The runner
+            # has 16 GB.
+            echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
             echo "app.name=$APP_NAME"
             echo "app.application_id=$APP_ID"
             echo "app.orientation=$APP_ORIENTATION"
