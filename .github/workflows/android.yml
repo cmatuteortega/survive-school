@@ -69,6 +69,10 @@ env:
   # settings page through the SDL_ORIENTATIONS hint. fullUser here only keeps
   # launch from forcing a side before that happens.
   APP_ORIENTATION: fullUser
+  # Play Console refuses bundles below its current target API level (36 since
+  # Aug 2026), and the pinned love-android still says 35. Raised over its
+  # build.gradle in the Configure step; bump this when Play raises the floor.
+  TARGET_SDK: 36
   ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || 'ca-app-pub-3940256099942544~3347511713' }}
   ADMOB_REWARDED_ID: ${{ vars.ADMOB_REWARDED_ID || '' }}
 
@@ -132,7 +136,7 @@ jobs:
           ndk=$(sed -n "s/.*ndkVersion '\([^']*\)'.*/\1/p" app/build.gradle)
           echo "NDK $ndk"
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$ndk" "cmake;3.22.1" > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$ndk" "cmake;3.22.1" "platforms;android-$TARGET_SDK" > /dev/null
 
       # Native LÖVE build is the slow part; ccache makes rebuilds near-instant
       # when only the game (game.love) changed. The patch is part of the key so
@@ -163,6 +167,10 @@ jobs:
           sed -i "s/abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'/abiFilters 'armeabi-v7a', 'arm64-v8a'/" app/build.gradle
           sed -i 's/arguments "-DANDROID_STL=c++_shared",/arguments "-DANDROID_STL=c++_shared", "-DCMAKE_C_COMPILER_LAUNCHER=ccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",/' app/build.gradle
           grep -q 'CMAKE_CXX_COMPILER_LAUNCHER=ccache' app/build.gradle || { echo "::error::ccache patch did not apply to app/build.gradle"; exit 1; }
+          # Target API level Play currently demands (see TARGET_SDK above).
+          sed -i -E "s/^( *compileSdk)( *=)? *[0-9]+/\1 = $TARGET_SDK/; s/^( *targetSdk) +[0-9]+/\1 $TARGET_SDK/" app/build.gradle
+          grep -Eq "^ *targetSdk $TARGET_SDK\$" app/build.gradle && grep -Eq "^ *compileSdk = $TARGET_SDK\$" app/build.gradle || { echo "::error::target SDK patch did not apply to app/build.gradle"; exit 1; }
+          grep -nE 'minSdk|compileSdk|targetSdk' app/build.gradle
           grep -n '^app\.' gradle.properties
           # Cool S launcher icon (replaces the LÖVE heart)
           python3 ../game/android/icon.py app/src/main/res

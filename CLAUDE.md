@@ -51,7 +51,8 @@ zip -r game.love main.lua conf.lua src art
 The Android APK is built by `.github/workflows/android.yml` (any push that is not
 docs or `art/`, `v*` tags as Releases, or by hand), in the same shape as
 auto-chest's and demomino's: it embeds `main.lua conf.lua src` in love-android
-pinned to a commit on its LÖVE 12 line, applies `love-android-audio.patch` to
+pinned to a commit on its LÖVE 12 line, raises its `targetSdk`/`compileSdk` to
+the workflow's `TARGET_SDK` (36, Play's floor), applies `love-android-audio.patch` to
 that engine, and bakes the launcher icon out of `Sprites.COOLS` with
 `android/icon.py` (ink on white, whole-number scales only). Unlike those two it
 pins no orientation: `fullUser` in the manifest, and the settings page's SCREEN
