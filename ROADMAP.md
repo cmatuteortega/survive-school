@@ -76,9 +76,50 @@ for it.
 
 ## 7. Retention and business model
 
-- [ ] **Business model decided** — premium price, ads with a remove-ads IAP, or
-      cosmetics.
-- [ ] **Store layer** for whatever is chosen.
+**Decided: free to play, opt-in rewarded ads, and IAP that only unlocks
+content.** The book's economy is earned (the purse, the canteen that gives
+everything back, the quests in `Collection.gates`), so nothing sold here buys
+coins, power or skins — drawing your own hero is the feature, not something to
+paywall.
+
+### Rewarded ads (opt-in only, never forced)
+
+- [ ] **Ad SDK integration** in the Android build (and iOS once it exists),
+      with consent handling (GDPR / UMP) and a test-ad mode.
+- [ ] **Revive by ad** — on death, offer one `ANOTHER CHANCE` for watching an
+      ad, using the same card and behaviour as a bought retake
+      (README **The retake**): half health, two seconds untouchable, the run
+      carries on. Once per run.
+- [ ] **Double the reward by ad** — on the end-of-run card, watch an ad to
+      double what the run paid into the purse (README **The purse**). Once per
+      run.
+- [ ] **No other ad placements** — no interstitials or banners, least of all
+      on the screens you answer by drawing.
+- [ ] Every ad-facing string goes through `I18n.t` with its `ES` line.
+
+### In-app purchases (non-consumable)
+
+- [ ] **Unlock a lesson** — one purchase per lesson other than SCIENCE
+      (P.E., GRAMMAR, FINANCE, MUSIC, MATHS, ART), each opening that lesson
+      immediately instead of waiting on the timetable's ladder
+      (`Collection.rungs`, `Collection.lessonOpen`). The ladder stays: every
+      lesson can still be earned for free by playing.
+- [ ] **Unlock everything** — one purchase that opens every lesson, removes the
+      ad prompts (revive and double are then free, still once per run), and is
+      priced below the sum of the single lessons.
+- [ ] **Store layer** — Google Play Billing (StoreKit later), purchase
+      restore, and entitlements saved beside `records.txt` so a reinstall or a
+      new phone gets them back.
+- [ ] **A purchase page in the book** — a section added to the canteen
+      (a row in `SECTIONS` in `src/canteen.lua`, so it costs the spread nothing) rather
+      than a new screen; prices read from the store, never hard-coded.
+- [ ] **Dev switch respected** — `src/dev.lua`'s `UNLOCKS` keeps overriding
+      entitlements, and comes out at launch as planned.
+- [ ] Update `README.md` / `DESIGNDOC.md` (**The purse**, **The retake**, **The
+      collection**) as each piece lands.
+
+### Retention
+
 - [ ] **Daily / weekly challenges** — seeded runs everyone plays the same; the
       game is already deterministic (DESIGNDOC **Determinism and allocation**).
 
