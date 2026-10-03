@@ -174,6 +174,7 @@ local Subjects = require("src.subjects")
 local Characters = require("src.characters")
 local Spawner = require("src.spawner")
 local Dev = require("src.dev")
+local Store = require("src.store")
 
 local Collection = {}
 
@@ -438,8 +439,13 @@ function Collection.lessonOpen(key)
     -- timetable shut down to its first page is no use if the pages you have
     -- already written on stay open, since those are exactly the ones a book worth
     -- testing on has.
+    --
+    -- And a page bought in the shop (src/store.lua) is open the same way, through
+    -- the same switch: buying a lesson is reaching its rung by another road, and
+    -- the ladder is not told -- the next page up still waits on this one's clock.
     return Dev.opened(Records.played(key)
-        or Records.get(rung.after).time >= rung.time)
+        or Records.get(rung.after).time >= rung.time
+        or Store.opens(key))
 end
 
 -- What a locked line has to say for itself: two phrases, or nothing at all for a

@@ -2995,6 +2995,75 @@ once here on the one thing that is finally about you. And it is not translated:
 a grade is a letter, not a word, and an `A` is an `A` on either page of the
 book.
 
+## Ads and the shop
+
+The game is free, and it pays for itself two ways: an ad you choose to watch, and
+pages you choose to buy. Both were decided against the same rule, which is the one
+the canteen already keeps (see **The counter**): **nothing a run needs is for
+sale, and nothing is ever put in front of you that you did not ask for.**
+
+### Two ads, both asked for
+
+There are exactly two places an ad can play, and both are a box you scribble in.
+
+**Another chance.** When the health runs out and the run has no retake left, an
+offer card comes up before the death card: `OUT OF HEALTH` / `ANOTHER CHANCE?`,
+`WATCH AN AD TO GET UP`, `ONCE A RUN`, and `YES` / `NO`. `YES` plays a rewarded ad
+and, if it was watched to its reward, the run gets up exactly as a bought retake
+gets up — half a page of health, two seconds untouchable, the retake card saying
+`ONCE A RUN` where it would print the charges. `NO`, or an ad closed early, is the
+death card that was coming anyway. It is asked *after* any retake the run carries,
+so a charge the book paid coins for is always spent first, and only when an ad is
+actually loaded — the game never offers what it cannot hand over.
+
+It is a question where the retake card is a clock, and that difference is the whole
+argument for it: a retake was bought weeks ago and spending it has one sensible
+answer, but thirty seconds of an afternoon is the player's to spend or not.
+
+**X2.** Both end cards grow a third box, `X2`, beside `RETRY` / `QUIT` or `END` /
+`ENDLESS`, with a line under the coins saying what it costs. Filling it plays an
+ad; a paid one doubles what the run pays into the purse. On the death card the run
+was already paid, so the same again is paid on the spot; on the win card nothing
+has been paid yet, so the doubled figure is what `END` collects — and a run that
+takes `ENDLESS` and dies later is paid double for all of it, once. The box is only
+there when the run earned something, has not been doubled, and an ad is ready.
+
+Once used, the box goes grey and takes no more ink rather than leaving the card:
+a strip that lost a box would close up and move the two boxes still being
+answered, and nothing on a card moves while it is asked.
+
+**And nowhere else.** No banners, no interstitials, nothing between runs, and
+least of all anything on the screens you answer by drawing — an ad that appeared
+under a pen would be an ad you tapped by accident, which is the one way a game
+can make money out of the player's own hand.
+
+Both offers are once a run, and a bookmark remembers that: a run carried over a
+closed program is the same run.
+
+### Pages for money
+
+The shop is three more sections at the back of the canteen, after the refund,
+since the purse never meets them: `LESSONS` and `MORE LESSONS` sell every lesson
+the timetable's ladder holds shut, one at a time, and `WHOLE BOOK` opens all of
+them and turns the ads off. The two offers stay on the page for a whole book —
+still once a run — with nothing to watch, so a player who paid is not given
+less. Beside it are `RESTORE` and, where the consent rules ask for one, `AD
+PRIVACY`, which brings the consent form back.
+
+What is sold is pages and only pages. Not coins, not perks, not heroes, not
+courses: those are what the purse is for, and a counter that could be skipped
+with a card would be a book whose afternoons were for sale. Drawing your own hero
+is the game, not a thing to paywall. The ladder is untouched — every lesson can
+still be earned by playing, and buying one is reaching its rung by another road:
+the next page up still waits on this one's clock. A lesson already earned says
+`OPEN` and has no box; one bought says `OWNED`.
+
+A row is still a name, a price and a box, and buying is still answered by
+scribbling rather than pressed — it is the most irreversible thing in the game.
+The price is the store's own string in the player's own currency, printed as it
+came; nothing is written down here, and until the store has answered the section
+says `THE SHOP IS CLOSED` and has no boxes.
+
 ## Levelling up
 
 Every level holds the run and lays three cards on the page, each with a

@@ -21,6 +21,14 @@
 #
 # Optional repo variables (Settings → Secrets and variables → Actions → Variables):
 #   ANDROID_APP_ID            application id (default com.cmatute.surviveschool)
+#   ADMOB_APP_ID              AdMob app id (default: Google's sample app id)
+#   ADMOB_REWARDED_ID         AdMob rewarded unit (default: Google's test unit)
+# Leave the two AdMob ones unset and the APK can only ever show test ads.
+#
+# Purchases and ads (README **Ads and the shop**): love-iap's action adds Play
+# Billing and its bridge, pinned to the commit src/iap.lua was vendored from;
+# android/ads.sh adds the rewarded-ads bridge (android/love-ads), the Mobile Ads
+# SDK and the consent SDK. Both land in love-android's lua-modules/.
 #
 # Launcher icon: the cool S (Sprites.COOLS) in ink on white, baked into
 # love-android's res/ at build time by android/icon.py, so it follows the art.
@@ -57,6 +65,8 @@ env:
   # settings page through the SDL_ORIENTATIONS hint. fullUser here only keeps
   # launch from forcing a side before that happens.
   APP_ORIENTATION: fullUser
+  ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID || 'ca-app-pub-3940256099942544~3347511713' }}
+  ADMOB_REWARDED_ID: ${{ vars.ADMOB_REWARDED_ID || '' }}
 
 jobs:
   apk:
@@ -95,6 +105,17 @@ jobs:
           path: love-android
           submodules: recursive
 
+      # In-app purchases. Pinned to the commit src/iap.lua was copied from: the
+      # Lua and the native bridge speak one protocol, so they move together.
+      - name: Add in-app purchases (love-iap)
+        uses: cmatuteortega/love-iap@6c881acd85a538d6fe59ce689bcca3a39ca26fc4
+        with:
+          love-android-path: love-android
+
+      # Rewarded ads, and the consent form that has to come before them.
+      - name: Add rewarded ads
+        run: game/android/ads.sh love-android "$ADMOB_APP_ID" "$ADMOB_REWARDED_ID"
+
       # Music stops when the app goes to the background; see the patch for why
       # a game cannot do this from Lua.
       - name: Patch LÖVE
@@ -114,7 +135,7 @@ jobs:
       # a change to it is never served from a stale cache.
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: love-android-${{ env.LOVE_ANDROID_REF }}-${{ hashFiles('game/love-android-audio.patch') }}
+          key: love-android-${{ env.LOVE_ANDROID_REF }}-${{ hashFiles('game/love-android-audio.patch', 'game/android/love-ads/**') }}
           max-size: 2G
 
       - name: Configure LÖVE for Android

@@ -84,39 +84,44 @@ paywall.
 
 ### Rewarded ads (opt-in only, never forced)
 
-- [ ] **Ad SDK integration** in the Android build (and iOS once it exists),
-      with consent handling (GDPR / UMP) and a test-ad mode.
-- [ ] **Revive by ad** — on death, offer one `ANOTHER CHANCE` for watching an
-      ad, using the same card and behaviour as a bought retake
-      (README **The retake**): half health, two seconds untouchable, the run
-      carries on. Once per run.
-- [ ] **Double the reward by ad** — on the end-of-run card, watch an ad to
-      double what the run paid into the purse (README **The purse**). Once per
-      run.
-- [ ] **No other ad placements** — no interstitials or banners, least of all
-      on the screens you answer by drawing.
-- [ ] Every ad-facing string goes through `I18n.t` with its `ES` line.
+Built (README **Ads and the shop**, DESIGNDOC **Ads and the shop**). Not yet
+checked on a real phone against a live AdMob account.
+
+- [x] **Ad SDK integration** in the Android build — `android/love-ads`
+      (Mobile Ads SDK + UMP consent), added by `android/ads.sh`; Google's test
+      unit unless the `ADMOB_APP_ID` / `ADMOB_REWARDED_ID` repo variables are
+      set. iOS waits on the iOS build.
+- [x] **Revive by ad** — `src/chance.lua`, then the retake card's own getting up
+      (`Game:openRetake(true)`). Once per run, asked after any bought retake.
+- [x] **Double the reward by ad** — the `X2` box on both end cards
+      (`src/double.lua`, `Game:doubleRun`). Once per run.
+- [x] **No other ad placements.**
+- [x] Every ad-facing string goes through `I18n.t` with its `ES` line.
+- [ ] **Go live:** create the AdMob app and rewarded unit, set the two repo
+      variables, and test the consent form from an EEA account.
 
 ### In-app purchases (non-consumable)
 
-- [ ] **Unlock a lesson** — one purchase per lesson other than SCIENCE
-      (P.E., GRAMMAR, FINANCE, MUSIC, MATHS, ART), each opening that lesson
-      immediately instead of waiting on the timetable's ladder
-      (`Collection.rungs`, `Collection.lessonOpen`). The ladder stays: every
-      lesson can still be earned for free by playing.
-- [ ] **Unlock everything** — one purchase that opens every lesson, removes the
-      ad prompts (revive and double are then free, still once per run), and is
-      priced below the sum of the single lessons.
-- [ ] **Store layer** — Google Play Billing (StoreKit later), purchase
-      restore, and entitlements saved beside `records.txt` so a reinstall or a
-      new phone gets them back.
-- [ ] **A purchase page in the book** — a section added to the canteen
-      (a row in `SECTIONS` in `src/canteen.lua`, so it costs the spread nothing) rather
-      than a new screen; prices read from the store, never hard-coded.
-- [ ] **Dev switch respected** — `src/dev.lua`'s `UNLOCKS` keeps overriding
-      entitlements, and comes out at launch as planned.
-- [ ] Update `README.md` / `DESIGNDOC.md` (**The purse**, **The retake**, **The
-      collection**) as each piece lands.
+Built on love-iap (`src/iap.lua`, and its action in the workflow). Not yet
+checked against Play: that needs the app and its products in Play Console.
+
+- [x] **Unlock a lesson** — `lesson_<key>` for every lesson after SCIENCE,
+      opening it through `Collection.lessonOpen`; the ladder still earns it free.
+- [x] **Unlock everything** — `everything`: every lesson, and the two ad offers
+      become free (still once per run).
+- [x] **Store layer** — Google Play Billing through love-iap: restore, sync at
+      launch (a refund takes a page back), entitlements in `iap.txt` beside
+      `records.txt`. StoreKit is in love-iap too, for when there is an iOS build.
+- [x] **A purchase page in the book** — the canteen's `LESSONS`, `MORE LESSONS`
+      and `WHOLE BOOK` sections; prices read from the store.
+- [x] **Dev switch respected** — `Store.opens` sits inside `Dev.opened`; with the
+      dev row showing, love-iap's mock and a stand-in ad answer on a desktop.
+- [x] Update `README.md` / `DESIGNDOC.md`.
+- [ ] **Go live:** create the app with the same application id in Play Console,
+      upload a signed build to a testing track, create and activate the seven
+      products (`lesson_pe`, `lesson_language`, `lesson_finance`, `lesson_music`,
+      `lesson_maths`, `lesson_art`, `everything`), add license testers, and
+      decide the prices — `everything` below the six lessons together.
 
 ### Retention
 

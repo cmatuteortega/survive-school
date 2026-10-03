@@ -116,6 +116,16 @@ local GLYPHS = {
     ["\195\145"] = { "###", "#.#", "##.", ".##", "#.#" }, -- N-tilde
     ["\194\191"] = { ".#.", "...", ".#.", "#..", ".##" }, -- inverted ?
     ["\194\161"] = { ".#.", "...", ".#.", ".#.", ".#." }, -- inverted !
+
+    -- Money, for the shop's prices (src/store.lua), which arrive formatted by the
+    -- store in the player's own currency and are printed as they came. The three
+    -- that cover most of the people likely to hold this book; anything else is
+    -- dropped by `Font.clean` and the figure reads on its own. The dollar's bar
+    -- is the middle column run top to bottom through an S that has lost its
+    -- corners, which is the only S that leaves it room.
+    ["$"] = { ".##", "##.", ".#.", ".##", "##." },
+    ["\226\130\172"] = { ".##", "##.", "#..", "##.", ".##" }, -- euro
+    ["\194\163"] = { ".##", ".#.", "###", ".#.", "###" },      -- pound
 }
 
 -- Every stroke is two pixels thick and every counter is one, which is what lets
@@ -549,6 +559,25 @@ function Font.at(text, n)
         end
         i = i + w
     end
+end
+
+-- A string the store wrote rather than the book (src/store.lua), cut down to
+-- what this face can draw: letters folded to capitals, the store's no-break
+-- spaces made plain ones, and any glyph the face does not have dropped rather
+-- than drawn as a hole. Allocates, so it is for a price, not for every frame.
+local SPACES = { ["\194\160"] = true, ["\226\128\175"] = true, ["\226\128\137"] = true }
+
+function Font.clean(text)
+    local out, i, len = {}, 1, #text
+    while i <= len do
+        local w = glyphLen(text, i)
+        local ch = text:sub(i, i + w - 1)
+        if w == 1 then ch = ch:upper() end
+        if SPACES[ch] then ch = " " end
+        if GLYPHS[ch] then out[#out + 1] = ch end
+        i = i + w
+    end
+    return (table.concat(out):gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
 function Font.load()

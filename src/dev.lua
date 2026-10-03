@@ -9,11 +9,17 @@
 -- their way back. Nothing is on the page until the word SETTINGS is tapped
 -- three times (`Dev.showing`).
 --
+-- It also decides, once at load, whether the shop and the ads get desktop
+-- stand-ins (src/store.lua, src/ads.lua): love-iap's mock store and an ad that
+-- pays after a second, so the shop and both ad offers can be played through
+-- without a phone. On a phone the real bridges win regardless.
+--
 -- TAKING IT OUT AT LAUNCH is three calls, two guards and a file: the last row
 -- of `ROWS` in src/settings.lua, the `Dev.opened` calls in `Collection.has`,
 -- `Collection.lessonOpen` and `Characters.owns`, the `unlocks` and `dev` lines
 -- src/options.lua writes, the `Dev.showing` guards in src/pause.lua and
--- src/game.lua's `keypressed` -- and then this file.
+-- src/game.lua's `keypressed`, the `Dev.showing()` that picks the stand-ins in
+-- src/store.lua and src/ads.lua -- and then this file.
 
 local Dev = {}
 

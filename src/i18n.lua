@@ -351,6 +351,37 @@ local ES = {
     ["YOU GET EVERY COIN BACK"] = "RECUPERAS TODAS LAS MONEDAS",
     ["SCRIBBLE A BOX TO REFUND"] = "GARABATEA UNA CASILLA PARA DEVOLVER",
     ["NOTHING TO REFUND"] = "NO HAY NADA QUE DEVOLVER",
+    -- The shop (src/store.lua, src/canteen.lua): pages for money, never coins.
+    -- TIENDA rather than CANTINA for the closed line, since it is the store that
+    -- is shut and not the counter.
+    ["LESSONS"] = "CLASES",
+    ["MORE LESSONS"] = "MAS CLASES",
+    ["OR EARN IT ON THE TIMETABLE"] = "O GANALA EN EL HORARIO",
+    ["EVERY LESSON HERE IS OPEN"] = "ESTAS CLASES YA ESTAN ABIERTAS",
+    ["WHOLE BOOK"] = "LIBRO ENTERO",
+    ["EVERY LESSON AND NO ADS"] = "TODAS LAS CLASES Y SIN ANUNCIOS",
+    ["OPEN THIS LESSON NOW"] = "ABRE ESTA CLASE YA",
+    ["OWNED"] = "TUYO",
+    ["OPEN"] = "ABIERTA",
+    ["RESTORE"] = "RESTAURAR",
+    ["WHAT THIS ACCOUNT BOUGHT"] = "LO QUE COMPRO ESTA CUENTA",
+    ["AD PRIVACY"] = "PRIVACIDAD",
+    ["CHANGE YOUR AD CHOICES"] = "CAMBIA TUS OPCIONES DE ANUNCIOS",
+    ["THE SHOP IS CLOSED"] = "LA TIENDA ESTA CERRADA",
+    ["WAITING FOR THE STORE"] = "ESPERANDO A LA TIENDA",
+    -- The two ad offers (src/ads.lua): getting up once a run, and the x2 box on
+    -- the cards a run ends on (src/chance.lua, src/double.lua).
+    ["OUT OF HEALTH"] = "SIN VIDA",
+    ["ANOTHER CHANCE?"] = "¿OTRA OPORTUNIDAD?",
+    ["WATCH AN AD TO GET UP"] = "MIRA UN ANUNCIO PARA LEVANTARTE",
+    ["FREE WITH THE WHOLE BOOK"] = "GRATIS CON EL LIBRO ENTERO",
+    ["ONCE A RUN"] = "UNA VEZ POR PARTIDA",
+    ["THE AD IS ON"] = "ANUNCIO EN CURSO",
+    ["WATCH AN AD FOR X2 COINS"] = "MIRA UN ANUNCIO PARA X2 MONEDAS",
+    ["X2 COINS FREE WITH THE WHOLE BOOK"] = "X2 MONEDAS GRATIS CON EL LIBRO ENTERO",
+    ["COINS DOUBLED"] = "MONEDAS DOBLADAS",
+    ["NO AD RIGHT NOW"] = "AHORA NO HAY ANUNCIO",
+    ["OR PRESS 1 2 OR 3"] = "O PULSA 1 2 O 3",
     -- The four of them (src/perks.lua). SKIP is already up in the settings block,
     -- where it is the word for not being asked to draw something -- the same verb
     -- about the same kind of thing, so one entry does for both.

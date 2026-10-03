@@ -196,12 +196,12 @@ pixel by pixel through the `Palette.overprint` lookup table. Consequences:
 
 `src/game.lua` is one table with `self.state` ∈ `menu`, `settings`, `timetable`,
 `studio`, `library`, `homework`, `canteen`, `playing`, `paused`, `levelup`,
-`won`, `dead`, `retaking`. `Game:update` and
+`won`, `dead`, `retaking`, `chance`. `Game:update` and
 `Game:draw` both branch on it first. `menu`, `settings`, `timetable`, `studio`,
-`library`, `paused`, `levelup`, `won`, `dead` and `retaking` each delegate to a
-module
+`library`, `paused`, `levelup`, `won`, `dead`, `retaking` and `chance` each
+delegate to a module
 (`menu.lua`, `settings.lua`, `timetable.lua`, `studio.lua`, `library.lua`,
-`pause.lua`, `levelup.lua`, `win.lua`, `over.lua`, `retake.lua`) that returns an
+`pause.lua`, `levelup.lua`, `win.lua`, `over.lua`, `retake.lua`, `chance.lua`) that returns an
 answer which `Game` acts on. `homework` and
 `canteen` are two small pages held in `Game.pages`, keyed by the state itself,
 which is what makes them one branch apiece rather than two of everything: they
@@ -1927,6 +1927,63 @@ going the other way. It is a section rather than a row at the bottom of one beca
 it is about both of the others at once, and `SECTIONS` grew two optional lines
 (`touch`, `shut`) for the same reason: COME BACK WITH MORE COINS is true of a
 counter and nonsense about a refund.
+
+### Ads and the shop
+
+README **Ads and the shop** has the argument; this is where it lives.
+
+**Two native bridges, one shape.** Purchases are love-iap
+(github.com/cmatuteortega/love-iap): `src/iap.lua` is its Lua file vendored
+unchanged, and the workflow's `cmatuteortega/love-iap@<sha>` step adds its
+Android half (Play Billing and `libliap.so`) to love-android's `lua-modules/`,
+pinned to the commit the Lua was copied from — bump the two together. Rewarded ads
+are `android/love-ads` (`LoveAds.java` for UMP consent and one AdMob rewarded
+unit, `liads.cpp` for five C functions) added by `android/ads.sh` in the same
+way, with the AdMob app id and unit in the manifest from the `ADMOB_APP_ID` /
+`ADMOB_REWARDED_ID` repo variables (Google's sample app and test unit when unset,
+so an unconfigured APK can only show test ads). Both bridges reach SDL's JNIEnv
+and activity by `dlsym`, load their class through the activity's class loader
+(the game thread's `FindClass` only sees the system loader), and turn every
+answer into a tab-separated line on a queue that Lua drains once a frame through
+LuaJIT's FFI. Nothing calls back into Lua from another thread.
+
+**`src/store.lua`** is the game's words about the store. Its ids are read off
+`Subjects.list` — `lesson_<key>` for every lesson after the first, the same rule
+`Collection.rungs` is built on — plus `everything`. love-iap keeps what is owned in
+`iap.txt` and syncs with Play at launch (a refund takes a page back).
+`Store.opens(key)` is the third clause of `Collection.lessonOpen`, inside
+`Dev.opened` like the other two, so the dev switch still overrides it.
+`Store.noAds()` is `everything` owned. `Store.price` is the store's formatted
+string through `Font.clean`, which drops any glyph the 3x5 face lacks (it has
+`$`, `€` and `£`).
+
+**`src/ads.lua`** is one call: `Ads.show(placement, fn)` calls `fn` once, true only
+for an ad watched to its reward, settled when the ad *closes* (AdMob pays before
+that). `Ads.ready()` is true when an ad is loaded or `Store.noAds()`, and both
+offers ask it before they are put on a card. With ads bought off, `show` answers
+true on the spot.
+
+**The offers are Game's.** `Game:canAdRevive` is asked after `Game:canRetake` on
+the frame the health runs out; `Game:openChance` freezes the run the way
+`Game:openDeath` does (silently) and puts up `src/chance.lua`; a paid ad goes to
+`Game:openRetake(true)`, which spends `self.adRevived` instead of a charge, and
+anything else to `Game:openDeath`. The x2 box is `src/double.lua`'s state on
+both end cards, offered by `Game:doubleOffer` and paid by `Game:doubleRun`;
+`self.doubled` doubles `Game:runWorth` whole, after the floor, so the death card
+pays the difference on the spot and the win card's `END` collects it through
+`Game:cashRun`. Both flags are run state, reset by `Game:reset` and carried by
+the bookmark.
+
+**The shop is canteen sections**, appended to `SECTIONS` in `src/canteen.lua`
+off `Store.lessons` three to a section, plus `WHOLE BOOK`. Their rows carry
+`money` (the figure is `shop.priceText`, no coin) and, for `RESTORE` and `AD
+PRIVACY`, `act` (no `n/n`). `section.store` puts the shop's own two hints —
+closed, waiting — ahead of the counter's.
+
+**Off a phone** there is no bridge and both modules are inert; with the dev row
+showing (`Dev.showing()` at load) love-iap's mock store and a stand-in ad answer
+instead, so every card can be played through on a desktop. Delete `iap.txt` to
+hand back what the mock sold.
 
 ### The book
 
@@ -6034,6 +6091,15 @@ and are all the same 11x11 glyph.
   business naming a kind, a shape or a minute, because those are the page's
   (`src/subjects.lua`) and the page may not price a thing.
 - **Paper:** the specs at the top of `src/subjects.lua`.
+- **Something sold for money:** a lesson is on sale by being in
+  `Subjects.list` after the first (`Store.lessons`); anything else is an id in
+  `Store.ids`, a row in the canteen's shop sections, and the same id created and
+  activated in Play Console. Ids cannot change once live. It must be a page or the
+  ads off — README **Ads and the shop** says why nothing else is sold.
+- **An ad placement:** a name passed to `Ads.show` and an offer on a card that
+  asks `Ads.ready()` before it draws the box and spends a once-a-run flag on the
+  run (reset in `Game:reset`, written by `src/bookmark.lua`). Never a placement
+  that appears unasked.
 - **A section on one of the three back pages:** a row in `KINDS`
   (`src/library.lua`), `SECTIONS` (`src/canteen.lua`) or `Challenges.sections`,
   and one `ES` line for its name. It is a *spread* rather than a page (see **The

@@ -24,6 +24,10 @@ local HEAD, TITLE = "ANOTHER CHANCE", "RETAKING"
 -- A count rather than a sentence: the page must not promise a run not yet played.
 local LEFT = "%d/%d CHARGES LEFT"
 
+-- And what it says instead when the chance was an ad rather than a charge
+-- (src/chance.lua): no charge was spent, so a count would be news about nothing.
+local AD = "ONCE A RUN"
+
 local LABEL_SCALE = 2
 local BOX_TIME = 0.25  -- the card drawing itself on, the other two cards' own
 local CARD_PAD_X, CARD_PAD_Y = 8, 7
@@ -45,8 +49,12 @@ end
 -- the book's, and the book may grow between them (buy a level at the counter,
 -- then CONTINUE a run that was dealt one), so the denominator is never let
 -- below the numerator: `1/0` is the one thing this line must not say.
-function Retake:open(left, owned)
+--
+-- `byAd` is a run getting up on an ad (Game:openRetake), which prints `AD` in
+-- place of the count.
+function Retake:open(left, owned, byAd)
     self.t = 0
+    self.byAd = byAd or false
     self.left = math.max(0, left)
     self.owned = math.max(owned, self.left)
 end
@@ -59,7 +67,8 @@ function Retake:contentWidth()
     return math.max(
         Font.width(I18n.t(HEAD)),
         Font.width(I18n.t(TITLE)) * LABEL_SCALE,
-        Font.width(I18n.t(LEFT):format(0, 0)))
+        Font.width(I18n.t(LEFT):format(0, 0)),
+        Font.width(I18n.t(AD)))
 end
 
 function Retake:layout(game)
@@ -114,9 +123,11 @@ function Retake:draw(game)
 
     -- Red on the last one, the slot counters' and the canteen's own rule: red
     -- means there is no more of this.
-    Scribble.printBig(I18n.t(LEFT):format(self.left, self.owned),
+    local line = self.byAd and I18n.t(AD)
+        or I18n.t(LEFT):format(self.left, self.owned)
+    Scribble.printBig(line,
         lay.cx, lay.left, 1,
-        self.left > 0 and Palette.slate or Palette.red, { seed = 51 })
+        (self.byAd or self.left > 0) and Palette.slate or Palette.red, { seed = 51 })
 end
 
 return Retake

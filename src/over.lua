@@ -12,6 +12,7 @@ local Mark = require("src.mark")
 local Purse = require("src.purse")
 local Scribble = require("src.scribble")
 local Sfx = require("src.sfx")
+local Double = require("src.double")
 local util = require("src.util")
 
 local Over = {}
@@ -45,7 +46,7 @@ end
 
 -- The score is copied in rather than read off the run each frame: RETRY
 -- replaces the run underneath, and this reports the run that ended.
-function Over:open(time, kills, coins, course)
+function Over:open(time, kills, coins, course, offer)
     self.t = 0
     self.phase = "asking"  -- asking -> confirm
     self.chosen = nil
@@ -65,10 +66,27 @@ function Over:open(time, kills, coins, course)
     -- A pointer already down when you died (a pen mid-stroke) is not a press.
     self.pen = Scribble.newPen(Input.pointerDown)
 
-    self.choice = Scribble.newChoice({
+    -- The x2 box (src/double.lua), third and only when there is an offer to
+    -- make: the run paid something, has not been doubled, and an ad is ready or
+    -- the book has bought the ads off. `offer` is Game's answer to all of that.
+    self.double = Double.new(offer)
+    local defs = {
         { key = "retry", label = "RETRY" },
         { key = "quit", label = "QUIT" },
-    }, LABEL_SCALE)
+    }
+    if Double.offered(self.double) then defs[3] = Double.def() end
+    self.choice = Scribble.newChoice(defs, LABEL_SCALE)
+end
+
+-- How the ad behind the x2 box ended, and what the run is worth now: the card
+-- prints the doubled figure if it was paid, and the box goes grey either way.
+function Over:doubled(paid, coins)
+    Double.settle(self.double, paid)
+    if paid then self.coins = coins end
+end
+
+function Over:keys()
+    return Double.offered(self.double) and Double.KEYS or KEYS
 end
 
 function Over:score()
@@ -83,6 +101,7 @@ function Over:coinLine()
 end
 
 function Over:prompt()
+    if Double.waiting(self.double) then return "THE AD IS ON" end
     if self.choice.armed then
         return Input.usingTouch and LIFT or RELEASE
     end
@@ -101,7 +120,8 @@ function Over:contentWidth()
         Purse.width(self:coinLine()),
         self.choice:stripWidth(),
         Font.width(I18n.t(ASK)), Font.width(I18n.t(LIFT)),
-        Font.width(I18n.t(RELEASE)), Font.width(I18n.t(KEYS)))
+        Font.width(I18n.t(RELEASE)), Font.width(I18n.t(KEYS)),
+        Font.width(I18n.t(Double.KEYS)), Double.width())
 end
 
 function Over:layout(game)
@@ -114,7 +134,14 @@ function Over:layout(game)
     lay.mark = y;  y = y + Mark.height() + 4
     lay.score = y; y = y + Font.height + 2
     lay.course = y; y = y + Font.height + 4
-    lay.coins = y; y = y + Purse.height() + 8
+    lay.coins = y; y = y + Purse.height() + 2
+    -- The x2 line, only on a card that carries the box: what filling it costs,
+    -- and then how it went.
+    if Double.offered(self.double) then
+        lay.double = y
+        y = y + Font.height + 2
+    end
+    y = y + 6
     lay.boxes = y; y = y + Scribble.BOX_H + 9
     lay.hint = y;  y = y + hintH
     lay.cardH = y + CARD_PAD_Y
@@ -127,6 +154,7 @@ function Over:layout(game)
     lay.score = lay.score + top
     lay.course = lay.course + top
     lay.coins = lay.coins + top
+    if lay.double then lay.double = lay.double + top end
     lay.boxes = lay.boxes + top
     lay.hint = lay.hint + top
 
@@ -150,6 +178,12 @@ function Over:commit(box)
 end
 
 function Over:mark(x, y, quiet)
+    -- A spent x2 box is page: it stays drawn and takes no more answers.
+    local over = self.choice:boxAt(x, y)
+    if over and over.key == "double" and not Double.live(self.double) then
+        self.marks:add(x, y)
+        return true
+    end
     -- In a box or off one, it is ink either way and the pen sounds it.
     if self.choice:mark(x, y, quiet) then return true end
     self.marks:add(x, y)
@@ -167,10 +201,20 @@ function Over:update(dt, game)
     if self.phase == "confirm" then
         self.confirmT = self.confirmT + dt
         if self.confirmT >= CONFIRM then
-            return self.chosen.key
+            -- The x2 box does not close the card: it hands the question to Game
+            -- (an ad) and the card goes back to asking the other two, holding
+            -- still until the ad has been answered.
+            if self.chosen.key == "double" then
+                self.phase, self.chosen = "asking", nil
+                self.choice.armed = nil
+                Double.wait(self.double)
+            end
+            return self.chosen and self.chosen.key or "double"
         end
         return
     end
+
+    if Double.waiting(self.double) then return end
 
     -- The keyboard fills a box in rather than jumping past it, and there is no
     -- pen to lift, so the answer stands as soon as the scribble lands.
@@ -191,12 +235,14 @@ function Over:update(dt, game)
 end
 
 function Over:keypressed(key)
-    if self.phase ~= "asking" then return end
+    if self.phase ~= "asking" or Double.waiting(self.double) then return end
 
     if key == "1" then
         self.choice:autoFill(self.choice.boxes[1])
     elseif key == "2" then
         self.choice:autoFill(self.choice.boxes[2])
+    elseif key == "3" and Double.live(self.double) then
+        self.choice:autoFill(self.choice.boxes[3])
     end
 end
 
@@ -235,8 +281,20 @@ function Over:draw(game)
     -- ink like them: a number the run kept, not the red thing about how it went.
     Purse.draw(self:coinLine(), lay.cx, lay.coins, Palette.ink)
 
+    -- What the x2 box costs, and then how it went: blue once the coins are
+    -- doubled, since that is good news about this run.
+    local double = Double.line(self.double)
+    if double then
+        love.graphics.setColor(self.double.state == "doubled" and Palette.blue
+            or Palette.slate)
+        Font.printCentered(I18n.t(double), lay.cx, lay.double)
+    end
+
     for i, box in ipairs(self.choice.boxes) do
         local color = Scribble.boxColor(box, self.chosen, self.confirmT)
+        if box.key == "double" and not Double.live(self.double) then
+            color = Palette.graphite
+        end
 
         Scribble.printBig(Scribble.label(box), box.labelCx, lay.labelY,
             LABEL_SCALE, color,
@@ -250,8 +308,8 @@ function Over:draw(game)
 
         Scribble.printBig(I18n.t(self:prompt()), lay.cx, lay.hint, 1,
             armed and Palette.red or Palette.slate, { seed = 51 })
-        if not Input.usingTouch and not armed then
-            Scribble.printBig(I18n.t(KEYS), lay.cx, lay.hint + Font.height + 2, 1,
+        if not Input.usingTouch and not armed and not Double.waiting(self.double) then
+            Scribble.printBig(I18n.t(self:keys()), lay.cx, lay.hint + Font.height + 2, 1,
                 Palette.graphite, { seed = 52 })
         end
     end

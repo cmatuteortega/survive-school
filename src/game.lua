@@ -27,6 +27,7 @@ local Pause = require("src.pause")
 local Win = require("src.win")
 local Over = require("src.over")
 local Retake = require("src.retake")
+local Chance = require("src.chance")
 local LevelUp = require("src.levelup")
 local Puddle = require("src.puddle")
 local Arena = require("src.arena")
@@ -44,6 +45,8 @@ local Records = require("src.records")
 local Tally = require("src.tally")
 local Mark = require("src.mark")
 local Purse = require("src.purse")
+local Store = require("src.store")
+local Ads = require("src.ads")
 local Perks = require("src.perks")
 local Course = require("src.course")
 local Bookmark = require("src.bookmark")
@@ -124,6 +127,14 @@ function Game:load(vw, vh)
     -- course and is clamped to what has been paid for.
     Course.load()
 
+    -- The shop and the ads (src/store.lua, src/ads.lua). Both are only started
+    -- here: what they have to say arrives over the next frames, polled at the
+    -- top of Game:update. The store answers from its own file straight away, so
+    -- a lesson bought last week is open on the timetable before Play has spoken.
+    -- After the options, which say whether the dev stand-ins are on.
+    Store.start()
+    Ads.start()
+
     -- Where the last run got to, if the program was closed on one. Read rather
     -- than applied -- offering it is the title screen's business and taking it
     -- is Game:continueRun's. After Characters and Subjects, which it validates
@@ -154,6 +165,9 @@ function Game:load(vw, vh)
     -- one (src/retake.lua). Beside the other two rather than on the run, for the
     -- same reason they are: it is a thing laid over whatever run is underneath.
     self.retake = Retake.new()
+    -- And the card that comes before it when there is no retake left but an ad
+    -- could stand the run up (src/chance.lua).
+    self.chance = Chance.new()
 
     -- A press that lands on the tool selector switches tools instead of
     -- starting a stroke.
@@ -198,6 +212,9 @@ function Game:load(vw, vh)
         -- landing on the page it lifts off, which is the line across the paper
         -- Game:holdRun exists to prevent.
         if self.state == "retaking" then return true end
+
+        -- The offer card, under the death card's rule: two boxes, every press a pen.
+        if self.state == "chance" then return false end
 
         -- Levelling up: the whole page belongs to the three cards, and the only
         -- way out of it is to circle one. Nothing else on the screen is
@@ -479,14 +496,44 @@ end
 -- at (src/course.lua). Off the run rather than off the pick, for the reason it is
 -- on the run at all: a run walked out of through the pause card and continued
 -- after a trip to the timetable must be paid for the class it was sat in.
+--
+-- Doubled whole, after the floor, once the x2 box has been paid for
+-- (`Game:doubleRun`): what the card promised is twice the figure it printed,
+-- and a rate folded in before the floor could come out a coin off that.
 function Game:runWorth(won)
-    return Purse.forRun({
+    local coins = Purse.forRun({
         kills = self.kills,
         skips = self.skipped,
         rung = Mark.rung(Mark.forRun(self.time or 0, won or false)),
         eyes = self.eyes,
         pay = (self.course or Course.default).pay,
     })
+    return self.doubled and coins * 2 or coins
+end
+
+-- Whether an end card carries the x2 box, and in which voice (src/double.lua):
+-- the run is worth something, has not been doubled, and an ad is ready -- or the
+-- book has bought the ads off, and it costs nothing.
+function Game:doubleOffer(won)
+    if self.doubled or self:runWorth(won) <= 0 or not Ads.ready() then
+        return nil
+    end
+    return Ads.free() and "free" or "ad"
+end
+
+-- The x2 box was filled. The ad is played, and only a paid one doubles: on the
+-- death card the run has already been paid, so the same again is paid on the
+-- spot; on the win card nothing has been paid yet, and `END` (or a later death
+-- after ENDLESS) collects the doubled figure through Game:cashRun. Either way the
+-- flag is what keeps it once a run.
+function Game:doubleRun(card, won)
+    Ads.show("double", function(paid)
+        if paid and not self.doubled then
+            if not won then Purse.earn(self:runWorth(won)) end
+            self.doubled = true
+        end
+        card:doubled(paid, self:runWorth(won))
+    end)
 end
 
 -- The program is closing (love.quit in main.lua), which is the last chance to
@@ -623,6 +670,10 @@ function Game:reset()
     -- been to the canteen hands the draft no corner at all.
     self.perks = Perks.forRun()
     self.skipped = 0
+    -- The two ad offers, each once a run (src/ads.lua): whether the run has been
+    -- stood back up by one, and whether its pay has been doubled by the other.
+    self.adRevived = false
+    self.doubled = false
     self.state = "playing"
     self.pendingWin = false
     -- Whether this run is worth going back to, which is the one question both
@@ -1037,6 +1088,9 @@ function Game:openBookmark()
     -- Game:reset has just handed this run a full set out of what the *book* owns,
     -- and the bookmark is what the run had actually got down to.
     self.skipped = mark.skipped
+    -- The two ad offers stay spent across a bookmark: once a run means once.
+    self.adRevived = mark.adRevived
+    self.doubled = mark.doubled
     for key, left in pairs(mark.perks) do
         -- Only for a line the book still owns, and never more of it than the book
         -- owns: a bookmark written before a perk was refunded -- or edited by hand
@@ -1108,9 +1162,17 @@ end
 -- The use is spent here and unconditionally, the way the three at the draft are:
 -- there is nothing to refuse and nobody to ask. And it is spent *before* the card
 -- is opened, so what the card prints is what is left rather than what was left.
-function Game:openRetake()
+--
+-- `byAd` is the same getting up paid for with an ad rather than a charge
+-- (src/chance.lua): nothing is spent off the run's retakes, the once-a-run flag
+-- is, and the card says so in place of the count.
+function Game:openRetake(byAd)
     self.state = "retaking"
-    self.perks.retake = self.perks.retake - 1
+    if byAd then
+        self.adRevived = true
+    else
+        self.perks.retake = self.perks.retake - 1
+    end
 
     self.player:revive()
     self.particles:burst(self.player.x, self.player.y, 16, Palette.blue)
@@ -1121,7 +1183,28 @@ function Game:openRetake()
     Sfx.play("transition2")
 
     self:holdRun()
-    self.retake:open(self.perks.retake, Perks.level("retake"))
+    self.retake:open(self.perks.retake or 0, Perks.level("retake"), byAd)
+end
+
+-- Whether an ad can stand the run up (src/ads.lua): once a run, and only when
+-- there is an ad to show or the book has bought the ads off. Asked after the
+-- retake, so a charge the book paid coins for is always spent first.
+function Game:canAdRevive()
+    return not self.adRevived and Ads.ready()
+end
+
+-- The health ran out with no retake left, and an ad could stand the run up. The
+-- run is frozen the way Game:openDeath freezes it -- silently, the stroke left
+-- where it was -- because the likelier answer is still that this is the end, and
+-- the rubber's pop over a card asking about it would be the wrong sound. Getting
+-- up goes through Game:openRetake, which holds the run properly.
+function Game:openChance()
+    self.state = "chance"
+    Sfx.stopLoop("rubbing")
+    Sfx.play("transition2")
+    self.wasDown = false
+    Input.stickEnabled = false
+    self.chance:open(Ads.free())
 end
 
 -- The run is over, and there is a card to answer (src/over.lua): RETRY builds the
@@ -1160,7 +1243,7 @@ function Game:openDeath()
     -- rather than what would be if you were paid.
     self:cashRun()
     self.over:open(self.time, self.kills, self:runWorth(),
-        (self.course or Course.default).name)
+        (self.course or Course.default).name, self:doubleOffer(false))
 end
 
 --- winning --------------------------------------------------------------------
@@ -1178,7 +1261,7 @@ function Game:openWin()
     -- the end of a run, `END` is (Game:cashRun), and ENDLESS is a bet that the
     -- number on the card will be bigger by the time it is collected.
     self.win:open(self.time, self.kills, self.spawner.cycle, self:runWorth(true),
-        (self.course or Course.default).name)
+        (self.course or Course.default).name, self:doubleOffer(true))
 end
 
 -- ENDLESS. Another ten minutes and another eye at the end of them, with the
@@ -4043,6 +4126,12 @@ function Game:update(dt)
     -- paused or ended the run still fades out instead of hanging mid-cut.
     Sfx.update(dt)
 
+    -- What the store and the ads have answered since last frame, whatever state
+    -- the book is in: a purchase can land on the title and an ad closes over
+    -- whichever card asked for it.
+    Store.update()
+    Ads.update(dt)
+
     if self.state == "menu" then
         local answer = Menu:update(dt, self)
         if answer == "yes" then
@@ -4221,6 +4310,8 @@ function Game:update(dt)
             self:toMenu()
         elseif answer == "endless" then
             self:beginNextCycle()
+        elseif answer == "double" then
+            self:doubleRun(self.win, true)
         end
         return
     end
@@ -4287,6 +4378,8 @@ function Game:update(dt)
             -- this was an ending at all.
             if self:canRetake() then
                 self:openRetake()
+            elseif self:canAdRevive() then
+                self:openChance()
             else
                 self:openDeath()
             end
@@ -4316,6 +4409,22 @@ function Game:update(dt)
         elseif answer == "quit" then
             Sfx.play("transition2")
             self:toMenu()
+        elseif answer == "double" then
+            self:doubleRun(self.over, false)
+        end
+    elseif self.state == "chance" then
+        -- YES plays the ad and the card holds still for it; the run gets up only
+        -- if it was watched to its reward. NO, or an ad cut short, is the death
+        -- card that was coming anyway.
+        local answer = self.chance:update(dt, self)
+        if answer == "yes" then
+            self.chance:wait()
+            Ads.show("revive", function(paid)
+                if self.state ~= "chance" then return end
+                if paid then self:openRetake(true) else self:openDeath() end
+            end)
+        elseif answer == "no" then
+            self:openDeath()
         end
     elseif self.state == "retaking" then
         -- A clock and nothing else: the card asks nothing, so the only thing that
@@ -4612,6 +4721,7 @@ function Game:draw()
     if self.state == "won" then self.win:draw(self) end
     if self.state == "dead" then self.over:draw(self) end
     if self.state == "retaking" then self.retake:draw(self) end
+    if self.state == "chance" then self.chance:draw(self) end
 end
 
 function Game:keypressed(key)
@@ -4670,6 +4780,11 @@ function Game:keypressed(key)
     -- question, it is a second and a half, and there is nothing to pause because
     -- the run is already held.
     if self.state == "retaking" then return end
+
+    if self.state == "chance" then
+        self.chance:keypressed(key)
+        return
+    end
 
     if key == "p" then
         self:togglePause()

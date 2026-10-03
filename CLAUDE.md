@@ -60,9 +60,19 @@ Signing uses the `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` /
 `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` secrets when set, and a throwaway
 key per run otherwise.
 
+The same workflow adds the two monetisation bridges to love-android's
+`lua-modules/`: in-app purchases through `cmatuteortega/love-iap`'s action
+(pinned to the commit `src/iap.lua` was vendored from -- bump the two together),
+and rewarded ads through `android/ads.sh` (`android/love-ads`: AdMob + UMP
+consent). The AdMob app id and rewarded unit come from the `ADMOB_APP_ID` /
+`ADMOB_REWARDED_ID` repo variables and default to Google's test ones. On a
+desktop both are inert; with the dev row showing a mock store and a stand-in ad
+answer instead.
+
 `F11` / `alt+enter` toggles fullscreen, `Esc` quits. Save state lives in
 `~/Library/Application Support/LOVE/notebook-survivors/`: `options.txt`,
-`bookmark.txt`, `records.txt`, `tally.txt`, `course.txt`, and one `.txt` per drawn design (`hero-*.txt`,
+`bookmark.txt`, `records.txt`, `tally.txt`, `course.txt`, `iap.txt` (what the
+shop has sold, kept by love-iap), and one `.txt` per drawn design (`hero-*.txt`,
 `sword.txt`, `star.txt`, `rocket.txt`, `sun.txt`, `cools.txt`, `skate.txt`,
 `bomb.txt`, `lightning.txt`, `bird.txt`, `shot.txt`) — one line per row of the
 design. Delete one to be handed the starting drawing again.
@@ -119,7 +129,8 @@ sure whatever measures it for layout measures the translation and not the key.
 - **Rendering:** `src/palette.lua`, `src/overprint.lua`, `src/pixelart.lua`,
   `src/sprites.lua`, `src/font.lua`, `src/background.lua`, `src/particles.lua`.
 - **Screens:** `menu`, `settings`, `timetable`, `studio`, `library`, `canteen`,
-  `homework` (the challenge list, read off `challenges`), `blank` (the page with
+  `homework` (the challenge list, read off `challenges`), `chance` (the
+  revive-by-ad offer), `double` (the x2 box on the end cards), `blank` (the page with
   nothing on it, which nothing instances today), `pause`, `levelup`, `win`,
   `over`, `retake`, `hud`, `scribble` (hand-drawn boxes), `spread` (the book the
   library, the canteen and the homework page are read in: two leaves, a crease,
@@ -128,6 +139,8 @@ sure whatever measures it for layout measures the translation and not the key.
 - **Run content:** `player`, `enemy`, `spawner`, `subjects`, `course` (how hard
   the book is: the four rungs of the difficulty ladder and what each multiplies),
   `characters`, `tools`, `upgrades`, `loadout`, `perks`, `purse`, `refund`,
+  `store` (what is sold for money, over `iap`, love-iap's vendored file), `ads`
+  (the two rewarded-ad offers),
   `collection` (what the book has opened, off `records`), `challenges` (what it
   asks you to go and do, off `tally`), `design`.
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,

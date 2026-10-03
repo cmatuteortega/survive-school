@@ -44,6 +44,16 @@
 -- row on the perks page that also sold your heroes back would be the counter's own
 -- split broken by the one row that cannot respect it.
 --
+-- **And the shop, which is the only part of the counter priced in money rather
+-- than coins** (src/store.lua). Its sections come after the refund, since the
+-- purse never meets them: the lessons the timetable holds shut, three to a
+-- section, and THE WHOLE BOOK with the two rows the store owes beside it --
+-- RESTORE, and the ad consent form where the law asks for a way back to it. A
+-- row there is the same name, price and box as any other, with `money` on it:
+-- the figure is the store's own formatted price rather than a coin, and the box
+-- opens the store's purchase sheet rather than spending the purse. Nothing is
+-- owned until the store says so, and the row has no box while it is deciding.
+--
 -- The split also happens to be what makes the page *fit*: a box is twenty pixels
 -- deep, so seven rows in one column is a counter hanging off the bottom of a
 -- sixteen-by-nine page. That is not why the split is where it is -- it is where the
@@ -91,6 +101,10 @@ local Perks = require("src.perks")
 local Characters = require("src.characters")
 local Course = require("src.course")
 local Refund = require("src.refund")
+local Store = require("src.store")
+local Ads = require("src.ads")
+local Collection = require("src.collection")
+local Upgrades = require("src.upgrades")
 local Hud = require("src.hud")
 local Sprites = require("src.sprites")
 local Sfx = require("src.sfx")
@@ -189,6 +203,91 @@ local SECTIONS = {
     },
 }
 
+-- The shop's sections (src/store.lua), built off its own list of lessons so a
+-- lesson added to the book is on sale without a line here. Three to a section,
+-- which is the heroes' count: four would fit, and three keeps the facing page's
+-- notes clear of the footer on a phone held upright. `store` is what the hint
+-- reads to say the shop is shut rather than that you are short of coins.
+local SHOP_ROWS = 3
+local storeSections = {}
+do
+    local sections = math.ceil(#Store.lessons / SHOP_ROWS)
+    for i = 1, sections do
+        SECTIONS[#SECTIONS + 1] = {
+            name = i == 1 and "LESSONS" or "MORE LESSONS",
+            note = "OR EARN IT ON THE TIMETABLE",
+            keys = "SCRIBBLE A BOX OR PRESS 1 2 3",
+            shut = "EVERY LESSON HERE IS OPEN",
+            store = true,
+        }
+        storeSections[#storeSections + 1] = #SECTIONS
+    end
+    SECTIONS[#SECTIONS + 1] = {
+        name = "WHOLE BOOK",
+        note = "EVERY LESSON AND NO ADS",
+        keys = "SCRIBBLE A BOX OR PRESS 1 2 3",
+        store = true,
+    }
+    storeSections[#storeSections + 1] = #SECTIONS
+end
+
+-- What the figure says on a money row that is not a price.
+local OWNED, OPEN, WAIT = "OWNED", "OPEN", "..."
+
+-- The counter's five questions, answered for a lesson or the whole book. `key`
+-- is the store's product id; `lesson` maps it back to the page it opens, which is
+-- what lets a page already earned on the timetable say OPEN rather than sell
+-- itself to a book that has it.
+local lessonOf = {}
+for _, l in ipairs(Store.lessons) do lessonOf[l.id] = l.key end
+
+local function earned(id)
+    local key = lessonOf[id]
+    return key ~= nil and Collection.lessonOpen(key) and not Store.owns(id)
+end
+
+local Shop = {}
+function Shop.levels() return 1 end
+function Shop.level(id) return (Store.owns(id) or earned(id)) and 1 or 0 end
+function Shop.priceOf(id)
+    if Store.owns(id) or earned(id) then return nil end
+    return Store.price(id)
+end
+function Shop.priceText(id)
+    if Store.owns(id) then return OWNED end
+    if earned(id) then return OPEN end
+    if Store.pending[id] then return WAIT end
+    return Store.price(id) or WAIT
+end
+function Shop.canBuy(id)
+    return not earned(id) and Store.canBuy(id)
+end
+function Shop.buy(id) return Store.buy(id) end
+
+-- The two rows that sell nothing: asking the store again for what this account
+-- owns, and the consent form. `act` drops the n/n column and the figure.
+local Restore = {}
+function Restore.levels() return 1 end
+function Restore.level() return 0 end
+function Restore.priceOf() return Store.available() and 0 or nil end
+function Restore.priceText() return "" end
+function Restore.canBuy() return Store.available() end
+function Restore.buy()
+    Store.restore()
+    return true
+end
+
+local Privacy = {}
+function Privacy.levels() return 1 end
+function Privacy.level() return 0 end
+function Privacy.priceOf() return Ads.privacyNeeded and 0 or nil end
+function Privacy.priceText() return "" end
+function Privacy.canBuy() return Ads.privacyNeeded end
+function Privacy.buy()
+    Ads.privacy()
+    return true
+end
+
 -- One list of rows per section, built once: both catalogues are the same tables for
 -- every screen the program draws and nothing here reads a run, so there is nothing
 -- to rebuild when the page is opened again. What *is* asked every frame is what a
@@ -202,7 +301,8 @@ local counters
 local function build()
     if counters then return end
 
-    counters = { {}, {}, {}, {} }
+    counters = {}
+    for i = 1, #SECTIONS do counters[i] = {} end
     for _, row in ipairs(Perks.list) do
         counters[1][#counters[1] + 1] = {
             key = row.key, name = row.name, blurb = row.blurb, icon = row.icon,
@@ -236,6 +336,30 @@ local function build()
         key = Refund.KEY, name = "REFUND ALL",
         blurb = "EVERY PERK HERO AND COURSE",
         icon = "coin", shop = Refund, back = true,
+    }
+
+    -- The shop. A lesson wears its tool's icon, the timetable's own rule for a
+    -- lesson tab, so the row and the tab it opens are the same picture.
+    for i, l in ipairs(Store.lessons) do
+        local rows = counters[storeSections[math.ceil(i / SHOP_ROWS)]]
+        rows[#rows + 1] = {
+            key = l.id, name = l.sub.name, blurb = "OPEN THIS LESSON NOW",
+            icon = Upgrades.byId[l.sub.tool].icon, shop = Shop, money = true,
+        }
+    end
+    local book = counters[storeSections[#storeSections]]
+    book[1] = {
+        key = Store.EVERYTHING, name = "WHOLE BOOK",
+        blurb = "EVERY LESSON AND NO ADS",
+        icon = "page", shop = Shop, money = true,
+    }
+    book[2] = {
+        key = "restore", name = "RESTORE", blurb = "WHAT THIS ACCOUNT BOUGHT",
+        icon = "tape", shop = Restore, money = true, act = true,
+    }
+    book[3] = {
+        key = "privacy", name = "AD PRIVACY", blurb = "CHANGE YOUR AD CHOICES",
+        icon = "laminate", shop = Privacy, money = true, act = true,
     }
 end
 
@@ -346,8 +470,13 @@ end
 -- says the whole counter at once, with a sign in front of it -- so the column is
 -- struck off that rather than off two figures, and it stops moving for the same
 -- reason everything else here does: it is measured at what could ever stand in it.
+--
+-- The shop's figures are words the store wrote, so they are measured at what it
+-- has said so far, and the column widens once on the frame the prices arrive.
 local function priceWidth()
     local w = math.max(Purse.width(WIDEST_PRICE), Font.width(I18n.t(MAX)))
+    w = math.max(w, Font.width(I18n.t(OWNED)), Font.width(I18n.t(OPEN)),
+        Store.widestPrice())
     return math.max(w, Purse.width(("+%d"):format(Refund.most())))
 end
 
@@ -796,6 +925,16 @@ end
 -- box on it.
 function Canteen:drawPrice(row, y)
     local lay = self.lay
+
+    -- Money is the store's own string, printed as it came and with no coin: a
+    -- coin beside a price in pounds would be the counter lying about the currency.
+    if row.money then
+        love.graphics.setColor(row.shop.canBuy(row.key) and Palette.ink
+            or Palette.slate)
+        Font.printCentered(I18n.t(row.shop.priceText(row.key)), lay.priceCx, y)
+        return
+    end
+
     local price = row.shop.priceOf(row.key)
 
     if not price then
@@ -860,8 +999,10 @@ function Canteen:drawRow(i, row)
     -- set against something.
     local at = lay.stack and under or top + math.floor((lay.rowH - Font.height) / 2)
 
-    love.graphics.setColor(level >= most and Palette.red or Palette.slate)
-    Font.print(("%d/%d"):format(level, most), lay.ownX, at)
+    if not row.act then
+        love.graphics.setColor(level >= most and Palette.red or Palette.slate)
+        Font.print(("%d/%d"):format(level, most), lay.ownX, at)
+    end
 
     self:drawPrice(row, at)
 end
@@ -993,6 +1134,21 @@ function Canteen:hint(at)
     end
 
     local section = SECTIONS[at]
+
+    -- The shop's own two reasons for having no box, ahead of the counter's: the
+    -- store is not answering, or it is still deciding about a purchase.
+    if section.store then
+        if not Store.available() then return "THE SHOP IS CLOSED" end
+        for _, row in ipairs(counters[at]) do
+            if Store.pending[row.key] then return "WAITING FOR THE STORE" end
+            -- Not owned, not earned and no price: the store has not heard of
+            -- it yet, which is the shop being shut for that row.
+            if not row.act and row.shop.level(row.key) == 0
+                and not Store.price(row.key) then
+                return "THE SHOP IS CLOSED"
+            end
+        end
+    end
 
     -- A section that can only ever be shut for one reason says that reason, in
     -- place of both of the counter's: a refund does not run out of stock and no
