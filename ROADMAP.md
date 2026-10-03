@@ -118,7 +118,8 @@ checked against Play: that needs the app and its products in Play Console.
       dev row showing, love-iap's mock and a stand-in ad answer on a desktop.
 - [x] Update `README.md` / `DESIGNDOC.md`.
 - [ ] **Go live:** create the app with the same application id in Play Console,
-      upload a signed build to a testing track, create and activate the seven
+      upload the signed `.aab` (the workflow's "Play bundle" artifact) to a
+      testing track, create and activate the seven
       products (`lesson_pe`, `lesson_language`, `lesson_finance`, `lesson_music`,
       `lesson_maths`, `lesson_art`, `everything`), add license testers, and
       decide the prices — `everything` below the six lessons together.

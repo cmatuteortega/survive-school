@@ -8,6 +8,10 @@
 #
 # Outputs:
 #   - every run: the signed APK as a workflow artifact, "Survive School"
+#   - every run with the signing secrets set: the signed app bundle (.aab) for
+#     Play Console as a second artifact, "Survive School (Play bundle)". Never
+#     with the throwaway key: Play locks in the key of the first upload, so a
+#     bundle signed with a key nobody kept must never reach it.
 #   - tags v*:   a GitHub Release with the APK attached (what players download)
 #
 # Signing (repo Settings → Secrets and variables → Actions → Secrets):
@@ -167,11 +171,13 @@ jobs:
           unzip -l ../love-android/app/src/embed/assets/game.love | grep -E ' (main|conf)\.lua$'
           ls -lh ../love-android/app/src/embed/assets/game.love
 
-      - name: Build APK
+      # The APK to install directly and the bundle Play Console wants, from one
+      # Gradle run so the native build is only done once.
+      - name: Build APK and app bundle
         working-directory: love-android
-        run: ./gradlew assembleEmbedNoRecordRelease --stacktrace
+        run: ./gradlew assembleEmbedNoRecordRelease bundleEmbedNoRecordRelease --stacktrace
 
-      - name: Sign APK
+      - name: Sign APK and app bundle
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -197,8 +203,25 @@ jobs:
             --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD \
             --out "$out" "$RUNNER_TEMP/aligned.apk"
           "$bt/apksigner" verify --print-certs "$out"
-          rm -f "$ks"
           echo "APK=$out" >> "$GITHUB_ENV"
+
+          # The bundle is signed with jarsigner (apksigner does not sign .aab),
+          # and only with the real key -- see the note at the top of this file.
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            bundle=$(ls love-android/app/build/outputs/bundle/embedNoRecordRelease/*.aab | head -1)
+            echo "Unsigned bundle: $bundle"
+            aab="$RUNNER_TEMP/$APK_BASENAME.aab"
+            cp "$bundle" "$aab"
+            jarsigner -keystore "$ks" -storepass:env KEYSTORE_PASSWORD \
+              -keypass:env KEY_PASSWORD -sigalg SHA256withRSA -digestalg SHA-256 \
+              "$aab" "$KEY_ALIAS"
+            jarsigner -verify "$aab"
+            keytool -printcert -jarfile "$aab" | grep -E 'SHA1:|SHA256:'
+            echo "AAB=$aab" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No signing secrets: skipping the Play bundle."
+          fi
+          rm -f "$ks"
         shell: bash
 
       - name: Upload APK
@@ -206,6 +229,14 @@ jobs:
         with:
           name: ${{ env.APK_BASENAME }}
           path: ${{ env.APK }}
+          if-no-files-found: error
+
+      - name: Upload app bundle
+        if: env.AAB != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_BASENAME }} (Play bundle)
+          path: ${{ env.AAB }}
           if-no-files-found: error
 
       - name: GitHub Release

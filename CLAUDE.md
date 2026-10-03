@@ -55,7 +55,9 @@ pinned to a commit on its LÖVE 12 line, applies `love-android-audio.patch` to
 that engine, and bakes the launcher icon out of `Sprites.COOLS` with
 `android/icon.py` (ink on white, whole-number scales only). Unlike those two it
 pins no orientation: `fullUser` in the manifest, and the settings page's SCREEN
-row (`src/orient.lua`) decides at run time. The artifact is `Survive School.apk`.
+row (`src/orient.lua`) decides at run time. The artifacts are `Survive School.apk`
+and, when the signing secrets are set, `Survive School.aab` for Play Console
+(never built with the throwaway key: Play locks in the first upload's key).
 Signing uses the `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` /
 `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` secrets when set, and a throwaway
 key per run otherwise.
