@@ -1372,6 +1372,10 @@ end
 -- there is no arrival animation, just the moment you notice that what came over
 -- the edge this time is enormous.
 --
+-- Which boss is the page's to say (`boss` on its row in src/subjects.lua), so
+-- every lesson can end on a fight of its own; the dev boss test (src/dev.lua) is
+-- the quick way to look at one.
+--
 -- The box goes up at the same moment (src/arena.lua), pinned where the player is
 -- standing rather than where the eye is: you get the middle of it, and the eye
 -- has to come to you. It is the game taking the one answer away that would
@@ -1382,7 +1386,9 @@ function Spawner:sendBoss(game)
     self.escortT = ESCORT_EVERY
     self:clearEvents()
     game:openArena()
-    self:drop(game, self:ring(game) + 20, "bosseye")
+    -- The lesson's own (src/subjects.lua), and the eye where a page has not
+    -- named one.
+    self:drop(game, self:ring(game) + 20, self.subject.boss or "bosseye")
 end
 
 -- The boss is down and the run went on rather than ending. The next cycle's ten

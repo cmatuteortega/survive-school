@@ -483,6 +483,8 @@ end
 -- at nineteen banks nineteen over the top of it.
 function Game:bankRun()
     if not self.subject or not self.time then return end
+    -- A dev boss test is not a run the book saw (src/dev.lua).
+    if self.bossTest then return end
     -- The course goes with it, and the register files it against the clock rather
     -- than as a fourth maximum (src/records.lua): what it says is which class the
     -- longest run on this page was sat in.
@@ -538,6 +540,7 @@ end
 -- everything it did, both eyes included.
 function Game:cashRun()
     if not self.time then return end
+    if self.bossTest then return end
     Purse.earn(self:runWorth())
 end
 
@@ -578,7 +581,8 @@ end
 -- the run is worth something, has not been doubled, and an ad is ready -- or the
 -- book has bought the ads off, and it costs nothing.
 function Game:doubleOffer(won)
-    if self.doubled or self:runWorth(won) <= 0 or not Ads.ready() then
+    if self.bossTest or self.doubled or self:runWorth(won) <= 0
+        or not Ads.ready() then
         return nil
     end
     return Ads.free() and "free" or "ad"
@@ -760,6 +764,13 @@ function Game:reset()
     -- the whole feature: quitting to the title does not end a run, it leaves one.
     self.resumable = true
 
+    -- The dev boss test (src/dev.lua), copied onto the run for the reason the
+    -- course is: it is what this run is, whatever the title is set to later. Not
+    -- resumable either -- a bookmark of it would come back as ten minutes of
+    -- horde, which is the one thing it was for skipping.
+    self.bossTest = Dev.boss
+    if self.bossTest then self.resumable = false end
+
     self.tool = 1
     self.toolLabel = 0
     -- Which weapon stands at the top of the weapon column, for the one case that
@@ -782,6 +793,10 @@ function Game:reset()
     Input.stickEnabled = true
 
     Camera.set(self.player.x, self.player.y)
+
+    -- After the camera, since the box is pinned on the player and the boss walks
+    -- on from the ring round the view.
+    if self.bossTest then self.spawner:sendBoss(self) end
 end
 
 -- Stopping the run, whatever stopped it: the pause button, or a level landing.
@@ -1299,7 +1314,7 @@ function Game:openDeath()
     -- screen and the bookmark comes off the disk. Both halves of CONTINUE are the
     -- same offer and a run that is over is not it.
     self.resumable = false
-    Bookmark.clear()
+    if not self.bossTest then Bookmark.clear() end
     Sfx.stopLoop("rubbing")
     self.particles:burst(self.player.x, self.player.y, 16, Palette.red)
     -- The win card's own sound, since it is the win card's own arrival: a page
@@ -4216,11 +4231,18 @@ function Game:update(dt)
         if self.waking and self.waking:update(dt, self) then self.waking = nil end
         local answer = Menu:update(dt, self)
         if answer == "yes" then
+            Dev.boss = false
             self:toTimetable()
         elseif answer == "no" then
             love.event.quit()
         elseif answer == "continue" then
+            Dev.boss = false
             self:continueRun()
+        elseif answer == "boss" then
+            -- The dev boss test (src/dev.lua): the timetable as usual, with GO!
+            -- sending the picked lesson's boss on the first frame.
+            Dev.boss = true
+            self:toTimetable()
         elseif answer == "settings" then
             self:toSettings()
         elseif answer == "language" then
@@ -4281,8 +4303,9 @@ function Game:update(dt)
             -- run and this is the frame it stops being the most recent thing that
             -- happened. Clearing it here rather than inside Game:reset is what
             -- keeps the scaffolding reset in Game:load from deleting a bookmark on
-            -- every launch.
-            Bookmark.clear()
+            -- every launch. A dev boss test leaves it be: it writes none of its
+            -- own, so the run that was bookmarked is still the one to go back to.
+            if not Dev.boss then Bookmark.clear() end
             self:reset()
         elseif answer == "custom" then
             self:toStudio(Design.hero(), "timetable")
@@ -4364,7 +4387,7 @@ function Game:update(dt)
             -- written as well, for the launch after this one -- the run in memory
             -- is the better of the two and will be preferred while it lasts, but
             -- this is the moment the player has told us they are done for now.
-            Bookmark.save(self)
+            if not self.bossTest then Bookmark.save(self) end
             self:toMenu()
         elseif answer == "resume" then
             self:togglePause()
@@ -4407,7 +4430,7 @@ function Game:update(dt)
             -- which is what collects the coins the card has been showing.
             self:cashRun()
             self.resumable = false
-            Bookmark.clear()
+            if not self.bossTest then Bookmark.clear() end
             self:toMenu()
         elseif answer == "endless" then
             self:beginNextCycle()

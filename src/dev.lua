@@ -19,7 +19,9 @@
 -- `Collection.lessonOpen` and `Characters.owns`, the `unlocks` and `dev` lines
 -- src/options.lua writes, the `Dev.showing` guards in src/pause.lua and
 -- src/game.lua's `keypressed`, the `Dev.showing()` that picks the stand-ins in
--- src/store.lua and src/ads.lua -- and then this file.
+-- src/store.lua and src/ads.lua, the BOSS button in src/menu.lua and the
+-- `Dev.boss` read in src/game.lua (`Game:reset`, `Game:bankRun`,
+-- `Game:cashRun`, and the menu's "boss" answer) -- and then this file.
 
 local Dev = {}
 
@@ -41,6 +43,25 @@ Dev.shown = false
 function Dev.showing()
     return Dev.shown or Dev.unlocks ~= "earned"
 end
+
+-- The boss test, thrown by the BOSS button in the title's bottom-right corner
+-- (src/menu.lua), which is only drawn while `Dev.showing`. While it is on, the
+-- timetable's GO! does not start a run, it starts the lesson's boss fight: the
+-- run is built as usual and the boss is sent on the first frame
+-- (`Game:reset`), so a boss can be iterated on without ten minutes of horde in
+-- front of every look at it. Which boss walks on is the lesson's `boss`
+-- (src/subjects.lua), which is the point -- pick the page on the timetable and
+-- that page's boss is what you get.
+--
+-- A run sat this way is not the book's business: it writes no record, no
+-- tally, no coins and no bookmark (`Game:bankRun`, `Game:cashRun`), since a
+-- boss fought at level one with a borrowed loadout is not a run anybody played.
+-- The pause card's T and W switches are what to lend it.
+--
+-- Not saved. It is on from the button to the next YES or CONTINUE on the title,
+-- so RETRY on the death card is another go at the same boss, and a launch never
+-- opens in it.
+Dev.boss = false
 
 -- The one question the three readers ask. On EARNED it hands the register's own
 -- answer straight back.

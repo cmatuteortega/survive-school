@@ -230,10 +230,14 @@ function Hud.footWidth(text)
     return math.max(CORNER_SIZE, Font.width(text or "") + 4)
 end
 
-function Hud.footBox(game, text)
-    return game.inset.l + CORNER_MARGIN,
-           game.vh - game.inset.b - CORNER_MARGIN - CORNER_SIZE,
-           Hud.footWidth(text)
+-- `right` mirrors it to the bottom *right* of the safe area, for the title's
+-- dev-only BOSS button (src/dev.lua): the same box the same distance in, so the
+-- foot of the page reads as one edge with a button at each end.
+function Hud.footBox(game, text, right)
+    local w = Hud.footWidth(text)
+    local x = right and game.vw - game.inset.r - CORNER_MARGIN - w
+        or game.inset.l + CORNER_MARGIN
+    return x, game.vh - game.inset.b - CORNER_MARGIN - CORNER_SIZE, w
 end
 
 -- The first row of page above it, for a screen laying something out down to the
@@ -480,14 +484,14 @@ function Hud.rightCornerBox(game)
            game.inset.t + CORNER_MARGIN
 end
 
-function Hud.footTarget(game, text)
+function Hud.footTarget(game, text, right)
     local pad = cornerPad()
-    local x, y, w = Hud.footBox(game, text)
+    local x, y, w = Hud.footBox(game, text, right)
     return x - pad, y - pad, w + pad * 2, CORNER_SIZE + pad * 2
 end
 
-function Hud.footAt(game, cx, cy, text)
-    local x, y, w, h = Hud.footTarget(game, text)
+function Hud.footAt(game, cx, cy, text, right)
+    local x, y, w, h = Hud.footTarget(game, text, right)
     return cx >= x and cx <= x + w and cy >= y and cy <= y + h
 end
 
@@ -608,8 +612,8 @@ end
 --
 -- The box is cut to the word (`Hud.footWidth`) rather than the word shrunk to
 -- the box, since there is nothing smaller than this face to shrink to.
-function Hud.drawFoot(game, text, hot)
-    local x, y, w = Hud.footBox(game, text)
+function Hud.drawFoot(game, text, hot, right)
+    local x, y, w = Hud.footBox(game, text, right)
 
     love.graphics.setColor(hot and Palette.red or Palette.slate)
     love.graphics.rectangle("fill", x, y, w, CORNER_SIZE)

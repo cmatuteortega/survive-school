@@ -603,6 +603,12 @@ rather than a thing in it, and paper is the furthest thing from a rule there is.
 `art/preview.py` renders the crowd onto its subject's own ruling with the blanking
 in it, which is where that is judged.
 
+Each row also names its **boss**: the `Enemy.types` key `Spawner:sendBoss` drops
+into the box at the end of every cycle. All seven say `bosseye` today, written out
+on every row rather than left to the fallback (a row without one gets the eye) so
+that giving a page a fight of its own is one word on its own row. The dev boss test
+(see **The collection**) is how to look at one.
+
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
 because a tool line's first level is its unlock — issuing a tool is taking that
 line to level one. `Loadout.new(vw, vh, startTool)` does it before the run is
@@ -2599,6 +2605,18 @@ rather than things the book opened, and the counter has its own way back for the
 
 Taking it out at launch is the row at the bottom of `ROWS` in `src/settings.lua`,
 the three `Dev.opened` calls, the `unlocks` line in `src/options.lua`, and the file.
+
+**The boss test is the other thing it holds.** While `Dev.showing()`, the title
+grows a BOSS button in its bottom-right corner (the LANG button mirrored,
+`Hud.footBox(game, text, true)`; X on a keyboard). Pressing it sets `Dev.boss` and
+opens the timetable, where GO! builds the run as usual and `Game:reset` sends the
+picked lesson's boss on the first frame (`Spawner:sendBoss`) -- so a lesson's boss
+can be fought without the ten minutes in front of it. The run copies the flag to
+`Game.bossTest` and is then nobody's business: no record, tally, coins, x2 offer or
+bookmark, and it is not resumable. RETRY on the death card is the same boss again;
+YES or CONTINUE on the title throws the test off, and it is never saved. A run
+sat this way starts at level one, so the pause card's T and W switches are what to
+lend it.
 
 ### Homework
 
@@ -6138,7 +6156,8 @@ and are all the same 11x11 glyph.
   `src/upgrades.lua`, a hand of `drills` (`{ every = <seconds>, of = { <drill> =
   <weight> } }` — see **Drills and surges**; a row without one gets `DRILL_MIX`
   at `DRILL_EVERY`, and a hand must hold two of `line`/`ring`/`grid` or the page
-  stutters before minute six), and optionally the two dials `crowd` and `clock`
+  stutters before minute six), a `boss` naming an `Enemy.types` row with `boss =
+  true` (the eye if left out), and optionally the two dials `crowd` and `clock`
   (no subject turns either). Argue the drill weights from the *ruling* rather
   than from difficulty — the ruling is the thing the player is looking at, and a
   page dealing the shapes its own lines already suggest is what makes a lesson

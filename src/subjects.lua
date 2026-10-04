@@ -296,12 +296,20 @@ local BLANK = {
 -- back of the book: the three pages that look least like paper you write on, and
 -- the pushpin, the compass and the rubber, which are the three tools that do
 -- something the rest of the strip does not do at all.
+--
+-- And each lesson names its **boss**: the `Enemy.types` row that walks into the
+-- box at the end of every cycle (`Spawner:sendBoss`). All seven are the eye for
+-- now, written out on every row rather than left to the fallback so that giving
+-- a page a fight of its own is one word on its own row. A new boss is a row in
+-- src/enemy.lua with `boss = true` on it; the dev boss test on the title screen
+-- (src/dev.lua) is how to fight it without the ten minutes in front of it.
 Subjects.list = {
     {
         key = "science",
         name = "SCIENCE",
         paper = RULED,
         tool = "pencil",
+        boss = "bosseye",
         -- The plainest hand in the book, and the slowest, because this is the
         -- page a first run is on: it teaches the two drills that arrive first
         -- and then leaves you alone with them. The line is the ruling read
@@ -314,6 +322,7 @@ Subjects.list = {
         name = "P.E.",
         paper = CALENDAR,
         tool = "stapler",
+        boss = "bosseye",
         -- The one page where the word means what it means everywhere else: a
         -- class does drills, and a class drills in *lines*. Walls and pincers
         -- above all, more often than anywhere but the unruled page, and no grid
@@ -336,6 +345,7 @@ Subjects.list = {
         name = "GRAMMAR",
         paper = GROUPED,
         tool = "highlighter",
+        boss = "bosseye",
         -- Grouped paper is ruling that arrives in clauses, and the drills follow
         -- it: the pincer is two of something on either side of where you are
         -- standing, which is the shape of the page said out loud. The only
@@ -348,6 +358,7 @@ Subjects.list = {
         name = "FINANCE",
         paper = LEDGER,
         tool = "ruler",
+        boss = "bosseye",
         -- A ledger is rows and columns and so is a grid: what walks onto this
         -- page is a table of figures, in step, four deep. The line is the same
         -- idea one row at a time, and the ruler is the tool that answers both --
@@ -360,6 +371,7 @@ Subjects.list = {
         name = "MUSIC",
         paper = STAVES,
         tool = "pushpin",
+        boss = "bosseye",
         -- Two shapes and they are the two things notation is made of. A chord is
         -- everything sounding at once, which is the ring; a scale is one thing
         -- after another along a line, which is the wall walking up the staves.
@@ -373,6 +385,7 @@ Subjects.list = {
         name = "MATHS",
         paper = SQUARED,
         tool = "compass",
+        boss = "bosseye",
         -- The grid, obviously and heavily: squared paper is a grid, a times
         -- table is a grid, and a block of monsters arriving four by four on a
         -- page already ruled four by four is the single most on-the-nose thing
@@ -387,6 +400,7 @@ Subjects.list = {
         name = "ART",
         paper = BLANK,
         tool = "rubber",
+        boss = "bosseye",
         -- All five at the same weight and more often than anywhere else, which
         -- is the unruled page keeping its promise: there is no ruling here to say
         -- what shape a thing should be, so it is the one lesson where any of them

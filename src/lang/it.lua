@@ -288,6 +288,7 @@ return {
     ["W: HAND THE WEAPONS BACK"] = "W: RENDI LE ARMI",
     ["ON"] = "SI",
     ["OFF"] = "NO",
+    ["BOSS"] = "BOSS",
 
     --- the draft ------------------------------------------------------------
 

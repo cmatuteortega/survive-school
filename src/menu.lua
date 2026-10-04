@@ -55,6 +55,12 @@
 -- end of the same top edge (`Hud.rightCornerBox`). Pressed, not answered, for the
 -- margin's reason -- it opens the card that asks (src/fullgame.lua), and that
 -- card is where the answer is scribbled.
+--
+-- And a fourth that does not ship: BOSS, the LANG button mirrored to the bottom
+-- *right*, drawn only while the book has been asked for its dev controls
+-- (`Dev.showing`, src/dev.lua). Pressed, it throws the boss test on and opens
+-- the timetable, where GO! starts the picked lesson's boss fight rather than its
+-- ten minutes of horde. Red while the test is on; YES or CONTINUE throws it off.
 
 local Palette = require("src.palette")
 local Sprites = require("src.sprites")
@@ -72,6 +78,7 @@ local Sfx = require("src.sfx")
 local I18n = require("src.i18n")
 local Coach = require("src.coach")
 local Store = require("src.store")
+local Dev = require("src.dev")
 local util = require("src.util")
 
 local Menu = {}
@@ -317,6 +324,11 @@ end
 -- already wear.
 local LANG = "LANG"
 
+-- The dev boss test's button (src/dev.lua). Put through the dictionary like the
+-- rest of the dev controls, since unlike LANG it is for someone who can read the
+-- page.
+local BOSS = "BOSS"
+
 --- the two buttons in the margin --------------------------------------------
 
 -- Both are the corner button's own box, at the two ends of the same left margin,
@@ -329,6 +341,12 @@ end
 
 function Menu:langAt(game, x, y)
     return Hud.footAt(game, x, y, LANG)
+end
+
+-- Only while the dev controls are (`Dev.showing`): a hidden button that still
+-- swallowed presses would be a hole in the page.
+function Menu:bossAt(game, x, y)
+    return Dev.showing() and Hud.footAt(game, x, y, I18n.t(BOSS), true)
 end
 
 -- The padlock, which is only there while there is something for it to sell.
@@ -373,7 +391,8 @@ function Menu:mark(x, y, quiet)
     -- taken as a press, and a line drawn across one would be a line with a hole
     -- in it anyway, since both are drawn out past the overprint pass.
     if self.game and (self:settingsAt(self.game, x, y)
-        or self:langAt(self.game, x, y) or self:shopAt(self.game, x, y)) then
+        or self:langAt(self.game, x, y) or self:shopAt(self.game, x, y)
+        or self:bossAt(self.game, x, y)) then
         return false
     end
 
@@ -432,6 +451,10 @@ function Menu:updateScribble(dt)
             end
             if self.game and self:shopAt(self.game, px, py) then
                 self.pressed = "fullgame"
+                return
+            end
+            if self.game and self:bossAt(self.game, px, py) then
+                self.pressed = "boss"
                 return
             end
 
@@ -504,8 +527,8 @@ end
 --- update --------------------------------------------------------------------
 
 -- Returns "yes", "no" or "continue" on the frame the choice finishes playing
--- out, "settings", "language" or "fullgame" on the frame a margin button is
--- pressed, and
+-- out, "settings", "language", "fullgame" or "boss" on the frame a margin
+-- button is pressed, and
 -- nothing at all otherwise.
 function Menu:update(dt, game)
     -- Kept because the press edge and `mark` both have to know where the two
@@ -576,6 +599,11 @@ function Menu:keypressed(key)
     -- And B for the padlock: buying is the one word for what is behind it.
     if key == "b" and not Store.full() then
         self.pressed = "fullgame"
+        return
+    end
+    -- And X for the dev boss test, which is as dead as its button is hidden.
+    if key == "x" and Dev.showing() then
+        self.pressed = "boss"
         return
     end
 
@@ -781,6 +809,9 @@ function Menu:draw(game)
     -- and both are ways off the side of this screen rather than through it.
     Hud.drawCorner(game, "sliders", false)
     Hud.drawFoot(game, LANG, false)
+    if Dev.showing() then
+        Hud.drawFoot(game, I18n.t(BOSS), Dev.boss, true)
+    end
     if not Store.full() then
         local bx, by = Hud.rightCornerBox(game)
         Hud.drawButton(bx, by, Hud.CORNER_SIZE, "lock", false)

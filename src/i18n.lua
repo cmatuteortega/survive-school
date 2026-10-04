@@ -584,6 +584,8 @@ local ES = {
     ["W: HAND THE WEAPONS BACK"] = "W: DEVOLVER LAS ARMAS",
     ["ON"] = "SI",
     ["OFF"] = "NO",
+    -- The title's dev-only boss test button (src/menu.lua, src/dev.lua).
+    ["BOSS"] = "JEFE",
 
     --- the draft ------------------------------------------------------------
 
