@@ -7219,6 +7219,54 @@ rolls, so the loaded die is a shot you make at a moving thing rather than someth
 glue build can keep doing for the whole last third. Every boss has its one
 tool-shaped answer, and for a die it is the obvious one.
 
+### GRAMMAR ends on the dictionary
+
+The eye is about the ground, the whistle the air, the metronome time, the stamp which
+cell you are in and the die number. The GRAMMAR page is ruled in pairs -- two lines
+ten apart, then a gap twice as deep -- and the sixth answer is a fight about
+**lines**: the pair is where words go, the gap is where they do not, and everything
+the boss does is measured off that. It ends on the book the words come out of: a fat
+red dictionary lying on the page, with the thumb index cut down its fore-edge.
+
+**It is a book that bites.** It lies shut and comes at you in hops, mouth first: the
+front board lifts off the pages before it goes and snaps shut as it lands. Shut, ajar
+and open are three poses each traced at every heading (`3dmethod.md`), and the board
+going up is the tell for everything it does -- short for a hop, long for a move. A
+book opening at you is a book about to do something.
+
+- **It hops at you**, about the eye's pace, and every couple of seconds tears out a
+  page and flicks it at you, so standing still is never free.
+- **The clap.** Mouth open at you while two pages are dashed out on the paper either
+  side of a spine half a page away -- following you for as long as it is open -- then
+  it leaps onto the spine and lands open on its back. A moment later it shuts: the
+  fore-edges of both pages sweep in to the spine and whoever is between them is
+  caught. It is the page's pincer drill turned into a boss, and the answer is never
+  *which side*, because both sides are coming. It is out of the head or the tail --
+  and the pages are a whole number of groups deep with their head and tail on
+  printed rules, so the way out is a line you can already see -- or out past an edge
+  before it moves. Shut, it lies stuck for a second: the window the move paid for,
+  and a highlighter's line laid across a book that cannot move is GRAMMAR's lesson.
+- **The riffle.** Lying open, it turns pages at you, a fan of leaves a page, every
+  other fan shifted half a gap across -- so the gap you stood in is where the next
+  leaf goes. One step one way and back, in time with the pages. The gaps are a body
+  and a leaf wide with room to spare at any distance it fires from, which is why it
+  is fans and not a stream: a stream swung across you is nothing you can step
+  through.
+- **The definition.** From the second third: it writes on every pair of lines round
+  you, left to right across the box the way a page is read, each line starting when
+  the one above is a little way along. Faster than you walk, so it is stepped out of
+  rather than outrun; the ink on the lines is wet and hurts, and the gaps are where
+  you stand. At the last third it writes a second time once the lines have dried --
+  *between* the lines -- so the gap you hid in is the one place you cannot stay, and
+  the line is the one place you can. The words are the parts of speech, in whatever
+  language the book is in.
+
+What hurts in a move is the pages and the ink and nothing else: the clap puts its
+spine half a page from you, and lying open in the middle of its own pages the body is
+close enough to touch. **Glue shuts it**: a glued dictionary comes down where it is,
+lets go of a clap without closing it, leaves a half-written line to dry, and lies
+there for the rest of the hold.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was

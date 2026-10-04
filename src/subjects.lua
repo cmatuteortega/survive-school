@@ -299,12 +299,12 @@ local BLANK = {
 --
 -- And each lesson names its **boss**: the `Enemy.types` row that walks into the
 -- box at the end of every cycle (`Spawner:sendBoss`). P.E. has a fight of its
--- own, the whistle, MUSIC has the metronome, FINANCE the stamp and MATHS the
--- die; the other three are still the eye, written out on every row rather than
--- left to the fallback so that giving a page a fight of its own is one word on
--- its own row. A new boss is a row in
--- src/enemy.lua with `boss = true` on it; the dev boss test on the title screen
--- (src/dev.lua) is how to fight it without the ten minutes in front of it.
+-- own, the whistle, GRAMMAR has the dictionary, MUSIC the metronome, FINANCE
+-- the stamp and MATHS the die; the other two are still the eye, written out on
+-- every row rather than left to the fallback so that giving a page a fight of
+-- its own is one word on its own row. A new boss is a row in src/enemy.lua with
+-- `boss = true` on it; the dev boss test on the title screen (src/dev.lua) is
+-- how to fight it without the ten minutes in front of it.
 Subjects.list = {
     {
         key = "science",
@@ -351,7 +351,11 @@ Subjects.list = {
         name = "GRAMMAR",
         paper = GROUPED,
         tool = "highlighter",
-        boss = "bosseye",
+        -- The dictionary (src/dictionary.lua): the page ruled for writing ends
+        -- on the book the words come out of, and the fight is the one in the
+        -- book about *lines* -- pages a whole number of groups deep shutting on
+        -- you from both sides, and words written along the pairs of rules.
+        boss = "dictionary",
         -- Grouped paper is ruling that arrives in clauses, and the drills follow
         -- it: the pincer is two of something on either side of where you are
         -- standing, which is the shape of the page said out loud. The only

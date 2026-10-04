@@ -527,6 +527,18 @@ local ES = {
     ["MORE SIDES!"] = "¡MAS CARAS!",
     ["FUMBLE!"] = "¡PIFIA!",
     ["CRITICAL!"] = "¡CRITICO!",
+    -- The GRAMMAR boss (`dictionary` in src/enemy.lua): its name, the line
+    -- it walks on with, what the page says when it starts to write, and the
+    -- words it writes along the lines (src/dictionary.lua) -- written across
+    -- the box, so any width will do.
+    ["THE DICTIONARY"] = "EL DICCIONARIO",
+    ["THE DICTIONARY OPENS"] = "SE ABRE EL DICCIONARIO",
+    ["DEFINITION!"] = "¡DEFINICION!",
+    ["NOUN"] = "SUSTANTIVO",
+    ["VERB"] = "VERBO",
+    ["ADJECTIVE"] = "ADJETIVO",
+    ["ADVERB"] = "ADVERBIO",
+    ["PRONOUN"] = "PRONOMBRE",
     -- The drills and the surges (`DRILLS` and `SURGES` in src/spawner.lua),
     -- which the run says the once, the first time each one happens. They are
     -- copy rather than labels -- the run is describing what has just started

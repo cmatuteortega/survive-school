@@ -8,7 +8,9 @@ eye boss's painted sphere, and how to do either for another character. The worki
 also the example of a baked body with a part drawn live on top of it (see **A
 moving part on a baked body**), and the FINANCE stamp (`art/stamp.py`), the example
 of a body baked in several poses so it can animate (see **Poses: a body that
-moves**).
+moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of them
+a part hinged off the body and one built about a different point (see **Poses with
+a hinge: the dictionary**).
 
 The short version: **model the thing in 3D in a script, ray-trace it at sprite
 size straight into palette letters, do that once per heading, and bake the
@@ -18,9 +20,9 @@ pictures.
 
 ## Two ways to be solid
 
-The game has five bosses drawn as solid objects, made in two different ways --
-the metronome is the whistle's way with one part done the eye's, the stamp is
-the whistle's way with more than one picture per heading, and the MATHS die is
+The game has six bosses drawn as solid objects, made in two different ways --
+the metronome is the whistle's way with one part done the eye's, the stamp and
+the dictionary are the whistle's way with more than one picture per heading, and the MATHS die is
 the eye's way on flat faces (see **Painted live on flat faces: the die**).
 Pick the one that fits the character before starting.
 
@@ -366,6 +368,40 @@ Budget: a pose is a ring of views, so it costs what a second boss would. Thirty-
 51x46 pictures are about 1,600 lines of `sprites.lua`. Pick poses that are held long
 enough to be seen -- a tell, a fall, an impact -- rather than in-betweens: at this
 size the eye fills the gap between two held poses by itself.
+
+## Poses with a hinge: the dictionary
+
+The GRAMMAR boss is a fat dictionary lying on the page, and it is the stamp's method
+with two things the stamp did not need. Its poses are `shut`, `ajar` (the front board
+lifted off the pages, a mouth) and `open` (on its back, both leaves flat).
+
+- **A hinge is a pose of one part.** The stamp's poses bend the whole body; the
+  dictionary's `ajar` turns only the upper board, about the line where it meets the
+  spine. `shut_model(p, lift)` takes the point into the board's own frame for that
+  one part (`lifted`) and leaves the rest of the model alone, so the pages and the
+  spine are traced exactly as they were. The material is decided off the *board's*
+  point as well: its underside is the endpaper, so a lifted board shows a white mouth,
+  and it is lit whichever way it faces, because a slate inside reads as a hole.
+- **A pose can be a different model.** Open is not the shut book bent: it is its
+  own model, built about the spine, with the pages rising out of the gutter as a
+  height field (`page_top`; a height field's distance is not exact, so it is scaled
+  down by the slope's worst case to keep the march safe). Built about the spine
+  because the spine is the middle of the move the game plays on it, so swapping shut
+  for open shifts the picture half a book -- which is fine, because it only ever
+  happens on a landing, where nobody is looking for it.
+- **Ask the model, not the normal.** `shade` is handed the room's normal, which turns
+  with the heading. "Is this the fore-edge?" has to be asked of the point in the
+  model (its x), never of the normal's x; only the normal's y, which no heading
+  changes, is safe to read. The first preview had no thumb index for that reason.
+- **Spend the symmetry where there is some.** Shut and ajar have the spine on one
+  side, so they are baked at all sixteen headings. An open book is the same either
+  way round, so it is baked at eight and repeated: forty pictures, about 2,400 lines
+  of `sprites.lua`.
+
+`python3 art/dictionary.py --preview out.png` draws the three rings on the GRAMMAR
+page with the floor under the pivot marked, which is where `foot` is checked. The
+brain (`src/dictionary.lua`) lines the open book's spine up with the paired ruling
+off that number.
 
 ## Painted live on flat faces: the die
 

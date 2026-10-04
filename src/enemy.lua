@@ -6,6 +6,7 @@ local Eyeball = require("src.eyeball")
 local EyeBoss = require("src.eyeboss")
 local Metronome = require("src.metronome")
 local Stamp = require("src.stamp")
+local Dictionary = require("src.dictionary")
 local Dice = require("src.dice")
 local DiceBoss = require("src.diceboss")
 local pixelart = require("src.pixelart")
@@ -138,7 +139,9 @@ local BLARE_REACH = 34
 -- src/eyeboss.lua is the eye's), `dice` (the MATHS boss: a die painted a
 -- pixel at a time like the eye, src/dice.lua, thrown and read by its brain,
 -- src/diceboss.lua), `stamp` (the FINANCE boss's leaps and the three moves it
--- stamps the ledger with -- src/stamp.lua, a brain in the same socket) and
+-- stamps the ledger with -- src/stamp.lua, a brain in the same socket),
+-- `dictionary` (the GRAMMAR boss's hops and the three moves it makes off the
+-- paired ruling -- src/dictionary.lua, the same socket again) and
 -- `poses` (a `turns` body baked in more than one pose, each a ring of views,
 -- the brain saying which through `pose` -- art/stamp.py). Every one of them but
 -- `boss` is optional and
@@ -623,6 +626,68 @@ Enemy.types = {
                             wet = 0.6, rest = 1.2 },
               } },
 
+    -- The GRAMMAR boss: a fat dictionary, and the fight in the book about
+    -- *lines*. Its pages are whole groups of the paired ruling deep and what it
+    -- writes it writes on the lines; the moves and how it picks between them are
+    -- src/dictionary.lua, and why it is baked in three poses is art/dictionary.py.
+    --
+    -- The body keeps the eye's numbers where the fight is the same fight: 900
+    -- health for the measured half minute, the same knock, hold and 20 on
+    -- contact. The radius is the closed book round the middle of it. It never
+    -- walks -- every step is a hop the brain draws, about 25 a second between
+    -- moves, the eye's pace and the stamp's. `ground` is the near edge of the
+    -- book on the page, where the shadow goes: the floor under its middle
+    -- (`foot` in Sprites.DICTIONARY) and half the book's depth seen from above.
+    dictionary = { name = "DICTIONARY", sprite = "dictionary", hp = 900, speed = 0, radius = 14,
+                   damage = 20, xp = 250, shadow = 40, ground = 16, boss = true,
+                   turns = "dictionaryViews", poses = "dictionaryPoses", knock = 0.06, hold = 0.3,
+                   title = "THE DICTIONARY", call = "THE DICTIONARY OPENS",
+                   dictionary = {
+                       -- Seconds hopping at you between moves, by phase (the
+                       -- eye's thirds).
+                       cool = { 2.2, 1.7, 1.3 },
+                       -- The hop: every `every` seconds, up to `reach` pixels at
+                       -- you in a leap `time` long and `high` up, mouth open for
+                       -- `rear` before it. The stamp's numbers: the eye's pace.
+                       hop = { every = { 1.2, 1.0, 0.85 }, reach = 30, time = 0.34,
+                               high = 7, rear = 0.22 },
+                       -- A page torn out and flicked at you every `every`
+                       -- seconds while it hops: the least of what it does.
+                       leaf = { every = 2.6, speed = 62, damage = 9, hit = 3, life = 4 },
+                       -- The clap: mouth open for `rear` with the pages following
+                       -- you, a leap of `fly` onto the spine, open for `hold`,
+                       -- then both fore-edges in to the spine over `close`. The
+                       -- spine is put half a page short of you, so from
+                       -- the lock to the pages moving is `fly` and `hold` --
+                       -- over a second, sixty pixels of walking -- against at
+                       -- most half of `lines` groups to the head or the tail.
+                       -- Stuck for `rest` after, and from the second third the
+                       -- shut throws `splash` leaves out in a ring.
+                       clap = { rear = { 1.0, 0.85, 0.7 }, fly = 0.5, high = 30,
+                                hold = { 0.55, 0.45, 0.35 }, close = 0.3,
+                                reach = { 80, 90, 100 }, lines = { 2, 2, 3 },
+                                damage = 16, knock = 2, rest = { 1.2, 1.0, 0.9 },
+                                splash = { 0, 6, 8 } },
+                       -- The riffle: mouth open for `rear`, then `turns` pages a
+                       -- fan of `leaves` each, `every` apart, the fan `spread`
+                       -- radians between leaves and shifted half that on every
+                       -- other turn. 0.3 is twenty four pixels at eighty out: a
+                       -- body (twelve) and a leaf (six) with room to spare.
+                       riffle = { rear = 0.8, turns = { 5, 6, 8 }, every = { 0.42, 0.38, 0.34 },
+                                  leaves = { 5, 7, 7 }, spread = 0.3, rest = 0.9 },
+                       -- The definition: from the second third, the lines of
+                       -- every group within `rows` of yours, outlined for `rear`
+                       -- and written left to right at `speed` -- over twice your
+                       -- pace, so it is stepped out of rather than outrun -- each
+                       -- line `lag` behind the one above it, wet until `wet`
+                       -- after the last letter and dry for `dry` after that. At
+                       -- the last third it writes `passes` times, the second time
+                       -- between the lines, counted in for `again`.
+                       definition = { from = 2, rows = { 2, 2, 3 }, passes = { 1, 1, 2 },
+                                      rear = 1.3, again = 1.2, lag = 0.2, speed = 180,
+                                      damage = 12, wet = 0.8, dry = 5, rest = 1.2 },
+                   } },
+
     -- The MATHS boss: a die, and the fight in the book about *number*. The eye
     -- is about the ground, the whistle the air, the metronome time; this one is
     -- about reading what a roll says before it happens. It is thrown rather
@@ -944,18 +1009,21 @@ function Enemy.new(kind, x, y, scale)
         -- rest, but steers through the same `drive`.
         -- The stamp's is the same socket again (src/stamp.lua): it leaps from
         -- cell to cell of the ledger and moves the body itself while it does.
+        -- So is the dictionary's (src/dictionary.lua), which hops the same way.
         -- And the die's (src/diceboss.lua), which throws it rather than
         -- walking it: it holds `drive` and moves the body itself.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
+            or def.dictionary and Dictionary.new(def)
             or def.dice and DiceBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
         -- many pixels a brain has it off the ground (its hop on the beat).
         -- And which of its poses a body baked in several is in (`poses`, the
-        -- stamp's stand / rear / lean / squash), nil for the first.
+        -- stamp's stand / rear / lean / squash, the dictionary's shut / ajar /
+        -- open), nil for the first.
         face = nil, hop = 0, pose = nil,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else

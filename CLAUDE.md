@@ -19,11 +19,13 @@ neither is optional reading before a behavioural change:
   explains *why* every tool, number and layout decision is what it is.
 
 A third, `3dmethod.md`, covers the bosses drawn as solid objects and how to do
-the same for another character: the P.E. whistle, the MUSIC metronome and the
-FINANCE stamp, modelled and ray-traced into baked ASCII views ahead of time
-(`art/whistle.py`, `art/metronome.py`, `art/stamp.py`, over the shared tracer
+the same for another character: the P.E. whistle, the MUSIC metronome, the
+FINANCE stamp and the GRAMMAR dictionary, modelled and ray-traced into baked ASCII
+views ahead of time (`art/whistle.py`, `art/metronome.py`, `art/stamp.py`,
+`art/dictionary.py`, over the shared tracer
 `art/raytrace.py` -- the metronome's pendulum plotted live on top, the stamp baked
-in four poses so it can rock, dive and squash), the eye, painted a pixel at a time
+in four poses so it can rock, dive and squash, the dictionary in three so it can
+bite and lie open), the eye, painted a pixel at a time
 every frame off a turning sphere (`src/eyeball.lua`), and the MATHS die, painted
 the same way off flat faces (`src/dice.lua`).
 
@@ -171,7 +173,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   throw, the roll it lands on, and the move that number calls for), `metronome` (the MUSIC boss's brain in the same socket: a clock
   in beats, the sweep, chord and scale played on it, and its pendulum drawn live),
   `stamp` (the FINANCE boss's brain: the ledger's cells, its leaps and poses, the
-  slam, run and audit, and the PAID marks it leaves).
+  slam, run and audit, and the PAID marks it leaves), `dictionary` (the
+  GRAMMAR boss's brain: the paired ruling's groups, its hops and poses, the
+  clap, riffle and definition, and the words it writes on the lines).
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.
