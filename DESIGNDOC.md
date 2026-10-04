@@ -1129,7 +1129,7 @@ ten minutes, plus one that is never spawned and two that only arrive at the end:
 | `redeye` | 540 | 2 | 14 / 34 / 10 | shoots and holds range (`keep`) |
 | `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, five lessons |
 | `whistle` | 600 | — | 900 / 22 / 20 | the cycle boss, P.E. |
-| `metronome` | 600 | — | 900 / 46 / 20 | the cycle boss, MUSIC (walks on the beat, about 21 on average) |
+| `metronome` | 600 | — | 900 / 50 / 20 | the cycle boss, MUSIC (hops on the beat, 25 on average) |
 
 Every row walks at the player and every block is a way of not *only* doing that.
 The header comment over `Enemy.types` is the field reference; what matters
@@ -1284,7 +1284,7 @@ through the count-in. `tick` plays every beat, pitched up on the one.
 
 | move | count-in | played |
 | --- | --- | --- |
-| idle | — | scoots for `step` of each beat and stands the rest; a note at you every other beat |
+| idle | — | hops for `step` of each beat and stands the rest, roaming round you about 70px out (`roam`: aims `turn` further round than it stands, swaps direction every `swap` bars); a note at you every other beat. It roams through rests and the scale too, and plants only for the sweep and the chord. `hop` lifts the drawing off its shadow (`Enemy:footing`), never the hitbox |
 | `sweep` | the fan (±0.8 rad, 150px, clamped to the box) dashed on the floor and a ghost beam already swinging; the body is planted facing it (`face`) | a beam swinging the fan with the arm for a bar (two at the last third) |
 | `chord` | rings at 30 / 66 / 102 (/ 138) dotted on the floor round where it stands, the first blinking on the last beat | one ring struck a beat from the inside out, 12px bands with 24px of room between; the next blinks before it goes |
 | `scale` | from the second phase: a wall of notes 16px apart along the box edge on the far side from you, with a 3-note hole where you are | marched across the box in 8 beat-steps while the hole climbs a note a beat, the note at its leading edge *jumping* to the trailing one |

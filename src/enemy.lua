@@ -497,10 +497,10 @@ Enemy.types = {
     -- health for the measured half minute, the same knock, hold and 20 on
     -- contact. The radius is the pyramid's bulk round the middle of it, with
     -- the plinth's corners and the arm left outside. It walks on the beat --
-    -- scooting for `step` of each beat and standing for the rest -- so the 46
-    -- on the row is a stride, and what it covers on average is about 21,
-    -- between the whistle and the eye.
-    metronome = { name = "METRONOME", sprite = "metronome", hp = 900, speed = 46, radius = 12,
+    -- hopping for `step` of each beat and standing for the rest -- so the 50
+    -- on the row is a stride, and what it covers on average is 25, about the
+    -- eye's 26 and still well under your 58.
+    metronome = { name = "METRONOME", sprite = "metronome", hp = 900, speed = 50, radius = 12,
                   damage = 20, xp = 250, shadow = 30, boss = true, turns = "metronomeViews",
                   knock = 0.06, hold = 0.3,
                   title = "THE METRONOME", call = "THE METRONOME TICKS",
@@ -512,7 +512,14 @@ Enemy.types = {
                       tempo = { 60, 80, 100 }, bar = 4,
                       -- How far the arm swings either side of upright, in
                       -- radians; and the share of each beat it walks for.
-                      swing = 0.45, step = 0.45,
+                      swing = 0.45, step = 0.5,
+                      -- How it roams: circling you about `keep` out (it cuts the
+                      -- corner, so it settles nearer seventy) -- inside the
+                      -- sweep's 150, so a sweep is always on the cards -- aiming
+                      -- `turn` radians further round than it stands, swapping
+                      -- which way round every `swap` bars, and `hop` pixels
+                      -- off the ground at the top of each step.
+                      roam = { keep = 85, turn = 0.6, swap = 3, hop = 3 },
                       -- Bars walking between moves, by phase, and bars stood
                       -- still after one -- the window the move paid for.
                       cool = { 2, 1, 1 }, rest = 1,
@@ -794,8 +801,9 @@ function Enemy.new(kind, x, y, scale)
             or def.metronome and Metronome.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
-        -- wants it planted facing one way (the metronome's sweep).
-        face = nil,
+        -- wants it planted facing one way (the metronome's sweep); and how
+        -- many pixels a brain has it off the ground (its hop on the beat).
+        face = nil, hop = 0,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else
         -- (src/spiral.lua). Handed over rather than read off the page for the
@@ -1312,6 +1320,9 @@ function Enemy:footing()
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball
     local y = bob and self.y - 1 or self.y
+    -- And a body a brain has hopping (the metronome's walk on the beat), lifted
+    -- off its shadow: drawing only, for the recoil's reason below.
+    if self.hop and self.hop > 0 then y = y - self.hop end
 
     -- An enraged arrival is its own art in two colours, and it is swapped in
     -- here rather than at the draw so that both callers get the same answer: the

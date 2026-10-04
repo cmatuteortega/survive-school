@@ -15,10 +15,14 @@
 -- every move starts on a downbeat after a full bar of count-in, so the tell is
 -- always one bar long and always at the tempo the move will be played at.
 --
---  - **It walks on the beat.** Between moves it scoots towards you for the
---    first part of each beat and stands for the rest, so even its walk is a
---    rhythm -- and on every other beat it throws a note at you, so standing
---    still is never free.
+--  - **It walks on the beat.** It hops for the first half of each beat and
+--    stands for the rest, so even its walk is a rhythm you can see. It roams
+--    rather than chases: it circles you at a middle distance -- the distance
+--    its sweep wants -- and every few bars changes which way round it goes.
+--    It walks between moves, in the rest after one, and while its scale
+--    marches, and plants itself only for the two moves drawn round its own
+--    body, the sweep and the chord. On every other beat between moves it
+--    throws a note at you, so standing still is never free.
 --  - **The sweep.** It plants itself facing you and the arm becomes a beam
 --    across the floor, swinging the fan in front of it in time with the
 --    pendulum. The count-in draws the fan and a ghost of the beam already
@@ -78,6 +82,7 @@ function Metronome.new(def)
         last = nil, before = nil,
         rings = nil, sweep = nil, wall = nil,
         e = nil,
+        orbit = love.math.random() < 0.5 and -1 or 1,  -- which way round you it roams
     }, Metronome)
 end
 
@@ -126,7 +131,7 @@ function Metronome:update(dt, game, e)
         if self.wall then
             for _, n in ipairs(self.wall.notes) do n.life = n.life + dt end
         end
-        e.drive = { hold = true }
+        e.drive, e.hop = { hold = true }, 0
         return
     end
 
@@ -138,15 +143,41 @@ function Metronome:update(dt, game, e)
 
     -- Between beats: the walk, the beam, the rings going off, the wall's slide.
     local into = self.clock - self.beat
-    if self.state == "idle" then
-        e.face = nil
-        e.drive = into < self.def.step and nil or { hold = true }
-    else
-        e.drive = { hold = true }
-    end
+    self:walk(game, e, into)
     if self.sweep then self:sweepUpdate(dt, game, e) end
     if self.rings then self:chordUpdate(dt, game, e) end
     if self.wall then self:scaleUpdate(dt, game, e) end
+end
+
+-- Where it is walking to: a point `keep` from you on the side it is already
+-- on, turned a little further round each beat the way it is circling, so it
+-- roams round you rather than marching at you. Inside the box, and never a
+-- standing target -- it is recomputed every frame off where you are now.
+function Metronome:roamTo(game, e)
+    local p = game.player
+    local dx, dy = e.x - p.x, e.y - p.y
+    local a = (dx == 0 and dy == 0) and 0 or math.atan2(dy, dx)
+    a = a + self.orbit * self.def.roam.turn
+    local x = p.x + math.cos(a) * self.def.roam.keep
+    local y = p.y + math.sin(a) * self.def.roam.keep
+    if game.arena then x, y = game.arena:clamp(x, y, e.radius + 4) end
+    return x, y
+end
+
+-- The walk: a hop for the first `step` of every beat and stood still for the
+-- rest, whenever it is not planted for a move drawn round its own body. The hop
+-- is drawing only (`hop`, read by Enemy:footing), like the eye's: the hitbox
+-- stays on the floor.
+function Metronome:walk(game, e, into)
+    local planted = self.move == "sweep" or self.move == "chord"
+    if self.state == "idle" then e.face = nil end
+    if planted or into >= self.def.step then
+        e.drive, e.hop = { hold = true }, 0
+        return
+    end
+    local x, y = self:roamTo(game, e)
+    e.drive = { seek = true, x = x, y = y }
+    e.hop = math.floor(math.sin(math.pi * into / self.def.step) * self.def.roam.hop + 0.5)
 end
 
 -- One tick. The state machine moves only here, and only by whole bars, so every
@@ -157,6 +188,9 @@ function Metronome:onBeat(game, e)
     -- Heard on every beat, and higher on the one: the bar is something you can
     -- count along to with your eyes shut.
     Sfx.play("tick", down and 1.3 or 1.0)
+    if down and self.beat % (self.def.roam.swap * self.def.bar) == 0 then
+        self.orbit = -self.orbit
+    end
 
     self.left = self.left - 1
 

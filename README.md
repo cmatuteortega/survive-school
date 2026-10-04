@@ -7073,10 +7073,13 @@ beats* and gets shorter in seconds as the fight turns -- four seconds at the sta
 two and a half at the end -- which is what "faster" means here, and the page says
 FASTER! each time it happens.
 
-- **It walks on the beat.** It scoots for the first part of each beat and stands for
-  the rest, and throws a note at you every other beat. Its stride is 46, quicker
-  than anything else in the book, and what it covers on average is about 21 --
-  between the whistle and the eye -- so walking away still works, to a rhythm.
+- **It walks on the beat.** It hops for the first half of each beat and stands for
+  the rest, and throws a note at you every other beat. It roams rather than chases:
+  it circles you about seventy pixels out -- inside the reach of its sweep -- and
+  every three bars turns round and goes the other way. It keeps walking through the
+  rest after a move and while its scale marches, and plants itself only for the
+  two moves drawn round its own body. Its stride is 50 and what it covers on
+  average is 25, about the eye's, so walking away still works, to a rhythm.
 - **The sweep.** It plants itself facing you and the count-in draws a fan on the
   floor in front of it, with a ghost of the beam already swinging across it in time.
   Then the beam is real. At a hundred pixels out it crosses the fan at more than twice
