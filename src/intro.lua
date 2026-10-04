@@ -56,10 +56,16 @@ Intro.seen = false
 -- The script. `board` is chalk on the blackboard, a line per entry, each wrapped
 -- to the board. `clock` is the wall clock, `at` seconds past midnight, and it
 -- ticks forward from there until the minute hand moves. `notebook` is the
--- first lesson's page with the doodles on it: `say` is the bubble, `side` is
--- where the speaker is, and `doodle` is the scene they get drawn in (they stay on
+-- first lesson's page with the doodles on it, and the whispering is written
+-- straight onto it, passed back and forth the way a note is: `write` is what goes
+-- down, in `color`, and `rub` is what was there from the scene before and is
+-- rubbed out first. `doodle` is the scene the doodles get drawn in (they stay on
 -- the page after that). `dark` is the eyes shut, and `say` is typed into the
 -- dark.
+--
+-- The question is in blue and the answer in red, and those are the two sides of
+-- every page in this game (src/palette.lua): blue is you and red is everybody
+-- else.
 --
 -- Every word in here is English and goes through `I18n.t` at the draw. MS
 -- TEACHER is a name, and it stays a name in every language. Nobody heard what
@@ -69,8 +75,9 @@ Intro.scenes = {
     { kind = "board", lines = { "BACK TO SCHOOL" } },
     { kind = "board", lines = { "MS TEACHER", "FIRST LESSON" } },
     { kind = "clock", at = 9 * 3600 + 57 },
-    { kind = "notebook", say = "... PST ... WHEN DOES THE CLASS END?", side = "left", doodle = true },
-    { kind = "notebook", say = "AT 10", side = "right" },
+    { kind = "notebook", write = "... PST ... WHEN DOES THE CLASS END?", color = "blue", doodle = true },
+    { kind = "notebook", rub = "... PST ... WHEN DOES THE CLASS END?", rubColor = "blue",
+        write = "AT 10", color = "red" },
     { kind = "clock", at = 9 * 3600 + 2 * 60 + 57 },
     { kind = "board", lines = { "SOMETHING, SOMETHING MATHS" } },
     { kind = "dark", say = "..." },
@@ -107,11 +114,17 @@ local SKIP_HOLD = 1.2  -- seconds SKIP has to be held
 -- pause. That pause is what makes "... PST ..." sound like whispering.
 local LEAD = 0.35
 local WRITE_STEP = 0.07
-local TYPE_STEP = 0.045
+local PEN_STEP = 0.055  -- pencil on the page, quicker than chalk
 local PAUSE_STEP = 0.2
 local DOT_STEP = 0.45  -- the last scene's three dots, typed into the dark
 
 local DOODLE_TIME = 0.55 -- each of the three doodles, drawn one after another
+
+-- Rubbing the question out: an eraser going back and forth across it, a swish
+-- of the brush per pass, while the letters drop out a stamp at a time -- the
+-- dither every fade here is made of -- and crumbs come off the rub. Then a beat
+-- of clean page before the answer goes down where the question was.
+local RUB_TIME, RUB_PASSES, RUB_GAP = 0.9, 3, 0.2
 local DOODLE_SCALE = 2   -- close up, so twice the size they walk the page at
 
 local TICKS = 3          -- ticks before the minute turns: `at` is :57
@@ -190,6 +203,7 @@ function Intro:enter()
     self.swapped = false
     self.doneAt = 0
     self.written = 0
+    self.passes = 0
     self.particles = Particles.new()
     self.seed = love.math.random() * 997
 
@@ -227,23 +241,37 @@ function Intro:board(game)
     return x, y, w, h, lines, s
 end
 
--- A bubble is as wide as its words, never wider than most of the eye, and set
--- in the 3x5 face at twice its size wherever that still makes three lines.
-function Intro:bubble(game)
+-- Writing on the page sits across the top of the eye, above the doodles, at
+-- twice the 3x5 face wherever that still makes three lines. Both notes are laid
+-- out in the one place, so the answer is written where the question was rubbed
+-- out.
+function Intro:note(game, text)
     local cx, cy, r = self:eye(game)
+    local lines, s = fitLines({ text }, math.floor(r * 1.4), { 2, 1 }, 3)
+    return lines, s, cx, cy - math.floor(r * 0.56), Font.height * s + s + 2
+end
+
+-- What is being written in this scene and where, for the screens that write
+-- letter by letter: the board's chalk and the page's pencil. Both go down the
+-- same way, so they are written, puffed and swished by the same code.
+function Intro:lettering(game)
     local scene = self:scene()
-    local lines, s = fitLines({ scene.say }, math.floor(r * 1.6) - 10, { 2, 1 }, 3)
-
-    local widest = 0
-    for _, line in ipairs(lines) do widest = math.max(widest, Font.width(line)) end
-    local lineH = Font.height * s + s + 1
-    local w = math.max(24, widest * s + 10)
-    local h = #lines * lineH - (s + 1) + 10
-
-    local x = scene.side == "left" and cx - math.floor(r * 0.72)
-        or cx + math.floor(r * 0.72) - w
-    local y = cy - math.floor(r * 0.66)
-    return x, y, w, h, lines, s, lineH
+    if scene.kind == "board" then
+        local x, y, w, h, lines, s = self:board(game)
+        local lineH = Font.height * s + s + 2
+        return {
+            lines = lines, s = s, lineH = lineH, cx = x + math.floor(w / 2),
+            top = y + math.floor((h - (#lines * lineH - s - 2)) / 2),
+            start = LEAD, step = WRITE_STEP, dust = Palette.graphite,
+        }
+    elseif scene.kind == "notebook" then
+        local lines, s, cx, top, lineH = self:note(game, scene.write)
+        return {
+            lines = lines, s = s, lineH = lineH, cx = cx, top = top,
+            start = scene.rub and LEAD + RUB_TIME + RUB_GAP or LEAD,
+            step = PEN_STEP, dust = Palette.graphite,
+        }
+    end
 end
 
 -- The three doodles in the margin of the lesson's page, where a hand rests
@@ -261,14 +289,14 @@ end
 function Intro:sceneEnd(game)
     local scene = self:scene()
     if scene.kind == "board" then
-        local _, _, _, _, lines = self:board(game)
-        local _, t = typeTimes(lines, LEAD, WRITE_STEP)
+        local l = self:lettering(game)
+        local _, t = typeTimes(l.lines, l.start, l.step)
         return t
     elseif scene.kind == "clock" then
         return TICK_LEAD + TICKS - 1 + 0.4
     elseif scene.kind == "notebook" then
-        local _, _, _, _, lines = self:bubble(game)
-        local _, t = typeTimes(lines, LEAD, TYPE_STEP)
+        local l = self:lettering(game)
+        local _, t = typeTimes(l.lines, l.start, l.step)
         if scene.doodle then t = math.max(t, LEAD + DOODLE_TIME * 3) end
         return t
     elseif scene.kind == "dark" then
@@ -412,6 +440,7 @@ function Intro:update(dt, game)
             self.index = self.index + 1
             self.t = 0
             self.written = 0
+            self.passes = 0
             self.particles = Particles.new()
             -- Into the dark the lids have already closed for good, so the blink is
             -- over; anywhere else it still has the lift to play out.
@@ -424,25 +453,22 @@ function Intro:update(dt, game)
 
     self.doneAt = self:sceneEnd(game)
     self:updateChalk(game)
+    self:updateRub(game)
     self.particles:update(dt)
 end
 
--- Chalk dust off each letter as it lands, and a swish of chalk per line. That is
--- the title's graphite puff (src/menu.lua) in the board's colours. A tap that
--- finishes the board writes the rest silently: a burst off every letter at once
--- is a cloud, not a board being written on.
+-- Dust off each letter as it lands, and a swish per line: the title's graphite
+-- puff (src/menu.lua), off chalk on the board and pencil on the page. A tap that
+-- finishes the writing writes the rest silently: a burst off every letter at
+-- once is a cloud, not someone writing.
 function Intro:updateChalk(game)
-    local scene = self:scene()
-    if scene.kind ~= "board" then return end
+    local l = self:lettering(game)
+    if not l then return end
 
-    local x, y, w, h, lines, s = self:board(game)
-    local times = typeTimes(lines, LEAD, WRITE_STEP)
+    local lines, s = l.lines, l.s
+    local times = typeTimes(lines, l.start, l.step)
     local target = countBy(times, self.t)
     local quiet = target - self.written > 2
-
-    local lineH = Font.height * s + s + 2
-    local top = y + math.floor((h - (#lines * lineH - s - 2)) / 2)
-    local cx = x + math.floor(w / 2)
 
     while self.written < target do
         self.written = self.written + 1
@@ -458,13 +484,57 @@ function Intro:updateChalk(game)
         if not quiet then
             if n == 1 then
                 local last = times[self.written + Font.count(line) - 1] or times[self.written]
-                Sfx.play(Sfx.brushFor(math.max(0.2, last - times[self.written] + WRITE_STEP)))
+                Sfx.play(Sfx.brushFor(math.max(0.2, last - times[self.written] + l.step)))
             end
-            local lx = cx - math.floor(Font.width(line) * s / 2)
+            local lx = l.cx - math.floor(Font.width(line) * s / 2)
                 + (n - 1) * Font.advance * s + s
-            local ly = top + (li - 1) * lineH + Font.height * s / 2
-            self.particles:burst(lx, ly, 2, Palette.graphite)
+            local ly = l.top + (li - 1) * l.lineH + Font.height * s / 2
+            self.particles:burst(lx, ly, 2, l.dust)
         end
+    end
+end
+
+-- Where the eraser is `f` of the way through rubbing out a block of lines: back
+-- and forth across it RUB_PASSES times, working down it as it goes. Returns the
+-- point and which way it is heading.
+local function rubAt(lines, s, cx, top, lineH, f)
+    local widest = 0
+    for _, line in ipairs(lines) do widest = math.max(widest, Font.width(line) * s) end
+    local h = #lines * lineH - s - 2
+
+    local pass = math.min(RUB_PASSES - 1, math.floor(f * RUB_PASSES))
+    local u = f * RUB_PASSES - pass
+    local dir = pass % 2 == 0 and 1 or -1
+    local x = cx + (u - 0.5) * (widest + 6) * dir
+    local y = top + h * (pass + u) / RUB_PASSES
+    return x, y, dir, pass
+end
+
+-- The question coming off the page: crumbs off the eraser every frame and a
+-- brush swish at the top of each pass. A tap that jumps past the rub skips the
+-- noise with it, the way a tap past the writing does.
+function Intro:updateRub(game)
+    local scene = self:scene()
+    if not scene.rub then return end
+
+    local f = (self.t - LEAD) / RUB_TIME
+    if f < 0 or f >= 1 then
+        if f >= 1 then self.passes = RUB_PASSES end
+        return
+    end
+
+    local lines, s, cx, top, lineH = self:note(game, scene.rub)
+    local x, y, dir, pass = rubAt(lines, s, cx, top, lineH, f)
+
+    if pass >= self.passes then
+        self.passes = pass + 1
+        Sfx.play(Sfx.brushFor(RUB_TIME / RUB_PASSES))
+    end
+
+    local ink = Palette[scene.rubColor] or Palette.ink
+    self.particles:crumb(x, y, dir, 0, 4, Palette.graphite)
+    if love.math.random() < 0.5 then
+        self.particles:crumb(x, y, dir, 0, 4, ink)
     end
 end
 
@@ -493,7 +563,7 @@ end
 
 function Intro:drawBoard(game)
     wall(game)
-    local x, y, w, h, lines, s = self:board(game)
+    local x, y, w, h = self:board(game)
 
     -- The frame, the board, and a tray along the foot with a stick of chalk on it.
     love.graphics.setColor(Palette.slate)
@@ -514,11 +584,10 @@ function Intro:drawBoard(game)
         love.graphics.rectangle("fill", sx, sy, 3 + math.floor(util.hash01(i, 5, 47) * 9), 1)
     end
 
-    local lineH = Font.height * s + s + 2
-    local top = y + math.floor((h - (#lines * lineH - s - 2)) / 2)
-    local times = typeTimes(lines, LEAD, WRITE_STEP)
+    local l = self:lettering(game)
+    local times = typeTimes(l.lines, l.start, l.step)
 
-    printBlock(lines, x + math.floor(w / 2), top, s, lineH, countBy(times, self.t),
+    printBlock(l.lines, l.cx, l.top, l.s, l.lineH, countBy(times, self.t),
         Palette.paper, { shadow = Palette.slate, wobble = true, t = self.clock,
             seedBase = self.index * 101 })
 end
@@ -619,38 +688,25 @@ function Intro:drawNotebook(game)
         end
     end
 
+    -- The note, in the same ink layer as the doodles: pencil on a ruled page,
+    -- so a rule shows through it the way it shows through anything drawn here.
+    if scene.rub then
+        local f = util.clamp((self.t - LEAD) / RUB_TIME, 0, 1)
+        if f < 1 then
+            local lines, s, cx, top, lineH = self:note(game, scene.rub)
+            printBlock(lines, cx, top, s, lineH, math.huge,
+                Palette[scene.rubColor] or Palette.ink,
+                { wobble = true, t = self.clock, seedBase = 7, dither = f })
+        end
+    end
+
+    local l = self:lettering(game)
+    local times = typeTimes(l.lines, l.start, l.step)
+    printBlock(l.lines, l.cx, l.top, l.s, l.lineH, countBy(times, self.t),
+        Palette[scene.color] or Palette.ink,
+        { wobble = true, t = self.clock, seedBase = 7 })
+
     Overprint.finish()
-    self:drawBubble(game)
-end
-
--- Paper with an ink edge, its corners knocked off a pixel, and a tail out of the
--- bottom towards whoever is speaking: the left for you, the right for the desk
--- next to you.
-function Intro:drawBubble(game)
-    local scene = self:scene()
-    local x, y, w, h, lines, s, lineH = self:bubble(game)
-
-    love.graphics.setColor(Palette.ink)
-    love.graphics.rectangle("fill", x + 1, y, w - 2, h)
-    love.graphics.rectangle("fill", x, y + 1, w, h - 2)
-    love.graphics.setColor(Palette.paper)
-    love.graphics.rectangle("fill", x + 1, y + 1, w - 2, h - 2)
-
-    local left = scene.side == "left"
-    local ax = left and x + 6 or x + w - 7
-    local bx = left and x + 14 or x + w - 15
-    local tx = left and x - 4 or x + w + 3
-    local ty = y + h + 8
-    love.graphics.setColor(Palette.paper)
-    pixelart.fillPolygon({ ax, y + h - 1, bx, y + h - 1, tx, ty }, y + h - 1, ty,
-        function(sx, sy, sw) love.graphics.rectangle("fill", sx, sy, sw, 1) end)
-    love.graphics.setColor(Palette.ink)
-    pixelart.line(ax, y + h - 1, tx, ty)
-    pixelart.line(bx, y + h - 1, tx, ty)
-
-    local times = typeTimes(lines, LEAD, TYPE_STEP)
-    printBlock(lines, x + math.floor(w / 2), y + 5, s, lineH, countBy(times, self.t),
-        Palette.ink, { seedBase = 0 })
 end
 
 -- The next-tap mark: a little arrow at the foot of the eye that blinks once the

@@ -179,9 +179,14 @@ back, seen from your desk. It opens slowly, the way an eye opens first thing in
 the morning, onto a blackboard that writes `BACK TO SCHOOL` on itself in the
 title's own 3x chalk. Every tap blinks to the next scene. The board says `MS
 TEACHER` and `FIRST LESSON`. The wall clock ticks over to 9:01. On the first
-lesson's page, someone (you, the bubble points left) whispers `... PST ... WHEN
-DOES THE CLASS END?` while two blobs and a cool S get doodled in the margin. The
-desk next to you (the bubble points right) says `AT 10`. The clock ticks over to
+lesson's page, `... PST ... WHEN DOES THE CLASS END?` gets written in the margin
+in blue pencil, while two blobs and a cool S get doodled under it: a note to the
+desk next to you. One blink later the note is rubbed out, an eraser going back and
+forth across it with crumbs coming off and a brush swish on each pass, and `AT 10`
+is written where it was, in red. Blue is you and red is everybody else, the same
+two sides every page in the game is drawn in. There are no speech bubbles. The
+whispering is pencil on the page, so the ruling shows through it like any other
+mark. The clock ticks over to
 9:03. The board says `SOMETHING, SOMETHING MATHS`. Then the eyes close and stay
 closed, and `...` is typed into the dark. One more tap and the eye opens one last
 time and keeps opening, past every edge of the screen, and what was behind it is
