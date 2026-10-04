@@ -4,6 +4,7 @@ local Walls = require("src.walls")
 local Sfx = require("src.sfx")
 local Eyeball = require("src.eyeball")
 local EyeBoss = require("src.eyeboss")
+local Metronome = require("src.metronome")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -128,8 +129,10 @@ local BLARE_REACH = 34
 -- facing you -- 3dmethod.md), `trail` (a wet blot dropped behind it as it
 -- walks), `tears` (the same wet thrown rather than walked, three ways --
 -- Game:updateTears), `attacks` (the moves it picks between, read by its brain
--- and nowhere else -- src/eyeboss.lua) and `whistle` (the P.E. boss's four
--- calls -- Game:updateWhistle). Every one of them but `boss` is optional and
+-- and nowhere else -- src/eyeboss.lua), `whistle` (the P.E. boss's four
+-- calls -- Game:updateWhistle) and `metronome` (the MUSIC boss's tempo and the
+-- three moves it plays on it -- src/metronome.lua, which is its brain the way
+-- src/eyeboss.lua is the eye's). Every one of them but `boss` is optional and
 -- read in one place, so a second boss is a row that picks which of them it is
 -- made of.
 --
@@ -482,6 +485,67 @@ Enemy.types = {
                     -- going your way, the class gets bigger.
                     pump = { at = { 0.75, 0.5, 0.25 }, count = 3, range = 170 },
                 } },
+
+    -- The MUSIC boss: a metronome, and the fight in the book about *time*. The
+    -- eye is about the ground and the whistle about the air; this is about
+    -- when. Everything it does lands on its own tick -- the tick you hear, and
+    -- the arm you can see reaching the end of its swing -- and every move is
+    -- counted in for a full bar first, at the tempo it is about to be played at.
+    -- The three moves and how it picks between them are src/metronome.lua.
+    --
+    -- The body keeps the eye's numbers where the fight is the same fight: 900
+    -- health for the measured half minute, the same knock, hold and 20 on
+    -- contact. The radius is the pyramid's bulk round the middle of it, with
+    -- the plinth's corners and the arm left outside. It walks on the beat --
+    -- scooting for `step` of each beat and standing for the rest -- so the 46
+    -- on the row is a stride, and what it covers on average is about 21,
+    -- between the whistle and the eye.
+    metronome = { name = "METRONOME", sprite = "metronome", hp = 900, speed = 46, radius = 12,
+                  damage = 20, xp = 250, shadow = 30, boss = true, turns = "metronomeViews",
+                  knock = 0.06, hold = 0.3,
+                  title = "THE METRONOME", call = "THE METRONOME TICKS",
+                  metronome = {
+                      -- Beats a minute, by phase (the eye's thirds), and how
+                      -- many to the bar. Every move is counted in for a bar and
+                      -- starts on a downbeat, so at 60 the tell is four
+                      -- seconds and at 100 it is two and a half.
+                      tempo = { 60, 80, 100 }, bar = 4,
+                      -- How far the arm swings either side of upright, in
+                      -- radians; and the share of each beat it walks for.
+                      swing = 0.45, step = 0.45,
+                      -- Bars walking between moves, by phase, and bars stood
+                      -- still after one -- the window the move paid for.
+                      cool = { 2, 1, 1 }, rest = 1,
+                      -- While it walks, a note at you every `every` beats: the
+                      -- least of what it does, so standing still is never free.
+                      tick = { every = 2, speed = 62, damage = 9, hit = 3, life = 4,
+                               sprite = "note" },
+                      -- The sweep: a beam across a fan of `fan` radians either
+                      -- side of you, swinging with the arm, for `bars` bars. At
+                      -- a hundred pixels it crosses the fan at over twice your
+                      -- speed, which is the point: you leave the fan rather
+                      -- than outrun the beam.
+                      sweep = { length = 150, fan = 0.8, width = 5, damage = 14,
+                                bars = { 1, 1, 2 } },
+                      -- The chord: rings `width` across at these radii, struck
+                      -- from the inside out, one a beat. Thirty six apart, so
+                      -- the room between two of them is wider than the room
+                      -- the bands take -- somewhere to stand on every beat.
+                      chord = { rings = { 30, 66, 102, 138 }, count = { 3, 3, 4 },
+                                width = 12, damage = 14, flash = 0.2, bars = 1 },
+                      -- The scale: notes `gap` apart across the whole box with a
+                      -- hole `hole` notes wide, marched across it in `beats`
+                      -- steps while the hole climbs a note a beat. Held back
+                      -- until the second phase: it is a whole-box move, and the
+                      -- first third is for learning the other two. Three is
+                      -- the narrowest the hole can be and stay fair: at three,
+                      -- the middle of the hole is still clear of every note one
+                      -- climb later; at two, the note that jumps the hole lands
+                      -- on whoever is standing in the middle of it.
+                      scale = { gap = 16, hole = 3, beats = 8, slide = 0.18,
+                                damage = 10, hit = 3, sprite = "note", bars = 2,
+                                from = 2 },
+                  } },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -723,8 +787,15 @@ function Enemy.new(kind, x, y, scale)
         -- walk at a point other than you, `dash` to run a locked line -- and
         -- takes it off the page entirely with `ghost` while it is underground or
         -- still falling onto it.
-        brain = def.attacks and EyeBoss.new(def) or nil,
+        -- The metronome's is the same socket with a different mind in it
+        -- (src/metronome.lua): it keeps time rather than choosing moves off a
+        -- rest, but steers through the same `drive`.
+        brain = def.attacks and EyeBoss.new(def)
+            or def.metronome and Metronome.new(def) or nil,
         drive = nil, ghost = false,
+        -- A heading for a `turns` body to face instead of you, while a brain
+        -- wants it planted facing one way (the metronome's sweep).
+        face = nil,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else
         -- (src/spiral.lua). Handed over rather than read off the page for the
@@ -910,7 +981,7 @@ function Enemy:update(dt, player, walls, slick)
     -- way it was pointing.
     if self.def.turns and self.frozen <= 0 then
         local n = #Sprites[self.def.turns]
-        local a = math.atan2(player.y - self.y, player.x - self.x)
+        local a = self.face or math.atan2(player.y - self.y, player.x - self.x)
         local want = math.floor(a / (math.pi * 2) * n + 0.5) % n + 1
         if not self.view then
             self.view = want
@@ -1364,6 +1435,8 @@ function Enemy:drawSolid()
     love.graphics.setColor(Palette.paper)
     if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow) end
     sprite:drawMask(x, y, nil, self.grow)
+    -- The metronome's arm, which stands off the body and so needs its own blank.
+    if self.def.metronome then self.brain:drawArm(self, x, y, Palette.paper) end
 end
 
 function Enemy:draw()
@@ -1435,6 +1508,14 @@ function Enemy:draw()
 
     if ring then outline(sprite, x, y, ring, grow) end
 
+    -- The metronome's arm is plotted live (src/metronome.lua), behind the body
+    -- when the panel it swings in front of is turned away from you and in front
+    -- of it otherwise -- so from behind, all you see of it is the tip going
+    -- over the top.
+    local arm = self.def.metronome and self.brain
+    local armFront = arm and Metronome.armInFront(self.view or 1)
+    if arm and not armFront then arm:drawArm(self, x, y, lit) end
+
     if lit then
         love.graphics.setColor(lit)
         sprite:drawMask(x, y, nil, grow)
@@ -1442,6 +1523,7 @@ function Enemy:draw()
         love.graphics.setColor(1, 1, 1)
         sprite:draw(x, y, nil, grow)
     end
+    if armFront then arm:drawArm(self, x, y, lit) end
 
     -- The blast going out (`blareT`, set by Game:updateWhistle). Two rings a
     -- third of the reach apart, plotted a pixel at a time like every circle in

@@ -604,8 +604,9 @@ rather than a thing in it, and paper is the furthest thing from a rule there is.
 in it, which is where that is judged.
 
 Each row also names its **boss**: the `Enemy.types` key `Spawner:sendBoss` drops
-into the box at the end of every cycle. P.E. says `whistle` (see **The bosses**);
-the other six say `bosseye`, written out on every row rather than left to the
+into the box at the end of every cycle. P.E. says `whistle` and MUSIC says
+`metronome` (see **The bosses**); the other five say `bosseye`, written out on
+every row rather than left to the
 fallback (a row without one gets the eye) so that giving a page a fight of its own
 is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one.
@@ -1126,8 +1127,9 @@ ten minutes, plus one that is never spawned and two that only arrive at the end:
 | `eye` | 420 | 2 | 14 / 9 / 10 | shoots (`shot`) |
 | `grin` | 480 | 2 | 34 / 11 / 16 | shrugs off shoves (`knock`/`hold`) |
 | `redeye` | 540 | 2 | 14 / 34 / 10 | shoots and holds range (`keep`) |
-| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, six lessons |
+| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, five lessons |
 | `whistle` | 600 | — | 900 / 22 / 20 | the cycle boss, P.E. |
+| `metronome` | 600 | — | 900 / 46 / 20 | the cycle boss, MUSIC (walks on the beat, about 21 on average) |
 
 Every row walks at the player and every block is a way of not *only* doing that.
 The header comment over `Enemy.types` is the field reference; what matters
@@ -1136,6 +1138,9 @@ one place and nothing else in the game knows it exists:
 
 - **`shot`** and **`trail`** and **`tears`** and **`whistle`** — `Game:updateEnemies`
   (the last two through `Game:updateTears` and `Game:updateWhistle`).
+- **`attacks`** and **`metronome`** — the boss's `brain`, built in `Enemy.new`
+  (`src/eyeboss.lua` and `src/metronome.lua` respectively) and stepped from
+  `Game:updateEnemies` before the walk, which it steers through `drive`.
 - **`keep`** — inside `Enemy:update`'s chase, as a *turn* applied to the heading
   everything else already computed. That placement is the whole reason it is
   cheap: a shooter holding its distance still rounds a pen line, still skids on
@@ -1200,7 +1205,7 @@ A boss is a row with `boss = true`, and everything else that makes it one is an
 optional field read in one place, so a second boss is a row choosing which of them
 it is made of rather than a branch anywhere. `title` is its name under the HUD's bar
 (`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
-walks on (`Game:spawnEnemy`). Both bosses sit on the eye's 900 health, knock, hold
+walks on (`Game:spawnEnemy`). All three bosses sit on the eye's 900 health, knock, hold
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
@@ -1256,6 +1261,38 @@ holds the eye's tears. The blast and the pump draw `blareT` -- two red rings goi
 invulnerability window (`Game:updateSpikes`, beside `Game:updatePuddles`), drawn on
 the page beside the wet, and it goes by blinking out for its last second rather than
 by drying.
+
+**The metronome** (`metronome`, MUSIC) is a fight about *time*. Its body is baked
+views like the whistle's -- `turns = "metronomeViews"`, sixteen views of a pyramid
+metronome traced by `art/metronome.py` into the `BAKE:metronome` markers -- but its
+pendulum is not in them, because it swings. The bake also writes `arm` (the arm's
+pivot, lean, length and where the weight sits, in model units) and `cam` (the
+camera's tilt, the size of a pixel and where the pivot's pixel is) beside the views,
+and `Metronome.armPoint` projects the arm with those every frame, so the arm and the
+body it hangs off read their geometry from one place. `Enemy:draw` plots it behind
+the body when the panel is turned away from the camera and in front of it otherwise
+(`Metronome.armInFront`); `Enemy:drawSolid` blanks under it.
+
+Everything else is its `brain` (`src/metronome.lua`), in the same socket the eye's
+uses: `update`, `busy`, `drawGround`, `drawAir`, steering through `drive`. It keeps a
+clock in *beats* at `tempo` (60 / 80 / 100 a minute at the eye's thirds, `FASTER!`
+said at each), four to the `bar`, and the arm is at an end of its swing on every
+beat. Its state machine (`idle` → `count` → `play` → `rest`) moves only on whole
+beats and only by whole bars, so every move gets a full bar of count-in at the tempo
+it will be played at and starts on a downbeat; the weight on the arm blinks red
+through the count-in. `tick` plays every beat, pitched up on the one.
+
+| move | count-in | played |
+| --- | --- | --- |
+| idle | — | scoots for `step` of each beat and stands the rest; a note at you every other beat |
+| `sweep` | the fan (±0.8 rad, 150px, clamped to the box) dashed on the floor and a ghost beam already swinging; the body is planted facing it (`face`) | a beam swinging the fan with the arm for a bar (two at the last third) |
+| `chord` | rings at 30 / 66 / 102 (/ 138) dotted on the floor round where it stands, the first blinking on the last beat | one ring struck a beat from the inside out, 12px bands with 24px of room between; the next blinks before it goes |
+| `scale` | from the second phase: a wall of notes 16px apart along the box edge on the far side from you, with a 3-note hole where you are | marched across the box in 8 beat-steps while the hole climbs a note a beat, the note at its leading edge *jumping* to the trailing one |
+
+The scale's notes are ordinary shots with no speed that the brain places itself. Glue
+stops the clock: nothing advances while it is frozen, a count-in is dropped for a rest
+to the next downbeat, and the wall's notes are given back the time so they do not run
+out of life half way across.
 
 ### Drills and surges
 
@@ -6015,10 +6052,13 @@ and are all the same 11x11 glyph.
   table and the four `src/lang/` files), named by a lesson's `boss` in
   `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
   picked, and no page reskins it. What it does is the blocks it carries -- the
-  eye's `pupil`/`trail`/`tears`, the whistle's `turns`/`whistle`, and any of the
-  horde's (`shot`, `charge`) -- see **The bosses**. A new kind of call is a field
-  on the row and one function beside `Game:updateTears` and `Game:updateWhistle`,
-  read from `Game:updateEnemies`. Keep it on the eye's 900 unless the fight has
+  eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
+  metronome's `turns`/`metronome`, and any of the horde's (`shot`, `charge`) -- see
+  **The bosses**. A new kind of call is a field on the row and one function beside
+  `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
+  boss with a mind of its own is a `brain` module like `src/eyeboss.lua` or
+  `src/metronome.lua`, built in `Enemy.new`. A solid body is a script beside
+  `art/whistle.py` over `art/raytrace.py` (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
   been re-measured, and fight it from the title's dev BOSS button.
 - **Tool:** append a row to `Tools.list` with an icon in `Sprites.icons`, *and* a
   `toolLine` in `Upgrades.list` naming it — the line's first level is what

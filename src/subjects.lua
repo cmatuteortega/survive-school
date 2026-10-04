@@ -299,9 +299,9 @@ local BLANK = {
 --
 -- And each lesson names its **boss**: the `Enemy.types` row that walks into the
 -- box at the end of every cycle (`Spawner:sendBoss`). P.E. has a fight of its
--- own, the whistle; the other six are still the eye, written out on every row
--- rather than left to the fallback so that giving a page a fight of its own is
--- one word on its own row. A new boss is a row in
+-- own, the whistle, and MUSIC has the metronome; the other five are still the
+-- eye, written out on every row rather than left to the fallback so that giving
+-- a page a fight of its own is one word on its own row. A new boss is a row in
 -- src/enemy.lua with `boss = true` on it; the dev boss test on the title screen
 -- (src/dev.lua) is how to fight it without the ten minutes in front of it.
 Subjects.list = {
@@ -376,7 +376,11 @@ Subjects.list = {
         name = "MUSIC",
         paper = STAVES,
         tool = "pushpin",
-        boss = "bosseye",
+        -- The metronome (src/metronome.lua): the page whose events all arrive
+        -- on the beat ends on the thing that keeps it, and the fight is the one
+        -- in the book about *when* -- every move counted in for a bar and
+        -- played on the tick.
+        boss = "metronome",
         -- Two shapes and they are the two things notation is made of. A chord is
         -- everything sounding at once, which is the ring; a scale is one thing
         -- after another along a line, which is the wall walking up the staves.

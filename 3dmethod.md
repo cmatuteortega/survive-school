@@ -3,7 +3,10 @@
 How the P.E. whistle boss was made to look solid, how that compares with the
 eye boss's painted sphere, and how to do either for another character. The working example is `art/whistle.py`, which writes the
 `BAKE:whistle` block in `src/sprites.lua`; the game side is `turns` on its row in
-`src/enemy.lua`.
+`src/enemy.lua`. The tracer itself -- everything that is not the model -- is
+`art/raytrace.py`, shared with the MUSIC metronome (`art/metronome.py`), which is
+also the example of a baked body with a part drawn live on top of it (see **A
+moving part on a baked body**).
 
 The short version: **model the thing in 3D in a script, ray-trace it at sprite
 size straight into palette letters, do that once per heading, and bake the
@@ -13,8 +16,9 @@ pictures.
 
 ## Two ways to be solid
 
-The game now has two bosses drawn as solid objects, made in two different ways.
-Pick the one that fits the character before starting.
+The game has three bosses drawn as solid objects, made in two different ways --
+the metronome is the whistle's way with one part done the eye's. Pick the one that
+fits the character before starting.
 
 | | **Baked views** (the whistle) | **Painted live** (the eye) |
 | --- | --- | --- |
@@ -223,11 +227,13 @@ Any row with `turns` gets this. Nothing else in the game needs to know.
 
 ## Doing another character
 
-1. **Copy `art/whistle.py`** to `art/<name>.py`. Replace the `sd_*` functions and
-   `model()` with the new shapes, set the pivot to the bulk of the body, and pick
-   materials and ramps. (Once there are two of these scripts, the tracer, ramps,
-   lines and baking should move into a shared `art/raytrace.py`, with each
-   character's file holding only its model. One script didn't justify it yet.)
+1. **Copy `art/whistle.py`** to `art/<name>.py`. Replace the `sd_*` functions,
+   `model()` and `shade()` with the new shapes and ramps, set the pivot to the
+   bulk of the body, and hand them to `Rig`. The tracer, the red ramp (the
+   default whenever `shade` answers nothing), the lines, the shared box and the
+   writing between markers are all `art/raytrace.py`; a character's file holds
+   only its model. Splitting it out changed nothing: the whistle re-bakes to the
+   same bytes.
 2. **Add markers** `-- BAKE:<name> begin` / `end` in `Sprites.load`, plus the loop
    that compiles the views with the shared origin.
 3. **Preview before baking.** Render all views into one image, upscaled with
@@ -258,6 +264,45 @@ Any row with `turns` gets this. Nothing else in the game needs to know.
 - **One sample a pixel, always.** It's tempting to supersample for smoother
   edges, but averaging is exactly what invents colours the palette doesn't have.
   Smoothness comes from rounding the model's edges instead.
+
+## A moving part on a baked body
+
+The metronome's pendulum swings, and a baked view is a fixed picture: sixteen
+headings times every angle of swing is not a budget, and stepping between swing
+angles would read as a flicker. So the body is baked and the arm is not. The
+bake writes two extra lines beside the views:
+
+```lua
+    Sprites.METRONOME = {
+        ox = 18, oy = 22,
+        arm = { x = -8.787, y = -7.500, z = 0.000, lean = 0.1806, len = 38.0, bob = 0.62 },
+        cam = { pitch = 0.59341, unit = 0.920, bias = 0.6087 },
+        ...
+```
+
+`arm` is where the arm hangs, in model units relative to the pivot; `cam` is the
+camera's tilt, the size of a pixel, and `bias`, which is where the pivot's own
+pixel sits (`half / unit - piv` in `Rig.bake`). `Metronome.armPoint` runs the same
+sums as the trace in reverse -- model to room by the view's heading, room to
+camera by the tilt, camera to pixels -- and gets a point on the arm in pixels
+from the sprite's origin. The arm is then plotted with `pixelart.line`, which
+goes down at any angle because it is plotted, not a sprite.
+
+Three things make it sit on the body rather than float over it:
+
+- **It uses the heading of the view being shown, not the true one.** The body
+  is quantised to sixteen; an arm turned to the exact angle would slide across
+  the panel between steps.
+- **Painter's order by view.** When the panel faces away from the camera the arm
+  is drawn first and the body covers it, so from behind only the tip shows over
+  the cap; otherwise it is drawn after (`Metronome.armInFront`). A per-pixel
+  depth test was not needed for one thin rod.
+- **The preview draws it too.** `python3 art/metronome.py --preview out.png` puts
+  every view on the MUSIC page with the arm swung, using the same sums, so the
+  pivot can be placed on the panel before anything is baked.
+
+The same split would serve any boss with one moving part: a wheel, a lid, a
+needle. Bake what turns, plot what moves, and bake the numbers the plot needs.
 
 ## Smaller than a boss: the teardrop
 

@@ -18,10 +18,12 @@ neither is optional reading before a behavioural change:
 - **`README.md`** — the design document, and an unusually complete one. It
   explains *why* every tool, number and layout decision is what it is.
 
-A third, `3dmethod.md`, covers the two bosses drawn as solid objects and how to
-do the same for another character: the P.E. whistle, modelled and ray-traced
-into baked ASCII views ahead of time (`art/whistle.py`), and the eye, painted a
-pixel at a time every frame off a turning sphere (`src/eyeball.lua`).
+A third, `3dmethod.md`, covers the bosses drawn as solid objects and how to do
+the same for another character: the P.E. whistle and the MUSIC metronome,
+modelled and ray-traced into baked ASCII views ahead of time (`art/whistle.py`,
+`art/metronome.py`, over the shared tracer `art/raytrace.py` -- the metronome's
+pendulum plotted live on top), and the eye, painted a pixel at a time every
+frame off a turning sphere (`src/eyeball.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -162,7 +164,8 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   asks you to go and do, off `tally`), `design`, `eyeball` (the eye boss's body:
   a sphere painted a pixel at a time, and its hop / roll gait), `eyeboss` (its
   brain: the stare, bowl, slam and sink, how it picks between them, its entrance
-  and its death).
+  and its death), `metronome` (the MUSIC boss's brain in the same socket: a clock
+  in beats, the sweep, chord and scale played on it, and its pendulum drawn live).
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.

@@ -116,6 +116,15 @@ local DEFS = {
     -- 1. The gap is the rings' own: two volleys a third of a second apart are
     -- one blow, and one blast of the whistle is what they should sound like.
     whistle     = { gain = 1.0, gap = 0.6, pitch = { 0.96, 1.04 } },
+    -- The MUSIC boss's tick (src/metronome.lua), on every beat of the fight
+    -- and pitched up on the one. Synthesised too -- two inharmonic partials at
+    -- 1.18 and 2.73kHz dying in a few hundredths, over a breath of noise for the
+    -- strike, which is a wood block -- and written to the common level at
+    -- source, then ducked: it is a pulse to play under rather than an event,
+    -- and at a hundred a minute it is the most frequent thing in the fight.
+    -- No pitch range, because every play names its own pitch: a beat that
+    -- wandered would be a beat out of time.
+    tick        = { gain = 1.0 * 0.6 },
 
     rubbing     = { gain = 59, loop = true },
     eraser      = { gain = 0.89 },

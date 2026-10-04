@@ -1691,12 +1691,12 @@ eighty-one lines open. The same six runs now clear five of seventeen and read
 fifteen. A reward you cannot miss is not a reward.
 
 **Only three of them ask about a boss, and that is a ceiling.** The eye is
-provisional — one fight standing in for seven, six of which nobody has drawn yet —
+provisional — one fight standing in for the five of seven nobody has drawn yet —
 so a ladder leaning on it is a ladder nobody can balance. *Sitting* a lesson is the
 half of the same question that does not care what walks on at minute ten, and it
 carries five quests to beating's three. Sit all seven and beat none and you are
 still holding twenty-nine of the thirty-six shelved lines and thirty-six of the
-forty-five fusions, which is what keeps the game tunable while six bosses are
+forty-five fusions, which is what keeps the game tunable while five bosses are
 missing.
 
 **The first two land inside the first run.** A collection has to be seen filling
@@ -1719,7 +1719,7 @@ which is when the boss walks on — and it is yours everywhere.
 *Sitting* and *beating* are two different words everywhere in this book, and this is
 the one that matters most. To sit a lesson is to still be on the page at minute ten;
 to beat it is to put down what walks on. The tool is behind the first and not the
-second, deliberately: six of the seven bosses have not been drawn yet, and hanging
+second, deliberately: five of the seven bosses have not been drawn yet, and hanging
 seven tools and the whole fusion shelf off fights that do not exist is not a ladder
 anybody could balance. When they are real, moving the tool behind beating its own
 lesson is the obvious next thing — it is the cleanest possible reading of "each
@@ -7049,6 +7049,59 @@ the line it locked, which inside a box is a dash at a wall. The lunge and the bl
 share the one tell this game has for "something big is coming", so they never run
 at once -- red always means one thing.
 
+### MUSIC ends on the metronome
+
+The eye is a fight about the ground and the whistle a fight about the air. The
+third answer to the same box is a fight about **time**: not where to stand but
+*when* to move. MUSIC is the page whose drills all arrive on the beat, so it ends on
+the thing that keeps the beat -- a pyramid metronome in red, with a paper tempo scale
+down its front and its pendulum swinging.
+
+It is drawn the way the whistle is, sixteen traced views it turns through to face
+you, with one difference: the arm. A pendulum is the one part of a metronome that
+moves, and a baked view is a fixed picture, so the arm is plotted over the body every
+frame, in the same projection the views were traced in. From the front it swings
+across the panel; from behind, all you see of it is the tip going over the top. The
+arm is the clock you can see -- it reaches the end of its swing exactly on each
+beat -- and the tick you hear is the same clock, higher on the one.
+
+Everything it does lands on that tick. 60 beats a minute for the first third, 80 for
+the second, 100 for the last, and four to the bar. Every move is **counted in for a
+whole bar**, at the tempo it is about to be played at, with the weight on the arm
+blinking red, and starts on a downbeat. So the tell is always the same length *in
+beats* and gets shorter in seconds as the fight turns -- four seconds at the start,
+two and a half at the end -- which is what "faster" means here, and the page says
+FASTER! each time it happens.
+
+- **It walks on the beat.** It scoots for the first part of each beat and stands for
+  the rest, and throws a note at you every other beat. Its stride is 46, quicker
+  than anything else in the book, and what it covers on average is about 21 --
+  between the whistle and the eye -- so walking away still works, to a rhythm.
+- **The sweep.** It plants itself facing you and the count-in draws a fan on the
+  floor in front of it, with a ghost of the beam already swinging across it in time.
+  Then the beam is real. At a hundred pixels out it crosses the fan at more than twice
+  your speed, so it is not outrun: it is answered by being out of the fan, behind
+  the thing or past the end of the beam -- and behind the thing is where the damage
+  goes in.
+- **The chord.** Three rings round it, four at the last third, dotted on the floor
+  for the count-in, then struck one a beat from the inside out, each blinking red on
+  the beat before it goes. There is more room between two rings than either ring
+  takes, so there is always somewhere to stand -- and the inside of a ring that has
+  just been struck is room again. Step in across a ring the moment after it goes.
+- **The scale.** From the second phase: a wall of notes along the far edge of the
+  box with a three-note hole where you are standing. It sits there for the count-in,
+  then marches across the box a step a beat while the hole climbs a note a beat --
+  a scale run up the staves. Walk with the hole. The note at the hole's leading edge
+  *jumps* to its trailing edge rather than sliding across, because a note sliding
+  through the hole would hit the one person standing where the move promised was
+  safe -- and three wide is the narrowest the hole can be for the middle of it to
+  still be clear one climb later.
+
+**Glue stops the clock.** A glued metronome does not tick: the arm stops, whatever it
+was in the middle of stops where it is, and a count-in it had started is dropped. It
+is the one tool-shaped answer this fight has, as it is the eye's, and for a
+metronome it is the obvious one.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was
@@ -9182,7 +9235,7 @@ src/
   quest nobody will ever re-price. **Price a `time` row above the term's ceiling**:
   seven minutes or less arrives while the player is opening pages, and a reward you
   cannot miss is not a reward. **Keep the boss count low** — three of seventeen ask
-  `beat`, because six of the seven bosses do not exist yet and `sat` asks the same
+  `beat`, because five of the seven bosses do not exist yet and `sat` asks the same
   question without them. Never put a **character's weapon** behind a quest — a
   bought hero's line has a lock of its own already, read off the roster, and the
   base hero's may have none at all, since his weapon is what a fresh book's first

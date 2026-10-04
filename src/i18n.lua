@@ -505,6 +505,11 @@ local ES = {
     ["THE WHISTLE BLOWS"] = "SUENA EL SILBATO",
     ["FALL IN!"] = "¡EN FILA!",
     ["GROW!"] = "¡A CRECER!",
+    -- The MUSIC boss (`metronome` in src/enemy.lua): its name under the bar
+    -- and the line it walks on with. What the page says when its tempo goes up
+    -- is FASTER!, which the page already says elsewhere.
+    ["THE METRONOME"] = "EL METRONOMO",
+    ["THE METRONOME TICKS"] = "EL METRONOMO MARCA EL COMPAS",
     -- The drills and the surges (`DRILLS` and `SURGES` in src/spawner.lua),
     -- which the run says the once, the first time each one happens. They are
     -- copy rather than labels -- the run is describing what has just started
