@@ -1155,6 +1155,22 @@ one place and nothing else in the game knows it exists:
 - **`knock`** and **`hold`** — `Enemy:knockback` and `Enemy:freeze`, both of
   which already rode on the enemy rather than on the dozen things that shove and
   stick. The grin is the horde-sized version of what went in for the boss.
+- **`pupil`** — `Enemy.new` hands the row an `Eyeball` (`src/eyeball.lua`), and
+  from then on the body is not a sprite. It is painted a pixel at a time off a
+  sphere turned to face the player: each pixel inside the outline is turned into
+  the ball's own frame and asked whether it is pupil, iris, vein or white, so an
+  iris looking sideways goes oval and a roll carries every vein round with it.
+  The light is fixed on the screen, so the shadow crescent and the catchlight
+  stay put while the ball turns. Output is horizontal runs of whole pixels in the
+  palette, so none of the rendering rules bend. The eyeball also owns the gait --
+  glide, a run of hops, or a roll then a dizzy sit -- and answers
+  `Enemy:update` a *share* of the row's speed, chosen per mode to average 1, so
+  the 26 on the row is still the fight. Height, squash and roll are drawing
+  only; the hitbox is still `x/y/radius`. `Enemy:drawSolid`, the hit rim and the
+  flash ask its `drawMask` for the silhouette, `Game:updateEnemies` asks it to
+  `spill` dust off a landing, and the shot, the lane and the ring `kick` it.
+  `Sprites.enemies.bosseye` is still loaded and still what `Enemy:footing`
+  measures the shadow off; nothing draws it.
 
 ### Drills and surges
 

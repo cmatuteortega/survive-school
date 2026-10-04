@@ -1627,6 +1627,8 @@ function Game:updateEnemies(dt, grid)
     for i = #self.enemies, 1, -1 do
         local e = self.enemies[i]
         e:update(dt, player, self.walls, self.hasSlick and self:slickAt(e.x, e.y) or nil)
+        -- The dust off the eye boss's landings and rolls (src/eyeball.lua).
+        if e.eyeball then e.eyeball:spill(self, e) end
 
         -- Keep the horde from stacking into a single pixel. Glued enemies are
         -- immovable, so the crowd jams up against them instead of squeezing
@@ -2231,6 +2233,8 @@ function Game:fireEnemyShot(e, shot)
     local n = shot.spread or 1
     local step = n > 1 and shot.arc / (n - 1) or 0
     local from = aim - (n - 1) * step / 2
+    -- The eye boss spits it: a glare and a squeeze (src/eyeball.lua).
+    if e.eyeball then e.eyeball:kick(false) end
 
     -- The pellet is as big as whatever fired it (`reach` in Enemy.new), and the
     -- hitbox and the drawing take the same number so the art cannot lie about the
@@ -2350,6 +2354,7 @@ function Game:updateTears(dt, e)
         for i = 0, lane.count - 1 do
             self:throwTear(e, tears, aim, lane.from + i * lane.step)
         end
+        if e.eyeball then e.eyeball:kick(false) end
     end
 
     -- The two turns. Every threshold this hit has taken it past fires, so a shot
@@ -2363,6 +2368,7 @@ function Game:updateTears(dt, e)
             self:throwTear(e, tears, turn + i * math.pi * 2 / ring.count, ring.radius)
         end
         self.particles:burst(e.x, e.y, 12, Palette.blue)
+        if e.eyeball then e.eyeball:kick(true) end
     end
 end
 

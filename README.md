@@ -7005,6 +7005,38 @@ worse — its burst is ground taken away, and the whole point of the box is that
 there is only so much ground. Both stay low, because either at bat weights would
 make it a fight about the escort rather than about the eye.
 
+### The eye is a ball
+
+The boss used to be a flat white disc with a pupil slid across it, and slid was
+the problem: a disc moving over a disc reads as a sticker on a plate, and the one
+monster whose drawing says which way it is facing was saying it in two
+dimensions. Now it is painted off a real sphere every frame (`src/eyeball.lua`).
+Turn it to look at you and the iris goes oval towards the edge of the ball the
+way an iris does; the light stays where it is while the ball turns, so the grey
+crescent along the bottom and the catchlight on the cornea are what tell you it
+is round. It has veins that come round with it, fibres in the iris, a border
+three pixels of ink thick -- the heaviest line on the page, for the heaviest
+thing on it -- and a lid, so it blinks, glares when it spits, and sits half shut
+and dizzy after a roll.
+
+It also got a way of walking, because a thing that size gliding at a steady 26
+reads as a sticker being pushed across the page. Every couple of seconds it does
+something: **a run of hops**, crouching into a squash, stretching on the way up
+and landing in a jelly wobble with dust kicked out either side -- the last hop of
+a run is the big one, and the page knocks under it; or **a roll**, where the ball
+actually turns by the distance it covers, so the eye goes over the top and round
+the back, and then it sits dizzy while the spring brings it back round to find
+you, overshooting a little, which is the part that reads as *looking*. Glued, it
+drops out of the air and keeps watching.
+
+**None of this is allowed to move the fight.** Each mode's speed is chosen to
+average out to the row's 26 -- a hop stands still on the ground and makes it up
+in the air, a roll runs a third over and pays it back sitting dizzy -- and the
+quickest it ever goes, mid-hop, is about 46, under your 58. Walking away still
+works; what changed is that walking away has a rhythm you can read. And every
+bit of it is drawing: the height, the squash and the roll never touch the
+hitbox, for the reason the hit recoil doesn't.
+
 ### The weights held still
 
 Blob and bat are still half the horde between them and everything else is trim.

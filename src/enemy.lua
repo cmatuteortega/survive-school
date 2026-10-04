@@ -2,7 +2,7 @@ local Palette = require("src.palette")
 local Sprites = require("src.sprites")
 local Walls = require("src.walls")
 local Sfx = require("src.sfx")
-local pixelart = require("src.pixelart")
+local Eyeball = require("src.eyeball")
 local util = require("src.util")
 
 local Enemy = {}
@@ -49,16 +49,6 @@ local HIT_BUMP_TIME = 0.12  -- and how long it takes to slide home
 -- walk across the page, so crossing a lit corner twice in a run is not the same
 -- as standing in one.
 local SOAK_COOL = 1.2
-
--- The boss's pupil: a disc slid across the iris towards the player rather than
--- a pixel of the sprite, which is why the art has no pupil in it. The eye is the
--- one enemy in the game whose sprite says which way it is facing, and a boss you
--- are running away from ought to be watching you do it.
-local PUPIL_R = 4
-local PUPIL_SLIDE = 5 -- how far off centre it may sit: the iris is 19 across
-                      -- and the pupil is 9, so at 5 it still clears the rim
-local PUPIL_TURN = 6  -- how fast it swings across, in fractions per second --
-                      -- an eye tracks smoothly, it does not snap
 
 -- Add a row here to add a monster; the spawner picks from this table by name.
 -- Every row walks at the player, and every block below is a way of not *only*
@@ -115,7 +105,8 @@ local PUPIL_TURN = 6  -- how fast it swings across, in fractions per second --
 --
 -- Four more fields turn a row into a boss: `boss` (never despawns, never shoved
 -- out of the way by the crowd, and ends the run when it dies), `pupil` (an eye
--- that watches you), `trail` (a wet blot dropped behind it as it walks) and
+-- that watches you: the body is a ball painted a pixel at a time and turned to
+-- face the player, with a gait of its own -- src/eyeball.lua), `trail` (a wet blot dropped behind it as it walks) and
 -- `tears` (the same wet thrown rather than walked, three ways --
 -- Game:updateTears).
 --
@@ -536,9 +527,9 @@ function Enemy.new(kind, x, y, scale)
         laneT = def.tears and def.tears.lane.every or nil,
         rings = 0,
         headX = 0, headY = 0, -- the way it is actually going, vs the way it wants to
-        -- Where the pupil is looking, as a fraction of how far it may slide.
-        -- Chased rather than set, so the eye swings round to you (Enemy:draw).
-        lookX = 0, lookY = 0,
+        -- The ball an eye boss is drawn as, and how it gets about
+        -- (src/eyeball.lua). nil on everything that is a sprite.
+        eyeball = def.pupil and Eyeball.new() or nil,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else
         -- (src/spiral.lua). Handed over rather than read off the page for the
@@ -710,13 +701,12 @@ end
 
 function Enemy:update(dt, player, walls, slick)
     -- The eye follows you whatever else is happening to it -- glued, frozen,
-    -- stood still -- because that is the one thing an eye does. Chased towards
-    -- the direction of the player rather than set to it, so it swings.
-    if self.def.pupil then
-        local dx, dy = util.normalize(player.x - self.x, player.y - self.y)
-        local k = 1 - math.exp(-PUPIL_TURN * dt)
-        self.lookX = self.lookX + (dx - self.lookX) * k
-        self.lookY = self.lookY + (dy - self.lookY) * k
+    -- stood still -- because that is the one thing an eye does. Its gait
+    -- answers a share of its speed (hopping, rolling, sat dizzy) which averages
+    -- out to the row's own, so the speed on the row is still the fight.
+    local gait = 1
+    if self.eyeball then
+        gait = self.eyeball:update(dt, self.x, self.y, player, self.frozen > 0)
     end
 
     -- Glued: no chase, no drift, and any knockback it was carrying is dropped
@@ -820,7 +810,7 @@ function Enemy:update(dt, player, walls, slick)
         -- a fraction of the legs off whatever is following him down it. A
         -- multiplier rather than a stop -- being glued is the gluestick's, and
         -- a crowd strung out along a line is what this is for.
-        local speed = self.speed
+        local speed = self.speed * gait
         if self.chillT > 0 then
             self.chillT = self.chillT - dt
             speed = speed * self.chill
@@ -880,6 +870,7 @@ function Enemy:hurt(amount)
     local bx, by = -self.headX, -self.headY
     if bx == 0 and by == 0 then bx, by = 0, 1 end
     self.bumpX, self.bumpY, self.bumpT = bx, by, HIT_BUMP_TIME
+    if self.eyeball then self.eyeball:jolt() end
     -- Counted after the softening and not before it, so what is added up is what
     -- was actually taken off the thing.
     Enemy.dealt = Enemy.dealt + amount
@@ -1011,8 +1002,9 @@ end
 -- agree to the pixel: a blank a pixel off the body would print a paper rim along
 -- one edge of the bob and nowhere else.
 function Enemy:footing()
-    -- Stuck things stop bobbing.
-    local bob = self.frozen <= 0 and self.bob >= 1
+    -- Stuck things stop bobbing, and an eye boss has a gait of its own instead
+    -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
+    local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball
     local y = bob and self.y - 1 or self.y
 
     -- An enraged arrival is its own art in two colours, and it is swapped in
@@ -1115,6 +1107,12 @@ end
 function Enemy:drawSolid()
     local sprite, x, y = self:footing()
 
+    if self.eyeball then
+        love.graphics.setColor(Palette.paper)
+        self.eyeball:drawMask(x, y, self:outlineColour() and 1 or 0)
+        return
+    end
+
     love.graphics.setColor(Palette.paper)
     if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow) end
     sprite:drawMask(x, y, nil, self.grow)
@@ -1149,6 +1147,10 @@ function Enemy:draw()
     -- as wide as the foot that is stuck in it.
     local grow = self.grow
     local shadow = (self.def.shadow + (stuck and 2 or 0)) * grow
+    -- A ball in the air leaves less of a mark under it, and a squashed one more.
+    if self.eyeball then
+        shadow = math.floor(shadow * self.eyeball:shadowScale() + 0.5)
+    end
     -- Struck off the bottom edge of the sprite -- `h - oy` -- rather than off
     -- half its height, which is Sprites.shadow's own expression and makes it the
     -- one rule in the game for where a thing stands. Half the height was the
@@ -1164,6 +1166,25 @@ function Enemy:draw()
         shadow, (stuck and 2 or 1) * grow)
 
     local ring = self:outlineColour()
+
+    -- The eye boss is painted rather than stamped (src/eyeball.lua), but wears
+    -- the same rim and the same flash as everything else: a silhouette one out,
+    -- then the body blown out to the flash colour, pupil and all -- a white body
+    -- with a pupil still in it would read as the hit landing on something else.
+    if self.eyeball then
+        if ring then
+            love.graphics.setColor(ring)
+            self.eyeball:drawMask(x, y, 1)
+        end
+        if lit then
+            love.graphics.setColor(lit)
+            self.eyeball:drawMask(x, y, 0)
+        else
+            self.eyeball:draw(x, y)
+        end
+        return
+    end
+
     if ring then outline(sprite, x, y, ring, grow) end
 
     if lit then
@@ -1172,19 +1193,6 @@ function Enemy:draw()
     else
         love.graphics.setColor(1, 1, 1)
         sprite:draw(x, y, nil, grow)
-    end
-
-    -- The pupil, over the iris the art left empty. A disc rather than a sprite
-    -- because it is drawn at a different place every frame and there is nothing
-    -- to author: `pixelart.circleFill` plots whole pixels on the same grid as
-    -- everything else, which is the rule a rotated sprite would break. It
-    -- flashes with the body, since a white body with a black pupil still in it
-    -- would read as the hit landing on something else.
-    if self.def.pupil then
-        love.graphics.setColor(lit or Palette.ink)
-        pixelart.circleFill(
-            x + self.lookX * PUPIL_SLIDE,
-            y + self.lookY * PUPIL_SLIDE, PUPIL_R)
     end
 end
 
