@@ -23,8 +23,9 @@ the same for another character: the P.E. whistle, the MUSIC metronome and the
 FINANCE stamp, modelled and ray-traced into baked ASCII views ahead of time
 (`art/whistle.py`, `art/metronome.py`, `art/stamp.py`, over the shared tracer
 `art/raytrace.py` -- the metronome's pendulum plotted live on top, the stamp baked
-in four poses so it can rock, dive and squash), and the eye, painted a pixel at a time every
-frame off a turning sphere (`src/eyeball.lua`).
+in four poses so it can rock, dive and squash), the eye, painted a pixel at a time
+every frame off a turning sphere (`src/eyeball.lua`), and the MATHS die, painted
+the same way off flat faces (`src/dice.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -165,7 +166,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   asks you to go and do, off `tally`), `design`, `eyeball` (the eye boss's body:
   a sphere painted a pixel at a time, and its hop / roll gait), `eyeboss` (its
   brain: the stare, bowl, slam and sink, how it picks between them, its entrance
-  and its death), `metronome` (the MUSIC boss's brain in the same socket: a clock
+  and its death), `dice` (the MATHS boss's body: a d6, d10 and d20 as lists of
+  face planes, painted a pixel at a time and rolled), `diceboss` (its brain: the
+  throw, the roll it lands on, and the move that number calls for), `metronome` (the MUSIC boss's brain in the same socket: a clock
   in beats, the sweep, chord and scale played on it, and its pendulum drawn live),
   `stamp` (the FINANCE boss's brain: the ledger's cells, its leaps and poses, the
   slam, run and audit, and the PAID marks it leaves).

@@ -605,8 +605,8 @@ in it, which is where that is judged.
 
 Each row also names its **boss**: the `Enemy.types` key `Spawner:sendBoss` drops
 into the box at the end of every cycle. P.E. says `whistle`, MUSIC says
-`metronome` and FINANCE says `stamp` (see **The bosses**); the other four say
-`bosseye`, written out on every row rather than left to the
+`metronome`, FINANCE says `stamp` and MATHS says `die` (see **The bosses**); the
+other three say `bosseye`, written out on every row rather than left to the
 fallback (a row without one gets the eye) so that giving a page a fight of its own
 is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one.
@@ -1127,10 +1127,11 @@ ten minutes, plus one that is never spawned and two that only arrive at the end:
 | `eye` | 420 | 2 | 14 / 9 / 10 | shoots (`shot`) |
 | `grin` | 480 | 2 | 34 / 11 / 16 | shrugs off shoves (`knock`/`hold`) |
 | `redeye` | 540 | 2 | 14 / 34 / 10 | shoots and holds range (`keep`) |
-| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, four lessons |
+| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, three lessons |
 | `whistle` | 600 | — | 900 / 22 / 20 | the cycle boss, P.E. |
 | `metronome` | 600 | — | 900 / 50 / 20 | the cycle boss, MUSIC (hops on the beat, 25 on average) |
 | `stamp` | 600 | — | 900 / — / 20 | the cycle boss, FINANCE (never walks: every step is a leap its brain draws, about 25 a second between moves) |
+| `die` | 600 | — | 900 / 0 / 20 | the cycle boss, MATHS (never walks: thrown, 97–108px a throw) |
 
 Every row walks at the player and every block is a way of not *only* doing that.
 The header comment over `Enemy.types` is the field reference; what matters
@@ -1139,9 +1140,11 @@ one place and nothing else in the game knows it exists:
 
 - **`shot`** and **`trail`** and **`tears`** and **`whistle`** — `Game:updateEnemies`
   (the last two through `Game:updateTears` and `Game:updateWhistle`).
-- **`attacks`**, **`metronome`** and **`stamp`** — the boss's `brain`, built in
-  `Enemy.new` (`src/eyeboss.lua`, `src/metronome.lua` and `src/stamp.lua`) and stepped from
-  `Game:updateEnemies` before the walk, which it steers through `drive`.
+- **`attacks`**, **`metronome`**, **`stamp`** and **`dice`** — the boss's `brain`,
+  built in `Enemy.new` (`src/eyeboss.lua`, `src/metronome.lua`, `src/stamp.lua` and
+  `src/diceboss.lua` respectively) and stepped from `Game:updateEnemies` before the
+  walk, which it steers through `drive`. `dice` also builds the body
+  (`src/dice.lua`) the way `pupil` builds the eye's.
 - **`keep`** — inside `Enemy:update`'s chase, as a *turn* applied to the heading
   everything else already computed. That placement is the whole reason it is
   cheap: a shooter holding its distance still rounds a pen line, still skids on
@@ -1206,11 +1209,11 @@ A boss is a row with `boss = true`, and everything else that makes it one is an
 optional field read in one place, so a second boss is a row choosing which of them
 it is made of rather than a branch anywhere. `title` is its name under the HUD's bar
 (`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
-walks on (`Game:spawnEnemy`). All four bosses sit on the eye's 900 health, knock, hold
+walks on (`Game:spawnEnemy`). All five bosses sit on the eye's 900 health, knock, hold
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
-**The eye** (`bosseye`, four lessons) is a fight about *ground*: `pupil` (the body is
+**The eye** (`bosseye`, three lessons) is a fight about *ground*: `pupil` (the body is
 a ball painted a pixel at a time off a turning sphere, `src/eyeball.lua`), `trail`
 (wet dragged behind it), `tears` (wet thrown, three ways, with rings at two thirds
 and one third), `attacks` (the five moves its brain picks between,
@@ -1330,6 +1333,58 @@ invulnerability window, then dries for 6s (slate, graphite, blinking out) and do
 nothing. A cell stamped again is the same mark wetted again. Glue drops whatever it
 is doing -- a leap ends where it is, unstamped -- for a short rest. Every landing that prints
 plays `stamp` (a synthesised thump, `src/sfx/stamp.mp3`).
+
+**The die** (`die`, MATHS) is a fight about *number*: every move is decided by a roll
+the player watches land. Its body is painted live like the eye's, not baked -- a die
+has no front for sixteen headings to be spent on, and it has to tumble any way at all
+-- by `src/dice.lua`, which holds three convex solids as lists of face planes
+(`n . p <= h`, one `h` per solid): the cube, a pentagonal trapezohedron (`TILT` is its
+whole shape) and the icosahedron, labelled so opposite faces add to 7, 11 and 21. Its
+corners, and so the box a frame is painted in, are found at load by intersecting every
+triple of planes. Each frame `Dice:raster` asks every pixel in that box which face its
+ray comes in through last before any goes out -- 0 for none -- once, and the blank
+(`drawMask`), the outline (`drawMask` padded) and the body (`draw`) all read that one
+answer. A face is one step of a red ramp lit off its screen normal by the eye's light;
+an edge is a pixel whose right or lower neighbour is another face; the rim is ink one
+inside and one outside the silhouette. The d6's pips are painted on the faces in 3D,
+by taking the pixel back into the die's frame (`mx/my/mz`); the d10's and d20's
+numbers are the 3x5 font stamped flat over the middle of the face on *top* -- the face
+pointing up in the room, which is the roll, not the one most towards the camera, which
+in the tilted room is often a different face. The room is tilted by `PITCH` (0.6, the
+whistle's) so the top face reads. `Dice:roll` turns it about the floor line square to
+its travel at the rate that rolls it; `Dice:settle` tips the nearest-up face flat, or
+a named one however far round (`want`). About half a millisecond a frame on desktop
+LuaJIT, the eye's order.
+
+The `brain` (`src/diceboss.lua`) is the same socket: `update`, `busy`, `drawGround`,
+`drawAir`, plus `soften`, which `Enemy:hurt` multiplies any brain's hits by. It holds
+`drive` and moves the body itself, so the row's speed is 0. Its loop is `wind` (the
+line locked and dashed on the floor, `blowT` set so `Enemy:footing` shudders it and
+`Enemy:outlineColour` blinks it red, the whistle's tell) → `tumble` (a linear run-down
+from `throw.speed` over `throw.time`, bouncing off the box, `hops` drawn through `hop`,
+spun about the upright by up to `twist` so the roll is not a function of the line) →
+`settle` → `show` (strikes off a queue, each a `tell` then `hot`, then the pips) →
+`rest`. The number rolled sits on a tag over it through `show`.
+
+| die | roll | strike | then |
+| --- | --- | --- | --- |
+| d6 (first third) | 1–6 | `stamp`: a 3x3 of 30px cells snapped to the page's 10px squares round where you stand, the roll's pip cells hot (laid the way the top face's pips lie) | a fan of that many pips at you |
+| d10 (middle third) | 1–10 | `checker`: every 20px cell in the box whose column + row has the roll's parity | a ring of that many pips |
+| d20 (last third) | 2–19 | `spokes`: that many lines out from it to the box edge, swinging `turn` (a third) of a gap round while hot; a ghost of the swing loops through the count-in | — |
+| d20 | 20 | `CRITICAL!`: spokes 20, then odd cells, then even, on shortening count-ins (`crit.tell`) | — |
+| d20 | 1 | `FUMBLE!`: on its side `fumble.time` seeing stars, `soften` 1.5 | — |
+
+The two changes of shape are states of their own and cannot be glued out of. **Unfold**
+(two thirds): `blowT` shudder, then the body is `hidden` and `ghost` while the net -- a
+cross of six 40px faces with their pips round its cell -- counts in, goes hot and folds
+in (`fold`), and it comes back a d10 (`Dice:become`) saying `MORE SIDES!`. **Recast**
+(one third, or straight from the d6 if both thresholds go at once): up `recast.high`
+over `up`, its shadow and a dotted `shock` ring on where you stood for `aim`, down as a
+d20 with the ring hot on landing, and the landing settles into a roll. Glue drops a
+strike still counting in for a rest; glue that lands while it is in `tumble` or
+`settle` also marks that landing loaded: `settle` is given `want = 1`, so it lands on 1
+-- the fumble, on the d20. Only while rolling, or a glue build could keep a d20
+fumbling for the whole last third.
 
 ### Drills and surges
 
@@ -6090,14 +6145,15 @@ and are all the same 11x11 glyph.
   `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
   picked, and no page reskins it. What it does is the blocks it carries -- the
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
-  metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, and
-  any of the horde's (`shot`, `charge`) -- see
+  metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
+  die's `dice`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
-  `src/metronome.lua` or `src/stamp.lua`, built in `Enemy.new`. A solid body is a
-  script beside `art/whistle.py` over `art/raytrace.py` (`3dmethod.md`); one that
-  animates is baked in poses like `art/stamp.py`. Keep it on the eye's 900 unless the fight has
+  `src/metronome.lua`, `src/stamp.lua` or `src/diceboss.lua`, built in `Enemy.new`.
+  A solid body is a script beside `art/whistle.py` over `art/raytrace.py` (one that
+  animates is baked in poses like `art/stamp.py`), or -- for anything convex that
+  has to tumble -- a face list in `Dice.solids` painted live (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
   been re-measured, and fight it from the title's dev BOSS button.
 - **Tool:** append a row to `Tools.list` with an icon in `Sprites.icons`, *and* a
   `toolLine` in `Upgrades.list` naming it — the line's first level is what

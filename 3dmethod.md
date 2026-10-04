@@ -18,10 +18,11 @@ pictures.
 
 ## Two ways to be solid
 
-The game has four bosses drawn as solid objects, made in two different ways --
-the metronome is the whistle's way with one part done the eye's, and the stamp is
-the whistle's way with more than one picture per heading. Pick the one that
-fits the character before starting.
+The game has five bosses drawn as solid objects, made in two different ways --
+the metronome is the whistle's way with one part done the eye's, the stamp is
+the whistle's way with more than one picture per heading, and the MATHS die is
+the eye's way on flat faces (see **Painted live on flat faces: the die**).
+Pick the one that fits the character before starting.
 
 | | **Baked views** (the whistle) | **Painted live** (the eye) |
 | --- | --- | --- |
@@ -366,6 +367,50 @@ Budget: a pose is a ring of views, so it costs what a second boss would. Thirty-
 enough to be seen -- a tell, a fall, an impact -- rather than in-betweens: at this
 size the eye fills the gap between two held poses by itself.
 
+## Painted live on flat faces: the die
+
+The MATHS boss (`src/dice.lua`) is a d6, then a d10, then a d20, and it is the eye's
+method rather than the whistle's, for a reason worth keeping in mind for any future
+character: **a die has no front.** Baked views pay for headings -- sixteen pictures
+of a thing turning to face you -- and what a die needs is to tumble end over end in
+any direction and come to rest on any face. Baking that would be a picture for every
+orientation, which is not a budget; painting it fresh each frame costs about what
+the eye does.
+
+A convex solid is also the easiest thing there is to paint this way. Each die is a
+list of face planes, `n . p <= h` in its own frame, and that list is the whole
+model: corners, and the box a frame is painted in, are found by intersecting every
+triple of planes at load. For each pixel the ray along the view is cut by every
+plane: a plane facing the camera bounds the depth from above, one facing away from
+below, and the pixel is on the die if the nearest upper bound is above the furthest
+lower one -- the face that gave the nearest bound is the face it is on. Twenty
+planes, a couple of thousand pixels.
+
+What changes from the sphere:
+
+- **One colour per face.** A face is flat, so its light off its screen normal is one
+  number and it is one step of the ramp (blush, red, a checker, slate). No banding,
+  and the die turning is faces trading places on the ramp -- the thing flat
+  shading is best at in eight colours.
+- **Edges from the face buffer.** The raster keeps which face each pixel is on; a
+  pixel whose right or lower neighbour is another face is ink. One pixel wide and
+  exact, with no edge list to project.
+- **The room is tilted**, `PITCH` 0.6, the whistle's angle, so a die at rest shows
+  its top square-ish to the light and a side or two.
+- **What reads is still kept flat.** Pips are round and survive foreshortening, so
+  they are painted in 3D: the pixel goes back into the die's frame and is tested
+  against the face's pip layout. Numbers are not, so the d10 and d20 stamp the 3x5
+  font flat over the middle of the face on *top*. On top, not most towards the
+  camera: in a tilted room those are often different faces, and the stamped number
+  has to be the number rolled.
+- **Motion is the body's.** `Dice:roll` turns it about the floor line square to its
+  travel at the rate that rolls it without sliding; `Dice:settle` tips the nearest
+  face flat, or a named one (the glue's loaded die). The brain only pushes.
+
+To make another convex thing this way, add a face list to `Dice.solids` (unit
+normals, one `h`, labels) and the rest follows. Anything with a hole or a dent is
+not convex and is back to the whistle's tracer.
+
 ## Smaller than a boss: the teardrop
 
 The live method also works at five pixels across, for things whose *heading* is
@@ -379,6 +424,9 @@ per drop, which is fine for the few dozen a boss throws.
 
 ## Where it fits and where it doesn't
 
+- **Convex and tumbling:** a die, a block, a crystal -- anything flat-faced that has
+  to turn every way rather than face you -- is a face list painted live (the die),
+  not baked.
 - **Good fits:** bosses and anything else big (the whistle is 63 by 41 pixels
   per view), and objects whose heading matters, such as something that aims, or
   a weapon that should point the way it's going.
