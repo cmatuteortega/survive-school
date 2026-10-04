@@ -45,14 +45,20 @@
 -- split broken by the one row that cannot respect it.
 --
 -- **And the shop, which is the only part of the counter priced in money rather
--- than coins** (src/store.lua). Its sections come after the refund, since the
--- purse never meets them: the lessons the timetable holds shut, three to a
--- section, and THE WHOLE BOOK with the two rows the store owes beside it --
--- RESTORE, and the ad consent form where the law asks for a way back to it. A
--- row there is the same name, price and box as any other, with `money` on it:
--- the figure is the store's own formatted price rather than a coin, and the box
--- opens the store's purchase sheet rather than spending the purse. Nothing is
--- owned until the store says so, and the row has no box while it is deciding.
+-- than coins** (src/store.lua). Its section comes after the refund, since the
+-- purse never meets it, and it is three rows: what the store has to sell next,
+-- RESTORE, and the ad consent form where the law asks for a way back to it. What
+-- it has to sell next is the FULL GAME until that is bought, and THE WHOLE BOOK
+-- after -- one row that changes what it is selling (`stock`) rather than two with
+-- one of them always dead, since the second purchase is not on offer to a book
+-- that has not made the first. A row there is the same name, price and box as
+-- any other, with `money` on it: the figure is the store's own formatted price
+-- rather than a coin, and the box opens the store's purchase sheet rather than
+-- spending the purse. Nothing is owned until the store says so, and the row has
+-- no box while it is deciding.
+--
+-- Everything else on the counter is sold to a free book exactly as to a bought
+-- one: the purse is earned on SCIENCE as well as anywhere.
 --
 -- The split also happens to be what makes the page *fit*: a box is twenty pixels
 -- deep, so seven rows in one column is a counter hanging off the bottom of a
@@ -103,8 +109,6 @@ local Course = require("src.course")
 local Refund = require("src.refund")
 local Store = require("src.store")
 local Ads = require("src.ads")
-local Collection = require("src.collection")
-local Upgrades = require("src.upgrades")
 local Hud = require("src.hud")
 local Sprites = require("src.sprites")
 local Sfx = require("src.sfx")
@@ -203,66 +207,53 @@ local SECTIONS = {
     },
 }
 
--- The shop's sections (src/store.lua), built off its own list of lessons so a
--- lesson added to the book is on sale without a line here. Three to a section,
--- which is the heroes' count: four would fit, and three keeps the facing page's
--- notes clear of the footer on a phone held upright. `store` is what the hint
--- reads to say the shop is shut rather than that you are short of coins.
-local SHOP_ROWS = 3
-local storeSections = {}
-do
-    local sections = math.ceil(#Store.lessons / SHOP_ROWS)
-    for i = 1, sections do
-        SECTIONS[#SECTIONS + 1] = {
-            name = i == 1 and "LESSONS" or "MORE LESSONS",
-            note = "OR EARN IT ON THE TIMETABLE",
-            keys = "SCRIBBLE A BOX OR PRESS 1 2 3",
-            shut = "EVERY LESSON HERE IS OPEN",
-            store = true,
-        }
-        storeSections[#storeSections + 1] = #SECTIONS
-    end
-    SECTIONS[#SECTIONS + 1] = {
-        name = "WHOLE BOOK",
-        note = "EVERY LESSON AND NO ADS",
-        keys = "SCRIBBLE A BOX OR PRESS 1 2 3",
-        store = true,
-    }
-    storeSections[#storeSections + 1] = #SECTIONS
-end
+-- The shop's section (src/store.lua). `store` is what the hint reads to say the
+-- shop is shut rather than that you are short of coins, and the note is a
+-- function because it is about whichever of the two products the first row is
+-- selling: what the full game is for a book without it, and what THE WHOLE BOOK
+-- leaves alone for one with it.
+SECTIONS[#SECTIONS + 1] = {
+    name = "SHOP",
+    note = function()
+        if Store.full() then return "HOMEWORK STILL HAS TO BE EARNED" end
+        return "SCIENCE IS ALWAYS FREE"
+    end,
+    keys = "SCRIBBLE A BOX OR PRESS 1 2 3",
+    store = true,
+}
+local SHOP = #SECTIONS
 
 -- What the figure says on a money row that is not a price.
-local OWNED, OPEN, WAIT = "OWNED", "OPEN", "..."
+local OWNED, WAIT = "OWNED", "..."
 
--- The counter's five questions, answered for a lesson or the whole book. `key`
--- is the store's product id; `lesson` maps it back to the page it opens, which is
--- what lets a page already earned on the timetable say OPEN rather than sell
--- itself to a book that has it.
-local lessonOf = {}
-for _, l in ipairs(Store.lessons) do lessonOf[l.id] = l.key end
-
-local function earned(id)
-    local key = lessonOf[id]
-    return key ~= nil and Collection.lessonOpen(key) and not Store.owns(id)
-end
-
+-- The counter's five questions, answered for either product. `key` is the
+-- store's product id.
 local Shop = {}
 function Shop.levels() return 1 end
-function Shop.level(id) return (Store.owns(id) or earned(id)) and 1 or 0 end
+function Shop.level(id) return Store.owns(id) and 1 or 0 end
 function Shop.priceOf(id)
-    if Store.owns(id) or earned(id) then return nil end
+    if Store.owns(id) then return nil end
     return Store.price(id)
 end
 function Shop.priceText(id)
     if Store.owns(id) then return OWNED end
-    if earned(id) then return OPEN end
     if Store.pending[id] then return WAIT end
     return Store.price(id) or WAIT
 end
-function Shop.canBuy(id)
-    return not earned(id) and Store.canBuy(id)
-end
+function Shop.canBuy(id) return Store.canBuy(id) end
 function Shop.buy(id) return Store.buy(id) end
+
+-- The two things the shop's first row can be. Built once, like every other row,
+-- and swapped into the section by `stock`.
+local FULL_ROW = {
+    key = Store.FULL, name = "FULL GAME", blurb = "EVERY LESSON AND EVERY TOOL",
+    icon = "page", shop = Shop, money = true,
+}
+local BOOK_ROW = {
+    key = Store.EVERYTHING, name = "WHOLE BOOK",
+    blurb = "EVERY TOOL OPEN AND NO ADS",
+    icon = "star", shop = Shop, money = true,
+}
 
 -- The two rows that sell nothing: asking the store again for what this account
 -- owns, and the consent form. `act` drops the n/n column and the figure.
@@ -338,21 +329,10 @@ local function build()
         icon = "coin", shop = Refund, back = true,
     }
 
-    -- The shop. A lesson wears its tool's icon, the timetable's own rule for a
-    -- lesson tab, so the row and the tab it opens are the same picture.
-    for i, l in ipairs(Store.lessons) do
-        local rows = counters[storeSections[math.ceil(i / SHOP_ROWS)]]
-        rows[#rows + 1] = {
-            key = l.id, name = l.sub.name, blurb = "OPEN THIS LESSON NOW",
-            icon = Upgrades.byId[l.sub.tool].icon, shop = Shop, money = true,
-        }
-    end
-    local book = counters[storeSections[#storeSections]]
-    book[1] = {
-        key = Store.EVERYTHING, name = "WHOLE BOOK",
-        blurb = "EVERY LESSON AND NO ADS",
-        icon = "page", shop = Shop, money = true,
-    }
+    -- The shop: whichever product is next (`stock`), and the two rows that sell
+    -- nothing.
+    local book = counters[SHOP]
+    book[1] = FULL_ROW
     book[2] = {
         key = "restore", name = "RESTORE", blurb = "WHAT THIS ACCOUNT BOUGHT",
         icon = "tape", shop = Restore, money = true, act = true,
@@ -361,6 +341,15 @@ local function build()
         key = "privacy", name = "AD PRIVACY", blurb = "CHANGE YOUR AD CHOICES",
         icon = "laminate", shop = Privacy, money = true, act = true,
     }
+end
+
+-- The shop's first row is whatever the store has to sell next: the full game,
+-- and THE WHOLE BOOK once that is bought. Asked every frame rather than at
+-- `enter`, because the purchase lands while the page is open -- the store answers
+-- a frame or a minute after the box is filled -- and the row should turn into the
+-- next thing as it does.
+local function stock()
+    counters[SHOP][1] = Store.full() and BOOK_ROW or FULL_ROW
 end
 
 function Canteen.new()
@@ -452,6 +441,9 @@ local function eachRow(fn)
     for _, rows in ipairs(counters) do
         for _, row in ipairs(rows) do fn(row) end
     end
+    -- And whichever of the shop's two products is not on the counter this frame,
+    -- so the columns are cut to both and nothing moves when one becomes the other.
+    fn(counters[SHOP][1] == FULL_ROW and BOOK_ROW or FULL_ROW)
 end
 
 local function nameWidth()
@@ -475,8 +467,7 @@ end
 -- has said so far, and the column widens once on the frame the prices arrive.
 local function priceWidth()
     local w = math.max(Purse.width(WIDEST_PRICE), Font.width(I18n.t(MAX)))
-    w = math.max(w, Font.width(I18n.t(OWNED)), Font.width(I18n.t(OPEN)),
-        Store.widestPrice())
+    w = math.max(w, Font.width(I18n.t(OWNED)), Store.widestPrice())
     return math.max(w, Purse.width(("+%d"):format(Refund.most())))
 end
 
@@ -836,6 +827,7 @@ function Canteen:update(dt, game)
     -- The section is the book's, so the choice is too, and it is picked up before
     -- anything is laid out: the leaf landing is what moves it.
     self.choice = self.choices[self.book.at]
+    stock()
 
     self:layout(game)
     self.t = self.t + dt
@@ -1059,7 +1051,8 @@ function Canteen:drawPage(game, at)
     if Font.width(hint) <= lay.w then
         Scribble.printBig(hint, lay.sayCx, lay.hint, 1, Palette.slate, { seed = 61 })
     end
-    local note = I18n.t(section.note)
+    local note = I18n.t(type(section.note) == "function" and section.note()
+        or section.note)
     if Font.width(note) <= lay.w then
         Scribble.printBig(note, lay.sayCx, lay.hint + Font.height + 2, 1,
             Palette.graphite, { seed = 62 })
@@ -1089,6 +1082,7 @@ function Canteen:drawPage(game, at)
 end
 
 function Canteen:draw(game)
+    stock()
     local lay = self:layout(game)
 
     -- The leaf, or the two of them, or the one turning between them.

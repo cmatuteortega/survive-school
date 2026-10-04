@@ -49,6 +49,12 @@
 -- (src/coach.lua) pointing at the language row's arrow, where every language is
 -- written in its own name. It is the corner button's own box at the other end of
 -- the same margin (`Hud.footBox`), widened to the word.
+--
+-- And a third, in the top *right* corner and only on a book that is not the full
+-- game yet: a padlock in the settings button's own box, mirrored to the other
+-- end of the same top edge (`Hud.rightCornerBox`). Pressed, not answered, for the
+-- margin's reason -- it opens the card that asks (src/fullgame.lua), and that
+-- card is where the answer is scribbled.
 
 local Palette = require("src.palette")
 local Sprites = require("src.sprites")
@@ -65,6 +71,7 @@ local Hud = require("src.hud")
 local Sfx = require("src.sfx")
 local I18n = require("src.i18n")
 local Coach = require("src.coach")
+local Store = require("src.store")
 local util = require("src.util")
 
 local Menu = {}
@@ -324,6 +331,13 @@ function Menu:langAt(game, x, y)
     return Hud.footAt(game, x, y, LANG)
 end
 
+-- The padlock, which is only there while there is something for it to sell.
+function Menu:shopAt(game, x, y)
+    if Store.full() then return false end
+    local bx, by = Hud.rightCornerBox(game)
+    return Hud.buttonAt(bx, by, x, y)
+end
+
 --- drawing on it -------------------------------------------------------------
 
 -- Ink that lands in a box is the answer and is counted there (see
@@ -359,7 +373,7 @@ function Menu:mark(x, y, quiet)
     -- taken as a press, and a line drawn across one would be a line with a hole
     -- in it anyway, since both are drawn out past the overprint pass.
     if self.game and (self:settingsAt(self.game, x, y)
-        or self:langAt(self.game, x, y)) then
+        or self:langAt(self.game, x, y) or self:shopAt(self.game, x, y)) then
         return false
     end
 
@@ -414,6 +428,10 @@ function Menu:updateScribble(dt)
             end
             if self.game and self:langAt(self.game, px, py) then
                 self.pressed = "language"
+                return
+            end
+            if self.game and self:shopAt(self.game, px, py) then
+                self.pressed = "fullgame"
                 return
             end
 
@@ -486,7 +504,8 @@ end
 --- update --------------------------------------------------------------------
 
 -- Returns "yes", "no" or "continue" on the frame the choice finishes playing
--- out, "settings" or "language" on the frame a margin button is pressed, and
+-- out, "settings", "language" or "fullgame" on the frame a margin button is
+-- pressed, and
 -- nothing at all otherwise.
 function Menu:update(dt, game)
     -- Kept because the press edge and `mark` both have to know where the two
@@ -552,6 +571,11 @@ function Menu:keypressed(key)
     end
     if key == "l" then
         self.pressed = "language"
+        return
+    end
+    -- And B for the padlock: buying is the one word for what is behind it.
+    if key == "b" and not Store.full() then
+        self.pressed = "fullgame"
         return
     end
 
@@ -757,6 +781,10 @@ function Menu:draw(game)
     -- and both are ways off the side of this screen rather than through it.
     Hud.drawCorner(game, "sliders", false)
     Hud.drawFoot(game, LANG, false)
+    if not Store.full() then
+        local bx, by = Hud.rightCornerBox(game)
+        Hud.drawButton(bx, by, Hud.CORNER_SIZE, "lock", false)
+    end
 end
 
 return Menu

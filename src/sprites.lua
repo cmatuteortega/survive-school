@@ -3325,6 +3325,20 @@ function Sprites.load()
             "ooooooo",
             "....oo.",
         }),
+        -- The button that sells the full game (src/fullgame.lua), on the title and
+        -- the timetable. A padlock, because what it is about is what is shut: the
+        -- pages and the lines a free book cannot open. The keyhole is the one
+        -- pixel of paper in the body, without which the body is a block and the
+        -- glyph reads as a bag.
+        lock = pixelart.newSprite({
+            "..ooo..",
+            ".o...o.",
+            ".o...o.",
+            "ooooooo",
+            "ooo.ooo",
+            "ooo.ooo",
+            "ooooooo",
+        }),
         -- What a run pays out (src/purse.lua), on the two cards a run ends on and
         -- on the canteen's own page. Nine across rather than the tools' eleven,
         -- because it is never picked up off a shelf -- it stands beside a number

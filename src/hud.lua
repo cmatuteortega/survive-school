@@ -464,6 +464,22 @@ function Hud.cornerAt(game, cx, cy)
     return cx >= x and cx <= x + w and cy >= y and cy <= y + h
 end
 
+-- The corner button's box and allowance at a place the caller picks, for a screen
+-- with a second button in its own top corner (the padlock on the title and the
+-- timetable, src/fullgame.lua). Drawn with `Hud.drawButton` at `CORNER_SIZE`.
+function Hud.buttonAt(x, y, cx, cy)
+    local pad = cornerPad()
+    return cx >= x - pad and cx <= x + CORNER_SIZE + pad
+        and cy >= y - pad and cy <= y + CORNER_SIZE + pad
+end
+
+-- And the mirror of `Hud.cornerBox`: the same box the same distance in from the
+-- top *right* of the safe area.
+function Hud.rightCornerBox(game)
+    return game.vw - game.inset.r - CORNER_MARGIN - CORNER_SIZE,
+           game.inset.t + CORNER_MARGIN
+end
+
 function Hud.footTarget(game, text)
     local pad = cornerPad()
     local x, y, w = Hud.footBox(game, text)

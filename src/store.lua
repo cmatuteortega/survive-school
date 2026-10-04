@@ -1,18 +1,24 @@
 -- The shop: what the book sells for real money, and the one place that knows.
 --
--- **What is sold is pages, and only pages** (ROADMAP.md, README **Ads and the
--- shop**). Every lesson the timetable's ladder holds shut (`Collection.rungs`)
--- can be opened outright, and THE WHOLE BOOK opens all of them and turns the ads
--- off. Nothing here sells coins, perks, heroes or courses: those are what the
--- purse is for (src/purse.lua), and a book whose counter could be skipped with a
--- card would be a book whose afternoons were for sale. The ladder stays exactly
--- as it is, so every page bought here can still be earned by playing.
+-- **Two things are sold, one after the other** (ROADMAP.md, README **Ads and
+-- the shop**). The book is free to open at SCIENCE and free to read there for as
+-- long as you like; every other page, and every line of the library that has to
+-- be earned, is the FULL GAME. Bought, the book is the book this whole project
+-- describes -- the ladder opens the pages (`Collection.rungs`) and the quests
+-- open the lines (`Collection.gates`), exactly as they always have. Then, and
+-- only then, THE WHOLE BOOK is on sale: every page and every line opened on the
+-- spot, and the ads turned off. It skips the ladder and the quests and nothing
+-- else -- the homework (src/challenges.lua) still counts only what was earned.
+--
+-- Nothing here sells coins, perks, heroes or courses: those are what the purse
+-- is for (src/purse.lua), and the canteen's counter is open to a free book
+-- exactly as it is to a bought one.
 --
 -- **The store itself is love-iap** (src/iap.lua, vendored; its Android half is
 -- added to the APK by its own action in .github/workflows/android.yml). It keeps
 -- what is owned in `iap.txt` beside the records, answers offline and on the first
 -- frame, and syncs with Play at every launch -- which is how a reinstall or a new
--- phone gets its pages back, and how a refund takes one away. This file is the
+-- phone gets its book back, and how a refund takes it away. This file is the
 -- game's words about it: which ids exist, what a bought id opens, and the price
 -- made fit to print.
 --
@@ -25,29 +31,16 @@
 -- kept in the same file; delete `iap.txt` to hand it back.
 
 local iap = require("src.iap")
-local Subjects = require("src.subjects")
 local Font = require("src.font")
 local Dev = require("src.dev")
 
 local Store = {}
 
--- The one product that is not a page.
+-- The two products. The ids are the store's and cannot change once a product is
+-- live in the console.
+Store.FULL = "full_game"
 Store.EVERYTHING = "everything"
-
--- Lesson key -> product id, for every lesson after the first: the same rule
--- `Collection.rungs` is built on, read off the same list, so a lesson added to
--- src/subjects.lua is on sale without a line here. (The ids are the store's and
--- cannot change once a product is live in the console.)
-Store.lessons = {}
-Store.ids = {}
-for i, sub in ipairs(Subjects.list) do
-    if i > 1 then
-        local id = "lesson_" .. sub.key
-        Store.lessons[#Store.lessons + 1] = { key = sub.key, id = id, sub = sub }
-        Store.ids[#Store.ids + 1] = id
-    end
-end
-Store.ids[#Store.ids + 1] = Store.EVERYTHING
+Store.ids = { Store.FULL, Store.EVERYTHING }
 
 -- Ids with a purchase sheet open or a payment still clearing: no box on the row
 -- until the store has said how it ended.
@@ -80,15 +73,26 @@ function Store.available()
     return iap.available()
 end
 
--- Owned outright, or covered by THE WHOLE BOOK.
+-- Owned outright. THE WHOLE BOOK is only ever sold on top of the full game, but
+-- a refund of the one and not the other is the store's to decide, so owning it
+-- counts as owning the full game too rather than leaving a book with every line
+-- open and its pages shut.
 function Store.owns(id)
     if iap.owns(id) then return true end
-    return id ~= Store.EVERYTHING and iap.owns(Store.EVERYTHING)
+    return id == Store.FULL and iap.owns(Store.EVERYTHING)
 end
 
--- Whether a lesson has been bought open (src/collection.lua asks).
-function Store.opens(key)
-    return Store.owns("lesson_" .. key)
+-- Whether the book is the full game: every page on the ladder and every quest
+-- live (src/collection.lua asks). Without it the book is SCIENCE and the lines
+-- nobody has to earn.
+function Store.full()
+    return Store.owns(Store.FULL)
+end
+
+-- Whether THE WHOLE BOOK is bought: every page and line open outright
+-- (src/collection.lua asks).
+function Store.everything()
+    return iap.owns(Store.EVERYTHING)
 end
 
 -- Whether the ads are off (src/ads.lua asks).
@@ -115,7 +119,10 @@ function Store.widestPrice()
     return w
 end
 
+-- THE WHOLE BOOK is not for sale to a book that is not the full game yet: it is
+-- the second purchase, and the counter does not offer it until the first is made.
 function Store.canBuy(id)
+    if id == Store.EVERYTHING and not Store.full() then return false end
     return Store.available() and not Store.owns(id) and not Store.pending[id]
         and Store.price(id) ~= nil
 end

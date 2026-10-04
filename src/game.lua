@@ -30,6 +30,7 @@ local Win = require("src.win")
 local Over = require("src.over")
 local Retake = require("src.retake")
 local Chance = require("src.chance")
+local FullGame = require("src.fullgame")
 local LevelUp = require("src.levelup")
 local Puddle = require("src.puddle")
 local Arena = require("src.arena")
@@ -171,6 +172,10 @@ function Game:load(vw, vh)
     -- could stand the run up (src/chance.lua).
     self.chance = Chance.new()
 
+    -- And the card that sells the full game (src/fullgame.lua), laid over the
+    -- title or the timetable, whichever its padlock was pressed on.
+    self.fullGame = FullGame.new()
+
     -- A press that lands on the tool selector switches tools instead of
     -- starting a stroke.
     Input.onPointerDown = function(cx, cy)
@@ -221,6 +226,9 @@ function Game:load(vw, vh)
 
         -- The offer card, under the death card's rule: two boxes, every press a pen.
         if self.state == "chance" then return false end
+
+        -- And the full game's card, under the same rule.
+        if self.state == "fullgame" then return false end
 
         -- Levelling up: the whole page belongs to the three cards, and the only
         -- way out of it is to circle one. Nothing else on the screen is
@@ -419,6 +427,21 @@ function Game:toPage(key)
     self.pages[key]:enter()
 
     -- The press that opened the tab is not the first mark on this page.
+    Input.releaseAll()
+end
+
+-- The full game's card (src/fullgame.lua), over the screen whose padlock opened
+-- it: `from` is "menu" or "timetable", and it is what is drawn under the card and
+-- what the card hands back to. Handed back by entering it again rather than by
+-- flipping the state, because the timetable asks which pages open once, on the
+-- way in (`Timetable:enter`), and a purchase is exactly what changes that.
+function Game:toFullGame(from)
+    self.state = "fullgame"
+    self.fullFrom = from
+    Sfx.play("transition")
+    self.fullGame:open()
+
+    -- The press on the padlock is not the first mark on the card.
     Input.releaseAll()
 end
 
@@ -4202,6 +4225,22 @@ function Game:update(dt)
             self:toSettings()
         elseif answer == "language" then
             self:toSettings("lang")
+        elseif answer == "fullgame" then
+            self:toFullGame("menu")
+        end
+        return
+    end
+
+    if self.state == "fullgame" then
+        if self.fullGame:update(dt, self) == "back" then
+            Sfx.play("transition")
+            if self.fullFrom == "timetable" then
+                Timetable:enter(self.subject.key)
+                self.state = "timetable"
+                Input.releaseAll()
+            else
+                self:toMenu(true)
+            end
         end
         return
     end
@@ -4249,6 +4288,8 @@ function Game:update(dt)
             self:toStudio(Design.hero(), "timetable")
         elseif answer == "library" then
             self:toLibrary()
+        elseif answer == "fullgame" then
+            self:toFullGame("timetable")
         elseif self.pages[answer] then
             self:toPage(answer)
         end
@@ -4580,6 +4621,16 @@ function Game:draw()
         return
     end
 
+    if self.state == "fullgame" then
+        if self.fullFrom == "timetable" then
+            Timetable:draw(self)
+        else
+            Menu:draw(self)
+        end
+        self.fullGame:draw(self)
+        return
+    end
+
     if self.state == "timetable" then
         Timetable:draw(self)
         return
@@ -4865,6 +4916,11 @@ function Game:keypressed(key)
 
     if self.state == "menu" then
         Menu:keypressed(key)
+        return
+    end
+
+    if self.state == "fullgame" then
+        self.fullGame:keypressed(key)
         return
     end
 

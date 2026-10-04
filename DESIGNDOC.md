@@ -1968,15 +1968,21 @@ and activity by `dlsym`, load their class through the activity's class loader
 answer into a tab-separated line on a queue that Lua drains once a frame through
 LuaJIT's FFI. Nothing calls back into Lua from another thread.
 
-**`src/store.lua`** is the game's words about the store. Its ids are read off
-`Subjects.list` — `lesson_<key>` for every lesson after the first, the same rule
-`Collection.rungs` is built on — plus `everything`. love-iap keeps what is owned in
-`iap.txt` and syncs with Play at launch (a refund takes a page back).
-`Store.opens(key)` is the third clause of `Collection.lessonOpen`, inside
-`Dev.opened` like the other two, so the dev switch still overrides it.
-`Store.noAds()` is `everything` owned. `Store.price` is the store's formatted
-string through `Font.clean`, which drops any glyph the 3x5 face lacks (it has
-`$`, `€` and `£`).
+**`src/store.lua`** is the game's words about the store. Two ids:
+`full_game` (`Store.FULL`) and `everything` (`Store.EVERYTHING`), the second only
+`Store.canBuy` while `Store.full()`. love-iap keeps what is owned in `iap.txt` and
+syncs with Play at launch (a refund takes the book back). Owning `everything`
+counts as owning `full_game` too. `Store.full()` gates every rung of
+`Collection.lessonOpen` and every gate of `Collection.has` -- a free book is the
+first lesson and the ungated lines -- and `Store.everything()` opens both
+outright; all of it inside `Dev.opened`, so the dev switch still overrides it.
+`Collection.earned` is `has` without `everything` (and asks its own parts for a
+fusion), and it is the door `src/challenges.lua` counts the collection rows
+through: the whole book opens the library and does not tick the homework.
+`Collection.why`, `Collection.lessonWhy` and `Collection.meter` say the full
+game's two phrases, and no meter, on a free book. `Store.noAds()` is `everything`
+owned. `Store.price` is the store's formatted string through `Font.clean`, which
+drops any glyph the 3x5 face lacks (it has `$`, `€` and `£`).
 
 **`src/ads.lua`** is one call: `Ads.show(placement, fn)` calls `fn` once, true only
 for an ad watched to its reward, settled when the ad *closes* (AdMob pays before
@@ -1995,11 +2001,24 @@ pays the difference on the spot and the win card's `END` collects it through
 `Game:cashRun`. Both flags are run state, reset by `Game:reset` and carried by
 the bookmark.
 
-**The shop is canteen sections**, appended to `SECTIONS` in `src/canteen.lua`
-off `Store.lessons` three to a section, plus `WHOLE BOOK`. Their rows carry
-`money` (the figure is `shop.priceText`, no coin) and, for `RESTORE` and `AD
-PRIVACY`, `act` (no `n/n`). `section.store` puts the shop's own two hints —
-closed, waiting — ahead of the counter's.
+**The shop is one canteen section**, `SHOP`, appended to `SECTIONS` in
+`src/canteen.lua`: one product row, `RESTORE` and `AD PRIVACY`. The product row is
+`FULL_ROW` until `Store.full()` and `BOOK_ROW` after, swapped in by `stock()`
+every frame (the purchase lands while the page is open), and both are measured so
+nothing moves when one becomes the other; the section's `note` is a function for
+the same reason. Rows carry `money` (the figure is `shop.priceText`, no coin) and,
+for `RESTORE` and `AD PRIVACY`, `act` (no `n/n`). `section.store` puts the shop's
+own two hints -- closed, waiting -- ahead of the counter's.
+
+**The padlock** is `Hud.drawButton` with the `lock` icon at `Hud.rightCornerBox` on
+the title (`Menu:shopAt`) and just inside the top lesson tab on the timetable
+(`Timetable:shopAt`, `lay.shopX`, which the heading steps under where they would
+meet), drawn and pressable only while `not Store.full()`; `B` presses it. It
+answers `"fullgame"`, and `Game:toFullGame(from)` puts up `src/fullgame.lua` over
+that screen (state `fullgame`, drawn on top of `Menu:draw` or `Timetable:draw`).
+The card's `YES` calls `Store.buy(Store.FULL)` and waits on `Store.pending`; it
+answers `"back"` once bought, on `NO`, or on a payment left pending, and the
+timetable is re-entered so its tabs re-ask which pages open.
 
 **Off a phone** there is no bridge and both modules are inert; with the dev row
 showing (`Dev.showing()` at load) love-iap's mock store and a stand-in ad answer
@@ -6165,11 +6184,13 @@ and are all the same 11x11 glyph.
   business naming a kind, a shape or a minute, because those are the page's
   (`src/subjects.lua`) and the page may not price a thing.
 - **Paper:** the specs at the top of `src/subjects.lua`.
-- **Something sold for money:** a lesson is on sale by being in
-  `Subjects.list` after the first (`Store.lessons`); anything else is an id in
-  `Store.ids`, a row in the canteen's shop sections, and the same id created and
-  activated in Play Console. Ids cannot change once live. It must be a page or the
-  ads off — README **Ads and the shop** says why nothing else is sold.
+- **Something sold for money:** an id in `Store.ids`, a row in the canteen's
+  `SHOP` section (or the product row's `stock()` swap), what it opens asked
+  through `Collection.has` / `Collection.lessonOpen` inside `Dev.opened`, and the
+  same id created and activated in Play Console. Ids cannot change once live. It
+  must be the book or the ads off — README **Ads and the shop** says why nothing
+  else is sold. A lesson added to `Subjects.list` is in the full game by being
+  there.
 - **An ad placement:** a name passed to `Ads.show` and an offer on a card that
   asks `Ads.ready()` before it draws the box and spends a once-a-run flag on the
   run (reset in `Game:reset`, written by `src/bookmark.lua`). Never a placement

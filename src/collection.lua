@@ -364,7 +364,11 @@ end
 -- asking for two things at once would work without anything being told -- none
 -- does today, and one that did would want a sentence of its own on the shelf
 -- rather than the one line `Collection.why` writes.
-function Collection.met(gate)
+--
+-- `door` is what a fusion asks of its parts, and it is `Collection.has` unless the
+-- question is the homework's (`Collection.earned`): a fusion whose parts were
+-- bought open has been opened, and has not been made.
+function Collection.met(gate, door)
     local need = gate.need
 
     -- A lesson sat out is the one thing here asked of *one* page rather than of
@@ -390,7 +394,7 @@ function Collection.met(gate)
     -- is itself a fusion -- so this cannot wind up on itself.
     if need.made then
         for _, id in ipairs(need.made) do
-            if not Collection.has(id) then return false end
+            if not (door or Collection.has)(id) then return false end
         end
         return true
     end
@@ -411,10 +415,27 @@ end
 -- opened everything, or nothing, is this answer overridden in the one place it is
 -- ever given. A line with no gate is in the book whatever that switch says --
 -- there has to be something for a fresh book to deal.
+--
+-- And the shop (src/store.lua) is the other thing it asks, in two halves. A book
+-- that is not the full game has no gate that can be met at all -- what it has is
+-- the lines nobody earns, and SCIENCE to draw them on -- and a book with THE
+-- WHOLE BOOK bought has every gate met at once. Both through the same dev switch.
 function Collection.has(id)
     local gate = Collection.gateOf[id]
     if gate == nil then return true end
-    return Dev.opened(Collection.met(gate))
+    return Dev.opened((Store.full() and Collection.met(gate))
+        or Store.everything())
+end
+
+-- The same door with the shop's second purchase taken off it: what the book has
+-- *earned*, which is the one thing the homework counts (src/challenges.lua). THE
+-- WHOLE BOOK opens the library and does not do your homework for you -- a
+-- checklist that ticked itself off at the till would be a checklist about the
+-- till.
+function Collection.earned(id)
+    local gate = Collection.gateOf[id]
+    if gate == nil then return true end
+    return Dev.opened(Store.full() and Collection.met(gate, Collection.earned))
 end
 
 -- The other door, and the only thing asked of this file that is not a line in the
@@ -440,12 +461,12 @@ function Collection.lessonOpen(key)
     -- already written on stay open, since those are exactly the ones a book worth
     -- testing on has.
     --
-    -- And a page bought in the shop (src/store.lua) is open the same way, through
-    -- the same switch: buying a lesson is reaching its rung by another road, and
-    -- the ladder is not told -- the next page up still waits on this one's clock.
-    return Dev.opened(Records.played(key)
-        or Records.get(rung.after).time >= rung.time
-        or Store.opens(key))
+    -- And the shop (src/store.lua) decides whether there is a ladder at all: a
+    -- book that is not the full game is SCIENCE and nothing above it, and THE
+    -- WHOLE BOOK has every rung climbed. Through the same switch.
+    return Dev.opened((Store.full() and (Records.played(key)
+        or Records.get(rung.after).time >= rung.time))
+        or Store.everything())
 end
 
 -- What a locked line has to say for itself: two phrases, or nothing at all for a
@@ -464,6 +485,14 @@ end
 -- and naming one of them would be the shelf answering half a question.
 local function phrase(key, a, b)
     return { key = key, a = a, b = b }
+end
+
+-- What a hole says on a book that is not the full game, whatever the hole is: the
+-- library's shelf and the timetable's shut page alike. Every gate is the same
+-- gate on a free book, so it is the same two phrases -- and `meter` says nothing,
+-- since there is nothing being paid towards.
+local function unbought()
+    return phrase("ONLY IN THE FULL GAME"), phrase("PURCHASE FULL GAME TO TRY")
 end
 
 -- A clock rather than a count of minutes, which is what the time quests used to
@@ -497,6 +526,7 @@ end
 function Collection.why(id)
     local gate = Collection.gateOf[id]
     if not gate then return nil end
+    if not Store.full() then return unbought() end
 
     local need = gate.need
 
@@ -593,7 +623,7 @@ end
 -- here -- a clock is formatted one way in the whole book, and the screen that
 -- draws this one has no business owning the second copy of that.
 function Collection.meter(gate)
-    if Collection.met(gate) then return nil end
+    if not Store.full() or Collection.met(gate) then return nil end
 
     local have, want, how = Collection.progress(gate)
     if not have then return nil end
@@ -631,6 +661,7 @@ end
 function Collection.lessonWhy(key)
     local rung = Collection.rungs[key]
     if not rung then return nil end
+    if not Store.full() then return unbought() end
 
     return phrase("ONLY AFTER %s", Subjects.get(rung.after).name),
         phrase("SURVIVE %d MINUTES THERE", minutes(rung.time))

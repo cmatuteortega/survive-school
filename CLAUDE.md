@@ -75,7 +75,7 @@ answer instead.
 `F11` / `alt+enter` toggles fullscreen, `Esc` quits. Save state lives in
 `~/Library/Application Support/LOVE/notebook-survivors/`: `options.txt`,
 `bookmark.txt`, `records.txt`, `tally.txt`, `course.txt`, `iap.txt` (what the
-shop has sold, kept by love-iap), and one `.txt` per drawn design (`hero-*.txt`,
+shop has sold -- `full_game`, `everything` -- kept by love-iap), and one `.txt` per drawn design (`hero-*.txt`,
 `sword.txt`, `star.txt`, `rocket.txt`, `sun.txt`, `cools.txt`, `skate.txt`,
 `bomb.txt`, `lightning.txt`, `bird.txt`, `shot.txt`) — one line per row of the
 design. Delete one to be handed the starting drawing again.
@@ -140,7 +140,8 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
 - **Screens:** `intro` (the first launch's opening, seen through a blinking eye
   that opens on the title), `menu`, `settings`, `timetable`, `studio`, `library`, `canteen`,
   `homework` (the challenge list, read off `challenges`), `chance` (the
-  revive-by-ad offer), `double` (the x2 box on the end cards), `blank` (the page with
+  revive-by-ad offer), `fullgame` (the card the padlock on the title and the
+  timetable opens, selling the full game), `double` (the x2 box on the end cards), `blank` (the page with
   nothing on it, which nothing instances today), `pause`, `levelup`, `win`,
   `over`, `retake`, `hud`, `scribble` (hand-drawn boxes), `spread` (the book the
   library, the canteen and the homework page are read in: two leaves, a crease,

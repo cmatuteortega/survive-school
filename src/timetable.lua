@@ -101,6 +101,14 @@
 -- that stepped its cards into the page would be saying they are a stack with an
 -- order to it, and these are three doors that have nothing to do with each other.
 --
+-- **And a padlock at the top of the other edge**, on a book that is not the full
+-- game yet (src/store.lua): the corner button's box, standing in the page just
+-- inside the top lesson tab -- the top right of the sheet, since the tabs are the
+-- book's edge rather than the page's. Pressed like everything in the margins, and
+-- what it opens is the card that asks (src/fullgame.lua). The lessons it would
+-- open say so on their own pages: a shut page's two lines are the full game's
+-- two lines until it is bought (`Collection.lessonWhy`).
+--
 -- The corner button and that column are why the panel is fitted between them
 -- rather than against the page: the left margin has something in it top and
 -- bottom, and a sheet measured off the edges of the page would start its heading
@@ -122,6 +130,7 @@ local Upgrades = require("src.upgrades")
 local Records = require("src.records")
 local Mark = require("src.mark")
 local Collection = require("src.collection")
+local Store = require("src.store")
 local Sfx = require("src.sfx")
 local I18n = require("src.i18n")
 local util = require("src.util")
@@ -759,7 +768,8 @@ function Timetable:panel(lay, top, bottom)
     -- nothing. The guard is the narrow page or the long heading where the two
     -- would actually meet -- there the column steps down under the button, since
     -- the button is the one thing here that cannot move.
-    if cx - math.ceil(colW / 2) <= lay.buttonRight + EDGE then
+    if cx - math.ceil(colW / 2) <= lay.buttonRight + EDGE
+        or (lay.shopX and cx + math.ceil(colW / 2) >= lay.shopX - EDGE) then
         top = math.max(top, lay.underButton)
     end
 
@@ -1048,6 +1058,14 @@ function Timetable:layout(game)
     lay.buttonRight = Hud.cornerBox(game) + Hud.CORNER_SIZE
     lay.underButton = Hud.cornerBottom(game) + EDGE
 
+    -- And the padlock, level with it at the other end of the sheet, inside the
+    -- pulled-out tab's reach so the two never touch. Nil once there is nothing
+    -- left to sell, and then nothing here keeps clear of it.
+    if not Store.full() then
+        lay.shopX = lay.tabX - TAB_POP - EDGE - Hud.CORNER_SIZE
+        lay.shopY = select(2, Hud.cornerBox(game))
+    end
+
     -- The tabs are hung off the full height of the sheet -- they are down the
     -- other edge, so neither thing in the left margin is anything to them -- and
     -- only the panel is fitted between them.
@@ -1096,6 +1114,13 @@ function Timetable:commit(what)
     self.answer = what
     self.chosen = what == "go" and self.go.boxes[1] or self.custom.boxes[1]
     self.confirmT = 0
+end
+
+-- Whether a point is on the padlock, target and all.
+function Timetable:shopAt(x, y)
+    local lay = self.lay
+    return lay ~= nil and lay.shopX ~= nil
+        and Hud.buttonAt(lay.shopX, lay.shopY, x, y)
 end
 
 -- Whether a point is on the corner button, target and all.
@@ -1213,7 +1238,7 @@ function Timetable:mark(x, y)
     -- cannot answer is worse than no box at all.
     if self:openHere() and self.go:mark(x, y) then self.lastAct = "go" return true end
     if self:tabAt(x, y) or self:backAt(x, y) or self:sideAt(x, y)
-        or self:courseRow(x, y) then
+        or self:shopAt(x, y) or self:courseRow(x, y) then
         return false
     end
     self.marks:add(x, y)
@@ -1238,6 +1263,11 @@ end
 function Timetable:press(x, y)
     if self:backAt(x, y) then
         self.pressed = "back"
+        return
+    end
+
+    if self:shopAt(x, y) then
+        self.pressed = "fullgame"
         return
     end
 
@@ -1349,6 +1379,9 @@ function Timetable:keypressed(key)
         -- unlike the keys that answer the boxes, because the button it presses
         -- is not a box: there is nothing there to scribble in.
         self.pressed = "back"
+    elseif key == "b" and not Store.full() then
+        -- And to the padlock, on the title's own key for it.
+        self.pressed = "fullgame"
     elseif key == "return" or key == "space" then
         if self:openHere() then self.go:autoFill(self.go.boxes[1]) end
     elseif key == "c" then
@@ -1781,6 +1814,9 @@ function Timetable:draw(game)
     Hud.drawCorner(game, "back", false)
     for i, side in ipairs(self.sides) do
         self:drawSide(i, side)
+    end
+    if lay.shopX then
+        Hud.drawButton(lay.shopX, lay.shopY, Hud.CORNER_SIZE, "lock", false)
     end
 
 

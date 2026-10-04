@@ -3103,8 +3103,8 @@ book.
 
 ## Ads and the shop
 
-The game is free, and it pays for itself two ways: an ad you choose to watch, and
-pages you choose to buy. Both were decided against the same rule, which is the one
+The game is free to start, and it pays for itself two ways: an ad you choose to
+watch, and the rest of the book, which you choose to buy. Both were decided against the same rule, which is the one
 the canteen already keeps (see **The counter**): **nothing a run needs is for
 sale, and nothing is ever put in front of you that you did not ask for.**
 
@@ -3146,23 +3146,45 @@ can make money out of the player's own hand.
 Both offers are once a run, and a bookmark remembers that: a run carried over a
 closed program is the same run.
 
-### Pages for money
+### The full game, then the whole book
 
-The shop is three more sections at the back of the canteen, after the refund,
-since the purse never meets them: `LESSONS` and `MORE LESSONS` sell every lesson
-the timetable's ladder holds shut, one at a time, and `WHOLE BOOK` opens all of
-them and turns the ads off. The two offers stay on the page for a whole book —
-still once a run — with nothing to watch, so a player who paid is not given
-less. Beside it are `RESTORE` and, where the consent rules ask for one, `AD
-PRIVACY`, which brings the consent form back.
+The book is free to open at `SCIENCE` and free to play there for as long as you
+like. Everything else is the **full game**, one purchase: every other lesson on
+the timetable, and every line of the library that has to be earned. On a free
+book the lessons above `SCIENCE` are shut and say `ONLY IN THE FULL GAME` /
+`PURCHASE FULL GAME TO TRY` where the ladder's demand would be, and every gated
+line on the library's shelves says the same two things with no meter under it.
+The lines nobody earns are in the book either way, so a free run deals from the
+same starting catalogue a bought one does. The canteen's counter is open to a
+free book exactly as to a bought one — perks, heroes and courses are sold for
+coins, and coins are earned on `SCIENCE` as well as anywhere.
 
-What is sold is pages and only pages. Not coins, not perks, not heroes, not
-courses: those are what the purse is for, and a counter that could be skipped
-with a card would be a book whose afternoons were for sale. Drawing your own hero
-is the game, not a thing to paywall. The ladder is untouched — every lesson can
-still be earned by playing, and buying one is reaching its rung by another road:
-the next page up still waits on this one's clock. A lesson already earned says
-`OPEN` and has no box; one bought says `OWNED`.
+Bought, the book is the book the rest of this document describes: the ladder
+opens the pages and the quests open the lines, as they always have.
+
+It is sold from two places. A padlock in the settings button's own box sits in
+the top right of the title screen and at the top of the timetable, beside the
+lesson tabs, on a book that has not bought it — pressed rather than answered,
+like everything in the margins, it opens a card over the screen it was pressed
+on: `SCIENCE IS ALWAYS FREE` / `FULL GAME?`, what it opens, the store's price,
+and `YES` / `NO` to scribble in. `YES` opens the store's purchase sheet and the
+card waits; bought, the card is gone and the book opens behind it, and cancelled
+it asks again. And the canteen's last section, `SHOP`, has it as its first row.
+
+Once the full game is bought, and only then, that row becomes **`WHOLE BOOK`**:
+every lesson and every line of the library opened on the spot, and the ads turned
+off — the two offers stay on the page, still once a run, with nothing to watch, so
+a player who paid is not given less. It skips the ladder and the quests and
+nothing else: **it does not do your homework**. The homework page counts only what
+was earned by playing (`Collection.earned`), so a bought library leaves every
+collection row where it stood, and the canteen's note under the row says so. The
+other two rows of `SHOP` are `RESTORE` and, where the consent rules ask for one,
+`AD PRIVACY`, which brings the consent form back.
+
+What is sold is the book and only the book. Not coins, not perks, not heroes, not
+courses: those are what the purse is for, and a counter that could be skipped with
+a card would be a book whose afternoons were for sale. Drawing your own hero is
+the game, not a thing to paywall.
 
 A row is still a name, a price and a box, and buying is still answered by
 scribbling rather than pressed — it is the most irreversible thing in the game.

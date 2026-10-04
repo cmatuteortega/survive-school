@@ -237,13 +237,15 @@ end
 
 --- the catalogue --------------------------------------------------------------
 
--- How many of a list of catalogue lines the book has opened. The collection's one
--- door (`Collection.has`) asked of each, so a set is open exactly when every line
--- in it is -- there is no second opinion here about what being in the book means.
+-- How many of a list of catalogue lines the book has *earned*. The collection's
+-- door with the shop taken off it (`Collection.earned`), so a set is done exactly
+-- when every line in it was opened by playing -- THE WHOLE BOOK (src/store.lua)
+-- opens the library and leaves this page as it was, since homework bought at the
+-- till is not homework.
 local function opened(ids)
     local n = 0
     for _, id in ipairs(ids) do
-        if Collection.has(id) then n = n + 1 end
+        if Collection.earned(id) then n = n + 1 end
     end
     return n
 end

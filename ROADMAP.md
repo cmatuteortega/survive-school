@@ -86,8 +86,8 @@ for it.
 
 ## 7. Retention and business model
 
-**Decided: free to play, opt-in rewarded ads, and IAP that only unlocks
-content.** The book's economy is earned (the purse, the canteen that gives
+**Decided: free to start (SCIENCE), opt-in rewarded ads, and IAP that only
+unlocks content: the full game, then the whole book.** The book's economy is earned (the purse, the canteen that gives
 everything back, the quests in `Collection.gates`), so nothing sold here buys
 coins, power or skins — drawing your own hero is the feature, not something to
 paywall.
@@ -116,24 +116,27 @@ checked on a real phone against a live AdMob account.
 Built on love-iap (`src/iap.lua`, and its action in the workflow). Not yet
 checked against Play: that needs the app and its products in Play Console.
 
-- [x] **Unlock a lesson** — `lesson_<key>` for every lesson after SCIENCE,
-      opening it through `Collection.lessonOpen`; the ladder still earns it free.
-- [x] **Unlock everything** — `everything`: every lesson, and the two ad offers
-      become free (still once per run).
+- [x] **Full game** — `full_game`: every lesson after SCIENCE and every gated
+      line of the library. Without it the book is SCIENCE and the ungated lines,
+      and every shut page and shelf says `PURCHASE FULL GAME TO TRY`.
+- [x] **Whole book** — `everything`, sold only once `full_game` is owned: every
+      lesson and library line opened outright and the two ad offers free (still
+      once a run). The homework still counts only what was earned
+      (`Collection.earned`).
 - [x] **Store layer** — Google Play Billing through love-iap: restore, sync at
-      launch (a refund takes a page back), entitlements in `iap.txt` beside
+      launch (a refund takes the book back), entitlements in `iap.txt` beside
       `records.txt`. StoreKit is in love-iap too, for when there is an iOS build.
-- [x] **A purchase page in the book** — the canteen's `LESSONS`, `MORE LESSONS`
-      and `WHOLE BOOK` sections; prices read from the store.
-- [x] **Dev switch respected** — `Store.opens` sits inside `Dev.opened`; with the
+- [x] **Where it is sold** — the canteen's `SHOP` section (the full game, then
+      the whole book, with `RESTORE` and `AD PRIVACY`), and a padlock on the
+      title and the timetable that opens the full game's card
+      (`src/fullgame.lua`). Prices read from the store.
+- [x] **Dev switch respected** — both gates sit inside `Dev.opened`; with the
       dev row showing, love-iap's mock and a stand-in ad answer on a desktop.
 - [x] Update `README.md` / `DESIGNDOC.md`.
 - [ ] **Go live:** create the app with the same application id in Play Console,
       upload the signed `.aab` (the workflow's "Play bundle" artifact) to a
-      testing track, create and activate the seven
-      products (`lesson_pe`, `lesson_language`, `lesson_finance`, `lesson_music`,
-      `lesson_maths`, `lesson_art`, `everything`), add license testers, and
-      decide the prices — `everything` below the six lessons together.
+      testing track, create and activate the two products (`full_game` at
+      3,99 EUR, `everything` at 1,99 EUR), and add license testers.
 
 ### Retention
 

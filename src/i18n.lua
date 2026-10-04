@@ -382,18 +382,21 @@ local ES = {
     ["YOU GET EVERY COIN BACK"] = "RECUPERAS TODAS LAS MONEDAS",
     ["SCRIBBLE A BOX TO REFUND"] = "GARABATEA UNA CASILLA PARA DEVOLVER",
     ["NOTHING TO REFUND"] = "NO HAY NADA QUE DEVOLVER",
-    -- The shop (src/store.lua, src/canteen.lua): pages for money, never coins.
-    -- TIENDA rather than CANTINA for the closed line, since it is the store that
-    -- is shut and not the counter.
-    ["LESSONS"] = "CLASES",
-    ["MORE LESSONS"] = "MAS CLASES",
-    ["OR EARN IT ON THE TIMETABLE"] = "O GANALA EN EL HORARIO",
-    ["EVERY LESSON HERE IS OPEN"] = "ESTAS CLASES YA ESTAN ABIERTAS",
+    -- The shop (src/store.lua, src/canteen.lua, src/fullgame.lua): the full game,
+    -- then the whole book, for money and never for coins. TIENDA rather than
+    -- CANTINA for the section and the closed line, since it is the store and not
+    -- the counter. UTILES for the tools, the library's own word for them.
+    ["SHOP"] = "TIENDA",
+    ["FULL GAME"] = "JUEGO COMPLETO",
+    ["FULL GAME?"] = "¿JUEGO COMPLETO?",
+    ["EVERY LESSON AND EVERY TOOL"] = "TODAS LAS CLASES Y UTILES",
+    ["EVERY TOOL OPEN AND NO ADS"] = "TODO ABIERTO Y SIN ANUNCIOS",
+    ["SCIENCE IS ALWAYS FREE"] = "BIOLOGIA SIEMPRE ES GRATIS",
+    ["HOMEWORK STILL HAS TO BE EARNED"] = "LOS DEBERES HAY QUE HACERLOS",
+    ["ONLY IN THE FULL GAME"] = "SOLO EN EL JUEGO COMPLETO",
+    ["PURCHASE FULL GAME TO TRY"] = "COMPRA EL JUEGO COMPLETO PARA PROBAR",
     ["WHOLE BOOK"] = "LIBRO ENTERO",
-    ["EVERY LESSON AND NO ADS"] = "TODAS LAS CLASES Y SIN ANUNCIOS",
-    ["OPEN THIS LESSON NOW"] = "ABRE ESTA CLASE YA",
     ["OWNED"] = "TUYO",
-    ["OPEN"] = "ABIERTA",
     ["RESTORE"] = "RESTAURAR",
     ["WHAT THIS ACCOUNT BOUGHT"] = "LO QUE COMPRO ESTA CUENTA",
     ["AD PRIVACY"] = "PRIVACIDAD",
