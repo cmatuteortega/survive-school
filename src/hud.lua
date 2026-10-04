@@ -919,7 +919,9 @@ local function drawBoss(game)
     bar(x, y, BOSS_BAR_W, BOSS_BAR_H, boss.hp / boss.maxHp, Palette.red)
 
     love.graphics.setColor(Palette.ink)
-    Font.printCentered(I18n.t("THE EYE"), centre, y + BOSS_BAR_H + 2)
+    -- What the boss is called under its bar (`title` on its row, src/enemy.lua),
+    -- so each lesson's fight is named for what it is.
+    Font.printCentered(I18n.t(boss.def.title or "THE EYE"), centre, y + BOSS_BAR_H + 2)
 end
 
 function Hud.draw(game)

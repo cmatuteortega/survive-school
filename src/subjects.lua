@@ -298,9 +298,10 @@ local BLANK = {
 -- something the rest of the strip does not do at all.
 --
 -- And each lesson names its **boss**: the `Enemy.types` row that walks into the
--- box at the end of every cycle (`Spawner:sendBoss`). All seven are the eye for
--- now, written out on every row rather than left to the fallback so that giving
--- a page a fight of its own is one word on its own row. A new boss is a row in
+-- box at the end of every cycle (`Spawner:sendBoss`). P.E. has a fight of its
+-- own, the whistle; the other six are still the eye, written out on every row
+-- rather than left to the fallback so that giving a page a fight of its own is
+-- one word on its own row. A new boss is a row in
 -- src/enemy.lua with `boss = true` on it; the dev boss test on the title screen
 -- (src/dev.lua) is how to fight it without the ten minutes in front of it.
 Subjects.list = {
@@ -322,7 +323,11 @@ Subjects.list = {
         name = "P.E.",
         paper = CALENDAR,
         tool = "stapler",
-        boss = "bosseye",
+        -- The coach's whistle (src/enemy.lua): the page whose whole hand is
+        -- drills ends on the thing that calls them, and the fight is the one
+        -- bullet hell in the book -- rings of notes, lobbed jacks, squads
+        -- marched across the box, and the class grown into giants.
+        boss = "whistle",
         -- The one page where the word means what it means everywhere else: a
         -- class does drills, and a class drills in *lines*. Walls and pincers
         -- above all, more often than anywhere but the unruled page, and no grid

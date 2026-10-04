@@ -60,6 +60,17 @@ local PUPIL_SLIDE = 5 -- how far off centre it may sit: the iris is 19 across
 local PUPIL_TURN = 6  -- how fast it swings across, in fractions per second --
                       -- an eye tracks smoothly, it does not snap
 
+-- How far past its middle you have to be before a `face` body turns round to you.
+local FACE_BAND = 6
+
+-- The sound a whistle makes, drawn: two rings going out from it over BLARE_TIME,
+-- from the body's own radius to BLARE_REACH past it. A mark rather than a hit --
+-- what hurts is the notes it throws (Game:updateWhistle) -- so it is red for
+-- "theirs" and is gone before the notes have got anywhere.
+local BLARE_TIME = 0.35
+Enemy.BLARE_TIME = BLARE_TIME
+local BLARE_REACH = 34
+
 -- Add a row here to add a monster; the spawner picks from this table by name.
 -- Every row walks at the player, and every block below is a way of not *only*
 -- doing that. None of them is a special case anywhere else in the game: each is
@@ -113,11 +124,15 @@ local PUPIL_TURN = 6  -- how fast it swings across, in fractions per second --
 -- grin is the horde-sized version of the same idea: something the crowd-control
 -- half of a build cannot fully answer.
 --
--- Four more fields turn a row into a boss: `boss` (never despawns, never shoved
--- out of the way by the crowd, and ends the run when it dies), `pupil` (an eye
--- that watches you), `trail` (a wet blot dropped behind it as it walks) and
--- `tears` (the same wet thrown rather than walked, three ways --
--- Game:updateTears).
+-- A handful more fields turn a row into a boss: `boss` (never despawns, never
+-- shoved out of the way by the crowd, and ends the run when it dies), `title`
+-- (its name under the HUD's bar) and `call` (the line the page says as it walks
+-- on), `pupil` (an eye that watches you),
+-- `face` (a body drawn mirrored to point at you), `trail` (a wet blot dropped
+-- behind it as it walks), `tears` (the same wet thrown rather than walked, three
+-- ways -- Game:updateTears) and `whistle` (the P.E. boss's four calls --
+-- Game:updateWhistle). Every one of them but `boss` is optional and read in one
+-- place, so a second boss is a row that picks which of them it is made of.
 --
 -- The box the fight happens in is not one of them, and deliberately: an arena is
 -- a fact about the *fight* rather than about the monster, so the spawner opens it
@@ -283,6 +298,7 @@ Enemy.types = {
     -- the 1260 above is still the fight, and the second eye is 40% past it.
     bosseye = { name = "BOSS EYE", sprite = "bosseye", hp = 900, speed = 26, radius = 20, damage = 20,
               xp = 250, shadow = 34, boss = true, pupil = true, knock = 0.06, hold = 0.3,
+              title = "THE EYE", call = "THE EYE IS OPEN",
               shot = { range = 190, every = 2.6, speed = 46, damage = 12, hit = 4,
                        spread = 5, arc = 1.05, sprite = "bossShot" },
               trail = { every = 0.5, gap = 9, radius = 12, life = 7, damage = 6 },
@@ -322,6 +338,86 @@ Enemy.types = {
                         -- Thresholds rather than a clock, because what they are
                         -- for is marking progress you earned.
                         ring = { at = { 0.66, 0.33 }, count = 14, radius = 50 } } },
+    -- The P.E. boss: the coach's whistle, and the one fight in the book that is
+    -- a bullet hell. The eye is a fight about *ground* -- everything it does is
+    -- wet you have to stop standing on -- and this is the other half of the
+    -- same box: a fight about what is in the air, and about the class it calls
+    -- in. A P.E. teacher does not fight you. They blow the whistle and make
+    -- everybody else do it.
+    --
+    -- The body is the eye's numbers where the fight is the same fight -- 900
+    -- health for the eye's reason (the measured half minute), the same knock
+    -- and hold, the same 20 on contact -- and a narrower radius because it is
+    -- a narrower thing: 45 across and 26 high, so a 15px circle is the honest
+    -- middle of it. It walks a touch slower than the eye because it has
+    -- something faster to do instead.
+    --
+    -- **It lunges.** The wad's `charge`, at the boss's size: it stands still
+    -- winding up, outlined in red, and then throws itself down the line it
+    -- locked. The rule the wad's numbers keep is kept here too -- 140 for 0.6s
+    -- is 84px against a 150 trigger, so it closes on you and never crosses the
+    -- range in one go -- and the box is what makes it a threat: the far end of
+    -- the line is a wall, not open page.
+    --
+    -- **It spits.** Three peas down the line on a short beat, the least of what
+    -- it does and the thing that is always happening, so standing still is
+    -- never free even between the calls below.
+    whistle = { name = "WHISTLE", sprite = "whistle", hp = 900, speed = 22, radius = 15, damage = 20,
+                xp = 250, shadow = 30, boss = true, face = true, knock = 0.06, hold = 0.3,
+                title = "THE WHISTLE", call = "THE WHISTLE BLOWS",
+                shot = { range = 200, every = 1.9, speed = 58, damage = 9, hit = 3,
+                         spread = 3, arc = 0.42, sprite = "pea" },
+                charge = { range = 150, every = 7, wind = 0.85, speed = 140,
+                           time = 0.6, rest = 1.4 },
+                -- The four calls (Game:updateWhistle). Three clocks and a set of
+                -- thresholds, for the tears' reason: the clocks are a rhythm you
+                -- learn, and the thresholds are the fight answering you for
+                -- winning it.
+                whistle = {
+                    -- The blast. It stops, flashes red for `wind` seconds -- the
+                    -- one tell, and the same tell the lunge uses, because both
+                    -- are "it is about to do something big" -- and then blows a
+                    -- ring of notes out in every direction with a hole `gap`
+                    -- notes wide in it, twice, the second ring set half a note
+                    -- round from the first. The hole is the answer and it is in
+                    -- the same place both times; everywhere else, the half-step
+                    -- closes the room the first ring left. So the blast is not
+                    -- dodged by standing still and is not dodged by guessing --
+                    -- it is dodged by finding the hole and getting into it.
+                    blast = { every = 6, wind = 0.9, rings = 2, apart = 0.3,
+                              count = 22, gap = 4, speed = 55, damage = 10,
+                              hit = 3, life = 4.5, sprite = "note" },
+                    -- The jacks: the spiky things. Lobbed rather than thrown --
+                    -- over your head, harmless in the air, with their shadow on
+                    -- the page where each will come down -- to land in a
+                    -- scatter round where you are *standing*, and then lie there
+                    -- for `lie.life` seconds hurting whoever walks on them
+                    -- (src/spike.lua). Aimed at the ground round you rather than
+                    -- at you, so what it takes away is the room you were about
+                    -- to dodge the next blast into.
+                    jacks = { every = 4.6, count = 6, spread = 50, flight = 0.9,
+                              damage = 8, sprite = "jack",
+                              lie = { radius = 4, life = 7 } },
+                    -- Fall in. A short wall of one kind marched across the box
+                    -- from one of its edges (Spawner:squad), on top of the
+                    -- ordinary escort: the troops the whistle commands, and the
+                    -- P.E. page's own favourite drill turned on you. The kinds
+                    -- are dealt in turn so the squads are different problems --
+                    -- a wall of skulls is a wall, a wall of wads is a volley
+                    -- -- and `most` is the crowd it will not call into, so a
+                    -- squad never arrives into a box that is already full.
+                    squad = { every = 12, count = 6, gap = 18, most = 28,
+                              of = { "skull", "wad", "blob", "bat" } },
+                    -- Grow. At three quarters, half and a quarter of its health
+                    -- it blows a long note and the `count` nearest of its class
+                    -- within `range` come up as champions (Game:pumpEnemy) --
+                    -- twice the size, the champion's own health and damage, the
+                    -- same monster. Whoever it could not find nearby it calls in
+                    -- beside itself. Thresholds rather than a clock for the
+                    -- eye's rings' reason: the moment the bar says the fight is
+                    -- going your way, the class gets bigger.
+                    pump = { at = { 0.75, 0.5, 0.25 }, count = 3, range = 170 },
+                } },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -386,6 +482,10 @@ function Enemy.new(kind, x, y, scale)
         -- be 6) and quietly stopped working the moment anyone tuned one of them.
         tearDamage = def.tears and def.tears.damage * dmgMul or nil,
         tearWet = def.tears and def.tears.puddle.damage * dmgMul or nil,
+        -- And the whistle's two throws, for the same reason: a note and a jack
+        -- are two numbers, and a cycle that sharpens one sharpens both.
+        blastDamage = def.whistle and def.whistle.blast.damage * dmgMul or nil,
+        jackDamage = def.whistle and def.whistle.jacks.damage * dmgMul or nil,
         -- And the bulb's dose, both halves of it, for the same reason: what a
         -- burst hits for and what the blot of ink it leaves hurts for are two
         -- numbers, and a cycle that sharpens one sharpens both (Game:burstEnemy).
@@ -535,6 +635,19 @@ function Enemy.new(kind, x, y, scale)
         scatterT = def.tears and def.tears.scatter.every or nil,
         laneT = def.tears and def.tears.lane.every or nil,
         rings = 0,
+        -- The whistle's clocks (Game:updateWhistle), and the same "how many of
+        -- the thresholds have gone" count the rings keep, for the same reason.
+        -- `blowT` is the wind-up in front of a blast, which it stands still for
+        -- (Enemy:update); `volleys` is how many rings of the blast are still to
+        -- come and `volleyT` how long until the next; `blareT` is how long the
+        -- sound it just made is still drawn going out (Enemy:draw).
+        blastT = def.whistle and def.whistle.blast.every * 0.6 or nil,
+        jackT = def.whistle and def.whistle.jacks.every * 0.5 or nil,
+        squadT = def.whistle and def.whistle.squad.every * 0.5 or nil,
+        squads = 0, pumps = 0,
+        blowT = 0, volleys = 0, volleyT = 0, gapA = 0, blareT = 0,
+        -- Which way a `face` body is pointing: false is the way it was drawn.
+        faceRight = false,
         headX = 0, headY = 0, -- the way it is actually going, vs the way it wants to
         -- Where the pupil is looking, as a fraction of how far it may slide.
         -- Chased rather than set, so the eye swings round to you (Enemy:draw).
@@ -719,6 +832,21 @@ function Enemy:update(dt, player, walls, slick)
         self.lookY = self.lookY + (dy - self.lookY) * k
     end
 
+    -- And a body that points at you turns round once you are clearly on its
+    -- other side. The dead band is what stops it flipping every frame while you
+    -- stand straight above it, which on a body 45 across reads as a strobe.
+    -- Not while glued, for the pupil's reason inverted: a whistle stuck to the
+    -- page is stuck the way it was pointing.
+    if self.def.face and self.frozen <= 0 then
+        local dx = player.x - self.x
+        if dx > FACE_BAND then
+            self.faceRight = true
+        elseif dx < -FACE_BAND then
+            self.faceRight = false
+        end
+    end
+    self.blareT = math.max(0, self.blareT - dt)
+
     -- Glued: no chase, no drift, and any knockback it was carrying is dropped
     -- so it doesn't lurch the moment it comes unstuck. It can still be hit, and
     -- it still hurts the player who walks into it.
@@ -750,7 +878,12 @@ function Enemy:update(dt, player, walls, slick)
     -- Either it is walking, or it is committed to a line it picked half a second
     -- ago (`charge`). The two are exclusive and nothing below this cares which:
     -- a shove still rides on top of a dash, and a dashing wad still bobs.
-    if not (self.def.charge and self:charge(dt, player)) then
+    -- A whistle drawing breath for a blast stands where it is (Game:updateWhistle
+    -- owns the clock), which is half of the tell: the red outline says something
+    -- is coming and the stopping says it is not the lunge, which moves.
+    if self.blowT > 0 then
+        self.headX, self.headY = 0, 0
+    elseif not (self.def.charge and self:charge(dt, player)) then
         -- What it is walking at, which is the player unless something has
         -- offered it somewhere better. Everything after this -- the walls, the
         -- wax, the heading it keeps -- is untouched by the swap, so a lured
@@ -998,12 +1131,12 @@ end
 -- band, which is a different mark on the page -- and the rim is a *word* rather
 -- than a decoration, so it has to look the same on a bat as on a grin twice the
 -- size of one.
-local function outline(sprite, x, y, colour, s)
+local function outline(sprite, x, y, colour, s, flip)
     love.graphics.setColor(colour)
-    sprite:drawMask(x - 1, y, nil, s)
-    sprite:drawMask(x + 1, y, nil, s)
-    sprite:drawMask(x, y - 1, nil, s)
-    sprite:drawMask(x, y + 1, nil, s)
+    sprite:drawMask(x - 1, y, flip, s)
+    sprite:drawMask(x + 1, y, flip, s)
+    sprite:drawMask(x, y - 1, flip, s)
+    sprite:drawMask(x, y + 1, flip, s)
 end
 
 -- Which sprite it is and where it is standing this frame. Two callers -- the
@@ -1035,11 +1168,19 @@ function Enemy:footing()
     -- It slides home linearly, which on a whole-pixel grid is what makes it read
     -- as a recoil rather than as a wobble: 3, 2, 1, 0 is four held frames going
     -- one way, and an eased curve would spend most of them at the same pixel.
+    --
+    -- The fourth answer is which way round it is drawn, for a `face` body: the
+    -- blank under it has to be mirrored with it, so it comes out of here too.
+    -- And a whistle drawing breath shudders a pixel side to side, which is the
+    -- other half of its tell and belongs here for the recoil's reason.
+    local flip = self.def.face and self.faceRight or nil
+    local x = self.x
+    if self.blowT > 0 then x = x + (math.floor(self.blowT * 24) % 2 == 0 and 1 or -1) end
     if self.bumpT > 0 then
         local k = HIT_BUMP * (self.bumpT / HIT_BUMP_TIME)
-        return sprite, self.x + self.bumpX * k, y + self.bumpY * k
+        return sprite, x + self.bumpX * k, y + self.bumpY * k, flip
     end
-    return sprite, self.x, y
+    return sprite, x, y, flip
 end
 
 -- Which outline it is wearing this frame, or nil for none: the four ranked, most
@@ -1087,6 +1228,11 @@ function Enemy:outlineColour()
     if self.chargePhase == "wind" and math.floor(self.phaseT * 14) % 2 == 0 then
         return Palette.red
     end
+    -- A whistle drawing breath for a blast blinks the same red the wind-up does
+    -- and for the same reason: it is a warning, and there is one way to say one.
+    if self.blowT > 0 and math.floor(self.blowT * 14) % 2 == 0 then
+        return Palette.red
+    end
     if self.shockT > 0 then return Palette.blue end
     if self.bleached then return Palette.graphite end
 end
@@ -1113,15 +1259,15 @@ end
 -- Not the shadow, which is the one thing here that really is on the paper: a
 -- smear of graphite goes on darkening over a rule like every other mark.
 function Enemy:drawSolid()
-    local sprite, x, y = self:footing()
+    local sprite, x, y, flip = self:footing()
 
     love.graphics.setColor(Palette.paper)
-    if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow) end
-    sprite:drawMask(x, y, nil, self.grow)
+    if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow, flip) end
+    sprite:drawMask(x, y, flip, self.grow)
 end
 
 function Enemy:draw()
-    local sprite, x, y = self:footing()
+    local sprite, x, y, flip = self:footing()
     local stuck = self.frozen > 0
 
     -- Which colour the body is wearing this frame, or nil for its own art. Two
@@ -1164,14 +1310,28 @@ function Enemy:draw()
         shadow, (stuck and 2 or 1) * grow)
 
     local ring = self:outlineColour()
-    if ring then outline(sprite, x, y, ring, grow) end
+    if ring then outline(sprite, x, y, ring, grow, flip) end
 
     if lit then
         love.graphics.setColor(lit)
-        sprite:drawMask(x, y, nil, grow)
+        sprite:drawMask(x, y, flip, grow)
     else
         love.graphics.setColor(1, 1, 1)
-        sprite:draw(x, y, nil, grow)
+        sprite:draw(x, y, flip, grow)
+    end
+
+    -- The blast going out (`blareT`, set by Game:updateWhistle). Two rings a
+    -- third of the reach apart, plotted a pixel at a time like every circle in
+    -- the game.
+    if self.blareT > 0 then
+        local f = 1 - self.blareT / BLARE_TIME
+        love.graphics.setColor(Palette.red)
+        for k = 0, 1 do
+            local r = self.radius + (f - k / 3) * BLARE_REACH
+            if r > self.radius then
+                pixelart.circleOutline(math.floor(self.x), math.floor(self.y), math.floor(r))
+            end
+        end
     end
 
     -- The pupil, over the iris the art left empty. A disc rather than a sprite

@@ -33,6 +33,7 @@ local Chance = require("src.chance")
 local FullGame = require("src.fullgame")
 local LevelUp = require("src.levelup")
 local Puddle = require("src.puddle")
+local Spike = require("src.spike")
 local Arena = require("src.arena")
 local Loadout = require("src.loadout")
 local Design = require("src.design")
@@ -73,6 +74,7 @@ local SEPARATION = 0.35 -- how hard overlapping enemies shove each other apart
 local SPENT_PAD = 20      -- how far off screen a spent mark is still drawn
 local DRAFT_SIZE = 3      -- upgrades offered per level
 local NOTICE_TIME = 1.8   -- how long the run says what you just took
+local LOB_HEIGHT = 18      -- how high a lobbed jack goes over the page
 local RUB_HEARD = 24      -- pixels of rubbing before the release earns its pop:
                           -- a few tip-widths of travel, so a tap stays silent
 
@@ -640,10 +642,13 @@ function Game:reset()
     -- Game:killEnemy is what clears it.
     self.boss = nil
     self.bullets = {}
-    self.shots = {} -- enemy fire: the eye's pellets (Game:updateEnemyShots)
+    self.shots = {} -- enemy fire: pellets, tears, notes, jacks (Game:updateEnemyShots)
     -- The eye boss's wet trail (src/puddle.lua): ground that has stopped being
     -- safe. Page-level, like the marks, and it dries off on its own clock.
     self.puddles = {}
+    -- And the P.E. whistle's jacks, lying where they landed (src/spike.lua): the
+    -- same idea with corners, on the same page level and on a clock of their own.
+    self.spikes = {}
     -- The box the boss fight happens in (src/arena.lua), and nil every other
     -- minute of a run: an open page is the normal state and the box is the
     -- exception, so everything that asks about it asks `if self.arena`.
@@ -1465,7 +1470,7 @@ function Game:spawnEnemy(kind, x, y, scale)
     -- walking the horde: the HUD reads its health every frame.
     if e.def.boss then
         self.boss = e
-        self:say("THE EYE IS OPEN")
+        if e.def.call then self:say(e.def.call) end
     end
 
     -- Handed back for the drills (src/spawner.lua), which spawn a shape and then
@@ -1711,6 +1716,12 @@ function Game:updateEnemies(dt, grid)
         -- moment of the boss not doing anything.
         if e.def.tears and e.frozen <= 0 then
             self:updateTears(dt, e)
+        end
+
+        -- And the whistle blows, which is held by glue the same way: a held
+        -- boss buys a moment of it not doing anything, whichever boss it is.
+        if e.def.whistle and e.frozen <= 0 then
+            self:updateWhistle(dt, e)
         end
 
         -- The boss is the one thing on the page that cannot be walked away
@@ -2261,7 +2272,10 @@ function Game:updateEnemyShots(dt)
         s.y = s.y + s.dy * s.speed * dt
         s.life = s.life - dt
 
-        if util.len(player.x - s.x, player.y - s.y) < player.radius + s.radius then
+        -- A lobbed jack is over your head until it lands, so it hits nobody in
+        -- the air: what it threatens is where its shadow is.
+        if not s.lob
+            and util.len(player.x - s.x, player.y - s.y) < player.radius + s.radius then
             s.life = 0
             if player:hurt(s.damage) then
                 self.particles:burst(player.x, player.y, 6, Palette.red)
@@ -2286,6 +2300,14 @@ function Game:updateEnemyShots(dt)
                 if self.arena then px, py = self.arena:clamp(px, py, wet) end
                 self.puddles[#self.puddles + 1] = Puddle.new(px, py, s.wet,
                     s.wetDamage, love.math.random(2 ^ 20), s.wetReach)
+            end
+            -- And a jack comes down where its shadow was, which is the point it
+            -- was aimed at (Game:lobJack) -- already inside the box, so there is
+            -- no clamp to do.
+            if s.lob then
+                self.spikes[#self.spikes + 1] = Spike.new(s.tx, s.ty, s.lob,
+                    s.damage, s.grow)
+                self.particles:burst(s.tx, s.ty, 3, Palette.slate)
             end
             table.remove(self.shots, i)
         end
@@ -2363,6 +2385,198 @@ function Game:updateTears(dt, e)
             self:throwTear(e, tears, turn + i * math.pi * 2 / ring.count, ring.radius)
         end
         self.particles:burst(e.x, e.y, 12, Palette.blue)
+    end
+end
+
+--- the whistle -----------------------------------------------------------------
+
+-- The P.E. boss's four calls (`whistle` in src/enemy.lua): the blast, the jacks,
+-- the squad and the growth. Three clocks and a set of thresholds, and the blast
+-- and the lunge are kept from overlapping in both directions -- a blast never
+-- starts while a lunge is under way, and a lunge's clock does not run while the
+-- whistle is drawing breath (Enemy:update) -- so the two red tells never mean
+-- two things at once.
+function Game:updateWhistle(dt, e)
+    local calls = e.def.whistle
+    local player = self.player
+
+    -- The blast: draw breath, then the rings.
+    local blast = calls.blast
+    if e.blowT > 0 then
+        e.blowT = e.blowT - dt
+        if e.blowT <= 0 then
+            e.blowT = 0
+            e.volleys, e.volleyT = blast.rings, 0
+            e.gapA = love.math.random() * math.pi * 2
+        end
+    elseif e.volleys > 0 then
+        e.volleyT = e.volleyT - dt
+        if e.volleyT <= 0 then
+            local half = (blast.rings - e.volleys) % 2 == 1
+            self:blowRing(e, blast, half)
+            e.volleys = e.volleys - 1
+            e.volleyT = blast.apart
+        end
+    else
+        e.blastT = e.blastT - dt
+        if e.blastT <= 0 and e.chargePhase == nil then
+            e.blastT = blast.every
+            e.blowT = blast.wind
+        end
+    end
+
+    -- The jacks, lobbed to land in a scatter round where you are standing. Each
+    -- lands somewhere inside `spread` of you and inside the box, and nowhere in
+    -- particular beyond that -- the scatter is weather, the way the eye's is.
+    local jacks = calls.jacks
+    e.jackT = e.jackT - dt
+    if e.jackT <= 0 then
+        e.jackT = jacks.every
+        for _ = 1, jacks.count do
+            local a = love.math.random() * math.pi * 2
+            local r = math.sqrt(love.math.random()) * jacks.spread
+            local tx, ty = player.x + math.cos(a) * r, player.y + math.sin(a) * r
+            if self.arena then tx, ty = self.arena:clamp(tx, ty, jacks.lie.radius) end
+            self:lobJack(e, jacks, tx, ty)
+        end
+    end
+
+    -- Fall in: a squad, while the box has room for one.
+    local squad = calls.squad
+    e.squadT = e.squadT - dt
+    if e.squadT <= 0 then
+        e.squadT = squad.every
+        if #self.enemies + squad.count <= squad.most then
+            e.squads = e.squads + 1
+            local kind = squad.of[(e.squads - 1) % #squad.of + 1]
+            self.spawner:squad(self, kind, squad.count, squad.gap)
+            e.blareT = Enemy.BLARE_TIME
+            Sfx.play("whistle")
+            self.spawner:announce(self, "FALL IN!")
+        end
+    end
+
+    -- Grow, at every threshold this hit has taken it past -- the same rule the
+    -- eye's rings follow, so one big hit across two thresholds is two calls.
+    local pump = calls.pump
+    while e.pumps < #pump.at and e.hp / e.maxHp <= pump.at[e.pumps + 1] do
+        e.pumps = e.pumps + 1
+        self:pumpCrowd(e, pump)
+    end
+end
+
+-- One ring of the blast, with its hole at `gapA`. `half` sets it half a note
+-- round, which is what makes the second ring close the room the first one
+-- left everywhere except in the hole -- the gap is centred on the same angle
+-- both times, so getting into it once is getting into it for both.
+function Game:blowRing(e, blast, half)
+    local step = math.pi * 2 / blast.count
+    local from = e.gapA + (half and step / 2 or 0)
+    local hole = blast.gap * step / 2
+    for i = 0, blast.count - 1 do
+        local a = from + i * step
+        local off = math.abs((a - e.gapA + math.pi) % (math.pi * 2) - math.pi)
+        -- A note sitting exactly on the hole's edge is kept, so the full ring and
+        -- the half-step one open the same arc rather than one a note wider.
+        if off >= hole - 1e-6 then
+            self.shots[#self.shots + 1] = {
+                x = e.x, y = e.y, dx = math.cos(a), dy = math.sin(a),
+                speed = blast.speed, damage = e.blastDamage or blast.damage,
+                life = blast.life, sprite = blast.sprite,
+                radius = (blast.hit or 3) * e.reach, grow = e.grow,
+            }
+        end
+    end
+    e.blareT = Enemy.BLARE_TIME
+    Sfx.play("whistle")
+end
+
+-- One jack, lobbed from the whistle to come down on `tx,ty`. An ordinary piece
+-- of enemy fire in the shots table, with `lob` saying it is over your head --
+-- it hits nobody on the way (Game:updateEnemyShots) and its shadow is drawn on
+-- the page where it will land (Game:draw) -- and what it becomes when it does.
+function Game:lobJack(e, jacks, tx, ty)
+    local dx, dy, dist = util.normalize(tx - e.x, ty - e.y)
+    local life = jacks.flight
+    self.shots[#self.shots + 1] = {
+        x = e.x, y = e.y, dx = dx, dy = dy,
+        speed = dist / life, damage = e.jackDamage or jacks.damage,
+        life = life, flight = life, sprite = jacks.sprite,
+        radius = 0, grow = e.grow,
+        lob = jacks.lie, tx = tx, ty = ty,
+    }
+end
+
+-- The class grows. The `count` nearest ordinary arrivals within `range` of the
+-- whistle are swapped for champions of themselves (Game:pumpEnemy), and any it
+-- could not find are called in as champions beside it -- so the threshold
+-- always buys the same number of giants, whatever the escort happened to be
+-- doing at the time.
+function Game:pumpCrowd(e, pump)
+    local picks = {}
+    for i, other in ipairs(self.enemies) do
+        if other ~= e and not other.def.boss and other.grow == 1 then
+            local d = util.len(other.x - e.x, other.y - e.y)
+            if d <= pump.range then picks[#picks + 1] = { i = i, d = d } end
+        end
+    end
+    table.sort(picks, function(a, b) return a.d < b.d end)
+
+    local grown = 0
+    for k = 1, math.min(pump.count, #picks) do
+        self:pumpEnemy(picks[k].i)
+        grown = grown + 1
+    end
+    for k = grown + 1, pump.count do
+        local a = (k / pump.count) * math.pi * 2 + love.math.random()
+        local kind = self.spawner:escort()
+        local x = e.x + math.cos(a) * (e.radius + 14)
+        local y = e.y + math.sin(a) * (e.radius + 14)
+        local champ = self:spawnEnemy(kind, x, y,
+            self.spawner:scale(self.time, true, kind))
+        self.particles:burst(champ.x, champ.y, 10, Palette.red)
+    end
+
+    e.blareT = Enemy.BLARE_TIME
+    Sfx.play("whistle")
+    self:say("GROW!")
+end
+
+-- One arrival blown up in place into a champion of itself, at the run's
+-- current scale. Swapped in the list rather than mutated, so every number it
+-- carries is the one Enemy.new would have baked for a champion -- radius, the
+-- reach of what it throws, the xp it pays -- and nothing has to be patched by
+-- hand. The old body is marked gone for the storm's reason (Game:killEnemy):
+-- a cloud following it must not go on following something no longer there.
+-- Same length list afterwards, so it is safe inside the backwards walk of
+-- the crowd this is called from.
+function Game:pumpEnemy(index)
+    local old = self.enemies[index]
+    local scale = self.spawner:scale(self.time, true, old.kind)
+    if old.fury then
+        scale = self.spawner:scale(self.time, true, old.kind, nil, true)
+    end
+    local e = Enemy.new(old.kind, old.x, old.y, scale)
+    old.gone = true
+    self.enemies[index] = e
+    self.particles:burst(e.x, e.y, 10, Palette.red)
+end
+
+-- The jacks lying on the page. Standing on one hurts on the player's own
+-- invulnerability window, exactly as a puddle does (Game:updatePuddles).
+function Game:updateSpikes(dt)
+    local player = self.player
+    local hit = false
+    for i = #self.spikes, 1, -1 do
+        local k = self.spikes[i]
+        if not k:update(dt) then
+            table.remove(self.spikes, i)
+        elseif not hit and k:covers(player.x, player.y, player.radius) then
+            hit = true
+            if player:hurt(k.damage) then
+                self.particles:burst(player.x, player.y, 5, Palette.red)
+            end
+        end
     end
 end
 
@@ -4482,6 +4696,7 @@ function Game:update(dt)
         self:updateBullets(dt, grid)
         self:updateEnemyShots(dt)
         self:updatePuddles(dt)
+        self:updateSpikes(dt)
         -- What fights for you while your hands are busy drawing. After the
         -- crowd has moved, so a star cuts and a rocket goes off where things
         -- actually are.
@@ -4752,6 +4967,9 @@ function Game:draw()
     if self.arena then self.arena:draw() end
 
     for _, p in ipairs(self.puddles) do p:draw() end
+    -- The jacks, on the page beside the wet and for the same reason: they are
+    -- ground that is not yours, and have to be read before you walk onto them.
+    for _, k in ipairs(self.spikes) do k:draw() end
 
     -- And the other half of that: ground a weapon of yours has taken away rather
     -- than ground the boss has -- the bomb's burning crater, which is the boss's
@@ -4891,8 +5109,22 @@ function Game:draw()
     for _, b in ipairs(self.bullets) do b:draw() end
     love.graphics.setColor(1, 1, 1)
     for _, s in ipairs(self.shots) do
+        local y = s.y
+        -- A lobbed jack: its shadow on the page where it will land, and the jack
+        -- itself up an arc over the straight line to it. The shadow is the
+        -- whole telegraph -- a cross of graphite that is there from the moment
+        -- it is thrown -- and the arc is what says it is not coming *at* you.
+        if s.lob then
+            local f = 1 - s.life / s.flight
+            y = y - math.floor(4 * LOB_HEIGHT * f * (1 - f))
+            love.graphics.setColor(Palette.graphite)
+            local tx, ty = math.floor(s.tx), math.floor(s.ty)
+            love.graphics.rectangle("fill", tx - 2, ty, 5, 1)
+            love.graphics.rectangle("fill", tx, ty - 2, 1, 5)
+            love.graphics.setColor(1, 1, 1)
+        end
         (s.sprite and Sprites[s.sprite] or Sprites.enemyShot)
-            :draw(s.x, s.y, nil, s.grow)
+            :draw(s.x, y, nil, s.grow)
     end
     self.particles:draw()
     Camera.detach()

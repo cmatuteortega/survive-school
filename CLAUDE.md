@@ -159,7 +159,7 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.
 - **World bookkeeping:** `stroke`, `mark`, `walls`, `bullet`, `gem`, `pickup`,
-  `damage`, `sfx` (+ `src/sfx/`, `src/music/`), `haptics` (the one buzz: being
+  `puddle` and `spike` (the eye's wet and the P.E. whistle's jacks), `damage`, `sfx` (+ `src/sfx/`, `src/music/`), `haptics` (the one buzz: being
   hit, behind the settings page's `VIBRATION` row).
 
 `Game:buildGrid` is a 12px hash rebuilt every frame (enemy separation, bullet

@@ -604,10 +604,11 @@ rather than a thing in it, and paper is the furthest thing from a rule there is.
 in it, which is where that is judged.
 
 Each row also names its **boss**: the `Enemy.types` key `Spawner:sendBoss` drops
-into the box at the end of every cycle. All seven say `bosseye` today, written out
-on every row rather than left to the fallback (a row without one gets the eye) so
-that giving a page a fight of its own is one word on its own row. The dev boss test
-(see **The collection**) is how to look at one.
+into the box at the end of every cycle. P.E. says `whistle` (see **The bosses**);
+the other six say `bosseye`, written out on every row rather than left to the
+fallback (a row without one gets the eye) so that giving a page a fight of its own
+is one word on its own row. The dev boss test (see **The collection**) is how to
+look at one.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
 because a tool line's first level is its unlock — issuing a tool is taking that
@@ -1111,7 +1112,7 @@ every landscape page the game is realistically handed, including the notched
 
 `Enemy.types` in `src/enemy.lua` is the whole bestiary and `TABLE` in
 `src/spawner.lua` is when each of it turns up. Nine kinds walk on over a cycle's
-ten minutes, plus one that is never spawned and one that only arrives at the end:
+ten minutes, plus one that is never spawned and two that only arrive at the end:
 
 | kind | at | weight | hp / speed / dmg | what it is |
 | --- | --- | --- | --- | --- |
@@ -1125,14 +1126,16 @@ ten minutes, plus one that is never spawned and one that only arrives at the end
 | `eye` | 420 | 2 | 14 / 9 / 10 | shoots (`shot`) |
 | `grin` | 480 | 2 | 34 / 11 / 16 | shrugs off shoves (`knock`/`hold`) |
 | `redeye` | 540 | 2 | 14 / 34 / 10 | shoots and holds range (`keep`) |
-| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss |
+| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, six lessons |
+| `whistle` | 600 | — | 900 / 22 / 20 | the cycle boss, P.E. |
 
 Every row walks at the player and every block is a way of not *only* doing that.
 The header comment over `Enemy.types` is the field reference; what matters
 architecturally is **where each block is read**, because each is read in exactly
 one place and nothing else in the game knows it exists:
 
-- **`shot`** and **`trail`** and **`tears`** — `Game:updateEnemies`.
+- **`shot`** and **`trail`** and **`tears`** and **`whistle`** — `Game:updateEnemies`
+  (the last two through `Game:updateTears` and `Game:updateWhistle`).
 - **`keep`** — inside `Enemy:update`'s chase, as a *turn* applied to the heading
   everything else already computed. That placement is the whole reason it is
   cheap: a shooter holding its distance still rounds a pen line, still skids on
@@ -1155,6 +1158,46 @@ one place and nothing else in the game knows it exists:
 - **`knock`** and **`hold`** — `Enemy:knockback` and `Enemy:freeze`, both of
   which already rode on the enemy rather than on the dozen things that shove and
   stick. The grin is the horde-sized version of what went in for the boss.
+
+### The bosses
+
+A boss is a row with `boss = true`, and everything else that makes it one is an
+optional field read in one place, so a second boss is a row choosing which of them
+it is made of rather than a branch anywhere. `title` is its name under the HUD's bar
+(`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
+walks on (`Game:spawnEnemy`). Both bosses sit on the eye's 900 health, knock, hold
+and contact damage, because the measured half-minute is the same fight length
+whichever thing you are fighting; what differs is what they make you do.
+
+**The eye** (`bosseye`, six lessons) is a fight about *ground*: `pupil` (it watches
+you), `trail` (wet dragged behind it), `tears` (wet thrown, three ways, with rings at
+two thirds and one third), and a fan of `shot`.
+
+**The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
+body is `face = true` -- the sprite is authored pointing left and drawn mirrored
+through `Sprite:draw`'s own flip when you are more than `FACE_BAND` to its right,
+which is a whole-pixel mirror and not a rotation, and why the art is an odd 45
+across. `Enemy:footing` returns the flip as a fourth value so the blank under it
+mirrors with it. It has the wad's `charge` at the boss's size (84px of lunge
+against a 150 trigger), a three-pea `shot`, and a `whistle` block of four calls,
+all in `Game:updateWhistle`:
+
+| call | when | what |
+| --- | --- | --- |
+| `blast` | every 6s | stands still and blinks red for 0.9s (`blowT`; `Enemy:update` skips walking, `Enemy:footing` shudders it), then two rings of 22 notes 0.3s apart with a 4-note hole at the same angle in both, the second ring half a note round (`Game:blowRing`) |
+| `jacks` | every 4.6s | six jacks *lobbed* to land inside 50px of the player: `lob` on the shot means no collision in the air and a graphite cross on the landing point (`Game:draw`); landing makes a `Spike` (`src/spike.lua`) that hurts on contact for 7s |
+| `squad` | every 12s | a wall of six of one kind, dealt in turn from `of`, marched across the box off a square bearing (`Spawner:squad` → `Spawner:wall`'s new `kind`), only while the crowd is under `most` |
+| `pump` | at 75/50/25% health | the 3 nearest ordinary arrivals within 170px swapped for champions of themselves in place (`Game:pumpEnemy`, at the run's own scale); any it could not find are called in as champions beside it |
+
+A blast never starts during a lunge and a lunge's clock does not run during a blast,
+so the two red tells never mean two things at once. Glue holds all four calls, as it
+holds the eye's tears. The blast and the pump draw `blareT` -- two red rings going out
+(`Enemy:draw`) -- and play `whistle`, the one synthesised sound in `src/sfx/`.
+
+`Spike` is a puddle with corners: same hurt-on-contact rule on the player's own
+invulnerability window (`Game:updateSpikes`, beside `Game:updatePuddles`), drawn on
+the page beside the wet, and it goes by blinking out for its last second rather than
+by drying.
 
 ### Drills and surges
 
@@ -5661,7 +5704,7 @@ pass**.
 
 `Game:draw`'s ink order is load-bearing and commented at each step: spent
 pins/staples (page memory, culled to the camera by `Game:eachSpent`) → lingering
-marks → other marks → the arena box → the boss's puddles → what a weapon has left
+marks → other marks → the arena box → the boss's puddles and the whistle's jacks → what a weapon has left
 lying on the page (`Loadout:drawGround`, the bomb's burning crater, the
 skate's trail and every spiral) → drop marks/ruler guides/compass guides/cuts (the blades still
 travelling down one included) and the cross an anchor is waiting on → gems →
@@ -5909,6 +5952,16 @@ and are all the same 11x11 glyph.
   three. A row that splits may name `split.blown` if what it leaves stops making
   sense scaled up; if it is "what happens when
   it dies", that is `Game:killEnemy` and nothing else.
+- **Boss:** a sprite in `Sprites.enemies` and a row in `Enemy.types` with `boss =
+  true`, a `title` and a `call` (both through `I18n.t`, so a line each in the `ES`
+  table and the four `src/lang/` files), named by a lesson's `boss` in
+  `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
+  picked, and no page reskins it. What it does is the blocks it carries -- the
+  eye's `pupil`/`trail`/`tears`, the whistle's `face`/`whistle`, and any of the
+  horde's (`shot`, `charge`) -- see **The bosses**. A new kind of call is a field
+  on the row and one function beside `Game:updateTears` and `Game:updateWhistle`,
+  read from `Game:updateEnemies`. Keep it on the eye's 900 unless the fight has
+  been re-measured, and fight it from the title's dev BOSS button.
 - **Tool:** append a row to `Tools.list` with an icon in `Sprites.icons`, *and* a
   `toolLine` in `Upgrades.list` naming it — the line's first level is what
   unlocks it, so a tool without one can never be drafted and never reaches the
@@ -6157,7 +6210,7 @@ and are all the same 11x11 glyph.
   <weight> } }` — see **Drills and surges**; a row without one gets `DRILL_MIX`
   at `DRILL_EVERY`, and a hand must hold two of `line`/`ring`/`grid` or the page
   stutters before minute six), a `boss` naming an `Enemy.types` row with `boss =
-  true` (the eye if left out), and optionally the two dials `crowd` and `clock`
+  true` (the eye if left out -- see **The bosses**), and optionally the two dials `crowd` and `clock`
   (no subject turns either). Argue the drill weights from the *ruling* rather
   than from difficulty — the ruling is the thing the player is looking at, and a
   page dealing the shapes its own lines already suggest is what makes a lesson

@@ -7005,6 +7005,48 @@ worse — its burst is ground taken away, and the whole point of the box is that
 there is only so much ground. Both stay low, because either at bat weights would
 make it a fight about the escort rather than about the eye.
 
+### P.E. ends on the whistle
+
+Every lesson used to end on the eye, and the eye is a good fight about one thing:
+*ground*. Everything it does is wet you have to stop standing on, and a run that
+has learned it has learned to read the floor. P.E. is the first lesson with a
+fight of its own, and it is chosen to be the other half of the same box -- a fight
+about **what is in the air, and about the class it calls in.** A P.E. teacher does
+not fight you. They blow the whistle and make everybody else do it.
+
+So the boss is a coach's whistle the size of the eye, red plastic and scowling,
+turned to point its mouthpiece at you. It keeps the eye's 900 health, knock, hold
+and contact damage, because the half minute that number was measured to is still
+the right length for a fight; what changes is what you do during it. Four calls:
+
+- **The blast.** It stops, shudders and blinks red, then blows two rings of notes
+  out in every direction a third of a second apart. Each ring has a hole in it, in
+  the same place both times, and the second ring is set half a note round from the
+  first -- so the room between the notes of the first ring is exactly where the
+  notes of the second one are, everywhere except the hole. Standing still does not
+  dodge it and guessing does not dodge it. Finding the hole does. It is the one
+  bullet-hell pattern in the book, and it is built to be read rather than survived.
+- **The jacks.** The spiky things: six of them lobbed over your head to land in a
+  scatter round where you are standing, and then lie on the page for seven seconds.
+  Harmless in the air -- a jack is aimed at the ground, so its shadow, a little
+  graphite cross, is there from the moment it is thrown and is the whole telegraph.
+  What they take away is the room you were going to dodge the next blast into.
+- **Fall in.** Every twelve seconds a squad of six marches across the box from one
+  of its edges, all of one kind, dealt in turn: skulls, then wads, then blobs, then
+  bats. P.E. is the lesson whose whole hand is drills, so its boss is the thing
+  that calls them -- and a wall of skulls is a wall, while a wall of wads is a
+  volley, so each squad is a different problem.
+- **Grow.** At three quarters, half and a quarter of its health it blows a long
+  note and the three of its class nearest to it come up as champions -- twice the
+  size, the champion's health and damage, the same monster. If there are not three
+  near it, it calls the rest in beside itself. The moment the bar says the fight
+  is going your way, the class gets bigger.
+
+And it lunges, as a wad does at four times the size: a red wind-up and a dash down
+the line it locked, which inside a box is a dash at a wall. The lunge and the blast
+share the one tell this game has for "something big is coming", so they never run
+at once -- red always means one thing.
+
 ### The weights held still
 
 Blob and bat are still half the horde between them and everything else is trim.

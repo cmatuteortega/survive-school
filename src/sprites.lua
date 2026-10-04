@@ -714,6 +714,47 @@ function Sprites.load()
             "..............sssssssssssssss..............",
             ".................sssssssss.................",
         }),
+        -- The P.E. boss: a coach's whistle the size of the eye boss, scowling.
+        -- Red plastic because a whistle is, and because the one thing a red body
+        -- this big can say on this page is "theirs"; the shine is blush, the
+        -- window and the mouthpiece are the two slate slots a whistle is made
+        -- of, and the lanyard ring is blue only because it has to be some colour
+        -- that is not the body. The face is on the barrel, where the pea is.
+        --
+        -- Authored pointing left, mouthpiece first, and drawn mirrored when you
+        -- are on its right (`face` in src/enemy.lua) -- `Sprite:draw`'s own flip,
+        -- which is a whole-pixel mirror and not a rotation. Odd width on
+        -- purpose: 45 across mirrors about its centre column onto exactly the
+        -- same pixels, where an even width would step a pixel sideways every
+        -- time it turned round.
+        whistle = pixelart.newSprite({
+            "ooo..........................................",
+            "orrooooooooooooo......oooooooooooo.....bb....",
+            "orrkkkkkkkkkkkko......orrrrrrrrrrrooo.b..b...",
+            "orrkkkkkkkrrrrro......orrrkkkkkkkkkrro....b..",
+            "osrrrrrrrrrrrrrrossssorrkkrrrrrrrrrkkro...b..",
+            "osrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro.b...",
+            "osrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro....",
+            "orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro...",
+            "orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro...",
+            "orrooooooooooooooorrrrrrrrrrrrrrrrrrrrrrro...",
+            "ooo...............orrrrroorrrrrrrrroorrrrro..",
+            "..................orrrrrrroorrrrroorrrrrrro..",
+            "..................orrrrrrwwwrrrrrwwwrrrrrro..",
+            "..................orrrrrrwwwrrrrrwwwrrrrrro..",
+            "..................orrrrrrwowrrrrrwowrrrrrro..",
+            "..................orrrrrrwowrrrrrwowrrrrrro..",
+            "..................orrrrrrrrrrrrrrrrrrrrrrro..",
+            "...................orrrrrrrrrrrrrrrrrrrrro...",
+            "...................orrrrrrrrrrrrrrrrrrrrro...",
+            "...................orrrrrrrorrrrrorrrrrrro...",
+            "....................orrrrrrooooooorrrrrro....",
+            ".....................orrrrrrrrrrrrrrrrro.....",
+            "......................orrrrrrrrrrrrrrro......",
+            ".......................orrrrrrrrrrrrro.......",
+            "........................ooorrrrrrrooo........",
+            "...........................ooooooo...........",
+        }),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",
@@ -1477,6 +1518,48 @@ function Sprites.load()
         "obcbo",
         "obbbo",
         ".ooo.",
+    })
+
+    -- The whistle's three throws (`whistle` in src/enemy.lua), each drawn as
+    -- what it is so that what is in the air can be read before it arrives.
+    --
+    -- The pea: what rattles inside a whistle, spat down the line at you in a
+    -- small fan. The boss pellet's ink rim and red body at the ordinary pellet's
+    -- size, since there are three of them and they are the least of it.
+    Sprites.pea = pixelart.newSprite({
+        ".ooo.",
+        "orrko",
+        "orrro",
+        "orrro",
+        ".ooo.",
+    })
+
+    -- A note: the blast itself, thrown out all round in a ring with a hole in
+    -- it. Red head, ink stem, and never turned -- a note is the one shape that
+    -- reads as sound at any heading, the way the tear always reads as falling.
+    Sprites.note = pixelart.newSprite({
+        "...o.",
+        "...oo",
+        "...o.",
+        ".ooo.",
+        "orrro",
+        "orrro",
+        ".ooo.",
+    })
+
+    -- A jack: the spiky thing. Thrown to land round where you are standing and
+    -- then lying on the page for a while (src/spike.lua), so it is drawn as
+    -- eight ink spikes round a red core -- every edge of it says do not stand
+    -- here, and it is the same drawing in the air and on the ground because it
+    -- is the same object.
+    Sprites.jack = pixelart.newSprite({
+        "o..o..o",
+        ".o.o.o.",
+        "..rrr..",
+        "oorkroo",
+        "..rrr..",
+        ".o.o.o.",
+        "o..o..o",
     })
 
     -- The one thing in the game that is an object rather than a mark: a pushpin

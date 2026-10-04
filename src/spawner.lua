@@ -1097,15 +1097,17 @@ end
 
 -- A wall along one edge, marching. `a` is the bearing it arrives from, so it
 -- walks towards the opposite one, and each member is lured at the point directly
--- across the page from where it started (see MARCH_HOLD).
-function Spawner:wall(game, a, n, gap)
+-- across the page from where it started (see MARCH_HOLD). `kind` is optional
+-- and is the whistle's squad (Spawner:squad): a drill's wall is whatever the
+-- horde is made of, a squad is one kind called by name.
+function Spawner:wall(game, a, n, gap, kind)
     local ring, p = self:ring(game), game.player
     local fx, fy = math.cos(a), math.sin(a)
     local ax, ay = -fy, fx      -- along the wall
     for i = 1, n do
         local off = (i - (n + 1) / 2) * gap
         local e = self:dropAt(game, p.x + fx * ring + ax * off,
-                                    p.y + fy * ring + ay * off)
+                                    p.y + fy * ring + ay * off, kind)
         e:lure(p.x - fx * ring * MARCH_PAST + ax * off,
                p.y - fy * ring * MARCH_PAST + ay * off, MARCH_HOLD)
     end
@@ -1389,6 +1391,17 @@ function Spawner:sendBoss(game)
     -- The lesson's own (src/subjects.lua), and the eye where a page has not
     -- named one.
     self:drop(game, self:ring(game) + 20, self.subject.boss or "bosseye")
+end
+
+-- The P.E. whistle's squad (`squad` in src/enemy.lua): a wall of one kind
+-- marched across the box. Off one of the four *square* bearings only, because
+-- the wall arrives from the ring and is then clamped into the box
+-- (Game:spawnEnemy) -- square on, that puts it along one edge as a line; at a
+-- slant the clamp would fold it into a corner as a heap. It marches at the far
+-- edge, where the clamp holds it until the lure lets go and it comes for you.
+function Spawner:squad(game, kind, n, gap)
+    local a = love.math.random(0, 3) * math.pi / 2
+    self:wall(game, a, n, gap, kind)
 end
 
 -- The boss is down and the run went on rather than ending. The next cycle's ten

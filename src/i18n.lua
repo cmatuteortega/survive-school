@@ -498,6 +498,13 @@ local ES = {
     ["LV %d"] = "NV %d",
     ["THE EYE"] = "EL OJO",
     ["THE EYE IS OPEN"] = "EL OJO ESTA ABIERTO",
+    -- The P.E. boss (`whistle` in src/enemy.lua): its name under the bar, the
+    -- line it walks on with, and its two calls -- the squad, said the once
+    -- (Spawner:announce), and the growth, said every time.
+    ["THE WHISTLE"] = "EL SILBATO",
+    ["THE WHISTLE BLOWS"] = "SUENA EL SILBATO",
+    ["FALL IN!"] = "¡EN FILA!",
+    ["GROW!"] = "¡A CRECER!",
     -- The drills and the surges (`DRILLS` and `SURGES` in src/spawner.lua),
     -- which the run says the once, the first time each one happens. They are
     -- copy rather than labels -- the run is describing what has just started

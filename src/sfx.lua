@@ -109,6 +109,14 @@ local DEFS = {
     -- the finger is down, so it is boosted a very long way and then aimed a
     -- little *under* the one-shots: it is ground for the eraser pop to land
     -- on, not an event of its own.
+    -- The P.E. boss's whistle (src/enemy.lua), sounded when it blows a ring and
+    -- when it calls the squad in. Synthesised rather than recorded -- a pea
+    -- trilling at 38Hz on a 2.85kHz tone, two blasts -- and written to the
+    -- common level at source (0.045 RMS over its loudest 300ms), so its gain is
+    -- 1. The gap is the rings' own: two volleys a third of a second apart are
+    -- one blow, and one blast of the whistle is what they should sound like.
+    whistle     = { gain = 1.0, gap = 0.6, pitch = { 0.96, 1.04 } },
+
     rubbing     = { gain = 59, loop = true },
     eraser      = { gain = 0.89 },
 }
