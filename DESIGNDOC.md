@@ -645,8 +645,8 @@ centred against the whole width of the page on `lay.headCx` -- the screen's midd
 -- starting under the corner buttons, and the tabs are hung no higher than
 `HERO_GAP` below them. The padlock moves to `Hud.rightCornerBox`, the corner over
 the tabs. What is still beside the tabs (the hero and the two boxes) is centred on
-`lay.cx`, which upright is the middle of what the tabs leave (`textX`..`textX +
-textW`) rather than the page's, so it reads as centred against the tabs and the
+`lay.cx`, which upright is the middle of what the tabs leave (the safe left edge
+to `lay.tabX`) rather than the page's, so it reads as centred against the tabs and the
 hero keeps his 3x step. Everywhere else `lay.headCx` is `lay.cx` and nothing moved.
 
 **A shut lesson is a tab you can still turn to.** `Timetable:enter` asks

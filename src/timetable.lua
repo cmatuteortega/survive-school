@@ -707,9 +707,14 @@ function Timetable:panel(lay, top, bottom)
     -- Upright, the line is the middle of what the tabs leave rather than the
     -- page's: the header has the page's middle to itself, and what stands beside
     -- the tabs reads as centred against them. A centred-on-the-page character
-    -- walked left to clear them is neither, and is a size smaller for it.
+    -- walked left to clear them is neither, and is a size smaller for it. Measured
+    -- from the safe edge to the tabs' own edge, not between the margins `textW`
+    -- keeps: the gutter is the tabs' clearance, and halving it puts him visibly
+    -- nearer the page's edge than the card's.
     local function centre(wide)
-        if lay.portrait then return lay.textX + math.floor(lay.textW / 2) end
+        if lay.portrait then
+            return math.floor((lay.textX - EDGE + lay.tabX) / 2)
+        end
         return math.max(lay.textX + math.ceil(wide / 2),
                         math.min(lay.pageCx,
                                  lay.textX + lay.textW - math.ceil(wide / 2)))
