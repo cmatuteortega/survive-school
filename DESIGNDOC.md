@@ -1174,14 +1174,17 @@ you), `trail` (wet dragged behind it), `tears` (wet thrown, three ways, with rin
 two thirds and one third), and a fan of `shot`.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
-body is `face = true` -- the sprite is authored pointing left and drawn mirrored
-through `Sprite:draw`'s own flip when you are more than `FACE_BAND` to its right,
-which is a whole-pixel mirror and not a rotation. Its origin is the middle of the
-barrel (`{ ox = 30, oy = 17 }`), so a turn swings the mouthpiece about the drum
-and the 13px hit circle is the drum. `Enemy:footing` returns the flip as a fourth
-value so the blank under it mirrors with it. The art is the one sprite drawn as a
-solid object: modelled, ray-traced at size, and snapped to the red ramp (blush,
-red, slate, ink creases), with the face drawn flat on the barrel afterwards. It has the wad's `charge` at the boss's size (84px of lunge
+body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
+sixteenth of a turn, ray-traced at size by `art/whistle.py` and baked between the
+`BAKE:whistle` markers in `src/sprites.lua` (`python3 art/whistle.py --bake`). It
+is the rendering rule kept rather than bent -- nothing is rotated at draw time,
+every heading is baked up front as `pixelart.turn` bakes the rocket's eight -- and
+the light is fixed in the room, so it stays top left whichever way the thing
+points. `Enemy:update` steps `view` one at a time the short way round towards the
+player (`TURN_STEP`), and `Enemy:footing` hands that view to both the body and the
+blank under it. Every view is the same box with the barrel's middle at the origin,
+so a turn swaps pictures with the drum standing still and the 13px hit circle is
+always the drum. It has the wad's `charge` at the boss's size (84px of lunge
 against a 150 trigger), a three-pea `shot`, and a `whistle` block of four calls,
 all in `Game:updateWhistle`:
 
@@ -5960,7 +5963,7 @@ and are all the same 11x11 glyph.
   table and the four `src/lang/` files), named by a lesson's `boss` in
   `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
   picked, and no page reskins it. What it does is the blocks it carries -- the
-  eye's `pupil`/`trail`/`tears`, the whistle's `face`/`whistle`, and any of the
+  eye's `pupil`/`trail`/`tears`, the whistle's `turns`/`whistle`, and any of the
   horde's (`shot`, `charge`) -- see **The bosses**. A new kind of call is a field
   on the row and one function beside `Game:updateTears` and `Game:updateWhistle`,
   read from `Game:updateEnemies`. Keep it on the eye's 900 unless the fight has

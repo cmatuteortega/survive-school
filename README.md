@@ -7014,8 +7014,10 @@ fight of its own, and it is chosen to be the other half of the same box -- a fig
 about **what is in the air, and about the class it calls in.** A P.E. teacher does
 not fight you. They blow the whistle and make everybody else do it.
 
-So the boss is a coach's whistle the size of the eye, red plastic and scowling,
-turned to point its mouthpiece at you. It keeps the eye's 900 health, knock, hold
+So the boss is a coach's whistle the size of the eye, in red plastic, and the one
+thing in the game drawn as a solid object: modelled and rendered from sixteen
+headings, so it swings round to point its mouthpiece at you from anywhere on the
+page with the light staying where the room's light is. It keeps the eye's 900 health, knock, hold
 and contact damage, because the half minute that number was measured to is still
 the right length for a fight; what changes is what you do during it. Four calls:
 

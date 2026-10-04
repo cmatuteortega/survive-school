@@ -60,8 +60,11 @@ local PUPIL_SLIDE = 5 -- how far off centre it may sit: the iris is 19 across
 local PUPIL_TURN = 6  -- how fast it swings across, in fractions per second --
                       -- an eye tracks smoothly, it does not snap
 
--- How far past its middle you have to be before a `face` body turns round to you.
-local FACE_BAND = 6
+-- How long a `turns` body takes to swing one view (a sixteenth of a turn) round
+-- towards you. Stepped through the views in between rather than snapped, so a
+-- whistle you run round turns to follow you instead of jumping, and quickly
+-- enough that half a turn is under a third of a second.
+local TURN_STEP = 0.02
 
 -- The sound a whistle makes, drawn: two rings going out from it over BLARE_TIME,
 -- from the body's own radius to BLARE_REACH past it. A mark rather than a hit --
@@ -128,7 +131,7 @@ local BLARE_REACH = 34
 -- shoved out of the way by the crowd, and ends the run when it dies), `title`
 -- (its name under the HUD's bar) and `call` (the line the page says as it walks
 -- on), `pupil` (an eye that watches you),
--- `face` (a body drawn mirrored to point at you), `trail` (a wet blot dropped
+-- `turns` (a body drawn from a ring of baked views, the one facing you), `trail` (a wet blot dropped
 -- behind it as it walks), `tears` (the same wet thrown rather than walked, three
 -- ways -- Game:updateTears) and `whistle` (the P.E. boss's four calls --
 -- Game:updateWhistle). Every one of them but `boss` is optional and read in one
@@ -364,7 +367,7 @@ Enemy.types = {
     -- it does and the thing that is always happening, so standing still is
     -- never free even between the calls below.
     whistle = { name = "WHISTLE", sprite = "whistle", hp = 900, speed = 22, radius = 13, damage = 20,
-                xp = 250, shadow = 26, boss = true, face = true, knock = 0.06, hold = 0.3,
+                xp = 250, shadow = 26, boss = true, turns = "whistleViews", knock = 0.06, hold = 0.3,
                 title = "THE WHISTLE", call = "THE WHISTLE BLOWS",
                 shot = { range = 200, every = 1.9, speed = 58, damage = 9, hit = 3,
                          spread = 3, arc = 0.42, sprite = "pea" },
@@ -647,8 +650,9 @@ function Enemy.new(kind, x, y, scale)
         squadT = def.whistle and def.whistle.squad.every * 0.5 or nil,
         squads = 0, pumps = 0,
         blowT = 0, volleys = 0, volleyT = 0, gapA = 0, blareT = 0,
-        -- Which way a `face` body is pointing: false is the way it was drawn.
-        faceRight = false,
+        -- Which of its views a `turns` body is showing (1-based, nil until it has
+        -- first looked at you), and how long until it may step to the next.
+        view = nil, viewT = 0,
         headX = 0, headY = 0, -- the way it is actually going, vs the way it wants to
         -- Where the pupil is looking, as a fraction of how far it may slide.
         -- Chased rather than set, so the eye swings round to you (Enemy:draw).
@@ -833,17 +837,23 @@ function Enemy:update(dt, player, walls, slick)
         self.lookY = self.lookY + (dy - self.lookY) * k
     end
 
-    -- And a body that points at you turns round once you are clearly on its
-    -- other side. The dead band is what stops it flipping every frame while you
-    -- stand straight above it, which on a body 45 across reads as a strobe.
-    -- Not while glued, for the pupil's reason inverted: a whistle stuck to the
-    -- page is stuck the way it was pointing.
-    if self.def.face and self.frozen <= 0 then
-        local dx = player.x - self.x
-        if dx > FACE_BAND then
-            self.faceRight = true
-        elseif dx < -FACE_BAND then
-            self.faceRight = false
+    -- And a body drawn from a ring of views turns to the one pointing at you,
+    -- a view at a time (TURN_STEP), the short way round. Not while glued, for
+    -- the pupil's reason inverted: a whistle stuck to the page is stuck the
+    -- way it was pointing.
+    if self.def.turns and self.frozen <= 0 then
+        local n = #Sprites[self.def.turns]
+        local a = math.atan2(player.y - self.y, player.x - self.x)
+        local want = math.floor(a / (math.pi * 2) * n + 0.5) % n + 1
+        if not self.view then
+            self.view = want
+        else
+            self.viewT = self.viewT - dt
+            if self.view ~= want and self.viewT <= 0 then
+                local d = (want - self.view) % n
+                self.view = (self.view - 1 + (d <= n / 2 and 1 or -1)) % n + 1
+                self.viewT = TURN_STEP
+            end
         end
     end
     self.blareT = math.max(0, self.blareT - dt)
@@ -1132,12 +1142,12 @@ end
 -- band, which is a different mark on the page -- and the rim is a *word* rather
 -- than a decoration, so it has to look the same on a bat as on a grin twice the
 -- size of one.
-local function outline(sprite, x, y, colour, s, flip)
+local function outline(sprite, x, y, colour, s)
     love.graphics.setColor(colour)
-    sprite:drawMask(x - 1, y, flip, s)
-    sprite:drawMask(x + 1, y, flip, s)
-    sprite:drawMask(x, y - 1, flip, s)
-    sprite:drawMask(x, y + 1, flip, s)
+    sprite:drawMask(x - 1, y, nil, s)
+    sprite:drawMask(x + 1, y, nil, s)
+    sprite:drawMask(x, y - 1, nil, s)
+    sprite:drawMask(x, y + 1, nil, s)
 end
 
 -- Which sprite it is and where it is standing this frame. Two callers -- the
@@ -1156,6 +1166,9 @@ function Enemy:footing()
     -- would be two chances for that to stop being true.
     local sprite = Sprites.enemy(self.def.sprite)
     if self.fury then sprite = Sprites.enraged(sprite) end
+    -- A body drawn from a ring of views is whichever one it has turned to, so
+    -- the blank under it is that view's too.
+    if self.def.turns and self.view then sprite = Sprites[self.def.turns][self.view] end
 
     -- The recoil is folded in here and never into x/y, for both of the reasons
     -- this function exists. Where a thing is *standing* is what every hit
@@ -1170,18 +1183,15 @@ function Enemy:footing()
     -- as a recoil rather than as a wobble: 3, 2, 1, 0 is four held frames going
     -- one way, and an eased curve would spend most of them at the same pixel.
     --
-    -- The fourth answer is which way round it is drawn, for a `face` body: the
-    -- blank under it has to be mirrored with it, so it comes out of here too.
     -- And a whistle drawing breath shudders a pixel side to side, which is the
     -- other half of its tell and belongs here for the recoil's reason.
-    local flip = self.def.face and self.faceRight or nil
     local x = self.x
     if self.blowT > 0 then x = x + (math.floor(self.blowT * 24) % 2 == 0 and 1 or -1) end
     if self.bumpT > 0 then
         local k = HIT_BUMP * (self.bumpT / HIT_BUMP_TIME)
-        return sprite, x + self.bumpX * k, y + self.bumpY * k, flip
+        return sprite, x + self.bumpX * k, y + self.bumpY * k
     end
-    return sprite, x, y, flip
+    return sprite, x, y
 end
 
 -- Which outline it is wearing this frame, or nil for none: the four ranked, most
@@ -1260,15 +1270,15 @@ end
 -- Not the shadow, which is the one thing here that really is on the paper: a
 -- smear of graphite goes on darkening over a rule like every other mark.
 function Enemy:drawSolid()
-    local sprite, x, y, flip = self:footing()
+    local sprite, x, y = self:footing()
 
     love.graphics.setColor(Palette.paper)
-    if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow, flip) end
-    sprite:drawMask(x, y, flip, self.grow)
+    if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow) end
+    sprite:drawMask(x, y, nil, self.grow)
 end
 
 function Enemy:draw()
-    local sprite, x, y, flip = self:footing()
+    local sprite, x, y = self:footing()
     local stuck = self.frozen > 0
 
     -- Which colour the body is wearing this frame, or nil for its own art. Two
@@ -1311,14 +1321,14 @@ function Enemy:draw()
         shadow, (stuck and 2 or 1) * grow)
 
     local ring = self:outlineColour()
-    if ring then outline(sprite, x, y, ring, grow, flip) end
+    if ring then outline(sprite, x, y, ring, grow) end
 
     if lit then
         love.graphics.setColor(lit)
-        sprite:drawMask(x, y, flip, grow)
+        sprite:drawMask(x, y, nil, grow)
     else
         love.graphics.setColor(1, 1, 1)
-        sprite:draw(x, y, flip, grow)
+        sprite:draw(x, y, nil, grow)
     end
 
     -- The blast going out (`blareT`, set by Game:updateWhistle). Two rings a
