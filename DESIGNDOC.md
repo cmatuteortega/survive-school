@@ -1184,7 +1184,8 @@ points. `Enemy:update` steps `view` one at a time the short way round towards th
 player (`TURN_STEP`), and `Enemy:footing` hands that view to both the body and the
 blank under it. Every view is the same box with the barrel's middle at the origin,
 so a turn swaps pictures with the drum standing still and the 13px hit circle is
-always the drum. It has the wad's `charge` at the boss's size (84px of lunge
+always the drum. The method in full, and how to use it for another character,
+is `3dmethod.md`. It has the wad's `charge` at the boss's size (84px of lunge
 against a 150 trigger), a three-pea `shot`, and a `whistle` block of four calls,
 all in `Game:updateWhistle`:
 

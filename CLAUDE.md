@@ -18,6 +18,10 @@ neither is optional reading before a behavioural change:
 - **`README.md`** — the design document, and an unusually complete one. It
   explains *why* every tool, number and layout decision is what it is.
 
+A third, `3dmethod.md`, covers the one sprite made a different way: the P.E.
+whistle boss is modelled and ray-traced into baked ASCII views (`art/whistle.py`),
+and that file is how to do the same for another character.
+
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
 10 damage sitting one short of the skull's 12hp) is argued for in `README.md` —
