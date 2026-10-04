@@ -220,12 +220,20 @@ end
 -- belongs to the stick while a run is going. That is not enforced here: nothing
 -- during a run asks for it.
 --
--- Where the corner button takes an icon, this takes a *word*. A language is two
--- letters and there is no drawing of a language, which is the same reason the
--- timetable's LIBRARY tab carries lettering while every other tab carries a tool.
-function Hud.footBox(game)
+-- Where the corner button takes an icon, this takes a *word*. There is no
+-- drawing of a language, which is the same reason the timetable's LIBRARY tab
+-- carries lettering while every other tab carries a tool. The box is as tall as
+-- the corner button and as wide as the word needs, never narrower than square:
+-- two pixels of paper either side of the lettering, which is what eleven pixels
+-- leaves round two letters, so LANG gets the same margin EN used to.
+function Hud.footWidth(text)
+    return math.max(CORNER_SIZE, Font.width(text or "") + 4)
+end
+
+function Hud.footBox(game, text)
     return game.inset.l + CORNER_MARGIN,
-           game.vh - game.inset.b - CORNER_MARGIN - CORNER_SIZE
+           game.vh - game.inset.b - CORNER_MARGIN - CORNER_SIZE,
+           Hud.footWidth(text)
 end
 
 -- The first row of page above it, for a screen laying something out down to the
@@ -456,14 +464,14 @@ function Hud.cornerAt(game, cx, cy)
     return cx >= x and cx <= x + w and cy >= y and cy <= y + h
 end
 
-function Hud.footTarget(game)
+function Hud.footTarget(game, text)
     local pad = cornerPad()
-    local x, y = Hud.footBox(game)
-    return x - pad, y - pad, CORNER_SIZE + pad * 2, CORNER_SIZE + pad * 2
+    local x, y, w = Hud.footBox(game, text)
+    return x - pad, y - pad, w + pad * 2, CORNER_SIZE + pad * 2
 end
 
-function Hud.footAt(game, cx, cy)
-    local x, y, w, h = Hud.footTarget(game)
+function Hud.footAt(game, cx, cy, text)
+    local x, y, w, h = Hud.footTarget(game, text)
     return cx >= x and cx <= x + w and cy >= y and cy <= y + h
 end
 
@@ -582,20 +590,18 @@ end
 -- thing lying on the page rather than a window onto it, so a screen drawing it
 -- draws it after the overprint pass with the rest of the HUD.
 --
--- Two letters is what it is cut for -- eleven pixels holds seven of lettering
--- with two either side -- and anything longer is centred and allowed to run over
--- the border rather than being shrunk, since there is nothing smaller than this
--- face to shrink to.
+-- The box is cut to the word (`Hud.footWidth`) rather than the word shrunk to
+-- the box, since there is nothing smaller than this face to shrink to.
 function Hud.drawFoot(game, text, hot)
-    local x, y = Hud.footBox(game)
+    local x, y, w = Hud.footBox(game, text)
 
     love.graphics.setColor(hot and Palette.red or Palette.slate)
-    love.graphics.rectangle("fill", x, y, CORNER_SIZE, CORNER_SIZE)
+    love.graphics.rectangle("fill", x, y, w, CORNER_SIZE)
     love.graphics.setColor(Palette.paper)
-    love.graphics.rectangle("fill", x + 1, y + 1, CORNER_SIZE - 2, CORNER_SIZE - 2)
+    love.graphics.rectangle("fill", x + 1, y + 1, w - 2, CORNER_SIZE - 2)
 
     love.graphics.setColor(hot and Palette.red or Palette.slate)
-    Font.printCentered(text, x + CORNER_SIZE / 2,
+    Font.print(text, x + math.floor((w - Font.width(text)) / 2),
         y + math.floor((CORNER_SIZE - Font.height) / 2))
 end
 

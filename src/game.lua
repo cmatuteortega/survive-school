@@ -293,10 +293,13 @@ end
 -- the same shape as the library off the timetable, and for the same reason:
 -- nothing on it is part of starting a run, and it hands nothing over. What it
 -- changes it changes where it stands and saves for itself.
-function Game:toSettings()
+--
+-- `focus` is the row to open it on: the title's LANG button opens it on the
+-- language, with the hand pointing at it (Settings:enter).
+function Game:toSettings(focus)
     self.state = "settings"
     Sfx.play("transition2")
-    Settings:enter()
+    Settings:enter(focus)
 
     -- The press that opened the button is not the first mark on this page.
     Input.releaseAll()
@@ -4155,6 +4158,8 @@ function Game:update(dt)
             self:continueRun()
         elseif answer == "settings" then
             self:toSettings()
+        elseif answer == "language" then
+            self:toSettings("lang")
         end
         return
     end

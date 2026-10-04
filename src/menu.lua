@@ -35,16 +35,20 @@
 -- Two things in the left margin are not drawn on, and both are *pressed* rather
 -- than answered -- the timetable's rule for the same pair of corners
 -- (src/timetable.lua): the settings button at the top (src/settings.lua) and the
--- language switch at the foot. Neither is a question. The first opens a screen
--- and the second throws a switch where it stands, so there is nothing to arm and
--- nothing to lift, and `Menu:mark` drops any ink that lands on either -- a press
--- on a button was taken as a press, not as the start of a line.
+-- language button at the foot. Neither is a question. Both open the settings
+-- page, so there is nothing to arm and nothing to lift, and `Menu:mark` drops
+-- any ink that lands on either -- a press on a button was taken as a press, not
+-- as the start of a line.
 --
--- The switch is here rather than only in settings because it is the first thing
--- somebody who cannot read the title needs, and burying it one screen inside a
--- page written in the wrong language is burying it. It is the corner button's own
--- box at the other end of the same margin (`Hud.footBox`), with the two letters of
--- the language in it instead of an icon.
+-- The language button is here rather than only behind the sliders because it is
+-- the first thing somebody who cannot read the title needs, and burying it one
+-- screen inside a page written in the wrong language is burying it. It used to
+-- step the language where it stood, which was right with two of them and wrong
+-- with six: a switch you have to press five times to come back round is a switch
+-- you get lost in. So it says LANG and opens the settings page with the hand
+-- (src/coach.lua) pointing at the language row's arrow, where every language is
+-- written in its own name. It is the corner button's own box at the other end of
+-- the same margin (`Hud.footBox`), widened to the word.
 
 local Palette = require("src.palette")
 local Sprites = require("src.sprites")
@@ -60,7 +64,6 @@ local Scribble = require("src.scribble")
 local Hud = require("src.hud")
 local Sfx = require("src.sfx")
 local I18n = require("src.i18n")
-local Options = require("src.options")
 local Coach = require("src.coach")
 local util = require("src.util")
 
@@ -157,8 +160,8 @@ function Menu:enter(resumable)
 
     -- The one-frame latch for the settings button: `update` hands it back the
     -- moment it is hit rather than after a flash, the way the timetable's margin
-    -- buttons do. The language switch needs no latch at all, since it acts on the
-    -- screen it is on rather than closing it.
+    -- buttons do. The language button uses the same latch, answering "language"
+    -- so the settings page opens pointing at the row it came for.
     self.pressed = nil
 
     self.choice = Scribble.newChoice({
@@ -299,6 +302,14 @@ function Menu:updateChase(dt, game)
     end
 end
 
+-- The word on the language button. Not put through the dictionary, for the
+-- reason a language's own name is not (src/i18n.lua): the button is for
+-- somebody who cannot read the language the page is in, so it has to say the
+-- same thing in every one of them. LANG is where LANGUAGE, LANGUE and LINGUA all
+-- start, and it is the word a phone's own settings and most web pages' pickers
+-- already wear.
+local LANG = "LANG"
+
 --- the two buttons in the margin --------------------------------------------
 
 -- Both are the corner button's own box, at the two ends of the same left margin,
@@ -310,19 +321,7 @@ function Menu:settingsAt(game, x, y)
 end
 
 function Menu:langAt(game, x, y)
-    return Hud.footAt(game, x, y)
-end
-
--- The language switch acts where it stands and comes straight back, which is the
--- same bargain the pause card's dev switch makes: nothing about the screen is
--- decided, so the screen is still here afterwards and the switch can be thrown
--- again. The title, the prompt and the two box labels are all read through the
--- dictionary every frame, so the whole page is in the other language on the next
--- one.
-function Menu:swapLang()
-    I18n.step(1)
-    Sfx.play("transition")
-    Options.save()
+    return Hud.footAt(game, x, y, LANG)
 end
 
 --- drawing on it -------------------------------------------------------------
@@ -414,7 +413,7 @@ function Menu:updateScribble(dt)
                 return
             end
             if self.game and self:langAt(self.game, px, py) then
-                self:swapLang()
+                self.pressed = "language"
                 return
             end
 
@@ -486,8 +485,9 @@ end
 
 --- update --------------------------------------------------------------------
 
--- Returns "yes" or "no" on the frame the choice finishes playing out, and
--- nothing at all until then.
+-- Returns "yes", "no" or "continue" on the frame the choice finishes playing
+-- out, "settings" or "language" on the frame a margin button is pressed, and
+-- nothing at all otherwise.
 function Menu:update(dt, game)
     -- Kept because the press edge and `mark` both have to know where the two
     -- margin buttons are, and neither is handed the game.
@@ -543,24 +543,27 @@ function Menu:keypressed(key)
     self.coach:reset()
 
     -- The two margin buttons, and neither skips the intro: they are not presses
-    -- on the page. O for the options page and L for the language, both free here
-    -- -- the timetable spends L on its library tab and this screen has no tabs.
+    -- on the page. O for the options page and L for the language row of it, both
+    -- free here -- the timetable spends L on its library tab and this screen has
+    -- no tabs.
     if key == "o" then
         self.pressed = "settings"
         return
     end
     if key == "l" then
-        self:swapLang()
+        self.pressed = "language"
         return
     end
 
     if self.phase == "intro" then self:skip() end
 
-    -- S answers YES as well as Y, because in Spanish the box says SI. Both keys
-    -- are live in both languages rather than swapping with the dictionary: a
-    -- shortcut that moves when the words do is a shortcut you have to look up.
-    if key == "y" or key == "s" or key == "return" or key == "kpenter"
-        or key == "space" then
+    -- S answers YES as well as Y, because in Spanish, Italian and Portuguese
+    -- the box says SI or SIM, and J does for the German JA. All of them are live
+    -- in every language rather than swapping with the dictionary: a shortcut that
+    -- moves when the words do is a shortcut you have to look up. French keeps Y,
+    -- since O -- the letter OUI would want -- is the settings page's key above.
+    if key == "y" or key == "s" or key == "j" or key == "return"
+        or key == "kpenter" or key == "space" then
         self:autoFill(self.boxes[1])
     elseif key == "n" then
         self:autoFill(self.boxes[2])
@@ -750,11 +753,10 @@ function Menu:draw(game)
     -- a step darker and the box reads as a hole cut in the page.
     --
     -- Drawn after the dither rather than through it, so they stay put while the
-    -- page leaves. That is right for both of them: the settings button is not part
-    -- of the answer, and the switch in the other corner is a thing about the game
-    -- rather than about this screen.
+    -- page leaves. That is right for both of them: neither is part of the answer,
+    -- and both are ways off the side of this screen rather than through it.
     Hud.drawCorner(game, "sliders", false)
-    Hud.drawFoot(game, I18n.current().code, false)
+    Hud.drawFoot(game, LANG, false)
 end
 
 return Menu

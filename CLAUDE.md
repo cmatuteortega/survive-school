@@ -36,7 +36,7 @@ No build step, no test suite, no dependency manifest. The closest thing to a
 lint pass is a syntax check, worth running after any broad edit:
 
 ```sh
-for f in main.lua conf.lua src/*.lua; do luac -p "$f" || echo "FAILED $f"; done
+for f in main.lua conf.lua src/*.lua src/lang/*.lua; do luac -p "$f" || echo "FAILED $f"; done
 ```
 
 Page skins are baked from `art/<subject>/*.txt` with `lua art/bake.lua`.
@@ -118,8 +118,11 @@ or 180.
 
 **Anything the player reads goes through `I18n.t`.** Write it in English where
 it belongs (the upgrade's row, the tool's name, the screen's own constant), add
-one line to the `ES` table in `src/i18n.lua` keyed by that English, and make
-sure whatever measures it for layout measures the translation and not the key.
+one line keyed by that English to the `ES` table in `src/i18n.lua` and to each
+of `src/lang/{de,fr,it,pt}.lua`, and make sure whatever measures it for layout
+measures the translation and not the key. Keep a translation no wider than the
+Spanish where a layout was sized for it, and leave acute, grave and circumflex
+accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, Ç).
 
 ## Where things live
 
@@ -141,7 +144,8 @@ sure whatever measures it for layout measures the translation and not the key.
   `over`, `retake`, `hud`, `scribble` (hand-drawn boxes), `spread` (the book the
   library, the canteen and the homework page are read in: two leaves, a crease,
   and a leaf you turn with your finger), `bookmark`, `records`, `tally`,
-  `options`, `i18n`.
+  `options`, `i18n` (English is the key and the Spanish sits in it; German,
+  French, Italian and Portuguese are one file each in `src/lang/`).
 - **Run content:** `player`, `enemy`, `spawner`, `subjects`, `course` (how hard
   the book is: the four rungs of the difficulty ladder and what each multiplies),
   `characters`, `tools`, `upgrades`, `loadout`, `perks`, `purse`, `refund`,

@@ -16,8 +16,8 @@
 --
 -- It follows the pause card's shape rather than the library's -- one fixed block
 -- of rows, centred in the safe area, a heading over it and a hint under it --
--- because it *can*: eight rows are eight rows on every screen and in both
--- languages, so there is a block here of a height that is the same twice, which
+-- because it *can*: eight rows are eight rows on every screen and in every
+-- language, so there is a block here of a height that is always the same, which
 -- is the one thing the library never has. The dev row is the one thing that
 -- changes that count and it is not a counter-example: it is on the page only
 -- once the heading has been tapped three times (src/dev.lua), so a block that
@@ -66,6 +66,7 @@ local Haptics = require("src.haptics")
 local Orient = require("src.orient")
 local Characters = require("src.characters")
 local Dev = require("src.dev")
+local Coach = require("src.coach")
 local util = require("src.util")
 
 local Settings = {}
@@ -306,7 +307,21 @@ end
 
 --- setup ---------------------------------------------------------------------
 
-function Settings:enter()
+local function rowIndex(key)
+    for i, row in ipairs(rows) do
+        if row.key == key then return i end
+    end
+end
+
+-- `focus` is the key of a row to open the page on, which only the title's LANG
+-- button asks for (src/menu.lua). The keyboard starts on that row, and the hand
+-- (src/coach.lua) comes and presses its right arrow -- the button was pressed by
+-- somebody who may not be able to read a word of this page, so the page shows
+-- them where to press rather than telling them. It goes the moment they press
+-- anything or touch a key and does not come back: by then they have found the
+-- page's one gesture, and a hand still tapping away would be in the way of the
+-- language they are looking for.
+function Settings:enter(focus)
     self.t = 0
     self.row = 1
     self.back = false
@@ -326,6 +341,14 @@ function Settings:enter()
     -- Nothing to walk here, so the corner the thumb stick lives in is page like
     -- any other.
     Input.stickEnabled = false
+
+    refresh()
+    self.coach = nil
+    local at = focus and rowIndex(focus)
+    if at then
+        self.row = at
+        self.coach = Coach.new(self.seed, "tap")
+    end
 end
 
 --- layout --------------------------------------------------------------------
@@ -359,7 +382,7 @@ local function valueWidth()
 end
 
 -- One fixed block, centred in the safe area. There is nothing here whose height
--- the content decides -- eight rows are eight rows in both languages -- so
+-- the content decides -- eight rows are eight rows in every language -- so
 -- unlike the library this page has something worth centring.
 function Settings:layout(game)
     self.game = game
@@ -620,6 +643,8 @@ end
 -- because a drag that let go the moment you strayed a pixel off a seven pixel bar
 -- would be a drag you could not do.
 function Settings:press(x, y)
+    self.coach = nil
+
     if self:backAt(x, y) then
         self.back = true
         return
@@ -651,6 +676,7 @@ function Settings:update(dt, game)
     self:layout(game)
     self.t = self.t + dt
     self.marks:update(dt)
+    if self.coach then self.coach:update(dt) end
 
     if self.back then
         -- A drag interrupted by the way out is still a drag that happened.
@@ -691,6 +717,8 @@ end
 -- read; left and right move whatever the row on is. Backspace is the corner
 -- button, exactly as it is on the timetable and in the library.
 function Settings:keypressed(key)
+    self.coach = nil
+
     if key == "backspace" then
         self.back = true
         return
@@ -839,6 +867,15 @@ function Settings:draw(game)
         end
     end
     Hud.drawCorner(game, "back", false)
+
+    -- The hand, last of all and over the arrow it is pressing: it is a picture
+    -- of a finger above the page, so nothing on the page goes over it. The row
+    -- is looked up rather than kept, since the dev row can come and go under it.
+    local at = self.coach and rowIndex("lang")
+    if at then
+        local ax, ay = self:arrowBox(at, 1)
+        self.coach:draw(ax, ay, ARROW, ARROW)
+    end
 end
 
 return Settings

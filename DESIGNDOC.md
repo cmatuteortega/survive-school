@@ -106,9 +106,10 @@ nearest filtering put every pixel of the result on the same grid as everything
 else, which is what the rule actually asks for; sampling off the grid is what a rotation does and what a
 fractional scale would do.
 
-**Lettering is counted in letters.** The 3x5 face carries an N-tilde and the two
-inverted marks for the Spanish (see **Settings and language**), and in UTF-8 those
-are two bytes each. So `Font.width`, `Font.print`, `Font.count`, `Font.at` and
+**Lettering is counted in letters.** The 3x5 face carries the marks that spell a
+word in one of the six languages -- N-tilde and the inverted marks, the umlauts,
+the Portuguese tildes, the cedilla (see **Settings and language**) -- and in UTF-8
+every one of those is two bytes. So `Font.width`, `Font.print`, `Font.count`, `Font.at` and
 `Scribble.printBig` all walk *glyphs*; nothing that will be drawn is ever measured
 or indexed with `#text`. Getting this wrong does not misplace a word, it misplaces
 whatever block was measured off it.
@@ -2700,7 +2701,9 @@ the screen:
   through on its way to the page. **The English string is the key.** There is no
   table of symbolic ids: a line of copy stays written out in English in the
   module it belongs to -- the upgrade's own row, the tool's name, the prompt at
-  the top of the screen -- and this file maps that English to Spanish. Which is
+  the top of the screen -- and this file maps that English to Spanish, while
+  `src/lang/` holds the German, French, Italian and Portuguese tables, one file
+  each, keyed the same way. Which is
   what keeps the whole **Extending** section below true: adding an upgrade is
   still one row in `Upgrades.list` and nothing else. A string with no translation
   falls through to the English, so a gap reads as English copy rather than as a
@@ -2781,14 +2784,25 @@ down and up again would restart it instead of turning it back on.
 
 **Two buttons in the title screen's left margin**, both pressed rather than
 answered and both `Hud`'s own definitions: the settings button in the corner
-button's box (`Hud.cornerBox`, the `sliders` icon) and the language switch in the
+button's box (`Hud.cornerBox`, the `sliders` icon) and the language button in the
 same box at the other end of the same margin (`Hud.footBox`/`footTarget`/
-`footAt`/`drawFoot`, which carries a *word* where the corner takes an icon).
-`Menu:mark` drops ink that lands on either. The switch is on the title screen and
-not only in settings because it is the first thing somebody who cannot read the
-title needs.
+`footAt`/`drawFoot`, which carries a *word* where the corner takes an icon, and is
+widened to it by `Hud.footWidth`). `Menu:mark` drops ink that lands on either.
+Both open the settings page. The language button says `LANG`, which is not a key
+for the same reason a language's own name is not, and answers `"language"` rather
+than `"settings"`, so `Game:toSettings("lang")` opens the page with the keyboard on
+the language row and a `Coach` on the `tap` path pressing that row's right arrow
+until the first press or key. It is on the title screen and not only in settings
+because it is the first thing somebody who cannot read the title needs; it no
+longer steps the language itself because, with six of them, a switch that has to
+be pressed five times to come back round is one you get lost in.
 
-Three things about how the Spanish is **set**, all forced by the 3x5 face:
+Three things about how the Spanish is **set**, all forced by the 3x5 face. The
+other four languages are set by the same rule the first two make between them --
+**a mark that spells is drawn, a mark that only accents is left off the capital**
+-- so the umlauts, Ã, Õ and Ç are glyphs like N-tilde, the German sharp S is SS,
+the French ligature is OE, and every acute, grave and circumflex is dropped. The
+apostrophe is a glyph too, because French and Italian elide:
 
 - **No acute accents.** A capital fills all five rows, so there is nowhere above
   one to put a mark: ORBITA, MUSICA.
@@ -6242,16 +6256,20 @@ and are all the same 11x11 glyph.
   `Game:bankTally`'s watermark rather than through a hook on whatever produces it.
 - **Anything the player reads:** write it in English where it belongs -- the
   upgrade's row, the tool's name, the screen's own constant -- and add one line to
-  the `ES` table in `src/i18n.lua` keyed by that English. Then make sure the place
-  that *draws* it puts it through `I18n.t`, and that anything measuring it for
-  layout measures the translation and not the key. Avoid a comma in the Spanish
-  and avoid an acute accent anywhere; N-tilde and the inverted marks are fine.
-- **A language:** a row in `I18n.langs` (a `key`, a two-letter `code` for the
-  title screen's switch, and the language's own `name` for itself, which is never
-  translated) and a table beside `ES` in `DICT`. The switch and the settings
-  stepper both step the list, so a third costs neither of them anything -- but
-  check the new words against the 3x5 face first: a letter it has no glyph for
-  draws as a blank the width of a letter.
+  the `ES` table in `src/i18n.lua` and to each of the four files in `src/lang/`,
+  keyed by that English. Then make sure the place that *draws* it puts it through
+  `I18n.t`, and that anything measuring it for layout measures the translation
+  and not the key. Keep each translation no wider than the Spanish wherever a
+  layout was sized for it (the Spanish is what every layout has been checked
+  against), leave acute, grave and circumflex accents off, and keep a multikill
+  word in plain ASCII, since the bold face it is drawn in has no marks. A missing
+  line falls through to the English.
+- **A language:** a row in `I18n.langs` (a `key` and the language's own `name` for
+  itself, which is never translated) and a file in `src/lang/` returning its table,
+  required into `DICT`. The settings stepper steps the list, so another language
+  costs it nothing -- but check the new words against the 3x5 face first: a letter
+  it has no glyph for draws as a blank the width of a letter, and a mark that
+  changes the word needs a glyph in `src/font.lua`.
 
 ## Style
 

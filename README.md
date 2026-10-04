@@ -17,10 +17,10 @@ Requires [LÖVE 11.x](https://love2d.org).
 
 | | Desktop | Touch |
 | --- | --- | --- |
-| Answer the title screen | scribble in a box, or `Y` / `S` / `N` | scribble in a box |
+| Answer the title screen | scribble in a box, or `Y` / `S` / `J` / `N` | scribble in a box |
 | Go back to a run you quit | scribble in `CONTINUE`, or `C` — only there when there is one | scribble in `CONTINUE` |
 | Open the settings page | the button in the top-left corner, or `O` | tap the button in the top-left corner |
-| Change language | the `EN` / `ES` button in the bottom-left corner, or `L` | tap the `EN` / `ES` button in the bottom-left corner |
+| Change language | the `LANG` button in the bottom-left corner, or `L`, then the `<` `>` it points at | tap the `LANG` button in the bottom-left corner, then the `>` it points at |
 | Set a volume | drag the bar, or `↑` / `↓` then `←` / `→` | drag the bar |
 | Change language in settings | the `<` `>` beside it, or `←` / `→` | tap the `<` `>` beside it |
 | Close the settings page | the arrow in the top-left corner, or `Backspace` | tap the arrow in the top-left corner |
@@ -313,16 +313,21 @@ a run and going back to one are the same journey off this screen.
 **Two things in the left margin are not page.** The top-left corner holds the
 settings button — the same box the run's pause button lives in, wearing two
 sliders, because two bars is what is behind it — and the bottom-left corner holds
-the language switch, the same box at the other end of the same margin with `EN`
-or `ES` written in it. Neither is a question: one opens a screen and the other
-throws a switch where it stands, so both are *pressed* rather than scribbled, and
-ink that lands on either is dropped rather than drawn — the timetable's rule for
-the same pair of corners.
+the language button, the same box at the other end of the same margin, widened
+to the word `LANG`. Neither is a question: both open the settings page, so both
+are *pressed* rather than scribbled, and ink that lands on either is dropped rather
+than drawn — the timetable's rule for the same pair of corners.
 
-The switch is here, and not only inside settings, because it is the first thing
-somebody who cannot read the title needs. Burying it one screen inside a page
-written in the wrong language is burying it. Press it and the title, the question,
-the boxes and the hint are all in the other language on the next frame.
+The language button is here, and not only behind the sliders, because it is the
+first thing somebody who cannot read the title needs. Burying it one screen inside
+a page written in the wrong language is burying it. It used to be a switch that
+stepped the language where it stood, which was right with two languages and wrong
+with six: a switch you press five times to come back round is one you get lost in.
+So it says `LANG` — the one word that reads as "language" in every one of them, and
+is not translated for that reason — and opens the settings page with the keyboard
+on the language row and the hand from the title (src/coach.lua) pressing that row's
+`>` arrow, over and over, until you press anything. Every language is written there
+in its own name, so you can find yours without reading a word of the one you are in.
 
 The page underneath is the game's own: the same ruled paper panning as if a
 camera were following someone, the character you drew walking a lap of it, and
@@ -385,10 +390,11 @@ rather than turn it back on.
 
 The stepped rows are the library's footer arrows doing the library's job: two
 arrows either side of the name of the thing they step. On the language row what is
-written between them is the language's own name for itself — `ENGLISH`, `ESPAÑOL`
-— because somebody looking for Spanish is looking for the word ESPAÑOL and not for
-the word SPANISH. The same switch is on the title screen, in the bottom-left
-corner, so it can be reached without reading anything. Every row's arrows are
+written between them is the language's own name for itself — `ENGLISH`,
+`DEUTSCH`, `ESPAÑOL`, `FRANÇAIS`, `ITALIANO`, `PORTUGUES` — because somebody
+looking for Spanish is looking for the word ESPAÑOL and not for the word SPANISH.
+The title screen's `LANG` button opens this page pointing at this row, so it can be
+reached without reading anything. Every row's arrows are
 struck off the widest word *any* of them can hold, so they line up with each
 other as well as standing still while their own word is stepped.
 
@@ -462,10 +468,11 @@ touch the purse or anything bought out of it: those are things you bought rather
 than things the book opened, and the counter already has its own way back for them
 (**Everything back**).
 
-### Two languages
+### Six languages
 
-The game is playable in English and Spanish, and every line of *copy* a player can
-read goes through one door on its way to the page. **The English string is the key.** There
+The game is playable in English, Spanish, French, Portuguese, German and Italian,
+and every line of *copy* a player can read goes through one door on its way to the
+page. **The English string is the key.** There
 is no table of `hud.kills.2`-style ids: an upgrade's copy stays written out, in
 English, in the upgrade's own row, and `src/i18n.lua` maps that English to the
 Spanish. Adding an upgrade is still one row in `Upgrades.list` and nothing else,
@@ -8557,8 +8564,11 @@ src/
   font.lua            three bitmap faces: 3x5 for the HUD, the cards and every
                       prompt, and 5x7 and 5x5 outlined faces for the damage
                       numbers. Counts letters, not bytes -- the 3x5 face carries
-                      an N-tilde and the two inverted marks for the Spanish
-  i18n.lua            every line of copy the player reads, keyed by its English
+                      the marks that spell: N-tilde, the inverted marks, the
+                      umlauts, the Portuguese tildes, the cedilla
+  i18n.lua            every line of copy the player reads, keyed by its English,
+                      and the Spanish for it
+  lang/               the other four dictionaries, one file each: de, fr, it, pt
   options.lua         options.txt: the language, the two volumes, the stick's
                       corner, the damage numbers and whether a new drawing is
                       asked for
@@ -8912,9 +8922,10 @@ src/
   name and the longest blurb in the list, so another character costs that screen
   no width and moves nothing on it. Keep the blurb inside 24 characters, and out
   of the punctuation the 3x5 face does not have — a glyph the face is missing comes
-  out as a space the width of a letter. It has a comma now, and an N-tilde, and
-  the two inverted marks; it has no acute accents and cannot have any, since a
-  capital in it fills all five of its rows.
+  out as a space the width of a letter. It has a comma now, an apostrophe, and
+  the marks that spell a word in one of the six languages (N-tilde, the inverted
+  marks, the umlauts, Ã and Õ, Ç); it has no acute, grave or circumflex accents and
+  cannot have any, since a capital in it fills all five of its rows.
 - **Something the book has to be earned to reach:** add a row to
   `Collection.gates` in `src/collection.lua` — a `need` naming one of the four
   columns (`time`, `kills`, `sat`, `beat`) and the single `line` it opens. Nothing
@@ -8944,15 +8955,19 @@ src/
   draws perfectly.
 - **Anything the player reads:** write it in English where it belongs — the
   upgrade's row, the tool's name, the screen's own constant — and add one line to
-  the `ES` table in `src/i18n.lua` keyed by that English. Then check that the place
-  which *draws* it puts it through `I18n.t`, and that anything measuring it for a
-  layout measures the translation rather than the key. Avoid a comma and any acute
-  accent in the Spanish; N-tilde and the inverted marks are fine.
-- **A language:** a row in `I18n.langs` — a `key`, a two-letter `code` for the
-  title screen's switch, and the language's own name for itself, which is never
-  translated — and a table beside `ES`. Both the switch and the settings stepper
-  step the list, so a third costs neither of them anything. Check the new words
-  against the 3x5 face first: a letter it has no glyph for draws as a blank.
+  the `ES` table in `src/i18n.lua` and to each of the four files in `src/lang/`,
+  keyed by that English. Then check that the place which *draws* it puts it through
+  `I18n.t`, and that anything measuring it for a layout measures the translation
+  rather than the key. Keep each translation no wider than the Spanish wherever a
+  layout was sized for it, leave acute, grave and circumflex accents off, and keep
+  a multikill word in plain ASCII (it is drawn in the bold face, which has no
+  marks at all). A line nobody has translated yet reads as English, not as a gap.
+- **A language:** a row in `I18n.langs` — a `key` and the language's own name for
+  itself, which is never translated — and a file in `src/lang/` returning its
+  table, required into `DICT`. The settings stepper steps the list, so another
+  language costs it nothing. Check the new words against the 3x5 face first: a
+  letter it has no glyph for draws as a blank, and a mark that changes the word
+  (an umlaut, a tilde) needs a glyph drawn for it in `src/font.lua`.
 - **Balance:** `SPEED` at the top of `src/player.lua` — the loadout only ever
   scales what is written there — the level tables of the `SHOT` and `SWORD` lines
   in `src/upgrades.lua`, which are where every number either hands-free attack has

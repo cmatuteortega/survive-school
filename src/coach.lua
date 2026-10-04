@@ -8,6 +8,11 @@
 -- the box is how you answer, the monster is how you fight, and both are the pen
 -- going across the thing on purpose.
 --
+-- A third screen borrows it for something that is not drawing at all: the
+-- settings page, opened off the title's LANG button, shows it pressing the
+-- language row's arrow (src/settings.lua). The one place in the book that is
+-- pressed rather than drawn on gets the one stroke that has no line in it.
+--
 -- **It never draws anything.** The line it lays is dashed, and it is dashed so
 -- that it cannot be mistaken for ink: a solid line would be a mark the page had
 -- made for you, and a box that a hint had half filled in would be a box the
@@ -66,6 +71,11 @@ end
 -- the whole inside being filled taught people a box wanted colouring in. It
 -- runs up and to the right because the hand trails down and to the right of
 -- its fingertip, so the line it has drawn stays out from under it.
+--
+-- `tap` is the press, for a button: the fingertip comes to the middle of the
+-- rectangle, sits pressed for the draw and the hold, and lifts. `dashes = false`
+-- is what makes it a tap rather than a very short line -- a dash under a
+-- button would say the button was something to draw across.
 local PATHS = {
     zig = {
         at = function(u, w, h)
@@ -80,6 +90,11 @@ local PATHS = {
     slash = {
         at = function(u, w, h) return u * w, (1 - u) * h end,
         length = function(w, h) return math.sqrt(w * w + h * h) end,
+    },
+    tap = {
+        at = function(u, w, h) return w / 2, h / 2 end,
+        length = function() return 0 end,
+        dashes = false,
     },
 }
 
@@ -127,7 +142,7 @@ function Coach:draw(x, y, w, h)
     -- keyboard's scribble is, so the dashes are evenly spaced whatever shape of
     -- rectangle it is drawn across.
     local length = math.max(1, math.floor(self.path.length(w, h)))
-    local n = math.floor(length * u)
+    local n = self.path.dashes == false and -1 or math.floor(length * u)
     love.graphics.setColor(Palette.slate)
     for s = 0, n do
         if s % (DASH + GAP) < DASH

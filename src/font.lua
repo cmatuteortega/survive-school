@@ -4,10 +4,11 @@
 -- love.graphics.setColor at draw time.
 --
 -- The 3x5 face is the quiet one and is what the HUD, the cards and every prompt
--- are written in -- and, since the game is playable in Spanish
--- (src/i18n.lua), it is the one face that carries an N-tilde and the two
--- inverted marks. Those are two bytes each in UTF-8, which is why nothing here
--- counts `#text`: see **walking a string** below. The bold faces are digits and
+-- are written in -- and, since the game is playable in six languages
+-- (src/i18n.lua), it is the one face that carries the marks that spell a word in
+-- one of them: N-tilde and the two inverted marks, the umlauts, the Portuguese
+-- tildes and the cedilla. Those are two bytes each in UTF-8, which is why nothing
+-- here counts `#text`: see **walking a string** below. The bold faces are digits and
 -- ASCII, because the only thing that shouts is a damage number. The other two are the loud one at two sizes -- `Font.bold` at
 -- 5x7 and `Font.boldSmall` at 5x5 -- and they exist for the damage numbers
 -- (src/damage.lua), which is why they were digits for a long while. They are the
@@ -116,6 +117,37 @@ local GLYPHS = {
     ["\195\145"] = { "###", "#.#", "##.", ".##", "#.#" }, -- N-tilde
     ["\194\191"] = { ".#.", "...", ".#.", "#..", ".##" }, -- inverted ?
     ["\194\161"] = { ".#.", "...", ".#.", ".#.", ".#." }, -- inverted !
+
+    -- French, Portuguese and German, and the same rule picks which letters
+    -- these are: a mark that makes another word gets drawn, and a mark that
+    -- only accents the same word is left off the capital, as ORBITA is.
+    --
+    -- So the umlauts are here -- SCHON and SCHÖN are two words -- and the
+    -- Portuguese tildes, which are N-tilde's case exactly: MAO is not a word
+    -- and MÃO is the hand. C-cedilla is the French and Portuguese spelling of
+    -- an S sound, and FRANCAIS is a misspelling of the very word on the
+    -- language row. The acute, grave and circumflex are not here, for
+    -- N-tilde's reason above, and the German sharp S is written SS, which is
+    -- what German capitals have always done with it.
+    --
+    -- Five rows only fit a mark *and* a letter if one of them gives way, so the
+    -- marked vowels keep the mark on the top row, leave a row of paper under
+    -- it, and draw the vowel in the three that are left -- A by its bar, O by
+    -- its round, U by its cup, which is all three rows ever said about any of
+    -- them. The tilde is N-tilde's flat bar, so the two tildes in the face are
+    -- one mark. The cedilla is the only mark that goes *under*, and it gets the
+    -- row the comma's tail already lives in.
+    ["\195\132"] = { "#.#", "...", ".#.", "###", "#.#" }, -- A-umlaut
+    ["\195\150"] = { "#.#", "...", ".#.", "#.#", ".#." }, -- O-umlaut
+    ["\195\156"] = { "#.#", "...", "#.#", "#.#", "###" }, -- U-umlaut
+    ["\195\131"] = { "###", "...", ".#.", "###", "#.#" }, -- A-tilde
+    ["\195\149"] = { "###", "...", ".#.", "#.#", ".#." }, -- O-tilde
+    ["\195\135"] = { ".##", "#..", "#..", ".##", ".#." }, -- C-cedilla
+
+    -- The apostrophe, which French and Italian cannot be written without --
+    -- L'ENCRE, DELL'OCCHIO -- and which English had been getting by without by
+    -- the luck of never needing it outside a shout (the bold faces have one).
+    ["'"] = { ".#.", ".#.", "...", "...", "..." },
 
     -- Money, for the shop's prices (src/store.lua), which arrive formatted by the
     -- store in the player's own currency and are printed as they came. The three
@@ -546,7 +578,7 @@ end
 
 -- The nth letter, as the key its glyph is filed under. Case is folded for
 -- single-byte letters only: `upper` is a per-byte operation and would go
--- rummaging inside a multi-byte glyph, and the three that are multi-byte are
+-- rummaging inside a multi-byte glyph, and the ones that are multi-byte are
 -- authored upper case anyway.
 function Font.at(text, n)
     local i, len, k = 1, #text, 0

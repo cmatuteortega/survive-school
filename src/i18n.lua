@@ -1,4 +1,4 @@
--- The game in two languages.
+-- The game in six languages: English, and the five this file maps it to.
 --
 -- **The English string is the key.** There is no table of symbolic ids anywhere:
 -- a line of copy stays written out, in English, in the module it belongs to --
@@ -24,7 +24,7 @@
 --
 -- **Translation happens at the draw, never at load.** Nothing here is baked into
 -- a data table when the module is required, because the language can be changed
--- from the title screen and from the settings page and the catalogue is the same
+-- on the settings page in the middle of a session and the catalogue is the same
 -- table for every run the program plays. So `Upgrades.list` holds English for
 -- ever and src/levelup.lua, src/library.lua and the rest ask for the Spanish
 -- each time they draw it.
@@ -43,9 +43,15 @@
 -- all three are glyphs in the face. They are two bytes each in UTF-8, which is
 -- why src/font.lua counts letters rather than bytes.
 --
--- **No commas.** The face has no comma glyph (it draws as a blank), so the
--- Spanish is written without them -- the same rule a character blurb is already
--- held to.
+-- **No commas.** The face had no comma glyph when the Spanish was written, so
+-- it was written without them -- the same rule a character blurb is already held
+-- to. The face has one now, and the later languages use it.
+--
+-- The four languages in src/lang/ are set by the same rule the first two points
+-- make, which is one rule: **a mark that spells is drawn, a mark that only
+-- accents is left off the capital.** So the umlauts, the Portuguese tildes and
+-- the cedilla are glyphs like N-tilde, and every acute, grave and circumflex is
+-- dropped like the Spanish ones are. src/font.lua has the long form.
 --
 -- **What is deliberately not translated.** Two things, and they are the same
 -- thing: a name is not a sentence.
@@ -67,14 +73,25 @@ local I18n = {}
 
 -- A language's own name for itself, since that is the one thing on a language
 -- selector that should not be translated: someone looking for Spanish is looking
--- for the word ESPANOL, not for the word SPANISH.
+-- for the word ESPANOL, not for the word SPANISH. Set by the face's rules like
+-- every other word -- FRANÇAIS keeps its cedilla and PORTUGUES loses its
+-- circumflex (src/font.lua).
 --
--- `code` is the two letters the title screen's corner button wears. It is the
--- whole of that button, so it has to be a pair of letters that reads as a
--- language at a glance and fits an eleven pixel box.
+-- The order is the order the settings row steps through them, English first
+-- because English is the key and then alphabetical by that name, which is the
+-- one order nobody has to be told.
+--
+-- English is the only one with no dictionary: it is the key. Spanish is the
+-- table below, written first and argued for line by line. The rest live in
+-- src/lang/, one file each, keyed the same way and set by the same rules; what is
+-- particular to each language is said at the top of its own file.
 I18n.langs = {
-    { key = "en", code = "EN", name = "ENGLISH" },
-    { key = "es", code = "ES", name = "ESPAÑOL" },
+    { key = "en", name = "ENGLISH" },
+    { key = "de", name = "DEUTSCH" },
+    { key = "es", name = "ESPAÑOL" },
+    { key = "fr", name = "FRANÇAIS" },
+    { key = "it", name = "ITALIANO" },
+    { key = "pt", name = "PORTUGUES" },
 }
 
 I18n.lang = "en"
@@ -1365,7 +1382,13 @@ local ES = {
 
 }
 
-local DICT = { es = ES }
+local DICT = {
+    es = ES,
+    de = require("src.lang.de"),
+    fr = require("src.lang.fr"),
+    it = require("src.lang.it"),
+    pt = require("src.lang.pt"),
+}
 
 --- lookup --------------------------------------------------------------------
 
@@ -1441,9 +1464,7 @@ function I18n.set(key)
     return false
 end
 
--- The next language round, which is what the title screen's corner button and
--- the settings page's arrows both do. Two languages make it a toggle; it is
--- written as a step so a third costs neither of them anything.
+-- The next language round, which is what the settings page's arrows do.
 function I18n.step(dir)
     local n = #I18n.langs
     I18n.lang = I18n.langs[(I18n.index() - 1 + (dir or 1)) % n + 1].key
