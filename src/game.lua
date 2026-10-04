@@ -34,6 +34,7 @@ local FullGame = require("src.fullgame")
 local LevelUp = require("src.levelup")
 local Puddle = require("src.puddle")
 local Spike = require("src.spike")
+local EyeBoss = require("src.eyeboss")
 local Arena = require("src.arena")
 local Loadout = require("src.loadout")
 local Design = require("src.design")
@@ -756,6 +757,9 @@ function Game:reset()
     self.doubled = false
     self.state = "playing"
     self.pendingWin = false
+    -- The eye coming apart once it is killed (EyeBoss.fall), which the win card
+    -- waits for.
+    self.fallen = nil
     -- Whether this run is worth going back to, which is the one question both
     -- halves of CONTINUE are asked (Game:continueRun, src/bookmark.lua): it is
     -- what puts the box on the title screen for a run still standing in memory,
@@ -1494,6 +1498,9 @@ end
 function Game:buildGrid()
     local grid = {}
     for _, e in ipairs(self.enemies) do
+        -- An eye boss underground or still falling is not on the page, so
+        -- nothing that hits through the grid can find it (EyeBoss).
+        if not e.ghost then
         local k = cellKey(math.floor(e.x / GRID_CELL), math.floor(e.y / GRID_CELL))
         local bucket = grid[k]
         if not bucket then
@@ -1501,6 +1508,7 @@ function Game:buildGrid()
             grid[k] = bucket
         end
         bucket[#bucket + 1] = e
+        end
     end
     return grid
 end
@@ -1538,7 +1546,7 @@ function Game:nearestEnemy(x, y, range)
 
     for _, e in ipairs(self.enemies) do
         local d = util.len(e.x - x, e.y - y)
-        if d <= range and (not bestDist or d < bestDist) then
+        if not e.ghost and d <= range and (not bestDist or d < bestDist) then
             best, bestDist = e, d
         end
     end
@@ -1631,7 +1639,13 @@ function Game:updateEnemies(dt, grid)
 
     for i = #self.enemies, 1, -1 do
         local e = self.enemies[i]
+        -- The eye boss decides what it is doing before it does it
+        -- (src/eyeboss.lua): the brain steers through `drive`, which the walk
+        -- below reads.
+        if e.brain then e.brain:update(dt, self, e) end
         e:update(dt, player, self.walls, self.hasSlick and self:slickAt(e.x, e.y) or nil)
+        -- The dust off the eye boss's landings and rolls (src/eyeball.lua).
+        if e.eyeball then e.eyeball:spill(self, e) end
 
         -- Keep the horde from stacking into a single pixel. Glued enemies are
         -- immovable, so the crowd jams up against them instead of squeezing
@@ -1683,8 +1697,10 @@ function Game:updateEnemies(dt, grid)
         -- running while the player is out of range and the beat just passes
         -- unspent -- if it only ran in range, stepping into view of a crowd of
         -- eyes would be answered with an instant volley from all of them.
+        -- Held, clock and all, while the eye boss is in the middle of a move
+        -- (EyeBoss:busy): a fan fired across a beam is two things to read at once.
         local shot = e.def.shot
-        if shot and e.frozen <= 0 then
+        if shot and e.frozen <= 0 and not (e.brain and e.brain:busy()) then
             e.shotT = e.shotT - dt
             if e.shotT <= 0 then
                 e.shotT = shot.every
@@ -1698,14 +1714,29 @@ function Game:updateEnemies(dt, grid)
         -- out once it has walked clear of the last blot, so a boss held still --
         -- glued, or just stood over you -- leaves one puddle rather than a
         -- growing pool it is standing in the middle of.
+        --
+        -- An eye boss only drips while it glides: a hop leaves splats where it
+        -- lands and a roll a streak (Eyeball:spill), so the floor says how it
+        -- moved. Its drips are drawn long down the way it was going, at its
+        -- feet, and a little different in size each, so a trail reads as a
+        -- trail rather than as a string of the same coin.
         local trail = e.def.trail
-        if trail and e.frozen <= 0 then
+        local drips = not e.eyeball or e.eyeball:dripping()
+        if trail and e.frozen <= 0 and drips then
             e.trailT = e.trailT - dt
             if e.trailT <= 0 and (e.trailX == nil
                 or util.len(e.x - e.trailX, e.y - e.trailY) >= trail.gap) then
                 e.trailT = trail.every
                 e.trailX, e.trailY = e.x, e.y
-                self.puddles[#self.puddles + 1] = Puddle.new(e.x, e.y, trail,
+                local x, y, def = e.x, e.y, trail
+                if e.eyeball then
+                    local dx, dy = util.normalize(e.headX, e.headY)
+                    y = y + e.radius * 0.5
+                    def = { radius = trail.radius * (0.8 + love.math.random() * 0.35),
+                        life = trail.life, stretch = 1.35, dx = dx, dy = dy,
+                        drops = love.math.random(0, 2) }
+                end
+                self.puddles[#self.puddles + 1] = Puddle.new(x, y, def,
                     e.trailDamage, love.math.random(2 ^ 20), e.reach)
             end
         end
@@ -1865,7 +1896,19 @@ function Game:killEnemy(index)
     -- finished.
     if e == self.boss then
         self.boss = nil
-        self.pendingWin = true
+        -- Not straight to the card: the eye comes apart first (EyeBoss.fall),
+        -- and the win is noticed when it has finished. Nothing hurts you while
+        -- it does, and whatever it had in the air falls out of it.
+        if e.eyeball then
+            self.fallen = EyeBoss.fall(e)
+            self.player.truce = true
+            for _, s in ipairs(self.shots) do
+                self.particles:burst(s.x, s.y, 2, Palette.blue)
+            end
+            self.shots = {}
+        else
+            self.pendingWin = true
+        end
         -- Counted here for the same reason the win is noticed here: this is the
         -- one door every kill in the game comes through, so it is the one place
         -- that has to know an eye is worth something (`Game:runWorth`).
@@ -2242,6 +2285,8 @@ function Game:fireEnemyShot(e, shot)
     local n = shot.spread or 1
     local step = n > 1 and shot.arc / (n - 1) or 0
     local from = aim - (n - 1) * step / 2
+    -- The eye boss spits it: a glare and a squeeze (src/eyeball.lua).
+    if e.eyeball then e.eyeball:kick(false) end
 
     -- The pellet is as big as whatever fired it (`reach` in Enemy.new), and the
     -- hitbox and the drawing take the same number so the art cannot lie about the
@@ -2298,6 +2343,10 @@ function Game:updateEnemyShots(dt)
                 local px, py = s.x, s.y
                 local wet = s.wet.radius * (s.wetReach or 1)
                 if self.arena then px, py = self.arena:clamp(px, py, wet) end
+                -- A tear landing in a puddle already there sends a ring across it.
+                for _, p in ipairs(self.puddles) do
+                    if p:covers(px, py) then p:ripple() end
+                end
                 self.puddles[#self.puddles + 1] = Puddle.new(px, py, s.wet,
                     s.wetDamage, love.math.random(2 ^ 20), s.wetReach)
             end
@@ -2365,13 +2414,14 @@ function Game:updateTears(dt, e)
     -- shooting at where you are. Aimed at the ground, which is why nothing about
     -- it is dodged by stepping aside -- you have to not be down that line.
     local lane = tears.lane
-    e.laneT = e.laneT - dt
+    if not (e.brain and e.brain:busy()) then e.laneT = e.laneT - dt end
     if e.laneT <= 0 then
         e.laneT = lane.every
         local aim = math.atan2(self.player.y - e.y, self.player.x - e.x)
         for i = 0, lane.count - 1 do
             self:throwTear(e, tears, aim, lane.from + i * lane.step)
         end
+        if e.eyeball then e.eyeball:kick(false) end
     end
 
     -- The two turns. Every threshold this hit has taken it past fires, so a shot
@@ -2385,6 +2435,16 @@ function Game:updateTears(dt, e)
             self:throwTear(e, tears, turn + i * math.pi * 2 / ring.count, ring.radius)
         end
         self.particles:burst(e.x, e.y, 12, Palette.blue)
+        if e.eyeball then e.eyeball:kick(true) end
+        -- And cries out a pair of eyes, each turn a worse one than the last.
+        local kind = ring.brood and ring.brood[e.rings]
+        if kind then
+            for i = 1, ring.broodCount or 1 do
+                local a = turn + i * math.pi * 2 / (ring.broodCount or 1)
+                self:spawnEnemy(kind, e.x + math.cos(a) * (e.radius + 12),
+                    e.y + math.sin(a) * (e.radius + 12))
+            end
+        end
     end
 end
 
@@ -2593,7 +2653,7 @@ function Game:updatePuddles(dt)
         local p = self.puddles[i]
         if not p:update(dt) then
             table.remove(self.puddles, i)
-        elseif not wet and p:covers(player.x, player.y) then
+        elseif not wet and p.damage > 0 and p:covers(player.x, player.y) then
             wet = true
             if player:hurt(p.damage) then
                 self.particles:burst(player.x, player.y, 5, Palette.blue)
@@ -4697,6 +4757,11 @@ function Game:update(dt)
         self:updateEnemyShots(dt)
         self:updatePuddles(dt)
         self:updateSpikes(dt)
+        if self.fallen and not self.fallen:update(dt, self) then
+            self.fallen = nil
+            self.player.truce = nil
+            self.pendingWin = true
+        end
         -- What fights for you while your hands are busy drawing. After the
         -- crowd has moved, so a star cuts and a rocket goes off where things
         -- actually are.
@@ -4970,6 +5035,9 @@ function Game:draw()
     -- The jacks, on the page beside the wet and for the same reason: they are
     -- ground that is not yours, and have to be read before you walk onto them.
     for _, k in ipairs(self.spikes) do k:draw() end
+    -- Where the eye boss is about to land or come up (src/eyeboss.lua): on the
+    -- page with the wet, since it is a place on the floor to keep off.
+    if self.boss and self.boss.brain then self.boss.brain:drawGround(self.time) end
 
     -- And the other half of that: ground a weapon of yours has taken away rather
     -- than ground the boss has -- the bomb's burning crater, which is the boss's
@@ -5050,6 +5118,7 @@ function Game:draw()
     -- sort below does not apply to it.
     Overprint.beginSolid()
     for _, e in ipairs(self.enemies) do e:drawSolid() end
+    if self.fallen then self.fallen:drawSolid() end
     if self.player.hp > 0 then self.player:drawSolid() end
     Overprint.endSolid()
 
@@ -5068,6 +5137,11 @@ function Game:draw()
         e:draw()
     end
     if pending then self.player:draw() end
+    if self.fallen then self.fallen:draw() end
+
+    -- The eye boss's moves, over the crowd: a beam or an arrow under a blob is a
+    -- tell you did not get.
+    if self.boss and self.boss.brain then self.boss.brain:drawAir(self.time, self.boss) end
 
     -- Over the crowd rather than sorted into it: one of these may be in the air
     -- on its way down, and the rest are standing proud of the paper. A pin you

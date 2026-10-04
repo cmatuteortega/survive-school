@@ -1,7 +1,7 @@
 # The 3D method
 
-How the P.E. whistle boss was made to look solid, and how to do the same for
-another character. The working example is `art/whistle.py`, which writes the
+How the P.E. whistle boss was made to look solid, how that compares with the
+eye boss's painted sphere, and how to do either for another character. The working example is `art/whistle.py`, which writes the
 `BAKE:whistle` block in `src/sprites.lua`; the game side is `turns` on its row in
 `src/enemy.lua`.
 
@@ -10,6 +10,41 @@ size straight into palette letters, do that once per heading, and bake the
 results into `src/sprites.lua` as ordinary ASCII sprites.** The game never knows
 anything was 3D. It draws pixel art like it always has, picking one of a ring of
 pictures.
+
+## Two ways to be solid
+
+The game now has two bosses drawn as solid objects, made in two different ways.
+Pick the one that fits the character before starting.
+
+| | **Baked views** (the whistle) | **Painted live** (the eye) |
+| --- | --- | --- |
+| where | `art/whistle.py` → `BAKE:whistle` in `src/sprites.lua` | `src/eyeball.lua`, every frame |
+| what it can show | any shape you can model: boxes, tubes, rings, cut-outs | shapes with a formula you can solve per pixel: a sphere, an ellipsoid |
+| turning | one of N headings (16), stepped through | any angle at all, in 3D, including up and down |
+| changing over time | no: each view is a fixed picture | yes: blinks, squash and stretch, veins creeping in with damage, a roll that turns the surface |
+| cost | nothing at runtime; ASCII in `sprites.lua` | a few thousand pixel tests a frame for one body |
+| looks like the other sprites | yes: it *is* a sprite | close: same palette and ink rim, but drawn as runs |
+
+The eye's way works like this. For every pixel inside the outline it works out
+the point on the sphere under it, turns that point into the ball's own frame,
+and asks what is painted there: iris, pupil, vein or white. The light is fixed
+on the screen and the ball turns underneath it. That's why an iris looking off
+to the side goes thin and oval, and why the veins come round with a roll. Read
+the header of `src/eyeball.lua` for the full account.
+
+**Use baked views** when the shape is complicated (anything you'd build from
+several parts) and its look doesn't change during a fight. Turning to face the
+player is the only movement it needs.
+
+**Paint live** when the body is one simple round shape and its surface has to
+move: an eye that rolls, blinks or swells, or a ball whose markings turn with it.
+
+**Don't redo the eye with baked views.** It was already given the live
+treatment (merged from main after this method was written), and baking would be
+a step back: 16 fixed headings can't roll, blink, squash or go bloodshot. The
+live method is also the reference for how its lighting is chosen. Both methods
+use a light from the top left and in front, fixed in the room or on the screen,
+so the two bosses look lit by the same window.
 
 ## Why it fits the rendering rules
 

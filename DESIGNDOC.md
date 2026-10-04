@@ -1158,6 +1158,38 @@ one place and nothing else in the game knows it exists:
 - **`knock`** and **`hold`** — `Enemy:knockback` and `Enemy:freeze`, both of
   which already rode on the enemy rather than on the dozen things that shove and
   stick. The grin is the horde-sized version of what went in for the boss.
+- **`pupil`** — `Enemy.new` hands the row an `Eyeball` (`src/eyeball.lua`), and
+  from then on the body is not a sprite. It is painted a pixel at a time off a
+  sphere turned to face the player: each pixel inside the outline is turned into
+  the ball's own frame and asked whether it is pupil, iris, vein or white, so an
+  iris looking sideways goes oval and a roll carries every vein round with it.
+  The light is fixed on the screen, so the shadow crescent and the catchlight
+  stay put while the ball turns. Output is horizontal runs of whole pixels in the
+  palette, so none of the rendering rules bend. The eyeball also owns the gait --
+  glide, a run of hops, or a roll then a dizzy sit -- and answers
+  `Enemy:update` a *share* of the row's speed, chosen per mode to average 1, so
+  the 26 on the row is still the fight. Height, squash and roll are drawing
+  only; the hitbox is still `x/y/radius`. `Enemy:drawSolid`, the hit rim and the
+  flash ask its `drawMask` for the silhouette, `Game:updateEnemies` asks it to
+  `spill` dust off a landing, and the shot, the lane and the ring `kick` it.
+  `Sprites.enemies.bosseye` is still loaded and still what `Enemy:footing`
+  measures the shadow off; nothing draws it.
+- **`attacks`** — `Enemy.new` hands the row an `EyeBoss` (`src/eyeboss.lua`), its
+  brain, which `Game:updateEnemies` steps *before* `Enemy:update`. It is a state
+  machine (`enter` → `wake` → `idle` ⇄ a move → `resting`), and everything it
+  does to the enemy goes through three fields: `drive` (nil to chase as usual,
+  `hold`, `seek` a point, `dash` a locked line — read in `Enemy:update`'s walk),
+  `ghost` (off the grid, out of `nearestEnemy`, and refused by `Enemy:hurt`, while
+  it is underground or still falling in) and `eyeball.ctl` (what the body is
+  doing). The four moves are `stare`/`bowl`/`slam`/`sink`, each a tell, the move,
+  and a rest; `EyeBoss:choose` weights them off distance, your smoothed velocity
+  and whether it is stuck, and marks down the last two. Lists of three on the row
+  are per phase (above ⅔, above ⅓, the rest). `EyeBoss:busy` holds the fan's and
+  the lane's clocks. The ring thresholds also `brood` (spawn eyes). A kill hands
+  the body to `EyeBoss.fall`, which `Game` steps and draws while `player.truce`
+  holds and `pendingWin` waits; the burst puddles carry 0 damage, which
+  `Game:updatePuddles` skips. Puddles grew `stretch`/`dx,dy` (streaks), `drops`
+  (splats), `ripple` and a wet glint (`src/puddle.lua`).
 
 ### The bosses
 
@@ -1169,9 +1201,11 @@ walks on (`Game:spawnEnemy`). Both bosses sit on the eye's 900 health, knock, ho
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
-**The eye** (`bosseye`, six lessons) is a fight about *ground*: `pupil` (it watches
-you), `trail` (wet dragged behind it), `tears` (wet thrown, three ways, with rings at
-two thirds and one third), and a fan of `shot`.
+**The eye** (`bosseye`, six lessons) is a fight about *ground*: `pupil` (the body is
+a ball painted a pixel at a time off a turning sphere, `src/eyeball.lua`), `trail`
+(wet dragged behind it), `tears` (wet thrown, three ways, with rings at two thirds
+and one third), `attacks` (the four moves its brain picks between,
+`src/eyeboss.lua`), and a fan of `shot`.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every

@@ -283,7 +283,9 @@ function Player:mend(amount)
 end
 
 function Player:hurt(amount)
-    if self.invuln > 0 then return false end
+    -- `truce` is the eye coming apart before the win card (EyeBoss.fall): a win
+    -- you could still die inside would not be one.
+    if self.invuln > 0 or self.truce then return false end
     self.hp = math.max(0, self.hp - amount)
     self.invuln = INVULN_TIME
 

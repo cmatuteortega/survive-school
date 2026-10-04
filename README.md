@@ -7049,6 +7049,103 @@ the line it locked, which inside a box is a dash at a wall. The lunge and the bl
 share the one tell this game has for "something big is coming", so they never run
 at once -- red always means one thing.
 
+### The eye is a ball
+
+The boss used to be a flat white disc with a pupil slid across it, and slid was
+the problem: a disc moving over a disc reads as a sticker on a plate, and the one
+monster whose drawing says which way it is facing was saying it in two
+dimensions. Now it is painted off a real sphere every frame (`src/eyeball.lua`).
+Turn it to look at you and the iris goes oval towards the edge of the ball the
+way an iris does; the light stays where it is while the ball turns, so the grey
+crescent along the bottom and the catchlight on the cornea are what tell you it
+is round. It has veins that come round with it, fibres in the iris, a border
+three pixels of ink thick -- the heaviest line on the page, for the heaviest
+thing on it -- and a lid, so it blinks, glares when it spits, and sits half shut
+and dizzy after a roll.
+
+It also got a way of walking, because a thing that size gliding at a steady 26
+reads as a sticker being pushed across the page. Every couple of seconds it does
+something: **a run of hops**, crouching into a squash, stretching on the way up
+and landing in a jelly wobble with dust kicked out either side -- the last hop of
+a run is the big one, and the page knocks under it; or **a roll**, where the ball
+actually turns by the distance it covers, so the eye goes over the top and round
+the back, and then it sits dizzy while the spring brings it back round to find
+you, overshooting a little, which is the part that reads as *looking*. Glued, it
+drops out of the air and keeps watching.
+
+**None of this is allowed to move the fight.** Each mode's speed is chosen to
+average out to the row's 26 -- a hop stands still on the ground and makes it up
+in the air, a roll runs a third over and pays it back sitting dizzy -- and the
+quickest it ever goes, mid-hop, is about 46, under your 58. Walking away still
+works; what changed is that walking away has a rhythm you can read. And every
+bit of it is drawing: the height, the squash and the roll never touch the
+hitbox, for the reason the hit recoil doesn't.
+
+### The eye decides
+
+Everything the eye did to you used to be a clock -- the fan on a beat, the tears
+on two more, the trail on a fourth -- and clocks are fair and learnable and, by
+the second eye, all the fight was. Now it has four moves it *chooses* between
+(`src/eyeboss.lua`), and each one is played in the same three beats: a tell you
+can read, the move, then a moment where it is stood still and open.
+
+- **The stare.** It stops and glares, and a dotted line marches out of the iris
+  and swings round onto you; for the last quarter of the wind it goes solid red,
+  then it is a beam. The 3D eye is the tell -- you can see exactly where it is
+  looking. From the second phase the beam keeps sweeping the way it was turning,
+  just under your walking speed at a hundred pixels, so you walk *against* the
+  swing.
+- **The bowl.** The wad's charge at the boss's size, with the wad's blinking red
+  rim borrowed so it is a warning you already know, plus an arrow down the lane.
+  It locks the line at the start of the wind, leading you a little, then rolls
+  down it at 104 -- faster than you, so you step off the line rather than
+  outrun it -- smearing a streak, and bounces off the box: never, once, then
+  twice as the fight turns. It sits dizzy after.
+- **The slam.** A crouch, then a leap at where you will be half way through its
+  flight, with a marker on the floor the whole time it is up -- and it tumbles in
+  the air, so it comes down looking at you. It lands in a ring that rolls out
+  across the floor. Crouch and flight are about 1.2 seconds, which at your 58 is
+  more ground than the widest ring, so being in it means having stood still. In
+  the third phase it does it twice.
+- **The sink.** From the second phase it goes down into its own wet and comes up
+  out of a different puddle, with bubbles and a blinking ring where it will
+  surface for the whole time it is under. The trail stops being only ground you
+  cannot stand on and becomes ground it can come *out* of. It will never surface
+  within 45 pixels of you.
+
+**The choosing is what makes it a mind and not a fifth clock.** Each move is
+weighted off the distance (the slam is for someone who came close to put damage
+in; the stare and the sink are for someone keeping away), off how you are moving
+(it leads a running target, never a still one), and off whether it has got
+itself stuck against the box or a pen line (a jammed eye goes underground). The
+last move it made is marked down hard and the one before softly, so you never
+get the same thing twice in a row and never a pattern you can stand in. Between
+moves it walks at where you are going rather than where you are. While it is in
+the middle of a move the fan and the lane hold their clocks, because a beam with
+a fan fired across it is two things to read at once and the point of a tell is
+that it is *the* thing on the page. Glue on a wind-up cancels the move outright,
+which is the one tool-shaped answer this fight has.
+
+**It gets meaner where the bar says it should.** At two thirds and one third --
+the same marks the tear rings were already on -- it flinches hard and the page
+knocks, the rest between moves shortens (2.6, 2.0, 1.5 seconds), the beam
+sweeps, the bowl bounces, the slam doubles and throws tears, the sink comes in,
+and it cries out a pair of eyes, small ones at the first turn and bloodshot ones
+at the second. The body says it too: veins come on and creep towards the iris as
+the health goes, and for the last third the iris itself goes red.
+
+**The floor says how it moved.** Gliding, it drips blots drawn long down the way
+it was going; hopping, it leaves splats with droplets thrown round them where it
+lands; rolling, a streak. Something landing in or beside a puddle sends a ring
+across it, fresh puddles have a wet glint that dries off, and before it cries a
+lane of tears a tear wells at its lower lid -- the one attack that had no tell.
+
+**It comes on and goes off like a boss.** It drops onto the page from above on a
+marker a hundred pixels from you, lands with the eye shut, and opens it on you.
+Killed, it shivers with its eye rolled up and its pupil blown, flattens, and
+bursts into the puddles it was made of -- none of them hurt, nothing on the page
+can hurt you while it plays, and the win card waits a beat and a half for it.
+
 ### The weights held still
 
 Blob and bat are still half the horde between them and everything else is trim.

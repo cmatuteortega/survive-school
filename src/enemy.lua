@@ -2,6 +2,8 @@ local Palette = require("src.palette")
 local Sprites = require("src.sprites")
 local Walls = require("src.walls")
 local Sfx = require("src.sfx")
+local Eyeball = require("src.eyeball")
+local EyeBoss = require("src.eyeboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -49,16 +51,6 @@ local HIT_BUMP_TIME = 0.12  -- and how long it takes to slide home
 -- walk across the page, so crossing a lit corner twice in a run is not the same
 -- as standing in one.
 local SOAK_COOL = 1.2
-
--- The boss's pupil: a disc slid across the iris towards the player rather than
--- a pixel of the sprite, which is why the art has no pupil in it. The eye is the
--- one enemy in the game whose sprite says which way it is facing, and a boss you
--- are running away from ought to be watching you do it.
-local PUPIL_R = 4
-local PUPIL_SLIDE = 5 -- how far off centre it may sit: the iris is 19 across
-                      -- and the pupil is 9, so at 5 it still clears the rim
-local PUPIL_TURN = 6  -- how fast it swings across, in fractions per second --
-                      -- an eye tracks smoothly, it does not snap
 
 -- How long a `turns` body takes to swing one view (a sixteenth of a turn) round
 -- towards you. Stepped through the views in between rather than snapped, so a
@@ -129,13 +121,17 @@ local BLARE_REACH = 34
 --
 -- A handful more fields turn a row into a boss: `boss` (never despawns, never
 -- shoved out of the way by the crowd, and ends the run when it dies), `title`
--- (its name under the HUD's bar) and `call` (the line the page says as it walks
--- on), `pupil` (an eye that watches you),
--- `turns` (a body drawn from a ring of baked views, the one facing you), `trail` (a wet blot dropped
--- behind it as it walks), `tears` (the same wet thrown rather than walked, three
--- ways -- Game:updateTears) and `whistle` (the P.E. boss's four calls --
--- Game:updateWhistle). Every one of them but `boss` is optional and read in one
--- place, so a second boss is a row that picks which of them it is made of.
+-- (its name under the HUD's bar), `call` (the line the page says as it walks
+-- on), `pupil` (an eye that watches you: the body is a ball painted a pixel at a
+-- time and turned to face the player, with a gait of its own --
+-- src/eyeball.lua), `turns` (a body drawn from a ring of baked views, the one
+-- facing you -- 3dmethod.md), `trail` (a wet blot dropped behind it as it
+-- walks), `tears` (the same wet thrown rather than walked, three ways --
+-- Game:updateTears), `attacks` (the moves it picks between, read by its brain
+-- and nowhere else -- src/eyeboss.lua) and `whistle` (the P.E. boss's four
+-- calls -- Game:updateWhistle). Every one of them but `boss` is optional and
+-- read in one place, so a second boss is a row that picks which of them it is
+-- made of.
 --
 -- The box the fight happens in is not one of them, and deliberately: an arena is
 -- a fact about the *fight* rather than about the monster, so the spawner opens it
@@ -340,7 +336,49 @@ Enemy.types = {
                         -- says the fight is going your way, the floor answers.
                         -- Thresholds rather than a clock, because what they are
                         -- for is marking progress you earned.
-                        ring = { at = { 0.66, 0.33 }, count = 14, radius = 50 } } },
+                        ring = { at = { 0.66, 0.33 }, count = 14, radius = 50,
+                                 -- And it cries out eyes at each: two of the
+                                 -- small ones at the first turn and two of the
+                                 -- bloodshot ones at the second, so the escort
+                                 -- is the fight getting worse rather than
+                                 -- something that was always there.
+                                 brood = { "eye", "redeye" }, broodCount = 2 } },
+              -- The moves (src/eyeboss.lua), each read in that file and nowhere
+              -- else. A list of three is a number per phase -- above two thirds
+              -- of its health, above one third, and the last third -- and the
+              -- whole of how the fight gets meaner is in those lists.
+              --
+              -- Every number below that is a *time* is a tell, and none of them
+              -- is under half a second: the promise of this fight is that it is
+              -- answered by reading and moving, never by reflex. Damage is the
+              -- first cycle's and scales with the contact damage (EyeBoss).
+              attacks = {
+                  -- Seconds of walking between moves, plus up to 0.6 more.
+                  cool = { 2.6, 2.0, 1.5 },
+                  -- The beam. `turn` is how fast the line swings onto you while
+                  -- it aims, radians a second; `sweep` is how fast it keeps
+                  -- going once it fires. 0.55 at 100px is ~55px a second, just
+                  -- under your 58: outwalkable, barely, by walking against it.
+                  stare = { aim = { 0.95, 0.85, 0.75 }, fire = { 0.45, 0.55, 0.65 },
+                            sweep = { 0, 0.35, 0.55 }, turn = 2.4, width = 5,
+                            damage = 14, length = 260, rest = 0.6 },
+                  -- The roll. 104 is well over your speed, which is the wad's
+                  -- bargain: you cannot outrun the line, you step off it.
+                  bowl = { wind = { 0.75, 0.65, 0.55 }, lead = 0.3, speed = 104,
+                           time = 1.7, bounces = { 0, 1, 2 }, rest = 0.9 },
+                  -- The leap. The ring it lands in reaches `shock`; from where
+                  -- it was aimed, crouch plus air is ~1.2s, which at 58 is ~70px
+                  -- of walking -- more than the widest ring, so standing still
+                  -- is the only way to be in it.
+                  slam = { crouch = 0.4, air = 0.85, high = 46, reach = 150,
+                           shock = { 48, 54, 60 }, damage = 12, leaps = { 1, 1, 2 },
+                           ring = { 0, 8, 10 }, tearReach = 44, rest = 0.7 },
+                  -- Under and up again, from the second phase. `near`/`far`
+                  -- is how far from you it is willing to come up.
+                  sink = { from = 2, down = 0.45, under = 0.4, up = 0.35,
+                           near = 45, far = 140, ring = { 0, 0, 8 }, tearReach = 40,
+                           rest = 0.5 },
+              } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
     -- wet you have to stop standing on -- and this is the other half of the
@@ -654,9 +692,17 @@ function Enemy.new(kind, x, y, scale)
         -- first looked at you), and how long until it may step to the next.
         view = nil, viewT = 0,
         headX = 0, headY = 0, -- the way it is actually going, vs the way it wants to
-        -- Where the pupil is looking, as a fraction of how far it may slide.
-        -- Chased rather than set, so the eye swings round to you (Enemy:draw).
-        lookX = 0, lookY = 0,
+        -- The ball an eye boss is drawn as, and how it gets about
+        -- (src/eyeball.lua). nil on everything that is a sprite.
+        eyeball = def.pupil and Eyeball.new() or nil,
+        -- And what it decides to do (src/eyeboss.lua): the moves a row with
+        -- `attacks` makes between walking at you. The brain steers through
+        -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
+        -- walk at a point other than you, `dash` to run a locked line -- and
+        -- takes it off the page entirely with `ghost` while it is underground or
+        -- still falling onto it.
+        brain = def.attacks and EyeBoss.new(def) or nil,
+        drive = nil, ghost = false,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else
         -- (src/spiral.lua). Handed over rather than read off the page for the
@@ -828,13 +874,12 @@ end
 
 function Enemy:update(dt, player, walls, slick)
     -- The eye follows you whatever else is happening to it -- glued, frozen,
-    -- stood still -- because that is the one thing an eye does. Chased towards
-    -- the direction of the player rather than set to it, so it swings.
-    if self.def.pupil then
-        local dx, dy = util.normalize(player.x - self.x, player.y - self.y)
-        local k = 1 - math.exp(-PUPIL_TURN * dt)
-        self.lookX = self.lookX + (dx - self.lookX) * k
-        self.lookY = self.lookY + (dy - self.lookY) * k
+    -- stood still -- because that is the one thing an eye does. Its gait
+    -- answers a share of its speed (hopping, rolling, sat dizzy) which averages
+    -- out to the row's own, so the speed on the row is still the fight.
+    local gait = 1
+    if self.eyeball then
+        gait = self.eyeball:update(dt, self.x, self.y, player, self.frozen > 0)
     end
 
     -- And a body drawn from a ring of views turns to the one pointing at you,
@@ -889,10 +934,21 @@ function Enemy:update(dt, player, walls, slick)
     -- Either it is walking, or it is committed to a line it picked half a second
     -- ago (`charge`). The two are exclusive and nothing below this cares which:
     -- a shove still rides on top of a dash, and a dashing wad still bobs.
-    -- A whistle drawing breath for a blast stands where it is (Game:updateWhistle
-    -- owns the clock), which is half of the tell: the red outline says something
-    -- is coming and the stopping says it is not the lunge, which moves.
-    if self.blowT > 0 then
+    local drive = self.drive
+    if drive and drive.dash then
+        -- Down a line the brain locked, at the brain's speed: the bowl. Nothing
+        -- here steers it -- a pen line stops it in the wall pass and the box
+        -- turns it round (EyeBoss:bowlRoll) -- which is what makes it a line.
+        self.headX, self.headY = drive.dx, drive.dy
+        self.x = self.x + drive.dx * drive.speed * dt
+        self.y = self.y + drive.dy * drive.speed * dt
+    elseif drive and drive.hold then
+        -- Stood where the brain wants it, for a tell or a rest.
+    elseif self.blowT > 0 then
+        -- A whistle drawing breath for a blast stands where it is
+        -- (Game:updateWhistle owns the clock), which is half of the tell: the
+        -- red outline says something is coming and the stopping says it is not
+        -- the lunge, which moves.
         self.headX, self.headY = 0, 0
     elseif not (self.def.charge and self:charge(dt, player)) then
         -- What it is walking at, which is the player unless something has
@@ -901,6 +957,7 @@ function Enemy:update(dt, player, walls, slick)
         -- thing rounds a pen line and skids on a crayon lane exactly as it
         -- would on its way to you.
         local tx, ty = player.x, player.y
+        if drive and drive.seek then tx, ty = drive.x, drive.y end
         if self.lureT > 0 then
             self.lureT = self.lureT - dt
             tx, ty = self.lureX, self.lureY
@@ -964,7 +1021,7 @@ function Enemy:update(dt, player, walls, slick)
         -- a fraction of the legs off whatever is following him down it. A
         -- multiplier rather than a stop -- being glued is the gluestick's, and
         -- a crowd strung out along a line is what this is for.
-        local speed = self.speed
+        local speed = self.speed * gait
         if self.chillT > 0 then
             self.chillT = self.chillT - dt
             speed = speed * self.chill
@@ -996,6 +1053,8 @@ function Enemy:hurt(amount)
     -- Glue-stuck things take deeper cuts -- a gluestick level. Everything that
     -- deals damage arrives through this one door, so the multiplier rides on
     -- the enemy rather than being known to any of the dozen things that hit.
+    -- Underground, or still falling onto the page: not there to be hit.
+    if self.ghost then return false end
     if self.glue and self.frozen > 0 and self.glue.soften then
         amount = amount * self.glue.soften
     end
@@ -1024,6 +1083,7 @@ function Enemy:hurt(amount)
     local bx, by = -self.headX, -self.headY
     if bx == 0 and by == 0 then bx, by = 0, 1 end
     self.bumpX, self.bumpY, self.bumpT = bx, by, HIT_BUMP_TIME
+    if self.eyeball then self.eyeball:jolt(amount / self.maxHp) end
     -- Counted after the softening and not before it, so what is added up is what
     -- was actually taken off the thing.
     Enemy.dealt = Enemy.dealt + amount
@@ -1155,8 +1215,9 @@ end
 -- agree to the pixel: a blank a pixel off the body would print a paper rim along
 -- one edge of the bob and nowhere else.
 function Enemy:footing()
-    -- Stuck things stop bobbing.
-    local bob = self.frozen <= 0 and self.bob >= 1
+    -- Stuck things stop bobbing, and an eye boss has a gait of its own instead
+    -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
+    local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball
     local y = bob and self.y - 1 or self.y
 
     -- An enraged arrival is its own art in two colours, and it is swapped in
@@ -1272,6 +1333,12 @@ end
 function Enemy:drawSolid()
     local sprite, x, y = self:footing()
 
+    if self.eyeball then
+        love.graphics.setColor(Palette.paper)
+        self.eyeball:drawMask(x, y, self:outlineColour() and 1 or 0)
+        return
+    end
+
     love.graphics.setColor(Palette.paper)
     if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow) end
     sprite:drawMask(x, y, nil, self.grow)
@@ -1306,6 +1373,10 @@ function Enemy:draw()
     -- as wide as the foot that is stuck in it.
     local grow = self.grow
     local shadow = (self.def.shadow + (stuck and 2 or 0)) * grow
+    -- A ball in the air leaves less of a mark under it, and a squashed one more.
+    if self.eyeball then
+        shadow = math.floor(shadow * self.eyeball:shadowScale() + 0.5)
+    end
     -- Struck off the bottom edge of the sprite -- `h - oy` -- rather than off
     -- half its height, which is Sprites.shadow's own expression and makes it the
     -- one rule in the game for where a thing stands. Half the height was the
@@ -1321,6 +1392,25 @@ function Enemy:draw()
         shadow, (stuck and 2 or 1) * grow)
 
     local ring = self:outlineColour()
+
+    -- The eye boss is painted rather than stamped (src/eyeball.lua), but wears
+    -- the same rim and the same flash as everything else: a silhouette one out,
+    -- then the body blown out to the flash colour, pupil and all -- a white body
+    -- with a pupil still in it would read as the hit landing on something else.
+    if self.eyeball then
+        if ring then
+            love.graphics.setColor(ring)
+            self.eyeball:drawMask(x, y, 1)
+        end
+        if lit then
+            love.graphics.setColor(lit)
+            self.eyeball:drawMask(x, y, 0)
+        else
+            self.eyeball:draw(x, y)
+        end
+        return
+    end
+
     if ring then outline(sprite, x, y, ring, grow) end
 
     if lit then
@@ -1345,18 +1435,6 @@ function Enemy:draw()
         end
     end
 
-    -- The pupil, over the iris the art left empty. A disc rather than a sprite
-    -- because it is drawn at a different place every frame and there is nothing
-    -- to author: `pixelart.circleFill` plots whole pixels on the same grid as
-    -- everything else, which is the rule a rotated sprite would break. It
-    -- flashes with the body, since a white body with a black pupil still in it
-    -- would read as the hit landing on something else.
-    if self.def.pupil then
-        love.graphics.setColor(lit or Palette.ink)
-        pixelart.circleFill(
-            x + self.lookX * PUPIL_SLIDE,
-            y + self.lookY * PUPIL_SLIDE, PUPIL_R)
-    end
 end
 
 return Enemy

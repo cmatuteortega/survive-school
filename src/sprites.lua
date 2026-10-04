@@ -1381,12 +1381,11 @@ function Sprites.load()
         -- veins are the bloodshot eye's tell given room to be drawn properly
         -- rather than implied by a red pupil.
         --
-        -- Authored with no pupil at all, and that is deliberate: the pupil is
-        -- drawn every frame as a disc that slides across the iris towards the
-        -- player (Enemy:draw), so the thing watches you. Baking one in and
-        -- sliding another over it would leave two. The iris is 19 across and
-        -- the pupil is 9, which is what sets how far it may slide -- five
-        -- pixels, and the pupil never reaches the rim.
+        -- Nothing draws this any more: the boss is painted a pixel at a time
+        -- off a turning sphere (src/eyeball.lua), which is what lets the iris
+        -- foreshorten and the ball roll. It is kept because it is still what
+        -- the body is measured off -- Enemy:footing reads its size for where
+        -- the shadow goes -- and it is the same size as the ball at rest.
         bosseye = pixelart.newSprite({
             ".................sssssssss.................",
             "..............sssssssssssssss..............",

@@ -18,9 +18,10 @@ neither is optional reading before a behavioural change:
 - **`README.md`** — the design document, and an unusually complete one. It
   explains *why* every tool, number and layout decision is what it is.
 
-A third, `3dmethod.md`, covers the one sprite made a different way: the P.E.
-whistle boss is modelled and ray-traced into baked ASCII views (`art/whistle.py`),
-and that file is how to do the same for another character.
+A third, `3dmethod.md`, covers the two bosses drawn as solid objects and how to
+do the same for another character: the P.E. whistle, modelled and ray-traced
+into baked ASCII views ahead of time (`art/whistle.py`), and the eye, painted a
+pixel at a time every frame off a turning sphere (`src/eyeball.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -158,7 +159,10 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   `store` (what is sold for money, over `iap`, love-iap's vendored file), `ads`
   (the two rewarded-ad offers),
   `collection` (what the book has opened, off `records`), `challenges` (what it
-  asks you to go and do, off `tally`), `design`.
+  asks you to go and do, off `tally`), `design`, `eyeball` (the eye boss's body:
+  a sphere painted a pixel at a time, and its hop / roll gait), `eyeboss` (its
+  brain: the stare, bowl, slam and sink, how it picks between them, its entrance
+  and its death).
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.
