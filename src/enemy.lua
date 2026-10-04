@@ -348,9 +348,10 @@ Enemy.types = {
     -- The body is the eye's numbers where the fight is the same fight -- 900
     -- health for the eye's reason (the measured half minute), the same knock
     -- and hold, the same 20 on contact -- and a narrower radius because it is
-    -- a narrower thing: 45 across and 26 high, so a 15px circle is the honest
-    -- middle of it. It walks a touch slower than the eye because it has
-    -- something faster to do instead.
+    -- a narrower thing: the barrel is 27 across, and the hit circle is that
+    -- drum (the sprite's origin is its middle, src/sprites.lua), with the
+    -- mouthpiece left outside it as the thin thing it is. It walks a touch
+    -- slower than the eye because it has something faster to do instead.
     --
     -- **It lunges.** The wad's `charge`, at the boss's size: it stands still
     -- winding up, outlined in red, and then throws itself down the line it
@@ -362,8 +363,8 @@ Enemy.types = {
     -- **It spits.** Three peas down the line on a short beat, the least of what
     -- it does and the thing that is always happening, so standing still is
     -- never free even between the calls below.
-    whistle = { name = "WHISTLE", sprite = "whistle", hp = 900, speed = 22, radius = 15, damage = 20,
-                xp = 250, shadow = 30, boss = true, face = true, knock = 0.06, hold = 0.3,
+    whistle = { name = "WHISTLE", sprite = "whistle", hp = 900, speed = 22, radius = 13, damage = 20,
+                xp = 250, shadow = 26, boss = true, face = true, knock = 0.06, hold = 0.3,
                 title = "THE WHISTLE", call = "THE WHISTLE BLOWS",
                 shot = { range = 200, every = 1.9, speed = 58, damage = 9, hit = 3,
                          spread = 3, arc = 0.42, sprite = "pea" },

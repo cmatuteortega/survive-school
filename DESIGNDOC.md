@@ -1176,9 +1176,12 @@ two thirds and one third), and a fan of `shot`.
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `face = true` -- the sprite is authored pointing left and drawn mirrored
 through `Sprite:draw`'s own flip when you are more than `FACE_BAND` to its right,
-which is a whole-pixel mirror and not a rotation, and why the art is an odd 45
-across. `Enemy:footing` returns the flip as a fourth value so the blank under it
-mirrors with it. It has the wad's `charge` at the boss's size (84px of lunge
+which is a whole-pixel mirror and not a rotation. Its origin is the middle of the
+barrel (`{ ox = 30, oy = 17 }`), so a turn swings the mouthpiece about the drum
+and the 13px hit circle is the drum. `Enemy:footing` returns the flip as a fourth
+value so the blank under it mirrors with it. The art is the one sprite drawn as a
+solid object: modelled, ray-traced at size, and snapped to the red ramp (blush,
+red, slate, ink creases), with the face drawn flat on the barrel afterwards. It has the wad's `charge` at the boss's size (84px of lunge
 against a 150 trigger), a three-pea `shot`, and a `whistle` block of four calls,
 all in `Game:updateWhistle`:
 

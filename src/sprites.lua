@@ -714,47 +714,63 @@ function Sprites.load()
             "..............sssssssssssssss..............",
             ".................sssssssss.................",
         }),
-        -- The P.E. boss: a coach's whistle the size of the eye boss, scowling.
+        -- The P.E. boss: a coach's whistle the size of the eye boss, scowling,
+        -- and the one sprite in the game drawn as a solid object rather than a
+        -- doodle. It was modelled -- a cylinder for the barrel, a rounded box
+        -- for the mouthpiece, a torus for the lanyard ring -- and ray-traced at
+        -- this size from a little above and to the right, lit from the top left,
+        -- with every pixel snapped to the red ramp: paper for the glint, blush
+        -- lit, red in the middle, slate in shadow, and ink round the edge and
+        -- along the creases where one face turns into another. Red bounces back
+        -- up into the bottom of the shadow side, which is what keeps the dark
+        -- half reading as the side of a drum rather than a hole in it. The face
+        -- was then drawn flat onto the barrel's front by hand, because a face
+        -- rendered in perspective at this size is a face nobody can read.
+        --
         -- Red plastic because a whistle is, and because the one thing a red body
-        -- this big can say on this page is "theirs"; the shine is blush, the
-        -- window and the mouthpiece are the two slate slots a whistle is made
-        -- of, and the lanyard ring is blue only because it has to be some colour
-        -- that is not the body. The face is on the barrel, where the pea is.
+        -- this big can say on this page is "theirs"; the ring is blue only
+        -- because it has to be some colour that is not the body.
         --
         -- Authored pointing left, mouthpiece first, and drawn mirrored when you
         -- are on its right (`face` in src/enemy.lua) -- `Sprite:draw`'s own flip,
-        -- which is a whole-pixel mirror and not a rotation. Odd width on
-        -- purpose: 45 across mirrors about its centre column onto exactly the
-        -- same pixels, where an even width would step a pixel sideways every
-        -- time it turned round.
+        -- which is a whole-pixel mirror and not a rotation. Its origin is the
+        -- middle of the barrel rather than of the picture, so that turning round
+        -- swings the mouthpiece about the drum instead of sliding the whole body
+        -- sideways, and so the hit circle sits on the thing you are aiming at.
+        -- The barrel is 27 wide with that column at its middle, so a turn moves
+        -- it by one pixel, which is the least a mirror on a whole-pixel grid can.
         whistle = pixelart.newSprite({
-            "ooo..........................................",
-            "orrooooooooooooo......oooooooooooo.....bb....",
-            "orrkkkkkkkkkkkko......orrrrrrrrrrrooo.b..b...",
-            "orrkkkkkkkrrrrro......orrrkkkkkkkkkrro....b..",
-            "osrrrrrrrrrrrrrrossssorrkkrrrrrrrrrkkro...b..",
-            "osrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro.b...",
-            "osrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro....",
-            "orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro...",
-            "orrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrro...",
-            "orrooooooooooooooorrrrrrrrrrrrrrrrrrrrrrro...",
-            "ooo...............orrrrroorrrrrrrrroorrrrro..",
-            "..................orrrrrrroorrrrroorrrrrrro..",
-            "..................orrrrrrwwwrrrrrwwwrrrrrro..",
-            "..................orrrrrrwwwrrrrrwwwrrrrrro..",
-            "..................orrrrrrwowrrrrrwowrrrrrro..",
-            "..................orrrrrrwowrrrrrwowrrrrrro..",
-            "..................orrrrrrrrrrrrrrrrrrrrrrro..",
-            "...................orrrrrrrrrrrrrrrrrrrrro...",
-            "...................orrrrrrrrrrrrrrrrrrrrro...",
-            "...................orrrrrrrorrrrrorrrrrrro...",
-            "....................orrrrrrooooooorrrrrro....",
-            ".....................orrrrrrrrrrrrrrrrro.....",
-            "......................orrrrrrrrrrrrrrro......",
-            ".......................orrrrrrrrrrrrro.......",
-            "........................ooorrrrrrrooo........",
-            "...........................ooooooo...........",
-        }),
+            "...oooo......................................",
+            ".oorrrrooooooooo.............................",
+            "okkrrrrrrrrrrrrrooooooooo....................",
+            "okwwwwkkkkkkrrrrrssoooooooooooooooo...ooo....",
+            "orrrrrrrkkkwwwwkkkkkksooorsrrrrrrrrooocoooo..",
+            "orrrrrrrrrrrrrrrrkkkwwwwsrrrrrrrrrrrcbo..oo..",
+            "orrrrrrrrrrrrrrrrrrrrrskkkkkkkrrrrrrcsso..oo.",
+            "orrrrrrrrrrrrrrrrrrrrkkkkrrrkkkrrrrrrssso.oo.",
+            "oooorrrrrrrrrrrrrrrrkkrrrrrrrrrrrrrssssssobo.",
+            "....oooorrrrrrrrrrrkkrrrrrrrrrrrrrrrsssbscbo.",
+            "........ooooorrrrrkkrrrrrrrrrrrrrrrrrssccbo..",
+            ".............oooorkrrrrrrrrrrrrrrrrrrssssso..",
+            ".................orrrrrrrrrrrrrrrrrrrrssssso.",
+            ".................orrrroorrrrrrroorrrrrssssso.",
+            ".................orrrrrooorrrooorrrrrrssssso.",
+            ".................orrrrrroorrroorrrrrrrrsssso.",
+            ".................orrrrrwwwrrrwwwrrrrrrrsssso.",
+            ".................orrrrrwwwrrrwwwrrrrrrrsssso.",
+            ".................orrrrrwoorrroowrrrrrrrsssso.",
+            ".................orrrrrwoorrroowrrrrrrrsssso.",
+            ".................orrrrrrrrrrrrrrrrrrrrrssso..",
+            "..................orrrrrrrrrrrrrrrrrrrrssso..",
+            "..................orrrrrorrrrrorrrrrrrssso...",
+            "...................orrrrrooooorrrrrrrrsso....",
+            "...................orrrrrrrrrrrrrrrrrsso.....",
+            "....................orrrrrrrrrrrrrrrrso......",
+            ".....................orrrrrrrrrrrrrroo.......",
+            "......................oorrrrrrrrrrro.........",
+            "........................ooorrrrrooo..........",
+            "...........................ooooo.............",
+        }, { ox = 30, oy = 17 }),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",
