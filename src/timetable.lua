@@ -688,12 +688,12 @@ function Timetable:panel(lay, top, bottom)
     --
     -- Upright, the heading, the lesson and the stats are not rows of it: they are
     -- the header, above the tabs, and have the width of the whole page to be
-    -- centred in (`Timetable:layout`). Measured into the column they would walk
-    -- its middle line left of the page's for a clearance only the rows *beside*
-    -- the tabs need.
+    -- centred in (`Timetable:layout`). What is left of the column is *beside* the
+    -- tabs, and is given the whole of what they leave -- which is what lets the
+    -- character keep his third size on a phone held upright.
     local headW = math.max(Font.width(headText()) * lay.headScale,
                            nameWidth() * lay.nameScale, lay.statW)
-    local colW = lay.portrait and heroW * HERO_SCALE
+    local colW = lay.portrait and lay.textW
               or math.max(headW, heroW * HERO_SCALE)
     local statsBottom = headerHeight(lay.headScale, lay.nameScale)
 
@@ -703,7 +703,13 @@ function Timetable:panel(lay, top, bottom)
     -- left until it clears them. Everything centred is measured into that one
     -- clamp -- the column and whatever is at the foot -- so they all stay on the
     -- same line as each other whatever the page does.
+    --
+    -- Upright, the line is the middle of what the tabs leave rather than the
+    -- page's: the header has the page's middle to itself, and what stands beside
+    -- the tabs reads as centred against them. A centred-on-the-page character
+    -- walked left to clear them is neither, and is a size smaller for it.
     local function centre(wide)
+        if lay.portrait then return lay.textX + math.floor(lay.textW / 2) end
         return math.max(lay.textX + math.ceil(wide / 2),
                         math.min(lay.pageCx,
                                  lay.textX + lay.textW - math.ceil(wide / 2)))
