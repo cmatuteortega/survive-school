@@ -54,10 +54,10 @@ for it.
 
 - [x] **Tutorial / guided first run** — the draw-to-answer input model
       (README **Asking by drawing**) is unusual and should be taught, not
-      discovered. A hand drawing a dashed scribble (`src/coach.lua`, README
-      **Being shown how**): across the YES box after a few idle seconds on the
-      title, and across a monster in a run's opening seconds until the first
-      kill made while drawing.
+      discovered. A hand drawing a dashed line (`src/coach.lua`, README
+      **Being shown how**): a diagonal through the YES box after a few idle
+      seconds on the title, and a scribble across a monster in a run's opening
+      seconds until the first kill made while drawing.
 - [ ] **Story framing** — a short intro (first day of school) and an ending card
       per course (`src/course.lua`).
 - [x] **Accessibility**

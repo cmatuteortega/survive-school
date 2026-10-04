@@ -131,8 +131,9 @@ sure whatever measures it for layout measures the translation and not the key.
   else, so taking it out at launch is three calls and a file.
 - **Rendering:** `src/palette.lua`, `src/overprint.lua`, `src/pixelart.lua`,
   `src/sprites.lua`, `src/font.lua`, `src/background.lua`, `src/particles.lua`,
-  `src/coach.lua` (the hand that shows how: a dashed scribble over the YES box
-  and over a monster in a run's first seconds, never a real mark).
+  `src/coach.lua` (the hand that shows how: a dashed diagonal through the YES
+  box and a dashed scribble over a monster in a run's first seconds, never a
+  real mark).
 - **Screens:** `menu`, `settings`, `timetable`, `studio`, `library`, `canteen`,
   `homework` (the challenge list, read off `challenges`), `chance` (the
   revive-by-ad offer), `double` (the x2 box on the end cards), `blank` (the page with

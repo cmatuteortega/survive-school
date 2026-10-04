@@ -5630,7 +5630,9 @@ the page, under the readouts.
 ### The coaching hand
 
 `src/coach.lua` is the tutorial: a pointing hand (`Sprites.hand`, origin on the
-fingertip) that slides in, lays a dashed three-sweep zigzag across a rectangle,
+fingertip) that slides in, lays a dashed line across a rectangle -- a `PATHS`
+entry, the three-sweep `zig` for a monster or the single diagonal `slash` for a
+box --
 holds, lifts while the dashes dither out, rests, and loops (`CYCLE`, about three
 seconds). It is told nothing but a rectangle, handed in fresh every `draw`, so a
 hint across a walking monster keeps to the monster. **It never marks anything**:
@@ -5644,7 +5646,8 @@ player does anything:
 
 - **The title** (`Menu:updateCoach`). `self.idle` runs only while the phase is
   `choosing`, no pointer is down and no box is armed; past `COACH_AFTER` (3.5s)
-  the hand scribbles the inside of the YES box. A press or a key zeroes it.
+  the hand strikes a `slash` through the YES box, corner to corner and a few
+  pixels past the border. A press or a key zeroes it.
 - **The run** (`Game:updateCoach`). Between `COACH_FROM` and `COACH_UNTIL` (1.5s
   and 15s of run time), with no pointer down and no `drewKill` yet, the hand
   scribbles across `self.coachOn` -- the on-screen monster nearest `COACH_AT`

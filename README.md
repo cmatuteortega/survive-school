@@ -200,19 +200,22 @@ pulls the paper away into the run.
 
 Drawing to answer is unusual, and drawing to fight is the whole game, so both
 are shown rather than explained — by a hand (`src/coach.lua`). A pointing finger
-with your blue at the cuff slides in, draws a dashed scribble, holds it a moment,
+with your blue at the cuff slides in, draws a dashed line, holds it a moment,
 lifts away while the dashes drop out a stamp at a time, rests, and goes round
 again.
 
 On the title it comes once the boxes have sat unanswered for three and a half
-seconds, and it scribbles the YES box. Anybody who already knows has answered by
+seconds, and it strikes one diagonal through the YES box, bottom-left corner to
+top-right and a little past both. One line, not the inside filled in: one line
+through a box is all a box asks, and a hand colouring the whole thing in would
+teach that it wanted colouring in. Anybody who already knows has answered by
 then; anybody who does not is still looking at the boxes. A press anywhere or any
 key sends it away mid-line and starts the wait again, because the moment someone
 is trying is the moment to stop showing them.
 
 In a run it comes a second and a half in and scribbles across a monster — the
-same scribble, on purpose, so the move that starts the game and the move that wins
-it are visibly one move. It picks a monster on the screen about fifty pixels off
+same pen going across the thing, on purpose, so the move that starts the game and
+the move that wins it are visibly one move. It picks a monster on the screen about fifty pixels off
 rather than the nearest one, because the nearest is the one your weapon is about to
 kill and a hand that kept losing its monster mid-stroke would teach nothing; it
 keeps that monster while it lives, and follows it as it walks. It goes for the rest

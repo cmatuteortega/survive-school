@@ -11,7 +11,7 @@
 -- committed -- are src/scribble.lua, which the pause card asks with too.
 --
 -- Nobody is told that in words. Leave the boxes alone for a few seconds and a
--- hand comes and scribbles the YES box in dashes (src/coach.lua) -- showing the
+-- hand comes and strikes a dashed line through the YES box (src/coach.lua) -- showing the
 -- gesture rather than describing it, and never actually answering for you.
 --
 -- A third box sits under those two and only some of the time: CONTINUE, for a
@@ -147,10 +147,12 @@ function Menu:enter(resumable)
     self.pen = Scribble.newPen()
     self.written = 0      -- letters of the title on the page so far
 
-    -- The hand that scribbles the YES box for anyone who has not worked out
-    -- that drawing is how this page is answered, and how long the page has been
-    -- left alone for it to be worth showing (`COACH_AFTER`).
-    self.coach = Coach.new(self.seed)
+    -- The hand that strikes a line through the YES box for anyone who has not
+    -- worked out that drawing is how this page is answered, and how long the
+    -- page has been left alone for it to be worth showing (`COACH_AFTER`). A
+    -- single diagonal rather than the scribble: one line through a box is all it
+    -- asks, and a hand filling the whole inside taught it wanted colouring in.
+    self.coach = Coach.new(self.seed, "slash")
     self.idle = 0
 
     -- The one-frame latch for the settings button: `update` hands it back the
@@ -731,12 +733,15 @@ function Menu:draw(game)
 
     -- The hand, out past the pass for the reason src/coach.lua gives: it is a
     -- picture of a gesture over the page and not a mark on it, and its paper
-    -- fill would come out a step darker wherever it crossed a rule. Over the YES
-    -- box's inside -- the border is not where you draw -- and only YES: the hint
-    -- is how to answer, and the answer it shows is the one that starts the game.
+    -- fill would come out a step darker wherever it crossed a rule. Corner to
+    -- corner of the whole YES box and a little past both, the way a line struck
+    -- through a box is actually drawn -- kept to the inside it was three dashes
+    -- long and read as a stray mark rather than a line through anything. And
+    -- only YES: the hint is how to answer, and the answer it shows is the one
+    -- that starts the game.
     if self:coaching() then
         local b = self.boxes[1]
-        self.coach:draw(b.x + 4, b.y + 4, b.w - 10, b.h - 10)
+        self.coach:draw(b.x - 3, b.y - 2, b.w + 4, b.h + 2)
     end
 
     -- The two margin buttons, out past the pass with the rest of the game's

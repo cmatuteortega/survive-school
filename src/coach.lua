@@ -1,12 +1,12 @@
 -- The hand that shows you how. A pointing finger slides in, draws a dashed
--- scribble across something, lifts away, and does it again -- the whole of the
+-- line across something, lifts away, and does it again -- the whole of the
 -- game's tutorial, because the whole of the game's input is one gesture
 -- (README **Asking by drawing**) and the gesture is the thing that has to be
 -- taught. Two screens use it, and both for the same lesson: the title shows it
--- scribbling the YES box (src/menu.lua), and the opening seconds of a run show
--- it scribbling across a monster (Game:updateCoach) -- the box is how you
--- answer, the monster is how you fight, and it is the same scribble both times
--- on purpose.
+-- striking a diagonal through the YES box (src/menu.lua), and the opening
+-- seconds of a run show it scribbling across a monster (Game:updateCoach) --
+-- the box is how you answer, the monster is how you fight, and both are the pen
+-- going across the thing on purpose.
 --
 -- **It never draws anything.** The line it lays is dashed, and it is dashed so
 -- that it cannot be mistaken for ink: a solid line would be a mark the page had
@@ -37,7 +37,7 @@ local LIFT = 0.45
 local REST = 0.55
 local CYCLE = APPROACH + DRAW + HOLD + LIFT + REST
 
--- Sweeps across the rectangle: the zigzag the keyboard's scribble lays in a box
+-- Sweeps across the rectangle for the scribble: the zigzag the keyboard lays in a box
 -- (src/scribble.lua), at half its six sweeps. A dashed line is a third gaps, and
 -- six passes of it across a box twenty pixels high run together into a grey
 -- smudge; three are three strokes you can follow.
@@ -56,17 +56,37 @@ local function ease(f)
     return f * f * (3 - 2 * f)
 end
 
--- A point on the zigzag for u in 0..1, as an offset into a w x h rectangle.
-local function zig(u, w, h)
-    local p = u * ROWS
-    local row = math.floor(p)
-    local f = p - row
-    if row % 2 == 1 then f = 1 - f end
-    return f * w, u * h
-end
+-- The two strokes the hand knows, each a point for u in 0..1 as an offset into
+-- a w x h rectangle, and the length of the path in pixels -- what the dashes
+-- are spaced along.
+--
+-- `zig` is the scribble, for a monster: crossing one out. `slash` is one
+-- diagonal from the bottom-left corner to the top-right, for a box: one line
+-- through it is all a box asks (six 2px cells, src/scribble.lua), and showing
+-- the whole inside being filled taught people a box wanted colouring in. It
+-- runs up and to the right because the hand trails down and to the right of
+-- its fingertip, so the line it has drawn stays out from under it.
+local PATHS = {
+    zig = {
+        at = function(u, w, h)
+            local p = u * ROWS
+            local row = math.floor(p)
+            local f = p - row
+            if row % 2 == 1 then f = 1 - f end
+            return f * w, u * h
+        end,
+        length = function(w, h) return ROWS * w + h end,
+    },
+    slash = {
+        at = function(u, w, h) return u * w, (1 - u) * h end,
+        length = function(w, h) return math.sqrt(w * w + h * h) end,
+    },
+}
 
-function Coach.new(seed)
-    return setmetatable({ t = 0, seed = seed or 0 }, Coach)
+-- `path` is a key of `PATHS`, the scribble if left out.
+function Coach.new(seed, path)
+    return setmetatable({ t = 0, seed = seed or 0,
+        path = PATHS[path or "zig"] }, Coach)
 end
 
 -- Back to the start of a loop, so the next time it is shown it comes in from
@@ -106,13 +126,13 @@ function Coach:draw(x, y, w, h)
     -- The dashed line, laid a stamp a pixel along the path the way the
     -- keyboard's scribble is, so the dashes are evenly spaced whatever shape of
     -- rectangle it is drawn across.
-    local length = math.max(1, math.floor(ROWS * w + h))
+    local length = math.max(1, math.floor(self.path.length(w, h)))
     local n = math.floor(length * u)
     love.graphics.setColor(Palette.slate)
     for s = 0, n do
         if s % (DASH + GAP) < DASH
             and (dither == 0 or util.hash01(s, self.seed, 31) > dither) then
-            local dx, dy = zig(s / length, w, h)
+            local dx, dy = self.path.at(s / length, w, h)
             love.graphics.rectangle("fill", math.floor(x + dx), math.floor(y + dy), 2, 2)
         end
     end
@@ -122,9 +142,10 @@ function Coach:draw(x, y, w, h)
     -- which is all a press is at this size.
     local hx, hy
     if c < APPROACH then
-        hx, hy = x, y
+        local dx, dy = self.path.at(0, w, h)
+        hx, hy = x + dx, y + dy
     else
-        local dx, dy = zig(u, w, h)
+        local dx, dy = self.path.at(u, w, h)
         hx, hy = x + dx, y + dy
     end
     hx = hx + REACH_X * slide
