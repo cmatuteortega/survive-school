@@ -68,8 +68,10 @@ for it.
         so the overprint rule still holds).
   - [x] Reduced motion / reduced screen shake toggle.
   - [x] Text size option.
-- [ ] **More languages** — EN and ES today (`src/i18n.lua`); target FR, DE,
-      PT-BR, JA, KO, ZH, RU.
+- [ ] **More languages**
+  - [x] EN, ES (`src/i18n.lua`), and DE, FR, IT, PT-BR (`src/lang/`), behind
+        the settings page's LANG row (`I18n.langs`).
+  - [ ] JA, KO, ZH, RU — need glyphs past the 3x5 Latin face (`src/font.lua`).
 
 ## 6. Platform
 
@@ -104,7 +106,8 @@ checked on a real phone against a live AdMob account.
 - [x] **Double the reward by ad** — the `X2` box on both end cards
       (`src/double.lua`, `Game:doubleRun`). Once per run.
 - [x] **No other ad placements.**
-- [x] Every ad-facing string goes through `I18n.t` with its `ES` line.
+- [x] Every ad-facing string goes through `I18n.t`, with its `ES` line and a
+      line in each of `src/lang/{de,fr,it,pt}.lua`.
 - [ ] **Go live:** create the AdMob app and rewarded unit, set the two repo
       variables, and test the consent form from an EEA account.
 
