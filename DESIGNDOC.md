@@ -1171,6 +1171,22 @@ one place and nothing else in the game knows it exists:
   `spill` dust off a landing, and the shot, the lane and the ring `kick` it.
   `Sprites.enemies.bosseye` is still loaded and still what `Enemy:footing`
   measures the shadow off; nothing draws it.
+- **`attacks`** — `Enemy.new` hands the row an `EyeBoss` (`src/eyeboss.lua`), its
+  brain, which `Game:updateEnemies` steps *before* `Enemy:update`. It is a state
+  machine (`enter` → `wake` → `idle` ⇄ a move → `resting`), and everything it
+  does to the enemy goes through three fields: `drive` (nil to chase as usual,
+  `hold`, `seek` a point, `dash` a locked line — read in `Enemy:update`'s walk),
+  `ghost` (off the grid, out of `nearestEnemy`, and refused by `Enemy:hurt`, while
+  it is underground or still falling in) and `eyeball.ctl` (what the body is
+  doing). The four moves are `stare`/`bowl`/`slam`/`sink`, each a tell, the move,
+  and a rest; `EyeBoss:choose` weights them off distance, your smoothed velocity
+  and whether it is stuck, and marks down the last two. Lists of three on the row
+  are per phase (above ⅔, above ⅓, the rest). `EyeBoss:busy` holds the fan's and
+  the lane's clocks. The ring thresholds also `brood` (spawn eyes). A kill hands
+  the body to `EyeBoss.fall`, which `Game` steps and draws while `player.truce`
+  holds and `pendingWin` waits; the burst puddles carry 0 damage, which
+  `Game:updatePuddles` skips. Puddles grew `stretch`/`dx,dy` (streaks), `drops`
+  (splats), `ripple` and a wet glint (`src/puddle.lua`).
 
 ### Drills and surges
 

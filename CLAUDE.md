@@ -155,7 +155,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   (the two rewarded-ad offers),
   `collection` (what the book has opened, off `records`), `challenges` (what it
   asks you to go and do, off `tally`), `design`, `eyeball` (the eye boss's body:
-  a sphere painted a pixel at a time, and its hop / roll gait).
+  a sphere painted a pixel at a time, and its hop / roll gait), `eyeboss` (its
+  brain: the stare, bowl, slam and sink, how it picks between them, its entrance
+  and its death).
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.

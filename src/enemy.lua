@@ -3,6 +3,7 @@ local Sprites = require("src.sprites")
 local Walls = require("src.walls")
 local Sfx = require("src.sfx")
 local Eyeball = require("src.eyeball")
+local EyeBoss = require("src.eyeboss")
 local util = require("src.util")
 
 local Enemy = {}
@@ -108,7 +109,8 @@ local SOAK_COOL = 1.2
 -- that watches you: the body is a ball painted a pixel at a time and turned to
 -- face the player, with a gait of its own -- src/eyeball.lua), `trail` (a wet blot dropped behind it as it walks) and
 -- `tears` (the same wet thrown rather than walked, three ways --
--- Game:updateTears).
+-- Game:updateTears), and `attacks` (the moves it picks between, read by its
+-- brain and nowhere else -- src/eyeboss.lua).
 --
 -- The box the fight happens in is not one of them, and deliberately: an arena is
 -- a fact about the *fight* rather than about the monster, so the spawner opens it
@@ -312,7 +314,49 @@ Enemy.types = {
                         -- says the fight is going your way, the floor answers.
                         -- Thresholds rather than a clock, because what they are
                         -- for is marking progress you earned.
-                        ring = { at = { 0.66, 0.33 }, count = 14, radius = 50 } } },
+                        ring = { at = { 0.66, 0.33 }, count = 14, radius = 50,
+                                 -- And it cries out eyes at each: two of the
+                                 -- small ones at the first turn and two of the
+                                 -- bloodshot ones at the second, so the escort
+                                 -- is the fight getting worse rather than
+                                 -- something that was always there.
+                                 brood = { "eye", "redeye" }, broodCount = 2 } },
+              -- The moves (src/eyeboss.lua), each read in that file and nowhere
+              -- else. A list of three is a number per phase -- above two thirds
+              -- of its health, above one third, and the last third -- and the
+              -- whole of how the fight gets meaner is in those lists.
+              --
+              -- Every number below that is a *time* is a tell, and none of them
+              -- is under half a second: the promise of this fight is that it is
+              -- answered by reading and moving, never by reflex. Damage is the
+              -- first cycle's and scales with the contact damage (EyeBoss).
+              attacks = {
+                  -- Seconds of walking between moves, plus up to 0.6 more.
+                  cool = { 2.6, 2.0, 1.5 },
+                  -- The beam. `turn` is how fast the line swings onto you while
+                  -- it aims, radians a second; `sweep` is how fast it keeps
+                  -- going once it fires. 0.55 at 100px is ~55px a second, just
+                  -- under your 58: outwalkable, barely, by walking against it.
+                  stare = { aim = { 0.95, 0.85, 0.75 }, fire = { 0.45, 0.55, 0.65 },
+                            sweep = { 0, 0.35, 0.55 }, turn = 2.4, width = 5,
+                            damage = 14, length = 260, rest = 0.6 },
+                  -- The roll. 104 is well over your speed, which is the wad's
+                  -- bargain: you cannot outrun the line, you step off it.
+                  bowl = { wind = { 0.75, 0.65, 0.55 }, lead = 0.3, speed = 104,
+                           time = 1.7, bounces = { 0, 1, 2 }, rest = 0.9 },
+                  -- The leap. The ring it lands in reaches `shock`; from where
+                  -- it was aimed, crouch plus air is ~1.2s, which at 58 is ~70px
+                  -- of walking -- more than the widest ring, so standing still
+                  -- is the only way to be in it.
+                  slam = { crouch = 0.4, air = 0.85, high = 46, reach = 150,
+                           shock = { 48, 54, 60 }, damage = 12, leaps = { 1, 1, 2 },
+                           ring = { 0, 8, 10 }, tearReach = 44, rest = 0.7 },
+                  -- Under and up again, from the second phase. `near`/`far`
+                  -- is how far from you it is willing to come up.
+                  sink = { from = 2, down = 0.45, under = 0.4, up = 0.35,
+                           near = 45, far = 140, ring = { 0, 0, 8 }, tearReach = 40,
+                           rest = 0.5 },
+              } },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -530,6 +574,14 @@ function Enemy.new(kind, x, y, scale)
         -- The ball an eye boss is drawn as, and how it gets about
         -- (src/eyeball.lua). nil on everything that is a sprite.
         eyeball = def.pupil and Eyeball.new() or nil,
+        -- And what it decides to do (src/eyeboss.lua): the moves a row with
+        -- `attacks` makes between walking at you. The brain steers through
+        -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
+        -- walk at a point other than you, `dash` to run a locked line -- and
+        -- takes it off the page entirely with `ghost` while it is underground or
+        -- still falling onto it.
+        brain = def.attacks and EyeBoss.new(def) or nil,
+        drive = nil, ghost = false,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else
         -- (src/spiral.lua). Handed over rather than read off the page for the
@@ -740,13 +792,24 @@ function Enemy:update(dt, player, walls, slick)
     -- Either it is walking, or it is committed to a line it picked half a second
     -- ago (`charge`). The two are exclusive and nothing below this cares which:
     -- a shove still rides on top of a dash, and a dashing wad still bobs.
-    if not (self.def.charge and self:charge(dt, player)) then
+    local drive = self.drive
+    if drive and drive.dash then
+        -- Down a line the brain locked, at the brain's speed: the bowl. Nothing
+        -- here steers it -- a pen line stops it in the wall pass and the box
+        -- turns it round (EyeBoss:bowlRoll) -- which is what makes it a line.
+        self.headX, self.headY = drive.dx, drive.dy
+        self.x = self.x + drive.dx * drive.speed * dt
+        self.y = self.y + drive.dy * drive.speed * dt
+    elseif drive and drive.hold then
+        -- Stood where the brain wants it, for a tell or a rest.
+    elseif not (self.def.charge and self:charge(dt, player)) then
         -- What it is walking at, which is the player unless something has
         -- offered it somewhere better. Everything after this -- the walls, the
         -- wax, the heading it keeps -- is untouched by the swap, so a lured
         -- thing rounds a pen line and skids on a crayon lane exactly as it
         -- would on its way to you.
         local tx, ty = player.x, player.y
+        if drive and drive.seek then tx, ty = drive.x, drive.y end
         if self.lureT > 0 then
             self.lureT = self.lureT - dt
             tx, ty = self.lureX, self.lureY
@@ -842,6 +905,8 @@ function Enemy:hurt(amount)
     -- Glue-stuck things take deeper cuts -- a gluestick level. Everything that
     -- deals damage arrives through this one door, so the multiplier rides on
     -- the enemy rather than being known to any of the dozen things that hit.
+    -- Underground, or still falling onto the page: not there to be hit.
+    if self.ghost then return false end
     if self.glue and self.frozen > 0 and self.glue.soften then
         amount = amount * self.glue.soften
     end
@@ -870,7 +935,7 @@ function Enemy:hurt(amount)
     local bx, by = -self.headX, -self.headY
     if bx == 0 and by == 0 then bx, by = 0, 1 end
     self.bumpX, self.bumpY, self.bumpT = bx, by, HIT_BUMP_TIME
-    if self.eyeball then self.eyeball:jolt() end
+    if self.eyeball then self.eyeball:jolt(amount / self.maxHp) end
     -- Counted after the softening and not before it, so what is added up is what
     -- was actually taken off the thing.
     Enemy.dealt = Enemy.dealt + amount
