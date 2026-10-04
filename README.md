@@ -7105,6 +7105,64 @@ was in the middle of stops where it is, and a count-in it had started is dropped
 is the one tool-shaped answer this fight has, as it is the eye's, and for a
 metronome it is the obvious one.
 
+### MATHS ends on the die
+
+The eye is about the ground, the whistle the air, the metronome time. The fourth
+answer to the box is a fight about **number** -- reading what a roll says before it
+happens. MATHS ends on a red die that starts as a d6, becomes a d10 at two thirds and
+a d20 at one third, and every move it makes is decided by a roll you watch land.
+
+That is the whole risk of the design, and the whole of how it is paid for. A boss
+that rolled for its moves in secret would be the one unfair thing in the book. So
+the roll is the tell: the die is thrown, tumbles, comes to rest, and the face on top
+-- painted on the die, and on a tag over it -- says what is coming and how much of
+it, and then there is a count-in. Luck picks the move; you always see the move
+before it lands.
+
+It is painted live, the eye's way, rather than baked like the whistle and the
+metronome, and the reason is that a die has no front. Sixteen baked headings are
+spent on a thing turning to face you; a die needs to tumble end over end in whatever
+direction it was thrown and stop on any face at all. Each die is a handful of flat
+faces, so every frame each pixel asks which face it lands on, the face is one step
+of the red ramp lit from the eye's window, and the edges are ink -- flat faces suit
+eight colours better than anything round can. The d6's pips are painted on its
+faces and come round with the roll; a number does not survive perspective at three
+pixels by five, so the d10's and d20's are stamped flat on the face that is up.
+
+- **It is thrown, never walks.** It shudders red with the line drawn on the floor in
+  front of it, then throws itself down it, tumbling and bouncing off the walls, and
+  stops about a hundred pixels on. At the start of a throw it is moving at nearly
+  three times your speed, so you step off the line, the wad's bargain at a boss's
+  size -- and where it stops is where it rolls.
+- **The d6 stamps its face on the floor.** Three by three squares of the page round
+  where you are standing, and the squares where the face has pips go off. Read the
+  die, find a blank square, stand on it. An odd roll has a pip in the middle, so it
+  always moves you; an even one leaves the middle empty. Then it spits that many pips
+  at you.
+- **It unfolds.** At two thirds the cube opens flat into its net -- six faces in a
+  cross, laid on the page's squares round where it stood -- and the net goes off.
+  Then it folds back up as a d10.
+- **The d10 plays odds and evens.** The whole box becomes a checkerboard of the
+  page's squares, and the half that matches the roll goes off. A safe square is
+  never more than one square away. Then a ring of that many pips.
+- **It is recast.** At one third it leaps off the page, and its shadow comes down on
+  where you were standing; it lands there as a d20. The air time is a walk of ninety
+  pixels against a ring of fifty-six, so only standing still gets you caught.
+- **The d20 throws spokes.** That many lines out from it, swinging a third of a gap
+  round as they go off. A low roll leaves wide gaps anywhere; a high one leaves gaps
+  you only fit through far out. A third of a gap rather than a half, so the trailing
+  side of every gap stays clear: you move with the swing.
+- **A natural 20 is a critical:** the spokes, then the odd squares, then the even
+  ones, each count-in shorter than the last, so you cross the board between them.
+  **A natural 1 is a fumble:** it falls over seeing stars and takes half again from
+  everything for three seconds. It is the roll you cheer.
+
+**Glue loads the die.** A glued die drops whatever it was counting in, and one glued
+while it is still rolling lands on 1 -- which on the d20 is the fumble. Only while it
+rolls, so the loaded die is a shot you make at a moving thing rather than something a
+glue build can keep doing for the whole last third. Every boss has its one
+tool-shaped answer, and for a die it is the obvious one.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was

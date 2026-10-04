@@ -2232,6 +2232,15 @@ function Sprites.load()
         -- all sixteen (`Sprites.metronomeViews`, below).
         metronome = pixelart.newSprite(Sprites.METRONOME[1],
             { ox = Sprites.METRONOME.ox, oy = Sprites.METRONOME.oy }),
+        -- And the MATHS boss, which like the eye is painted rather than
+        -- stamped (src/dice.lua): nothing draws this. It is the box the die
+        -- is measured off -- Enemy:footing reads it for where the shadow goes
+        -- -- 35 across, the d20 at rest near enough, so it is a plain block.
+        die = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 35 do rows[i] = ("r"):rep(35) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",
@@ -3019,6 +3028,18 @@ function Sprites.load()
         "..rrr..",
         ".o.o.o.",
         "o..o..o",
+    })
+
+    -- A pip: what the die spits after a roll (`pips` in src/enemy.lua), as
+    -- many of them as the roll said. A pip off a red die is a white dot, so it
+    -- is drawn as one -- in a red ring with an ink rim, so that what is white
+    -- on a white page is still plainly theirs.
+    Sprites.pip = pixelart.newSprite({
+        ".ooo.",
+        "orrro",
+        "orwro",
+        "orrro",
+        ".ooo.",
     })
 
     -- The one thing in the game that is an object rather than a mark: a pushpin

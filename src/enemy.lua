@@ -5,6 +5,8 @@ local Sfx = require("src.sfx")
 local Eyeball = require("src.eyeball")
 local EyeBoss = require("src.eyeboss")
 local Metronome = require("src.metronome")
+local Dice = require("src.dice")
+local DiceBoss = require("src.diceboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -130,9 +132,11 @@ local BLARE_REACH = 34
 -- walks), `tears` (the same wet thrown rather than walked, three ways --
 -- Game:updateTears), `attacks` (the moves it picks between, read by its brain
 -- and nowhere else -- src/eyeboss.lua), `whistle` (the P.E. boss's four
--- calls -- Game:updateWhistle) and `metronome` (the MUSIC boss's tempo and the
+-- calls -- Game:updateWhistle), `metronome` (the MUSIC boss's tempo and the
 -- three moves it plays on it -- src/metronome.lua, which is its brain the way
--- src/eyeboss.lua is the eye's). Every one of them but `boss` is optional and
+-- src/eyeboss.lua is the eye's) and `dice` (the MATHS boss: a die painted a
+-- pixel at a time like the eye, src/dice.lua, thrown and read by its brain,
+-- src/diceboss.lua). Every one of them but `boss` is optional and
 -- read in one place, so a second boss is a row that picks which of them it is
 -- made of.
 --
@@ -553,6 +557,79 @@ Enemy.types = {
                                 damage = 10, hit = 3, sprite = "note", bars = 2,
                                 from = 2 },
                   } },
+
+    -- The MATHS boss: a die, and the fight in the book about *number*. The eye
+    -- is about the ground, the whistle the air, the metronome time; this one is
+    -- about reading what a roll says before it happens. It is thrown rather
+    -- than walked -- a locked line, a tumble down it, a stop -- and where it
+    -- stops it lands on a face, and the face is the move. A d6, then a d10 at
+    -- two thirds, then a d20 at one third. The moves, the rolls and how glue
+    -- loads it are src/diceboss.lua; the body is painted live (src/dice.lua).
+    --
+    -- The body keeps the eye's numbers where the fight is the same fight: 900
+    -- health for the measured half minute, the same knock, hold and 20 on
+    -- contact. The radius is the die's bulk, a little inside its corners. No
+    -- walking speed, because it never walks: everything it covers it covers
+    -- in a throw, 97 pixels a cycle of throw, roll, strike and rest in the
+    -- first third and 108 in the last -- about 18 a second rising to 23,
+    -- under the eye's 26 -- and all of it down a line you can step off.
+    die = { name = "DIE", sprite = "die", hp = 900, speed = 0, radius = 14, damage = 20,
+            xp = 250, shadow = 28, boss = true, knock = 0.06, hold = 0.3,
+            title = "THE DIE", call = "THE DIE IS CAST",
+            dice = {
+                -- What it is, by phase (the eye's thirds).
+                shapes = { "d6", "d10", "d20" },
+                -- The throw: a red wind-up with the line drawn, then a run
+                -- down it from `speed` to nothing over `time` -- half of the
+                -- two multiplied is where it stops, 97 to 108 pixels off, and
+                -- a peak of nearly three times your 58 is why you step off the
+                -- line rather than outrun it. `spread` is how far off your
+                -- middle it may aim; `hops` and `high` the clatter on the way;
+                -- `twist` the most spin about the upright it is thrown with,
+                -- radians a second, which is what makes the roll a roll;
+                -- `settle` how quick it tips the rest of the way onto a face.
+                throw = { wind = { 0.75, 0.65, 0.55 }, speed = { 150, 165, 180 },
+                          time = { 1.3, 1.25, 1.2 }, spread = 0.3, hops = 3, high = 9,
+                          twist = 9, settle = 7 },
+                -- Stood still after a move: the window it paid for.
+                rest = { 1.5, 1.3, 1.1 },
+                -- The d6's face stamped round you, three by three cells of
+                -- `cell` -- three of the page's squares each -- with the pips'
+                -- cells going off. A cell is about half a second of walking,
+                -- so the 1.2 count-in is a read and a step, never a sprint.
+                stamp = { cell = 30, tell = 1.2, hot = 0.35, damage = 14 },
+                -- The d10's odds and evens: the whole box in cells of two
+                -- squares, the half matching the roll going off. A safe cell
+                -- is never more than one cell away, wherever you stand.
+                checker = { cell = 20, tell = 1.1, hot = 0.35, damage = 12 },
+                -- The d20's spokes: that many lines out from it, swinging
+                -- `turn` of a gap round while hot. A third and not a half,
+                -- so the trailing side of every gap stays clear: you move
+                -- with the swing, not away from it.
+                spokes = { tell = 1.0, hot = 0.6, width = 5, length = 260, turn = 0.35,
+                           damage = 12 },
+                -- The pips after a roll: a fan of that many off the d6
+                -- (`arc` apart), a ring of that many off the d10.
+                pips = { speed = 66, damage = 9, hit = 3, life = 4, arc = 0.22,
+                         sprite = "pip" },
+                -- Unfolding into the d10: a shudder, then the net -- a cross of
+                -- six faces `cell` across round where it stood -- counted in,
+                -- hot, and folded back up.
+                net = { shake = 0.5, cell = 40, tell = 1.0, hot = 0.4, fold = 0.3,
+                        damage = 14 },
+                -- Recast into the d20: up off the page, its shadow on where you
+                -- were standing for `aim`, then down with a ring `shock` wide.
+                -- Up and aim are 1.55s, which at 58 is ninety pixels of
+                -- walking against a ring of 56: standing still is the only way
+                -- to be under it.
+                recast = { up = 0.45, aim = 1.1, down = 0.25, high = 220, shock = 56,
+                           damage = 14 },
+                -- A natural 1: on its side for `time`, taking `soften` times
+                -- whatever hits it. A natural 20: the spokes, then odds, then
+                -- evens, each counted in for one of `tell`.
+                fumble = { time = 3, soften = 1.5 },
+                crit = { tell = { 1.0, 0.8, 0.6 } },
+            } },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -788,6 +865,9 @@ function Enemy.new(kind, x, y, scale)
         -- The ball an eye boss is drawn as, and how it gets about
         -- (src/eyeball.lua). nil on everything that is a sprite.
         eyeball = def.pupil and Eyeball.new() or nil,
+        -- The die the MATHS boss is drawn as (src/dice.lua), painted the eye's
+        -- way: nil on everything else.
+        dice = def.dice and Dice.new(def.dice.shapes[1]) or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -797,8 +877,11 @@ function Enemy.new(kind, x, y, scale)
         -- The metronome's is the same socket with a different mind in it
         -- (src/metronome.lua): it keeps time rather than choosing moves off a
         -- rest, but steers through the same `drive`.
+        -- And the die's (src/diceboss.lua), which throws it rather than
+        -- walking it: it holds `drive` and moves the body itself.
         brain = def.attacks and EyeBoss.new(def)
-            or def.metronome and Metronome.new(def) or nil,
+            or def.metronome and Metronome.new(def)
+            or def.dice and DiceBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -1159,6 +1242,8 @@ function Enemy:hurt(amount)
     if self.glue and self.frozen > 0 and self.glue.soften then
         amount = amount * self.glue.soften
     end
+    -- And a brain that has left it open (the die's fumble, src/diceboss.lua).
+    if self.brain and self.brain.soften then amount = amount * self.brain:soften() end
     self.hp = self.hp - amount
     self.flash = HIT_FLASH
     -- The third piece of the same feedback as the two lines either side of it:
@@ -1318,7 +1403,7 @@ end
 function Enemy:footing()
     -- Stuck things stop bobbing, and an eye boss has a gait of its own instead
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
-    local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball
+    local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -1442,6 +1527,11 @@ function Enemy:drawSolid()
         self.eyeball:drawMask(x, y, self:outlineColour() and 1 or 0)
         return
     end
+    if self.dice then
+        love.graphics.setColor(Palette.paper)
+        self.dice:drawMask(x, y, self:outlineColour() and 1 or 0)
+        return
+    end
 
     love.graphics.setColor(Palette.paper)
     if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow) end
@@ -1483,6 +1573,13 @@ function Enemy:draw()
     if self.eyeball then
         shadow = math.floor(shadow * self.eyeball:shadowScale() + 0.5)
     end
+    -- And a die off the page altogether (opened out into its net, or up out of
+    -- sight in its leap, where the brain draws the shadow coming down itself)
+    -- leaves none; one in the air leaves less of one the higher it is.
+    if self.dice then
+        if self.dice.hidden then return end
+        shadow = math.floor(shadow * self.dice:shadowScale(self.hop) + 0.5)
+    end
     -- Struck off the bottom edge of the sprite -- `h - oy` -- rather than off
     -- half its height, which is Sprites.shadow's own expression and makes it the
     -- one rule in the game for where a thing stands. Half the height was the
@@ -1513,6 +1610,20 @@ function Enemy:draw()
             self.eyeball:drawMask(x, y, 0)
         else
             self.eyeball:draw(x, y)
+        end
+        return
+    end
+    -- The die the same way, off its own painter (src/dice.lua).
+    if self.dice then
+        if ring then
+            love.graphics.setColor(ring)
+            self.dice:drawMask(x, y, 1)
+        end
+        if lit then
+            love.graphics.setColor(lit)
+            self.dice:drawMask(x, y, 0)
+        else
+            self.dice:draw(x, y)
         end
         return
     end

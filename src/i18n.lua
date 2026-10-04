@@ -510,6 +510,15 @@ local ES = {
     -- is FASTER!, which the page already says elsewhere.
     ["THE METRONOME"] = "EL METRONOMO",
     ["THE METRONOME TICKS"] = "EL METRONOMO MARCA EL COMPAS",
+    -- The MATHS boss (`die` in src/enemy.lua): its name, the line it walks on
+    -- with -- "the die is cast", which in Spanish is the luck that is cast --
+    -- what the page says each time it changes shape, and the two rolls a d20
+    -- has names for, in the words a Spanish table uses for them.
+    ["THE DIE"] = "EL DADO",
+    ["THE DIE IS CAST"] = "LA SUERTE ESTA ECHADA",
+    ["MORE SIDES!"] = "¡MAS CARAS!",
+    ["FUMBLE!"] = "¡PIFIA!",
+    ["CRITICAL!"] = "¡CRITICO!",
     -- The drills and the surges (`DRILLS` and `SURGES` in src/spawner.lua),
     -- which the run says the once, the first time each one happens. They are
     -- copy rather than labels -- the run is describing what has just started
