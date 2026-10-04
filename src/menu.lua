@@ -10,6 +10,10 @@
 -- book closes. The boxes themselves -- what counts as an answer, and when it is
 -- committed -- are src/scribble.lua, which the pause card asks with too.
 --
+-- Nobody is told that in words. Leave the boxes alone for a few seconds and a
+-- hand comes and scribbles the YES box in dashes (src/coach.lua) -- showing the
+-- gesture rather than describing it, and never actually answering for you.
+--
 -- A third box sits under those two and only some of the time: CONTINUE, for a
 -- run there is something to go back to (`Game:canContinue`,
 -- `Game:continueRun`). Two things can put it there and this screen is told
@@ -57,6 +61,7 @@ local Hud = require("src.hud")
 local Sfx = require("src.sfx")
 local I18n = require("src.i18n")
 local Options = require("src.options")
+local Coach = require("src.coach")
 local util = require("src.util")
 
 local Menu = {}
@@ -88,6 +93,13 @@ local T_BOXES = T_START + 0.22
 local BOX_TIME = 0.4
 local T_HINT = T_BOXES + BOX_TIME
 local INTRO_END = T_HINT + 0.2
+
+-- How long the boxes sit unanswered before a hand comes and shows what they are
+-- for (src/coach.lua). Long enough that anyone who already knows has answered --
+-- the intro is over and a returning player is drawing by now -- and short enough
+-- that someone who does not know is still looking at the boxes rather than
+-- reaching for the back button.
+local COACH_AFTER = 3.5
 
 local CONFIRM_FLASH = 0.3 -- the picked box flashing on its own
 local CONFIRM_OUT = 0.6   -- the page leaving, or the book closing
@@ -134,6 +146,12 @@ function Menu:enter(resumable)
     self.marks = Scribble.newMarks(self.seed)
     self.pen = Scribble.newPen()
     self.written = 0      -- letters of the title on the page so far
+
+    -- The hand that scribbles the YES box for anyone who has not worked out
+    -- that drawing is how this page is answered, and how long the page has been
+    -- left alone for it to be worth showing (`COACH_AFTER`).
+    self.coach = Coach.new(self.seed)
+    self.idle = 0
 
     -- The one-frame latch for the settings button: `update` hands it back the
     -- moment it is hit rather than after a flash, the way the timetable's margin
@@ -412,6 +430,27 @@ function Menu:updateScribble(dt)
     end
 end
 
+-- The clock the hand waits on only runs while nothing is happening: the boxes
+-- are up, nothing is being drawn and nothing is armed. Anything at all -- a
+-- press anywhere on the page, a key -- puts it back to zero and sends the hand
+-- away mid-line, because the moment someone is trying is the moment to stop
+-- showing them; it comes back, from the start of its loop, only if they stop
+-- again.
+function Menu:updateCoach(dt)
+    if self.phase == "choosing" and not Input.pointerDown and not self.pending then
+        self.idle = self.idle + dt
+    else
+        self.idle = 0
+        self.coach:reset()
+    end
+
+    if self:coaching() then self.coach:update(dt) end
+end
+
+function Menu:coaching()
+    return self.phase == "choosing" and self.idle >= COACH_AFTER
+end
+
 -- A little graphite puffs off each letter as it lands, so the title reads as
 -- being written rather than switched on.
 function Menu:updateWriting()
@@ -457,6 +496,7 @@ function Menu:update(dt, game)
 
     self:updateChase(dt, game)
     self:updateScribble(dt)
+    self:updateCoach(dt)
     self:updateWriting()
     self.particles:update(dt)
 
@@ -496,6 +536,9 @@ end
 
 function Menu:keypressed(key)
     if self.phase == "confirm" then return end
+
+    self.idle = 0
+    self.coach:reset()
 
     -- The two margin buttons, and neither skips the intro: they are not presses
     -- on the page. O for the options page and L for the language, both free here
@@ -685,6 +728,16 @@ function Menu:draw(game)
     self.particles:draw()
 
     Overprint.finish()
+
+    -- The hand, out past the pass for the reason src/coach.lua gives: it is a
+    -- picture of a gesture over the page and not a mark on it, and its paper
+    -- fill would come out a step darker wherever it crossed a rule. Over the YES
+    -- box's inside -- the border is not where you draw -- and only YES: the hint
+    -- is how to answer, and the answer it shows is the one that starts the game.
+    if self:coaching() then
+        local b = self.boxes[1]
+        self.coach:draw(b.x + 4, b.y + 4, b.w - 10, b.h - 10)
+    end
 
     -- The two margin buttons, out past the pass with the rest of the game's
     -- furniture: they are boxes filled in paper, and a paper fill does not survive

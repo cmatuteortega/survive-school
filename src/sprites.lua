@@ -1641,6 +1641,30 @@ function Sprites.load()
         skateEdge = pixelart.newOval(7, 4),
     }
 
+    -- The hand that shows you how (src/coach.lua): a pointing finger, filled in
+    -- paper so it reads as lying over whatever it is showing rather than as
+    -- part of it, with your blue at the cuff -- it is your hand, doing the thing
+    -- your hand is about to do. The origin is the fingertip rather than the
+    -- middle, because the fingertip is the pen: it lands on the exact pixel the
+    -- dashed line is being laid at, and the rest of the hand trails down and to
+    -- the right of it, out of the way of the line it is drawing.
+    Sprites.hand = pixelart.newSprite({
+        "..oo.......",
+        ".owwo......",
+        ".owwo......",
+        ".owwo......",
+        ".owwooo....",
+        ".owwowwooo.",
+        ".owwowwowwo",
+        "oowwwwwwwwo",
+        "owowwwwwwwo",
+        "owwwwwwwwwo",
+        ".owwwwwwwwo",
+        "..owwwwwwo.",
+        "...obbbbo..",
+        "...oooooo..",
+    }, { ox = 2, oy = 0 })
+
     Sprites.icons = {
         pencil = pixelart.newSprite({
             ".........o.",

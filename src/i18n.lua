@@ -148,6 +148,9 @@ local ES = {
     ["ALL"] = "TODOS",
     ["BIG ONLY"] = "GRANDES",
     ["NONE"] = "NINGUNO",
+    -- Whether a hit buzzes the phone. Its ON and OFF are the shared SI and NO
+    -- further down.
+    ["VIBRATION"] = "VIBRACION",
     ["NEW DRAWINGS"] = "DIBUJOS NUEVOS",
     ["ASK"] = "PREGUNTAR",
     ["SKIP"] = "OMITIR",

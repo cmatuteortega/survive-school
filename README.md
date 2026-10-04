@@ -196,6 +196,36 @@ they are what you are aiming at and a target should hold still. Answering dither
 the whole screen off the page, stamp by stamp, the way a mark fades; YES then
 pulls the paper away into the run.
 
+### Being shown how
+
+Drawing to answer is unusual, and drawing to fight is the whole game, so both
+are shown rather than explained — by a hand (`src/coach.lua`). A pointing finger
+with your blue at the cuff slides in, draws a dashed scribble, holds it a moment,
+lifts away while the dashes drop out a stamp at a time, rests, and goes round
+again.
+
+On the title it comes once the boxes have sat unanswered for three and a half
+seconds, and it scribbles the YES box. Anybody who already knows has answered by
+then; anybody who does not is still looking at the boxes. A press anywhere or any
+key sends it away mid-line and starts the wait again, because the moment someone
+is trying is the moment to stop showing them.
+
+In a run it comes a second and a half in and scribbles across a monster — the
+same scribble, on purpose, so the move that starts the game and the move that wins
+it are visibly one move. It picks a monster on the screen about fifty pixels off
+rather than the nearest one, because the nearest is the one your weapon is about to
+kill and a hand that kept losing its monster mid-stroke would teach nothing; it
+keeps that monster while it lives, and follows it as it walks. It goes for the rest
+of the run on the first kill landed while you were drawing, goes while your finger
+is down, and gives up fifteen seconds in. A returning player is drawing inside the
+first second and never sees it.
+
+**It never draws anything.** The line is dashed so that it cannot be mistaken for
+ink: a solid line would be a mark the page made for you, and a box a hint had half
+filled would be a box nobody answered. Nothing it lays is fed to a box or a
+stroke; it is drawn out past the overprint pass with the rest of the game's
+furniture, and the screen under it never knows it was there.
+
 ### The third box
 
 Under those two there is sometimes a `CONTINUE` box, and it is there for exactly
@@ -302,10 +332,11 @@ run.
 
 ## Settings
 
-The top-left corner of the title screen opens a page with six rows on it: how
-loud the music is, how loud the sound is, what language the game is in, which
-bottom corner the thumb stick sits in, how much of a hit the page says out loud,
-and whether the game asks you to draw the things it hands you. It is
+The top-left corner of the title screen opens a page with eight rows on it: how
+loud the music is, how loud the sound is, what language the game is in, which way
+up the page is held, which bottom corner the thumb stick sits in, how much of a
+hit the page says out loud, whether a hit buzzes the phone, and whether the game
+asks you to draw the things it hands you. It is
 a loop off the side of the title screen rather than a step through it — the corner
 button opens it and the corner button hands it back — and coming back lands on a
 title that is already written on, because you did not re-open the book.
@@ -349,7 +380,7 @@ track playing at zero instead of stopping it, because a stopped stream comes bac
 at the top of the file and turning the music down and up again would restart it
 rather than turn it back on.
 
-The bottom four rows are the library's footer arrows doing the library's job: two
+The stepped rows are the library's footer arrows doing the library's job: two
 arrows either side of the name of the thing they step. On the language row what is
 written between them is the language's own name for itself — `ENGLISH`, `ESPAÑOL`
 — because somebody looking for Spanish is looking for the word ESPAÑOL and not for
@@ -362,7 +393,7 @@ other as well as standing still while their own word is stepped.
 a desktop never uses — see **Controls** for what it moves, which is the ring and
 both margin columns with it. It is written down on every screen rather than
 appearing when you touch one: the whole reason this page can be centred at all is
-that six rows are six rows everywhere, and a row that came and went would be a
+that eight rows are eight rows everywhere, and a row that came and went would be a
 block whose height changed under you.
 
 `DAMAGE NUMBERS` steps `ALL` → `BIG ONLY` → `NONE`, most to least, so a step
@@ -371,7 +402,22 @@ exists because a late build lands several hits a frame on a crowd and the page i
 the thing you are meant to be reading; it ships on `ALL`, because a page filling
 with fatter numbers is how a run reads its own progress.
 
-`NEW DRAWINGS` is the last row of the four and it steps between `ASK` and `SKIP`. It is about
+`VIBRATION` is `ON` or `OFF`, and it is the only buzz in the game: being hit.
+The phone gives one short pulse on every hit that lands — sized off the same
+share of the bar the page's knock is, so a graze is a tick and a hit that takes a
+third of you is a thump — and nothing else in the game vibrates. That is on
+purpose. A buzz is said to the hand rather than to the eye or the ear, which
+makes it the one signal you cannot miss, and a game that buzzes for level-ups and
+pickups and boss slams has turned it into a texture you stop noticing. Being hit
+is the thing you most need to know about and the thing the screen is worst at
+telling you, since your eyes are on whatever is chasing you and not on the bar.
+The hit's own invulnerability window is the rate limit, so a crowd chewing on
+you is a stutter rather than a drone. Stepping the row buzzes once, so you know
+what `ON` means, and it ships on: it is what the genre has taught a phone player
+to expect, and the row is for the player who does not want it. Like `STICK`, a
+desktop has nothing to shake and the row simply does nothing there.
+
+`NEW DRAWINGS` is the last row and it steps between `ASK` and `SKIP`. It is about
 the boards the game opens *for* you rather than the ones you go and ask for: the
 weapon a draft has just sold you, and the arm a character carries, handed on from
 the hero's own board. On `SKIP` neither of them opens, and what arrives wears
@@ -388,7 +434,7 @@ row is worded the way it is: `ON` against a row that names a refusal is a double
 negative you have to stop and work out, and a stepper is read at a glance or not
 at all.
 
-All six live in `options.txt` in the save directory, one setting a line, in the
+All eight live in `options.txt` in the save directory, one setting a line, in the
 same shape a record is kept in: a line the game cannot read costs that one setting
 its default and nothing else. A garbled options file must never be a game that
 will not start. A yes or no is written there as `1` or `0`, and a row that steps
@@ -396,7 +442,7 @@ through a list writes the value itself — read back against the list its own mo
 owns (`Damage.MODES`, `Input.SIDES`), so a word from a later version of the game
 keeps the default rather than being trusted. Every line is a key and one token.
 
-**And a seventh row that does not ship.** While the game is being made there is an
+**And a ninth row that does not ship.** While the game is being made there is an
 `UNLOCKS` row at the bottom of the page, stepping `EARNED` → `ALL` → `NONE`, and it
 is the one row here that is not a setting: everything above it is a thing a player
 chooses about the program and this is a thing a dev does to the game. `ALL` is the

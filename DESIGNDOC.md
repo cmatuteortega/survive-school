@@ -1632,6 +1632,18 @@ are the same event — *something landed* — and how much it was worth is what 
 damage number says (`src/damage.lua`). The death particles are separate and
 unchanged (`Game:killEnemy`).
 
+**The player's side of a hit is three tellings of one event**, all in
+`Player:hurt` and all under its invulnerability check: the page knocks
+(`Camera.knock`, sized off the share of the bar the hit took), the hurt sound
+plays, and the phone buzzes (`Haptics.hit`, `src/haptics.lua`, sized off the same
+share between `Haptics.SOFT` and `Haptics.HARD`). The buzz is the only one in the
+game, on purpose -- see README **Settings** -- so nothing else may call
+`Haptics.pulse` without a reason as strong as being hit. `Haptics.on` is the
+settings page's `VIBRATION` row and `options.txt`'s `haptics` line; with it off,
+`pulse` returns before it asks the system. `love.system.vibrate` is called through
+`pcall` and is a no-op on a desktop; on Android the pinned love-android manifest
+already carries the `VIBRATE` permission.
+
 `Game:spawnEnemy(kind, x, y, scale)` takes an optional scale; left out it is the
 run's (`Game:enemyScale`). Three callers pass one: the spawner (which may make it
 a champion or a blow-up), and `Game:splitEnemy` (which passes the parent's).
@@ -2699,8 +2711,9 @@ the screen:
 - `src/options.lua` is the file, `options.txt`, in `records.lua`'s shape: it owns
   no value, it knows the format. The language lives on `I18n` because that is
   what knows which languages exist; the volumes live on `Sfx` because that is
-  what knows what a volume does to a voice; `Input.stickSide`, `Damage.show` and
-  `Design.ask` live on `Input`, `Damage` and `Design` for the same reason again.
+  what knows what a volume does to a voice; `Input.stickSide`, `Damage.show`,
+  `Haptics.on` and `Design.ask` live on `Input`, `Damage`, `Haptics` and
+  `Design` for the same reason again.
   Each of those modules also owns the *list* of values its setting may take
   (`Input.SIDES`, `Damage.MODES`), which is what a line is read back against: an
   unknown word keeps the default. A yes or no is written as `1` or `0`, so every
@@ -2712,7 +2725,7 @@ the screen:
   hear instead of them. It is a default and not a ceiling baked into
   `MUSIC_GAIN` -- the bar still reaches the top -- so the page reads 70 against
   100 rather than two hundreds with the difference hidden behind them.
-- `src/settings.lua` is the screen. Two bars and four steppers, the pause
+- `src/settings.lua` is the screen. Two bars and six steppers, the pause
   card's shape (one fixed block, centred, heading over and hint under) written
   straight on the page rather than on a card, since there is no run underneath.
   A stepped row is three functions on its row in `ROWS` -- the word to write
@@ -5597,7 +5610,7 @@ paper and covers what it floats over, which is the highest anything on this page
 gets) → rulers → the
 player again if a ruler is mid-slap →
 bullets → particles → (after the overprint pass, still under the camera) damage
-numbers.
+numbers, the multikill word, and the coaching hand while the run is `playing`.
 
 The ground pass is the one place a *weapon* draws under the crowd, and it is the
 split it sounds like: a bomb is an object and its crater is a surface, so the
@@ -5613,6 +5626,34 @@ HUD, so they sit above the page rather than on it. That is also why the draft's
 cards can be filled in `Palette.paper` and read as opaque paper lying on the
 page. The damage numbers go down there too, between the pass and the HUD — over
 the page, under the readouts.
+
+### The coaching hand
+
+`src/coach.lua` is the tutorial: a pointing hand (`Sprites.hand`, origin on the
+fingertip) that slides in, lays a dashed three-sweep zigzag across a rectangle,
+holds, lifts while the dashes dither out, rests, and loops (`CYCLE`, about three
+seconds). It is told nothing but a rectangle, handed in fresh every `draw`, so a
+hint across a walking monster keeps to the monster. **It never marks anything**:
+the dashes are not stamps fed to a box or a stroke, they are drawn after
+`Overprint.finish()` like the HUD, and the screen under them is never told. That
+is the rule to keep -- a hint that half-filled a box would be an answer nobody
+gave.
+
+Two owners, both with their own clock and both resetting the loop the moment the
+player does anything:
+
+- **The title** (`Menu:updateCoach`). `self.idle` runs only while the phase is
+  `choosing`, no pointer is down and no box is armed; past `COACH_AFTER` (3.5s)
+  the hand scribbles the inside of the YES box. A press or a key zeroes it.
+- **The run** (`Game:updateCoach`). Between `COACH_FROM` and `COACH_UNTIL` (1.5s
+  and 15s of run time), with no pointer down and no `drewKill` yet, the hand
+  scribbles across `self.coachOn` -- the on-screen monster nearest `COACH_AT`
+  (56px) from the player, kept while it lives and stays on screen. `drewKill` is
+  set in `Game:killEnemy` off `Multikill:isOpen()`, the same "a gesture of the
+  player's is open" window the multikill word is said off, so it inherits that
+  file's honest edge: a sword kill landed while a finger happens to be down
+  counts as drawing. Run time rather than wall time is what keeps it off a
+  continued run or a bookmark, which come back past the window.
 
 ### Damage numbers
 

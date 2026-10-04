@@ -130,7 +130,9 @@ sure whatever measures it for layout measures the translation and not the key.
   `Collection.has`, `Collection.lessonOpen` and `Characters.owns` and by nothing
   else, so taking it out at launch is three calls and a file.
 - **Rendering:** `src/palette.lua`, `src/overprint.lua`, `src/pixelart.lua`,
-  `src/sprites.lua`, `src/font.lua`, `src/background.lua`, `src/particles.lua`.
+  `src/sprites.lua`, `src/font.lua`, `src/background.lua`, `src/particles.lua`,
+  `src/coach.lua` (the hand that shows how: a dashed scribble over the YES box
+  and over a monster in a run's first seconds, never a real mark).
 - **Screens:** `menu`, `settings`, `timetable`, `studio`, `library`, `canteen`,
   `homework` (the challenge list, read off `challenges`), `chance` (the
   revive-by-ad offer), `double` (the x2 box on the end cards), `blank` (the page with
@@ -150,7 +152,8 @@ sure whatever measures it for layout measures the translation and not the key.
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.
 - **World bookkeeping:** `stroke`, `mark`, `walls`, `bullet`, `gem`, `pickup`,
-  `damage`, `sfx` (+ `src/sfx/`, `src/music/`).
+  `damage`, `sfx` (+ `src/sfx/`, `src/music/`), `haptics` (the one buzz: being
+  hit, behind the settings page's `VIBRATION` row).
 
 `Game:buildGrid` is a 12px hash rebuilt every frame (enemy separation, bullet
 hits); `src/walls.lua` is a 16px hash of pen-line segments rebuilt only when

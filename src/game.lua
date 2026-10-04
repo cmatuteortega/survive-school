@@ -12,6 +12,7 @@ local Pickup = require("src.pickup")
 local Particles = require("src.particles")
 local Damage = require("src.damage")
 local Multikill = require("src.multikill")
+local Coach = require("src.coach")
 local Spawner = require("src.spawner")
 local Hud = require("src.hud")
 local Menu = require("src.menu")
@@ -628,6 +629,14 @@ function Game:reset()
     -- `self.damage` is: a readout, so nothing it draws is a mark and none of
     -- it survives the run.
     self.multikill = Multikill.new()
+    -- The hand that shows a new player they can draw on the crowd as well as
+    -- walk from it (src/coach.lua, Game:updateCoach), and whether this run has
+    -- learned that yet -- a kill that landed while a gesture of the player's was
+    -- open (`drewKill`, set in Game:killEnemy). Run things: every run opens with
+    -- the offer, and the first kill drawn retires it for the rest of the run.
+    self.coach = Coach.new(love.math.random() * 997)
+    self.coachOn = nil
+    self.drewKill = false
     -- Which class this run is being sat as (src/course.lua), taken off the pick
     -- once and then belonging to the run rather than to the book. That is the
     -- whole reason it is copied here instead of being read where it is wanted: the
@@ -1732,6 +1741,10 @@ function Game:killEnemy(index)
     -- src/multikill.lua for what "open" means and why an automatic weapon's
     -- kill can count too.
     self.multikill:noteKill(e.x, e.y - e.radius - 3, self.subject.key)
+    -- And the hint's lesson learned, off the same window the word is said off:
+    -- a kill with a press open is a kill the player's drawing had a hand in,
+    -- which is the one thing the hand is trying to teach (Game:updateCoach).
+    if self.multikill:isOpen() then self.drewKill = true end
     self.particles:burst(e.x, e.y, 7, Palette.slate)
     self.gems[#self.gems + 1] = Gem.new(e.x, e.y, e.xp)
     -- Said on the enemy as well as taken out of the list, for the one thing that
@@ -4320,6 +4333,7 @@ function Game:update(dt)
         self.time = self.time + dt
 
         self.player:update(dt, self)
+        self:updateCoach(dt)
 
         -- The box has the last word on where the player ended up, exactly as it
         -- does for the horde. After the player has moved rather than inside the
@@ -4444,6 +4458,61 @@ function Game:update(dt)
     self.multikill:update(dt)
     Camera.follow(self.player.x, self.player.y, dt)
     Camera.settle(dt)
+end
+
+-- The first seconds of a run, for a player who has not found out that the pen
+-- is a weapon. The title has already shown the gesture answering a box
+-- (src/menu.lua); this shows the same scribble going across a monster, so the
+-- thing that starts the game and the thing that wins it are visibly one move.
+--
+-- Shown from `COACH_FROM` until `COACH_UNTIL` seconds into the run, and only
+-- until the run's first drawn kill (`drewKill`) -- someone who has killed with
+-- the pen does not need to be told they can. A returning player is drawing
+-- inside the first second and never sees it; a new one gets a quarter of a
+-- minute of it. Gone while a finger is down, too, so it never draws across a
+-- line the player is drawing themselves, and back from the start of its loop
+-- when the finger lifts.
+--
+-- Its monster is the one on the screen nearest `COACH_AT` pixels from you, kept
+-- for as long as it stays alive and on the screen rather than picked again every
+-- frame: a hand that hopped from monster to monster as they jostled would be
+-- teaching nobody anything. A little way off rather than the very nearest,
+-- because the nearest is the one your weapon is about to kill -- a sword run
+-- put down every monster the hand reached before it had finished one stroke --
+-- and a monster a little way off is the one the pen is actually for.
+local COACH_FROM, COACH_UNTIL = 1.5, 15
+local COACH_AT = 56
+
+function Game:updateCoach(dt)
+    local want = not self.drewKill and not Input.pointerDown
+        and self.time >= COACH_FROM and self.time < COACH_UNTIL
+    if not want then
+        self.coachOn = nil
+        self.coach:reset()
+        return
+    end
+
+    local left, top, w, h = Camera.steady()
+    local function onScreen(e)
+        return e.x > left + 8 and e.x < left + w - 8
+           and e.y > top + 8 and e.y < top + h - 8
+    end
+
+    local e = self.coachOn
+    if not e or e.gone or not onScreen(e) then
+        local best, bestD
+        for _, other in ipairs(self.enemies) do
+            if onScreen(other) then
+                local d = math.abs(COACH_AT
+                    - util.len(other.x - self.player.x, other.y - self.player.y))
+                if not bestD or d < bestD then best, bestD = other, d end
+            end
+        end
+        if best ~= e then self.coach:reset() end
+        self.coachOn = best
+    end
+
+    if self.coachOn then self.coach:update(dt) end
 end
 
 --- draw ---------------------------------------------------------------------
@@ -4713,6 +4782,17 @@ function Game:draw()
     Camera.attach()
     self.damage:draw()
     self.multikill:draw()
+    -- And the hand showing how, for the same two reasons: it is a picture over
+    -- the page rather than a mark on it, and it belongs to the monster it is
+    -- drawn across and has to walk with it. Only while the run is being played --
+    -- a card over the page is a question of its own, and the hand would be
+    -- pointing past it at something you cannot do from there.
+    if self.coachOn and self.state == "playing" then
+        local e, pad = self.coachOn, 6
+        local r = e.radius
+        self.coach:draw(math.floor(e.x - r - pad), math.floor(e.y - r - pad),
+            math.floor(r * 2 + pad * 2), math.floor(r * 2 + pad))
+    end
     Camera.detach()
 
     Hud.draw(self)

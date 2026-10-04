@@ -1,11 +1,12 @@
 -- What the player has set: language, the two volumes, which way up the page is
--- held, which corner the stick is in, how loud a hit is said, and whether a new
--- drawing is asked for. None of it belongs to a run.
+-- held, which corner the stick is in, how loud a hit is said, whether a hit
+-- buzzes the phone, and whether a new drawing is asked for. None of it belongs
+-- to a run.
 --
 -- Nothing here owns a value -- each setting lives in the module that knows what
--- it means (src/i18n, src/sfx, src/orient, src/input, src/damage, src/design),
--- and that module also owns the LIST of values it may take, which is what a
--- line is read back against: a value not on the list is a later version's file
+-- it means (src/i18n, src/sfx, src/orient, src/input, src/damage, src/haptics,
+-- src/design), and that module also owns the LIST of values it may take, which
+-- is what a line is read back against: a value not on the list is a later version's file
 -- and keeps the default. This file owns the format only, reading it once at
 -- load and writing whenever a screen sets a value on its owner and calls
 -- `Options.save` -- the same split src/records.lua uses.
@@ -21,6 +22,7 @@ local Design = require("src.design")
 local Input = require("src.input")
 local Damage = require("src.damage")
 local Orient = require("src.orient")
+local Haptics = require("src.haptics")
 local Dev = require("src.dev")
 
 local Options = {}
@@ -55,6 +57,7 @@ function Options.save()
         ("stick %s"):format(Input.stickSide),
         ("damage %s"):format(Damage.show),
         ("ask %d"):format(flag(Design.ask)),
+        ("haptics %d"):format(flag(Haptics.on)),
         -- DEV, out at launch with src/dev.lua. Written rather than defaulted so
         -- a dev who set ALL yesterday still has it; an unknown value defaults.
         ("unlocks %s"):format(Dev.unlocks),
@@ -99,6 +102,10 @@ function Options.load()
             -- costs a player nothing; a dev just taps three times again.
             local v = tonumber(value)
             if v then Dev.shown = v ~= 0 end
+        elseif key == "haptics" then
+            -- Same reading as `ask`: only a number turns it off.
+            local v = tonumber(value)
+            if v then Haptics.on = v ~= 0 end
         elseif key == "ask" then
             -- A non-number leaves the default alone, so a hand-edited file
             -- cannot turn the boards off by being unreadable.

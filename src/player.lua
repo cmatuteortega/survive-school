@@ -3,6 +3,7 @@ local Sprites = require("src.sprites")
 local Input = require("src.input")
 local Camera = require("src.camera")
 local Sfx = require("src.sfx")
+local Haptics = require("src.haptics")
 local util = require("src.util")
 
 local Player = {}
@@ -302,6 +303,11 @@ function Player:hurt(amount)
     local share = math.min(1, (amount / self.maxHp) / SHAKE_FULL)
     Camera.knock(SHAKE_SOFT + (SHAKE_HARD - SHAKE_SOFT) * share)
     Sfx.play("hurt")
+    -- And the third telling of the same event, to the hand (src/haptics.lua),
+    -- sized off the same share as the knock so the two agree about how bad it
+    -- was. The only thing in the game that buzzes, which is what keeps a buzz
+    -- meaning you were hit.
+    Haptics.hit(share)
     return true
 
 end

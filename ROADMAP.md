@@ -43,23 +43,28 @@ for it.
 
 ## 4. Game feel
 
-- [ ] **Haptics** — `love.system.vibrate` is used nowhere. Short pulses on taking
-      a hit, boss slams, level-ups and evolutions; a settings row to turn it off.
-- [ ] **Juice pass** — review hit-stop, flashes and particles against the
+- [x] **Haptics** — one short pulse on taking a hit, sized like the page's knock
+      (`src/haptics.lua`, `Player:hurt`), and a `VIBRATION` row in settings to
+      turn it off. Deliberately the only buzz for now (README **Settings**);
+      boss slams, level-ups and evolutions can be weighed against that later.
+- [x] **Juice pass** — review hit-stop, flashes and particles against the
       genre's best now that the base systems are stable.
 
 ## 5. Onboarding and UX
 
-- [ ] **Tutorial / guided first run** — the draw-to-answer input model
+- [x] **Tutorial / guided first run** — the draw-to-answer input model
       (README **Asking by drawing**) is unusual and should be taught, not
-      discovered.
+      discovered. A hand drawing a dashed scribble (`src/coach.lua`, README
+      **Being shown how**): across the YES box after a few idle seconds on the
+      title, and across a monster in a run's opening seconds until the first
+      kill made while drawing.
 - [ ] **Story framing** — a short intro (first day of school) and an ending card
       per course (`src/course.lua`).
-- [ ] **Accessibility**
-  - [ ] Colourblind / high-contrast palette option (a swapped eight-colour set,
+- [x] **Accessibility**
+  - [x] Colourblind / high-contrast palette option (a swapped eight-colour set,
         so the overprint rule still holds).
-  - [ ] Reduced motion / reduced screen shake toggle.
-  - [ ] Text size option.
+  - [x] Reduced motion / reduced screen shake toggle.
+  - [x] Text size option.
 - [ ] **More languages** — EN and ES today (`src/i18n.lua`); target FR, DE,
       PT-BR, JA, KO, ZH, RU.
 

@@ -1,6 +1,7 @@
 -- The settings page: how loud the game is, what language it is in, which way up
--- the page is held, which thumb walks, how much of a hit it says out loud, and
--- whether it asks you to draw the things it hands you.
+-- the page is held, which thumb walks, how much of a hit it says out loud,
+-- whether a hit buzzes the phone, and whether it asks you to draw the things it
+-- hands you.
 --
 -- **Nothing on this page is a question, so nothing on it is a box you scribble
 -- in.** That is the same rule the timetable's tabs and the whole of the library
@@ -15,7 +16,7 @@
 --
 -- It follows the pause card's shape rather than the library's -- one fixed block
 -- of rows, centred in the safe area, a heading over it and a hint under it --
--- because it *can*: seven rows are seven rows on every screen and in both
+-- because it *can*: eight rows are eight rows on every screen and in both
 -- languages, so there is a block here of a height that is the same twice, which
 -- is the one thing the library never has. The dev row is the one thing that
 -- changes that count and it is not a counter-example: it is on the page only
@@ -61,6 +62,7 @@ local I18n = require("src.i18n")
 local Options = require("src.options")
 local Design = require("src.design")
 local Damage = require("src.damage")
+local Haptics = require("src.haptics")
 local Orient = require("src.orient")
 local Characters = require("src.characters")
 local Dev = require("src.dev")
@@ -171,8 +173,9 @@ local KEY_STEP = 0.05
 -- demonstrate it: it is playing already, and dragging it is heard while the finger
 -- is down. Then the language, and then the four rows that are about the game as
 -- you play it rather than about the program: which way up you hold it, where
--- your thumb goes, what the page says when you hit something, and what it asks
--- you when it gives you something.
+-- your thumb goes, what the page says when you hit something, whether the phone
+-- buzzes when something hits you, and what it asks you when it gives you
+-- something.
 --
 -- A choice row carries three functions and nothing else: the word to write
 -- between its arrows, the widest word it could ever write there, and what a step
@@ -233,6 +236,24 @@ local ROWS = {
       widest = function() return listWidth(Damage.MODES, SHOW_WORD) end,
       step = function(dir)
           Damage.show = stepped(Damage.MODES, Damage.show, dir)
+      end },
+    -- Whether a hit buzzes the phone (src/haptics.lua). Under the damage row
+    -- because it is the other half of the same question -- how loudly a hit is
+    -- told to you -- and, like the stick, a row only a phone can act on that is
+    -- written down on every screen anyway, for the stick's reason. ON and OFF
+    -- rather than a pair of verbs, unlike the drawings row below it: the label
+    -- names the thing rather than a refusal, so ON reads straight.
+    { key = "haptics", label = "VIBRATION", kind = "choice",
+      text = function() return I18n.t(Haptics.on and "ON" or "OFF") end,
+      widest = function()
+          return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
+      end,
+      step = function()
+          Haptics.on = not Haptics.on
+          -- Turned on where it is stepped, and felt: the only way to know what
+          -- ON means is to have it buzz, which is the bars' argument for being
+          -- heard while they are dragged.
+          Haptics.hit(0.5)
       end },
     { key = "ask", label = "NEW DRAWINGS", kind = "choice",
       text = function() return I18n.t(Design.ask and ASK or SKIP) end,
@@ -338,7 +359,7 @@ local function valueWidth()
 end
 
 -- One fixed block, centred in the safe area. There is nothing here whose height
--- the content decides -- seven rows are seven rows in both languages -- so
+-- the content decides -- eight rows are eight rows in both languages -- so
 -- unlike the library this page has something worth centring.
 function Settings:layout(game)
     self.game = game
