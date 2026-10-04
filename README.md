@@ -3164,7 +3164,7 @@ opens the pages and the quests open the lines, as they always have.
 
 It is sold from two places. A padlock in the settings button's own box sits in
 the top right of the title screen and at the top of the timetable, beside the
-lesson tabs, on a book that has not bought it — pressed rather than answered,
+lesson tabs (above them, in the top right corner, on a phone held upright), on a book that has not bought it — pressed rather than answered,
 like everything in the margins, it opens a card over the screen it was pressed
 on: `SCIENCE IS ALWAYS FREE` / `FULL GAME?`, what it opens, the store's price,
 and `YES` / `NO` to scribble in. `YES` opens the store's purchase sheet and the

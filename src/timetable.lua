@@ -104,7 +104,10 @@
 -- **And a padlock at the top of the other edge**, on a book that is not the full
 -- game yet (src/store.lua): the corner button's box, standing in the page just
 -- inside the top lesson tab -- the top right of the sheet, since the tabs are the
--- book's edge rather than the page's. Pressed like everything in the margins, and
+-- book's edge rather than the page's. On a page held upright the tabs hang below
+-- a header that has the whole width (`Timetable:layout`), and the padlock goes to
+-- the corner over them instead, where the title keeps it. Pressed like everything
+-- in the margins, and
 -- what it opens is the card that asks (src/fullgame.lua). The lessons it would
 -- open say so on their own pages: a shut page's two lines are the full game's
 -- two lines until it is bought (`Collection.lessonWhy`).
@@ -496,6 +499,15 @@ local function nameWidth()
     return w
 end
 
+-- The heading, the lesson and the six rows under them, top to bottom, at the
+-- sizes they are lettered at. Asked twice: by the panel, which stacks the column
+-- on it, and by `Timetable:layout` on an upright page, which hangs the tabs below
+-- it before there is a panel to ask.
+local function headerHeight(headScale, nameScale)
+    return Font.height * headScale + HEAD_GAP + Font.height * nameScale + HEAD_GAP
+         + Font.height * STAT_ROWS + LINE_GAP * (STAT_ROWS - 1)
+end
+
 -- The stat block is measured across *every* lesson rather than the one on show,
 -- so the numbers stay in one column as you move down the tabs. A block that
 -- resized itself around each lesson's tool name would be a panel that twitched
@@ -655,7 +667,6 @@ function Timetable:panel(lay, top, bottom)
 
     lay.statW = statWidth()
     lay.courseW = selectorWidth()
-    local statsH = Font.height * STAT_ROWS + LINE_GAP * (STAT_ROWS - 1)
 
     -- The character and what is in his hand, at the size they will be drawn: the
     -- sword he swings or the shot he sends, measured across the whole roster so
@@ -674,10 +685,17 @@ function Timetable:panel(lay, top, bottom)
     -- be drawn at, whatever size the column ends up giving him, because this is
     -- what the middle line is clamped off and that line may not move as a page
     -- gets shorter, or as one gets taller and steps him up (`panel`'s ladder).
-    local colW = math.max(Font.width(headText()) * lay.headScale,
-                          nameWidth() * lay.nameScale, lay.statW,
-                          heroW * HERO_SCALE)
-    local statsBottom = headH + HEAD_GAP + nameH + HEAD_GAP + statsH
+    --
+    -- Upright, the heading, the lesson and the stats are not rows of it: they are
+    -- the header, above the tabs, and have the width of the whole page to be
+    -- centred in (`Timetable:layout`). Measured into the column they would walk
+    -- its middle line left of the page's for a clearance only the rows *beside*
+    -- the tabs need.
+    local headW = math.max(Font.width(headText()) * lay.headScale,
+                           nameWidth() * lay.nameScale, lay.statW)
+    local colW = lay.portrait and heroW * HERO_SCALE
+              or math.max(headW, heroW * HERO_SCALE)
+    local statsBottom = headerHeight(lay.headScale, lay.nameScale)
 
     -- The one line everything on this sheet is centred on. It gives only where the
     -- page is narrow enough that a centred block would run under the tabs, and
@@ -760,6 +778,16 @@ function Timetable:panel(lay, top, bottom)
     lay.actsW = paired and pairW or stackW
     lay.cx = cx
 
+    -- And the header's own middle, which is `cx` everywhere but upright: there it
+    -- is the page's, walked in only off the safe edges, since nothing beside it
+    -- has to be cleared.
+    lay.headCx = cx
+    if lay.portrait then
+        local half = math.ceil(headW / 2)
+        lay.headCx = math.max(lay.headX + half,
+                              math.min(lay.pageCx, lay.headX + lay.headW - half))
+    end
+
     -- The sheet starts at the top of the page rather than under the corner
     -- button, which is the library's rule (src/library.lua) taken for the
     -- library's reason: everything on this screen is centred on the page while
@@ -768,7 +796,10 @@ function Timetable:panel(lay, top, bottom)
     -- nothing. The guard is the narrow page or the long heading where the two
     -- would actually meet -- there the column steps down under the button, since
     -- the button is the one thing here that cannot move.
-    if cx - math.ceil(colW / 2) <= lay.buttonRight + EDGE
+    -- Upright, the header always starts under the two corner buttons, which is
+    -- the band `Timetable:layout` measured the tabs down from.
+    if lay.portrait
+        or cx - math.ceil(colW / 2) <= lay.buttonRight + EDGE
         or (lay.shopX and cx + math.ceil(colW / 2) >= lay.shopX - EDGE) then
         top = math.max(top, lay.underButton)
     end
@@ -893,7 +924,7 @@ function Timetable:panel(lay, top, bottom)
     local slack = availH - blockH
     local spread = slack >= SPARE
 
-    local y = spread and math.max(top, lay.underButton)
+    local y = (spread or lay.portrait) and math.max(top, lay.underButton)
                      or math.max(top, math.floor(top + slack / 2))
 
     -- Where the drawing lands: hard under the stats on a centred page, floating in
@@ -915,7 +946,7 @@ function Timetable:panel(lay, top, bottom)
     lay.head = y
     lay.name = y + headH + HEAD_GAP
     lay.stats = lay.name + nameH + HEAD_GAP
-    lay.statX = cx - math.floor(lay.statW / 2)
+    lay.statX = lay.headCx - math.floor(lay.statW / 2)
 
     -- The selector on the last row of the block, laid to the block's own grid: the
     -- label in the column the labels are in and the control in the column the
@@ -986,6 +1017,25 @@ function Timetable:layout(game)
     local columnH = n * lay.tabH + TAB_GAP * (n - 1)
     local top = math.max(ins.t, math.floor(ins.t + (availH - columnH) / 2))
 
+    -- **A page held upright has a header.** It is narrow -- 180 across -- and the
+    -- tabs take a third of that, so a heading centred clear of them is a heading
+    -- thirty pixels left of the middle of the screen; and it is tall, so the tabs
+    -- centred in it leave a band across the top with nothing beside it but the
+    -- two corner buttons. So the heading, the lesson and the stats are given that
+    -- band whole: they are lettered and centred against the width of the page,
+    -- and the tabs are hung below them -- only as far down as that takes, and
+    -- only on a page with the height to do it, which a page held sideways never
+    -- has. What is still beside the tabs (the character, the two boxes) is
+    -- fitted clear of them as before.
+    local fullW = availW - EDGE * 2
+    local headTop = Hud.cornerBottom(game) + EDGE
+    local fullHead = Font.width(headText()) * HEAD_SCALE <= fullW and HEAD_SCALE or 1
+    local fullName = nameWidth() * NAME_SCALE <= fullW and NAME_SCALE or 1
+    local under = headTop + headerHeight(fullHead, fullName) + HERO_GAP
+    lay.portrait = game.vh > game.vw
+               and math.max(top, under) + columnH <= game.vh - ins.b
+    if lay.portrait then top = math.max(top, under) end
+
     -- Where the column runs out, which is what the panel asks of it before putting
     -- anything in the corner under it.
     lay.tabBottom = top + columnH
@@ -1044,14 +1094,19 @@ function Timetable:layout(game)
     lay.textX = left
     lay.textW = lay.tabX - TAB_POP - GUTTER - left
 
+    -- And what the header has to clear, which is the same until the page is held
+    -- upright and the header is above the tabs rather than beside them.
+    lay.headX = left
+    lay.headW = lay.portrait and fullW or lay.textW
+
     -- The middle of the screen, and everything centred on this sheet is centred
     -- on it rather than on what the tabs left over: a tab is card in the edge of
     -- the book, so the column of them is margin and the page it leaves is still
     -- the whole page. `textX`/`textW` are what a centred block has to *clear*, not
     -- what it is centred in.
     lay.pageCx = ins.l + math.floor(availW / 2)
-    lay.headScale = Font.width(headText()) * HEAD_SCALE <= lay.textW and HEAD_SCALE or 1
-    lay.nameScale = nameWidth() * NAME_SCALE <= lay.textW and NAME_SCALE or 1
+    lay.headScale = Font.width(headText()) * HEAD_SCALE <= lay.headW and HEAD_SCALE or 1
+    lay.nameScale = nameWidth() * NAME_SCALE <= lay.headW and NAME_SCALE or 1
 
     -- What the corner button occupies, for the panel to keep its heading clear of
     -- where the two would meet.
@@ -1060,10 +1115,17 @@ function Timetable:layout(game)
 
     -- And the padlock, level with it at the other end of the sheet, inside the
     -- pulled-out tab's reach so the two never touch. Nil once there is nothing
-    -- left to sell, and then nothing here keeps clear of it.
+    -- left to sell, and then nothing here keeps clear of it. Upright, the tabs
+    -- start below the header, so the corner over them is free and the padlock
+    -- takes it: the title's own place for it (`Hud.rightCornerBox`), the
+    -- corner button's mirror.
     if not Store.full() then
-        lay.shopX = lay.tabX - TAB_POP - EDGE - Hud.CORNER_SIZE
-        lay.shopY = select(2, Hud.cornerBox(game))
+        if lay.portrait then
+            lay.shopX, lay.shopY = Hud.rightCornerBox(game)
+        else
+            lay.shopX = lay.tabX - TAB_POP - EDGE - Hud.CORNER_SIZE
+            lay.shopY = select(2, Hud.cornerBox(game))
+        end
     end
 
     -- The tabs are hung off the full height of the sheet -- they are down the
@@ -1476,7 +1538,7 @@ end
 function Timetable:drawPanel(lay)
     local sub = Subjects.get(self.current)
 
-    Scribble.printBig(headText(), lay.cx, lay.head, lay.headScale, Palette.red,
+    Scribble.printBig(headText(), lay.headCx, lay.head, lay.headScale, Palette.red,
         { shadow = Palette.blush, wobble = true, t = self.t, seed = 3 })
 
     if lay.heroX then self:drawHero(lay) end
@@ -1498,7 +1560,7 @@ function Timetable:drawPanel(lay)
     -- in one colour a pixel apart, which is a smudge rather than a faded word.
     if not open then nameOpts.shadow = nil end
 
-    Scribble.printBig(I18n.t(sub.name), lay.cx, lay.name, lay.nameScale,
+    Scribble.printBig(I18n.t(sub.name), lay.headCx, lay.name, lay.nameScale,
         open and Palette.ink or Palette.graphite, nameOpts)
 
     if not open then
@@ -1539,8 +1601,8 @@ end
 -- width would go back under them.
 function Timetable:drawShut(lay)
     local head, ask = Collection.lessonWhy(self.current)
-    local width = 2 * math.min(lay.cx - lay.textX,
-                               lay.textX + lay.textW - lay.cx)
+    local width = 2 * math.min(lay.headCx - lay.headX,
+                               lay.headX + lay.headW - lay.headCx)
     local y = lay.stats
 
     for i, part in ipairs({
@@ -1550,7 +1612,7 @@ function Timetable:drawShut(lay)
         if part.text then
             love.graphics.setColor(part.color)
             for _, line in ipairs(Font.wrap(part.text, width)) do
-                Font.printCentered(line, lay.cx, y)
+                Font.printCentered(line, lay.headCx, y)
                 y = y + Font.height + LINE_GAP
             end
             -- A blank line between the two, so the demand reads as an answer to

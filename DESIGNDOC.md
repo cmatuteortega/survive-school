@@ -638,6 +638,17 @@ choice — different label scales, different kinds of answer, two places on the 
 and arming one must not disarm the other — and `Timetable:update` returns
 `answer, key` so `Game` knows which was taken and about which lesson.
 
+**Held upright, the page has a header.** When `game.vh > game.vw` and the tab
+column still fits below it, `Timetable:layout` sets `lay.portrait`: the heading,
+the lesson's name and the stat rows (or `drawShut`'s two phrases) are lettered and
+centred against the whole width of the page on `lay.headCx` -- the screen's middle
+-- starting under the corner buttons, and the tabs are hung no higher than
+`HERO_GAP` below them. The padlock moves to `Hud.rightCornerBox`, the corner over
+the tabs. What is still beside the tabs (the hero and the two boxes) is centred on
+`lay.cx`, clamped clear of them as before; with the heading out of that column it
+lands within the gutter of the middle, at the cost of the hero's 3x step (he is
+2x there). Everywhere else `lay.headCx` is `lay.cx` and nothing moved.
+
 **A shut lesson is a tab you can still turn to.** `Timetable:enter` asks
 `Collection.lessonOpen` once per tab and holds the answer on the tab row — nothing
 can be earned while this screen is up, so the answer cannot change under it — and
@@ -2013,7 +2024,8 @@ own two hints -- closed, waiting -- ahead of the counter's.
 **The padlock** is `Hud.drawButton` with the `lock` icon at `Hud.rightCornerBox` on
 the title (`Menu:shopAt`) and just inside the top lesson tab on the timetable
 (`Timetable:shopAt`, `lay.shopX`, which the heading steps under where they would
-meet), drawn and pressable only while `not Store.full()`; `B` presses it. It
+meet) -- or, on a timetable held upright, at `Hud.rightCornerBox` too, over the
+tabs, drawn and pressable only while `not Store.full()`; `B` presses it. It
 answers `"fullgame"`, and `Game:toFullGame(from)` puts up `src/fullgame.lua` over
 that screen (state `fullgame`, drawn on top of `Menu:draw` or `Timetable:draw`).
 The card's `YES` calls `Store.buy(Store.FULL)` and waits on `Store.pending`; it
