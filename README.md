@@ -7130,12 +7130,13 @@ can read, the move, then a moment where it is stood still and open.
 and a little flat drop that pointed up whatever it was doing; next to an eye
 painted off a real sphere both read as stickers. Now both are teardrops painted
 solid (`src/teardrop.lua`) and laid along the way they are moving on the screen.
-The fan is red and flies level over its shadow: it hurts on the way. A tear is
-blue and *thrown* -- up and over on a parabola, pointing up as it leaves the eye,
+Both are red, the same blush and red as the puddles the tears leave. The fan
+flies level over its shadow and hurts on the way. A tear is *thrown* -- up and over on a parabola, pointing up as it leaves the eye,
 tipping over at the top and coming down head first, its shadow running along
 the floor underneath -- and it hurts only where it lands, because in the air it
-is over your head. Red hurts on the way and blue hurts where it stops, which is
-the same rule the colours already kept for the puddles.
+is over your head. They are told apart by the arc and the shadow rather than by
+colour: a drop flying level hurts on the way, and a drop coming down hurts where
+it lands.
 
 **The choosing is what makes it a mind and not a sixth clock.** Each move is
 weighted off the distance (the slam is for someone who came close to put damage

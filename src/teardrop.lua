@@ -26,12 +26,12 @@ local Teardrop = {}
 
 local floor, sqrt, abs = math.floor, math.sqrt, math.abs
 
--- The two fills, light and shaded, keyed by what a drop is. Blue for a tear,
--- because what it leaves behind is a blue puddle and you should be able to read
--- what a thing in the air will become before it lands; red for the fan, which is
--- the colour of everything that hurts on the way rather than where it stops.
+-- The two fills, light and shaded, keyed by what a drop is. Everything the eye
+-- throws is red: red is what is coming at you on this page, and a tear lands as
+-- a puddle in the same blush and red, so what is in the air already looks like
+-- what it will leave. A tear is told from the fan by being up in the air on an
+-- arc with its shadow under it, not by its colour.
 Teardrop.inks = {
-    blue = { Palette.sky, Palette.blue },
     red = { Palette.blush, Palette.red },
 }
 
@@ -53,7 +53,7 @@ local grid = {}
 -- A drop with its head's middle at (x, y), going (vx, vy) on the screen, `r`
 -- the radius it hits with, filled with `Teardrop.inks[ink]`.
 function Teardrop.draw(x, y, vx, vy, r, ink)
-    local fill = Teardrop.inks[ink] or Teardrop.inks.blue
+    local fill = Teardrop.inks[ink] or Teardrop.inks.red
     local light, dark = fill[1], fill[2]
     local len = sqrt(vx * vx + vy * vy)
     local ux, uy = 0, 1

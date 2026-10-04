@@ -1214,8 +1214,9 @@ Neither its fan nor its tears are sprites. A `drop` on the `shot` or `tears` blo
 names an ink in `Teardrop.inks` (`src/teardrop.lua`), and `Game:draw` paints the
 pellet as a solid teardrop -- a ball with a tangent cone, lit by the eye's own
 screen-fixed light, one-pixel ink outline at the hit radius -- laid along the way
-it is moving *on the screen*. The fan (`red`) flies level a few pixels over its
-shadow and hurts on the way. A tear (`blue`) is thrown: `Game:throwTear` gives it
+it is moving *on the screen*. Both are `red`, the colour of the eye's puddles. The
+fan flies level a few pixels over its shadow and hurts on the way. A tear is
+thrown: `Game:throwTear` gives it
 an `arc` of `high + rise × distance` pixels, `Game.tearHigh` is the parabola over
 its flight, and its screen heading includes the climb and the fall, so it points
 up leaving the eye and lands head first. Its shadow is on the page under it the

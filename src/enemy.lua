@@ -325,7 +325,7 @@ Enemy.types = {
               -- hurts only where it lands (Game:updateEnemyShots). In the air
               -- it is over your head. The red fan is the thing that hurts on
               -- the way; a tear is the thing that hurts where it stops.
-              tears = { speed = 74, damage = 8, hit = 3, drop = "blue",
+              tears = { speed = 74, damage = 8, hit = 3, drop = "red",
                         high = 8, rise = 0.2,
                         puddle = { radius = 10, life = 5.5, damage = 6 },
                         -- The weather. A few at a time, anywhere in the box,

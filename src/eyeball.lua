@@ -697,7 +697,7 @@ function Eyeball:draw(x, y)
             -- The same drop it throws (src/teardrop.lua), hanging head down and
             -- swelling, so what wells is visibly what is about to come out.
             local r = 1 + self.well * 1.6
-            Teardrop.draw(ix, iy + (ry - RIM) * sin(IRIS) + 1 + r, 0, 1, r, "blue")
+            Teardrop.draw(ix, iy + (ry - RIM) * sin(IRIS) + 1 + r, 0, 1, r, "red")
         end
     end
 end
