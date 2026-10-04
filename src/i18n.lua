@@ -392,7 +392,10 @@ local ES = {
     -- The two ad offers (src/ads.lua): getting up once a run, and the x2 box on
     -- the cards a run ends on (src/chance.lua, src/double.lua).
     ["OUT OF HEALTH"] = "SIN VIDA",
-    ["ANOTHER CHANCE?"] = "¿OTRA OPORTUNIDAD?",
+    -- ¿OTRA VIDA? rather than ¿OTRA OPORTUNIDAD?, which ran off the card on a
+    -- phone held upright. It also answers the line above it in its own word:
+    -- out of life, another life.
+    ["ANOTHER CHANCE?"] = "¿OTRA VIDA?",
     ["WATCH AN AD TO GET UP"] = "MIRA UN ANUNCIO PARA LEVANTARTE",
     ["FREE WITH THE WHOLE BOOK"] = "GRATIS CON EL LIBRO ENTERO",
     ["ONCE A RUN"] = "UNA VEZ POR PARTIDA",
@@ -583,7 +586,10 @@ local ES = {
 
     ["CLASS DISMISSED"] = "SE ACABO LA CLASE",
     ["GAME OVER"] = "FIN DEL JUEGO",
-    ["RETRY"] = "OTRA VEZ",
+    -- OTRA rather than OTRA VEZ: the two boxes share one row of a card a phone
+    -- held upright makes 170 pixels wide, and OTRA VEZ and SALIR together ran
+    -- off its edge. ¡OTRA! is what you shout for one more go anyway.
+    ["RETRY"] = "OTRA",
     ["QUIT"] = "SALIR",
 
     --- the retake card ------------------------------------------------------
