@@ -5,3 +5,7 @@ __MACOSX/
 # Build artifacts: a .love is just this tree zipped up, so it is never a source
 # file. See CLAUDE.md for the packaging command.
 *.love
+
+# The bake scripts' bytecode cache (art/*.py import art/raytrace.py), which
+# Python writes beside them on every run.
+__pycache__/
