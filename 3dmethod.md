@@ -259,6 +259,17 @@ Any row with `turns` gets this. Nothing else in the game needs to know.
   edges, but averaging is exactly what invents colours the palette doesn't have.
   Smoothness comes from rounding the model's edges instead.
 
+## Smaller than a boss: the teardrop
+
+The live method also works at five pixels across, for things whose *heading* is
+the point. The eye's fan and its tears (`src/teardrop.lua`) are a ball with a
+cone tangent to it, painted per pixel along whichever way the drop is moving on
+the screen -- including the climb and fall of a thrown tear, which is what makes
+its parabola read as one. At that size the ramp has room for two fills, one
+glint pixel and the ink outline, and that is enough: what sells it is the shape
+pointing the way it goes, not the shading. It costs one small box of pixel tests
+per drop, which is fine for the few dozen a boss throws.
+
 ## Where it fits and where it doesn't
 
 - **Good fits:** bosses and anything else big (the whistle is 63 by 41 pixels

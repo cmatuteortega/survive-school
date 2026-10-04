@@ -2169,37 +2169,8 @@ function Sprites.load()
         "..o..",
     })
 
-    -- The boss's, and it is the same pellet grown the way the boss is the eye
-    -- grown: same ink rim, same red body, with a blush core that the small one
-    -- has no room for. Five of these come at once and they have to be told
-    -- apart from the ordinary spit while they are in the air, because they hurt
-    -- half again as much and there is no dodging them one at a time.
-    Sprites.bossShot = pixelart.newSprite({
-        "..ooo..",
-        ".orrro.",
-        "orrkrro",
-        "orkkkro",
-        "orrkrro",
-        ".orrro.",
-        "..ooo..",
-    })
-
-    -- A tear, which is the eye crying on the page rather than shooting at it.
-    -- Blue where the pellets are red, because what it leaves behind is a puddle
-    -- and the puddle is blue: you should be able to read what a thing in the air
-    -- is going to become before it lands. Pointed at the top and heavy at the
-    -- bottom, so it reads as falling however it is actually travelling -- it is
-    -- never turned (see the rendering rules), and a teardrop is the one shape
-    -- that looks right at any heading precisely because it always looks like it
-    -- is going down.
-    Sprites.tear = pixelart.newSprite({
-        "..o..",
-        "..o..",
-        ".obo.",
-        "obcbo",
-        "obbbo",
-        ".ooo.",
-    })
+    -- The eye boss's fan and its tears are not sprites: they are drops painted
+    -- solid and laid along the way they are going (src/teardrop.lua).
 
     Sprites.whistleViews = {}
     for k, rows in ipairs(Sprites.WHISTLE) do

@@ -34,6 +34,7 @@ local FullGame = require("src.fullgame")
 local LevelUp = require("src.levelup")
 local Puddle = require("src.puddle")
 local Spike = require("src.spike")
+local Teardrop = require("src.teardrop")
 local EyeBoss = require("src.eyeboss")
 local Arena = require("src.arena")
 local Loadout = require("src.loadout")
@@ -76,6 +77,8 @@ local SPENT_PAD = 20      -- how far off screen a spent mark is still drawn
 local DRAFT_SIZE = 3      -- upgrades offered per level
 local NOTICE_TIME = 1.8   -- how long the run says what you just took
 local LOB_HEIGHT = 18      -- how high a lobbed jack goes over the page
+local TEAR_LAND = 4        -- a thrown tear this low or lower is splashing down
+local SHOT_FLOAT = 6       -- how far over its shadow a fired pellet flies
 local RUB_HEARD = 24      -- pixels of rubbing before the release earns its pop:
                           -- a few tip-widths of travel, so a tap stays silent
 
@@ -2300,7 +2303,7 @@ function Game:fireEnemyShot(e, shot)
             x = e.x, y = e.y, dx = math.cos(a), dy = math.sin(a),
             speed = shot.speed, damage = e.shotDamage, life = 3,
             sprite = shot.sprite, radius = (shot.hit or 3) * e.reach,
-            grow = e.grow,
+            grow = e.grow, drop = shot.drop,
         }
     end
 end
@@ -2318,8 +2321,9 @@ function Game:updateEnemyShots(dt)
         s.life = s.life - dt
 
         -- A lobbed jack is over your head until it lands, so it hits nobody in
-        -- the air: what it threatens is where its shadow is.
-        if not s.lob
+        -- the air: what it threatens is where its shadow is. A thrown tear is
+        -- the same until its last few pixels down, which is it splashing.
+        if not s.lob and not (s.arc and not Game.tearDown(s))
             and util.len(player.x - s.x, player.y - s.y) < player.radius + s.radius then
             s.life = 0
             if player:hurt(s.damage) then
@@ -2363,17 +2367,41 @@ function Game:updateEnemyShots(dt)
     end
 end
 
+-- How high a thrown tear is over the page right now: a parabola over its
+-- flight, nothing at either end and `arc` in the middle.
+function Game.tearHigh(s)
+    local f = 1 - math.max(0, s.life) / s.flight
+    return 4 * s.arc * f * (1 - f)
+end
+
+-- Whether it is coming down onto the page: low, and on the way down rather than
+-- just off the eye -- a tear leaving the lid is as low as one landing, and it
+-- is not the one that splashes.
+function Game.tearDown(s)
+    return s.life <= s.flight * 0.5 and Game.tearHigh(s) <= TEAR_LAND
+end
+
 -- One tear, thrown to land `dist` away along `angle`. It is an ordinary piece
--- of enemy fire the whole way -- same table, same collision with the player,
--- same drawing -- carrying two extra fields that say what to leave where it
--- stops. Life is worked out from the distance rather than written down, which is
--- what makes "land there" the thing a caller asks for.
+-- of enemy fire -- same table, same collision with the player once it is down --
+-- carrying extra fields that say what to leave where it stops and how high it
+-- goes on the way (`arc`, read by Game.tearHigh). Life is worked out from the
+-- distance rather than written down, which is what makes "land there" the thing
+-- a caller asks for.
+--
+-- The arc is a fixed `high` plus a share of the distance, rather than either
+-- alone: all of one, and a lane of five would leave the eye as one blob before
+-- fanning out; all of the other, and every tear would go up at the same slope.
+-- With both, the short ones go up steep and the long ones flat, and five tears
+-- thrown at once are five arcs from the first frame.
 function Game:throwTear(e, tears, angle, dist)
+    local life = dist / tears.speed
     self.shots[#self.shots + 1] = {
         x = e.x, y = e.y,
         dx = math.cos(angle), dy = math.sin(angle),
         speed = tears.speed, damage = e.tearDamage,
-        life = dist / tears.speed,
+        life = life, flight = life,
+        arc = ((tears.high or 0) + dist * (tears.rise or 0)) * e.reach,
+        drop = tears.drop,
         -- As big as whatever threw it, hitbox and drawing off the one number, for
         -- the pellet's reason (Game:fireEnemyShot). Dead weight on the only row
         -- that has tears today, since the boss is guarded out of both standout
@@ -5183,22 +5211,43 @@ function Game:draw()
     for _, b in ipairs(self.bullets) do b:draw() end
     love.graphics.setColor(1, 1, 1)
     for _, s in ipairs(self.shots) do
-        local y = s.y
-        -- A lobbed jack: its shadow on the page where it will land, and the jack
-        -- itself up an arc over the straight line to it. The shadow is the
-        -- whole telegraph -- a cross of graphite that is there from the moment
-        -- it is thrown -- and the arc is what says it is not coming *at* you.
-        if s.lob then
-            local f = 1 - s.life / s.flight
-            y = y - math.floor(4 * LOB_HEIGHT * f * (1 - f))
-            love.graphics.setColor(Palette.graphite)
-            local tx, ty = math.floor(s.tx), math.floor(s.ty)
-            love.graphics.rectangle("fill", tx - 2, ty, 5, 1)
-            love.graphics.rectangle("fill", tx, ty - 2, 1, 5)
+        -- A drop (src/teardrop.lua): the eye's tears and its fan, painted solid
+        -- and laid along the way they are going on the screen. A thrown tear
+        -- is up its arc with its shadow on the page under it, and the way it is
+        -- going on the screen includes the climb and the fall, so it points up
+        -- on the way out and comes down head first. A fired one flies level, a
+        -- little over its own shadow.
+        if s.drop then
+            local high, vy = SHOT_FLOAT, s.dy * s.speed
+            if s.arc then
+                high = Game.tearHigh(s)
+                local f = 1 - math.max(0, s.life) / s.flight
+                vy = vy + 4 * s.arc * (2 * f - 1) / s.flight
+                Teardrop.shadow(s.x, s.y + s.radius, s.radius, high)
+                Teardrop.draw(s.x, s.y - high, s.dx * s.speed, vy, s.radius, s.drop)
+            else
+                Teardrop.shadow(s.x, s.y + high, s.radius, high)
+                Teardrop.draw(s.x, s.y, s.dx * s.speed, vy, s.radius, s.drop)
+            end
             love.graphics.setColor(1, 1, 1)
+        else
+            local y = s.y
+            -- A lobbed jack: its shadow on the page where it will land, and the jack
+            -- itself up an arc over the straight line to it. The shadow is the
+            -- whole telegraph -- a cross of graphite that is there from the moment
+            -- it is thrown -- and the arc is what says it is not coming *at* you.
+            if s.lob then
+                local f = 1 - s.life / s.flight
+                y = y - math.floor(4 * LOB_HEIGHT * f * (1 - f))
+                love.graphics.setColor(Palette.graphite)
+                local tx, ty = math.floor(s.tx), math.floor(s.ty)
+                love.graphics.rectangle("fill", tx - 2, ty, 5, 1)
+                love.graphics.rectangle("fill", tx, ty - 2, 1, 5)
+                love.graphics.setColor(1, 1, 1)
+            end
+            (s.sprite and Sprites[s.sprite] or Sprites.enemyShot)
+                :draw(s.x, y, nil, s.grow)
         end
-        (s.sprite and Sprites[s.sprite] or Sprites.enemyShot)
-            :draw(s.x, y, nil, s.grow)
     end
     self.particles:draw()
     Camera.detach()

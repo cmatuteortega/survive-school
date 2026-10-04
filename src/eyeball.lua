@@ -38,6 +38,7 @@
 local Palette = require("src.palette")
 local Camera = require("src.camera")
 local Puddle = require("src.puddle")
+local Teardrop = require("src.teardrop")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -46,7 +47,10 @@ Eyeball.__index = Eyeball
 
 local RADIUS = 21   -- the outline at rest: 43 across, the sprite it replaced
 Eyeball.RADIUS = RADIUS
-local RIM = 3       -- the ink border. A boss is the heaviest line on the page
+-- The ink border. Two, not the three it had: a boss is still the heaviest line
+-- on the page, one over everything else's, but at three the outline was doing
+-- the work the shading is there to do, and a ball read as a coin with a rim.
+local RIM = 2
 local IRIS = 0.56   -- angular radius of the iris on the ball, in radians: ~19 across
 local LIMBUS = 0.10 -- the dark ring round it, the same unit
 local COLLAR = 0.36 -- where the fibres stop, nearer the pupil
@@ -690,14 +694,10 @@ function Eyeball:draw(x, y)
     if self.well > 0 and self.sink == 0 then
         local ix, iy, near = self:iris(x, y)
         if near and lid < 0.5 then
-            local r = self.well > 0.66 and 2 or self.well > 0.33 and 1 or 0
-            local tx, ty = floor(ix), floor(iy + (ry - RIM) * sin(IRIS) + 1 + r)
-            love.graphics.setColor(blue)
-            pixelart.circleFill(tx, ty, r + 1)
-            love.graphics.setColor(sky)
-            pixelart.circleFill(tx, ty, r)
-            love.graphics.setColor(paper)
-            love.graphics.rectangle("fill", tx - math.max(0, r - 1), ty - r, 1, 1)
+            -- The same drop it throws (src/teardrop.lua), hanging head down and
+            -- swelling, so what wells is visibly what is about to come out.
+            local r = 1 + self.well * 1.6
+            Teardrop.draw(ix, iy + (ry - RIM) * sin(IRIS) + 1 + r, 0, 1, r, "blue")
         end
     end
 end

@@ -299,7 +299,7 @@ Enemy.types = {
               xp = 250, shadow = 34, boss = true, pupil = true, knock = 0.06, hold = 0.3,
               title = "THE EYE", call = "THE EYE IS OPEN",
               shot = { range = 190, every = 2.6, speed = 46, damage = 12, hit = 4,
-                       spread = 5, arc = 1.05, sprite = "bossShot" },
+                       spread = 5, arc = 1.05, drop = "red" },
               trail = { every = 0.5, gap = 9, radius = 12, life = 7, damage = 6 },
               -- The eye cries, and where a tear lands the page is wet.
               --
@@ -311,14 +311,22 @@ Enemy.types = {
               --
               -- Three deliveries off one projectile, which is what keeps the
               -- fight varied without teaching three separate things. A tear is a
-              -- tear wherever it came from -- it hurts if it hits you on the way
-              -- and it puddles where it stops -- so all any of these change is
+              -- tear wherever it came from -- it hurts if it lands on you and it
+              -- puddles where it lands -- so all any of these change is
               -- *where* a handful of them land.
               --
               -- The puddle a tear leaves is deliberately smaller and shorter
               -- than the one the boss drags behind it: the trail is the price of
               -- letting it walk, and should be worse than weather.
-              tears = { speed = 74, damage = 8, hit = 3, sprite = "tear",
+              --
+              -- And a tear is *thrown*, not fired: it goes up and comes down
+              -- (`high` pixels over the page, plus `rise` for every pixel it
+              -- travels), with its shadow on the floor the whole way, and it
+              -- hurts only where it lands (Game:updateEnemyShots). In the air
+              -- it is over your head. The red fan is the thing that hurts on
+              -- the way; a tear is the thing that hurts where it stops.
+              tears = { speed = 74, damage = 8, hit = 3, drop = "blue",
+                        high = 8, rise = 0.2,
                         puddle = { radius = 10, life = 5.5, damage = 6 },
                         -- The weather. A few at a time, anywhere in the box,
                         -- landing near or far -- the one attack that is not
@@ -356,10 +364,14 @@ Enemy.types = {
                   -- Seconds of walking between moves, plus up to 0.6 more.
                   cool = { 2.6, 2.0, 1.5 },
                   -- The beam. `turn` is how fast the line swings onto you while
-                  -- it aims, radians a second; `sweep` is how fast it keeps
+                  -- it aims, radians a second; then it stops turning and holds
+                  -- the line for `lock` before it fires, which is the step you
+                  -- get to take off it -- tracking you right up to the shot was
+                  -- a hit nobody could dodge. `sweep` is how fast it keeps
                   -- going once it fires. 0.55 at 100px is ~55px a second, just
                   -- under your 58: outwalkable, barely, by walking against it.
-                  stare = { aim = { 0.95, 0.85, 0.75 }, fire = { 0.45, 0.55, 0.65 },
+                  stare = { aim = { 0.85, 0.75, 0.65 }, lock = { 0.5, 0.42, 0.36 },
+                            fire = { 0.45, 0.55, 0.65 },
                             sweep = { 0, 0.35, 0.55 }, turn = 2.4, width = 5,
                             damage = 14, length = 260, rest = 0.6 },
                   -- The roll. 104 is well over your speed, which is the wad's
@@ -378,6 +390,16 @@ Enemy.types = {
                   sink = { from = 2, down = 0.45, under = 0.4, up = 0.35,
                            near = 45, far = 140, ring = { 0, 0, 8 }, tearReach = 40,
                            rest = 0.5 },
+                  -- The weep, also from the second phase: it looks up, a tear
+                  -- wells, and it throws `volleys` rings of `count` tears, each
+                  -- ring `step` further out than the last and turned half a gap
+                  -- from it, `gap` seconds apart. Every ring has holes and no
+                  -- two holes line up, so the way out is a zigzag you walk
+                  -- while the shadows come down -- and the floor it leaves is
+                  -- the sink's next way up.
+                  weep = { from = 2, well = 0.7, volleys = { 0, 3, 4 },
+                           count = { 0, 8, 10 }, near = 38, step = 30, gap = 0.35,
+                           rest = 0.7 },
               } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is

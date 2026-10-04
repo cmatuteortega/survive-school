@@ -7059,8 +7059,9 @@ Turn it to look at you and the iris goes oval towards the edge of the ball the
 way an iris does; the light stays where it is while the ball turns, so the grey
 crescent along the bottom and the catchlight on the cornea are what tell you it
 is round. It has veins that come round with it, fibres in the iris, a border
-three pixels of ink thick -- the heaviest line on the page, for the heaviest
-thing on it -- and a lid, so it blinks, glares when it spits, and sits half shut
+two pixels of ink thick -- still the heaviest line on the page, one over
+everything else's; it was three, and at three the outline did the work the
+shading is there for and the ball read as a coin with a rim -- and a lid, so it blinks, glares when it spits, and sits half shut
 and dizzy after a roll.
 
 It also got a way of walking, because a thing that size gliding at a steady 26
@@ -7086,15 +7087,19 @@ hitbox, for the reason the hit recoil doesn't.
 Everything the eye did to you used to be a clock -- the fan on a beat, the tears
 on two more, the trail on a fourth -- and clocks are fair and learnable and, by
 the second eye, all the fight was. Now it has four moves it *chooses* between
-(`src/eyeboss.lua`), and each one is played in the same three beats: a tell you
+(`src/eyeboss.lua`) -- five, two of them held back until the first third of its
+health is gone -- and each one is played in the same three beats: a tell you
 can read, the move, then a moment where it is stood still and open.
 
 - **The stare.** It stops and glares, and a dotted line marches out of the iris
-  and swings round onto you; for the last quarter of the wind it goes solid red,
-  then it is a beam. The 3D eye is the tell -- you can see exactly where it is
-  looking. From the second phase the beam keeps sweeping the way it was turning,
-  just under your walking speed at a hundred pixels, so you walk *against* the
-  swing.
+  and swings round onto you. Then it stops following you: the line goes solid
+  red and holds still for half a second (a little less as the fight turns), and
+  only then is it a beam. The first version tracked you right up to the shot and
+  so hit every time -- a tell you cannot act on is not a tell -- and the solid
+  line is now a promise that it will not move until it fires. The 3D eye is the
+  tell too: you can see exactly where it is looking. From the second phase the
+  beam keeps sweeping the way it was turning, just under your walking speed at a
+  hundred pixels, so you walk *against* the swing.
 - **The bowl.** The wad's charge at the boss's size, with the wad's blinking red
   rim borrowed so it is a warning you already know, plus an arrow down the lane.
   It locks the line at the start of the wind, leading you a little, then rolls
@@ -7112,8 +7117,27 @@ can read, the move, then a moment where it is stood still and open.
   surface for the whole time it is under. The trail stops being only ground you
   cannot stand on and becomes ground it can come *out* of. It will never surface
   within 45 pixels of you.
+- **The weep.** Also from the second phase. It looks up -- the one move it makes
+  without looking at you, which is the tell -- a tear swells at its lid, and it
+  throws rings of tears up into the air round itself, three then four, each 30
+  pixels further out than the last and turned half a gap from it, so no hole
+  lines up with the one inside it. Every tear's shadow is on the floor before it
+  lands, so the way out is a zigzag through the gaps, walked while they come
+  down. It is the move for someone standing still in the middle distance, and it
+  leaves the floor wet enough for the sink to have somewhere to come up.
 
-**The choosing is what makes it a mind and not a fifth clock.** Each move is
+**What it throws looks like what it is.** The fan and the tears were a red ball
+and a little flat drop that pointed up whatever it was doing; next to an eye
+painted off a real sphere both read as stickers. Now both are teardrops painted
+solid (`src/teardrop.lua`) and laid along the way they are moving on the screen.
+The fan is red and flies level over its shadow: it hurts on the way. A tear is
+blue and *thrown* -- up and over on a parabola, pointing up as it leaves the eye,
+tipping over at the top and coming down head first, its shadow running along
+the floor underneath -- and it hurts only where it lands, because in the air it
+is over your head. Red hurts on the way and blue hurts where it stops, which is
+the same rule the colours already kept for the puddles.
+
+**The choosing is what makes it a mind and not a sixth clock.** Each move is
 weighted off the distance (the slam is for someone who came close to put damage
 in; the stare and the sink are for someone keeping away), off how you are moving
 (it leads a running target, never a still one), and off whether it has got
@@ -7129,8 +7153,9 @@ which is the one tool-shaped answer this fight has.
 **It gets meaner where the bar says it should.** At two thirds and one third --
 the same marks the tear rings were already on -- it flinches hard and the page
 knocks, the rest between moves shortens (2.6, 2.0, 1.5 seconds), the beam
-sweeps, the bowl bounces, the slam doubles and throws tears, the sink comes in,
-and it cries out a pair of eyes, small ones at the first turn and bloodshot ones
+sweeps, the bowl bounces, the slam doubles and throws tears, the sink and the
+weep come in (the weep throwing four rings of ten at the last third rather than
+three of eight), and it cries out a pair of eyes, small ones at the first turn and bloodshot ones
 at the second. The body says it too: veins come on and creep towards the iris as
 the health goes, and for the last third the iris itself goes red.
 

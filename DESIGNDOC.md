@@ -1181,10 +1181,13 @@ one place and nothing else in the game knows it exists:
   `hold`, `seek` a point, `dash` a locked line — read in `Enemy:update`'s walk),
   `ghost` (off the grid, out of `nearestEnemy`, and refused by `Enemy:hurt`, while
   it is underground or still falling in) and `eyeball.ctl` (what the body is
-  doing). The four moves are `stare`/`bowl`/`slam`/`sink`, each a tell, the move,
-  and a rest; `EyeBoss:choose` weights them off distance, your smoothed velocity
-  and whether it is stuck, and marks down the last two. Lists of three on the row
-  are per phase (above ⅔, above ⅓, the rest). `EyeBoss:busy` holds the fan's and
+  doing). The five moves are `stare`/`bowl`/`slam`/`sink`/`weep`, each a tell,
+  the move, and a rest; `EyeBoss:choose` weights them off distance, your smoothed
+  velocity and whether it is stuck, and marks down the last two. Lists of three
+  on the row are per phase (above ⅔, above ⅓, the rest), and `sink` and `weep`
+  carry a `from` phase they are not drawn before. The stare tracks you for `aim`,
+  then holds the line still and solid for `lock` (`stareLock`) before it fires,
+  which is the window to step off it. `EyeBoss:busy` holds the fan's and
   the lane's clocks. The ring thresholds also `brood` (spawn eyes). A kill hands
   the body to `EyeBoss.fall`, which `Game` steps and draws while `player.truce`
   holds and `pendingWin` waits; the burst puddles carry 0 damage, which
@@ -1204,8 +1207,21 @@ whichever thing you are fighting; what differs is what they make you do.
 **The eye** (`bosseye`, six lessons) is a fight about *ground*: `pupil` (the body is
 a ball painted a pixel at a time off a turning sphere, `src/eyeball.lua`), `trail`
 (wet dragged behind it), `tears` (wet thrown, three ways, with rings at two thirds
-and one third), `attacks` (the four moves its brain picks between,
+and one third), `attacks` (the five moves its brain picks between,
 `src/eyeboss.lua`), and a fan of `shot`.
+
+Neither its fan nor its tears are sprites. A `drop` on the `shot` or `tears` block
+names an ink in `Teardrop.inks` (`src/teardrop.lua`), and `Game:draw` paints the
+pellet as a solid teardrop -- a ball with a tangent cone, lit by the eye's own
+screen-fixed light, one-pixel ink outline at the hit radius -- laid along the way
+it is moving *on the screen*. The fan (`red`) flies level a few pixels over its
+shadow and hurts on the way. A tear (`blue`) is thrown: `Game:throwTear` gives it
+an `arc` of `high + rise × distance` pixels, `Game.tearHigh` is the parabola over
+its flight, and its screen heading includes the climb and the fall, so it points
+up leaving the eye and lands head first. Its shadow is on the page under it the
+whole way, and it can hit you only once `Game.tearDown` says it is coming down
+onto the page -- in the air it is over your head, like a lobbed jack. The tear
+welling at the lid before a lane or a weep is the same drop, hanging.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every

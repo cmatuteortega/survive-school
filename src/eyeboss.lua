@@ -9,10 +9,11 @@
 -- move, and a moment after it where it is open -- and then goes back to walking.
 --
 --  - **The stare.** It stops, glares, and a dotted line comes out of the iris
---    and swings round towards you; then the line is a beam. The 3D eye is the
---    tell -- you can see exactly where it is looking -- and from the second
---    phase the beam keeps sweeping the way it was turning, so the answer is to
---    step *against* the swing, not just off the line.
+--    and swings round towards you; then it stops swinging, the line goes solid,
+--    and a moment later the line is a beam. The 3D eye is the tell -- you can
+--    see exactly where it is looking -- and the solid line is the promise: it
+--    will not follow you off it. From the second phase the beam keeps sweeping
+--    the way it was turning, so the answer is to step *against* the swing.
 --  - **The bowl.** The wad's charge at the boss's size: a blinking red rim and
 --    an arrow while it winds up, then it rolls down the line it locked at the
 --    start, fast, smearing a wet streak behind it and bouncing off the walls of
@@ -25,15 +26,22 @@
 --    one -- the trail it left stops being only ground you cannot stand on and
 --    becomes ground it can come *out* of. Where it will surface bubbles for the
 --    whole time it is under.
+--  - **The weep.** From the second phase: it looks up, a tear wells, and it
+--    throws rings of tears into the air round itself, each further out than the
+--    last and turned so the gaps never line up. Every tear's shadow is on the
+--    floor before it lands, so the way out is a zigzag through the gaps.
 --
--- What makes it a mind rather than a fifth clock is the choosing. Every move is
+-- What makes it a mind rather than a sixth clock is the choosing. Every move is
 -- weighted off the distance to you (a slam is for someone standing close, a
 -- stare and a sink for someone keeping away), off how you are moving (it leads a
 -- running target, never a still one), off whether it has got itself stuck (a
 -- jammed eye goes underground), and away from whatever it did last -- the same
 -- move twice in a row is a pattern you can stand in. And it gets meaner by
 -- phase, at the same two thirds and one third the tear rings mark: shorter rests
--- between moves, more bounces, a sweep on the beam, a second slam.
+-- between moves, more bounces, a sweep on the beam, a second slam -- and two of
+-- the five moves, the sink and the weep, are not in its hand at all until the
+-- first third of its health is gone. The first third is the fight taught in
+-- three moves; the rest is the same fight with more of them.
 --
 -- Every move has a tell of at least half a second and every one of them is
 -- answered by moving, which is the whole of this boss's design (Enemy.types):
@@ -141,8 +149,9 @@ function EyeBoss:update(dt, game, e)
     -- Glue answers a tell. A move it was still winding up is dropped on the
     -- spot and it goes straight to being open -- which is what a glueing should
     -- buy against a boss, and the one tool-shaped counterplay this fight has.
-    if e.frozen > 0 and (self.state == "stareAim" or self.state == "bowlWind"
-        or self.state == "slamCrouch" or self.state == "sinkDown") then
+    if e.frozen > 0 and (self.state == "stareAim" or self.state == "stareLock"
+        or self.state == "bowlWind" or self.state == "slamCrouch"
+        or self.state == "sinkDown" or self.state == "weepWell") then
         self:open(e, 0.4, true)
     end
 
@@ -227,6 +236,7 @@ end
 function EyeBoss:open(e, t, dizzy)
     self.state, self.t = "resting", t
     self.beam, self.aim, self.mark, self.bubbles = nil, nil, nil, nil
+    e.eyeball.well = 0
     e.chargePhase = nil
     e.ghost = false
     e.eyeball.sink = 0
@@ -280,6 +290,12 @@ function EyeBoss:choose(game, e)
         end
     end
 
+    -- The weep is for someone in the middle distance, and more so for someone
+    -- standing still: rings of rain are what being planted costs.
+    if phase >= self.def.weep.from then
+        w.weep = ((d > 45 and d < 170) and 1.0 or 0.45) * (speed < 20 and 1.5 or 1)
+    end
+
     if self.last and w[self.last] then w[self.last] = w[self.last] * 0.12 end
     if self.before and w[self.before] then w[self.before] = w[self.before] * 0.6 end
 
@@ -287,7 +303,7 @@ function EyeBoss:choose(game, e)
     for _, v in pairs(w) do total = total + v end
     local roll = love.math.random() * total
     local move = "stare"
-    for _, name in ipairs({ "stare", "bowl", "slam", "sink" }) do
+    for _, name in ipairs({ "stare", "bowl", "slam", "sink", "weep" }) do
         if w[name] then
             roll = roll - w[name]
             if roll <= 0 then move = name break end
@@ -327,9 +343,8 @@ function EyeBoss:stareStart(game, e)
     -- It starts off to one side of you and swings round, so the line arrives
     -- rather than appears: you see it coming before it is on you.
     local side = love.math.random() < 0.5 and -1 or 1
-    self.beam = { a = toYou + side * 0.8, firing = false, turn = side, ripe = 0 }
+    self.beam = { a = toYou + side * 0.8, firing = false, locked = false, turn = side }
     self.state, self.t = "stareAim", pick(s.aim, self.phase)
-    self.aimTime = self.t
 end
 
 function EyeBoss:stareAim(dt, game, e)
@@ -339,11 +354,30 @@ function EyeBoss:stareAim(dt, game, e)
     local d
     beam.a, d = lerpAngle(beam.a, toYou, s.turn * dt)
     if d ~= 0 then beam.turn = d > 0 and 1 or -1 end
-    beam.ripe = 1 - math.max(0, self.t) / self.aimTime
     e.drive = { hold = true }
     eb.ctl = { squash = 0.08, look = { Eyeball.gaze(math.cos(beam.a), math.sin(beam.a), LOOK) },
         dilate = -0.4 }
     eb.squint = math.max(eb.squint, 0.4)
+    if self.t <= 0 then
+        -- It stops following you here, and the line goes solid to say so. The
+        -- line you see for the lock is the line the beam comes down, to the
+        -- pixel: tracking right up to the shot was a beam on you every time,
+        -- and a tell you cannot act on is not one.
+        beam.locked = true
+        self.state, self.t = "stareLock", pick(s.lock, self.phase)
+        self.lockTime = self.t
+    end
+end
+
+function EyeBoss:stareLock(dt, game, e)
+    local s, beam, eb = self.def.stare, self.beam, e.eyeball
+    e.drive = { hold = true }
+    -- Drawing itself up for it: squinting harder and squeezing down, so the
+    -- body says "now" as the line does.
+    local f = 1 - math.max(0, self.t) / self.lockTime
+    eb.ctl = { squash = 0.08 + 0.12 * f, look = { Eyeball.gaze(math.cos(beam.a), math.sin(beam.a), LOOK) },
+        dilate = -0.4 - 0.4 * f }
+    eb.squint = math.max(eb.squint, 0.4 + 0.2 * f) -- never so shut you lose where it looks
     if self.t <= 0 then
         beam.firing = true
         self.state, self.t = "stareFire", pick(s.fire, self.phase)
@@ -602,6 +636,51 @@ function EyeBoss:sinkUp(dt, game, e)
     end
 end
 
+--- the weep -------------------------------------------------------------------
+
+function EyeBoss:weepStart(game, e)
+    local w = self.def.weep
+    self.volleys, self.volley = pick(w.volleys, self.phase), 0
+    self.weepTurn = love.math.random() * math.pi * 2
+    self.state, self.t = "weepWell", w.well
+end
+
+-- Looking up at nothing, with a tear swelling at the lid: the one move it makes
+-- without looking at you, which is the tell -- an eye that has stopped watching
+-- you is about to do something to the whole floor.
+function EyeBoss:weepWell(dt, game, e)
+    local w, eb = self.def.weep, e.eyeball
+    local f = 1 - math.max(0, self.t) / w.well
+    e.drive = { hold = true }
+    eb.ctl = { squash = 0.12 + 0.14 * f, look = { Eyeball.gaze(0, -1, LOOK) }, dilate = 0.3 }
+    eb.well = f
+    if self.t <= 0 then self.state, self.t = "weepCry", 0 end
+end
+
+function EyeBoss:weepCry(dt, game, e)
+    local w, eb = self.def.weep, e.eyeball
+    e.drive = { hold = true }
+    eb.ctl = { squash = -0.04, look = { Eyeball.gaze(0, -1, LOOK) }, dilate = 0.5 }
+    eb.well = 0
+    if self.t > 0 then return end
+    self.volley = self.volley + 1
+    local n = pick(w.count, self.phase)
+    -- Each ring half a gap round from the last, so no hole lines up with the one
+    -- inside it: walking straight out is walking into a tear.
+    local turn = self.weepTurn + self.volley * math.pi / n
+    local dist = w.near + (self.volley - 1) * w.step
+    for i = 0, n - 1 do
+        game:throwTear(e, e.def.tears, turn + i * math.pi * 2 / n, dist)
+    end
+    eb:kick(false)
+    eb.squashV = eb.squashV - 3
+    if self.volley >= self.volleys then
+        self:open(e, w.rest)
+    else
+        self.t = w.gap
+    end
+end
+
 --- the shockwave --------------------------------------------------------------
 
 -- A ring rolling out across the floor from (x, y) to `most`, hitting you once if
@@ -720,10 +799,11 @@ function EyeBoss:drawAir(time, e)
             pixelart.band(beam.x0, beam.y0, beam.x1, beam.y1, 1)
             pixelart.circleFill(beam.x0, beam.y0, 2)
         else
-            -- The tell: graphite dashes marching out, going red and solid for
-            -- the last quarter of the wind so the moment it fires is readable.
+            -- The tell: graphite dashes marching out while it is still
+            -- following you, and a solid red line once it has stopped -- the
+            -- line the beam will come down, held still long enough to step off.
             local len = 230
-            if beam.ripe > 0.75 then
+            if beam.locked then
                 love.graphics.setColor(Palette.red)
                 local ex, ey = ox + math.cos(beam.a) * len, oy + math.sin(beam.a) * len
                 pixelart.line(math.floor(ox), math.floor(oy), math.floor(ex), math.floor(ey))
