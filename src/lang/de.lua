@@ -25,6 +25,14 @@ return {
     ["OR PRESS Y OR N"] = "ODER J ODER N",
     ["OR PRESS Y N OR C"] = "ODER J N ODER C",
 
+    --- the opening (src/intro.lua) -------------------------------------------
+
+    ["BACK TO SCHOOL"] = "ZURÜCK IN DIE SCHULE",
+    ["FIRST LESSON"] = "ERSTE STUNDE",
+    ["... PST ... WHEN DOES THE CLASS END?"] = "... PSST ... WANN IST DIE STUNDE AUS?",
+    ["AT 10"] = "UM 10",
+    ["SOMETHING, SOMETHING MATHS"] = "IRGENDWAS, IRGENDWAS MATHE",
+
     --- settings ---------------------------------------------------------------
 
     ["SETTINGS"] = "OPTIONEN",

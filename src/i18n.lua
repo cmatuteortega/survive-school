@@ -126,6 +126,17 @@ local ES = {
     -- list with a letter stuck on the end.
     ["OR PRESS Y N OR C"] = "O PULSA S N O C",
 
+    --- the opening (src/intro.lua) -------------------------------------------
+
+    -- MS TEACHER is her name and stays it in every language, the way the
+    -- title does. What the last lesson was about nobody heard, so it is
+    -- mumbled in every language rather than named.
+    ["BACK TO SCHOOL"] = "VUELTA AL COLE",
+    ["FIRST LESSON"] = "PRIMERA CLASE",
+    ["... PST ... WHEN DOES THE CLASS END?"] = "... PSST ... ¿CUANDO ACABA LA CLASE?",
+    ["AT 10"] = "A LAS 10",
+    ["SOMETHING, SOMETHING MATHS"] = "ALGO ALGO MATES",
+
     --- settings ---------------------------------------------------------------
 
     ["SETTINGS"] = "AJUSTES",

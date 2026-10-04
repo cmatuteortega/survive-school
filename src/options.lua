@@ -1,11 +1,12 @@
 -- What the player has set: language, the two volumes, which way up the page is
 -- held, which corner the stick is in, how loud a hit is said, whether a hit
--- buzzes the phone, and whether a new drawing is asked for. None of it belongs
--- to a run.
+-- buzzes the phone, and whether a new drawing is asked for -- and one thing the
+-- player did rather than set, whether the opening has been seen. None of it
+-- belongs to a run.
 --
 -- Nothing here owns a value -- each setting lives in the module that knows what
 -- it means (src/i18n, src/sfx, src/orient, src/input, src/damage, src/haptics,
--- src/design), and that module also owns the LIST of values it may take, which
+-- src/design, src/intro), and that module also owns the LIST of values it may take, which
 -- is what a line is read back against: a value not on the list is a later version's file
 -- and keeps the default. This file owns the format only, reading it once at
 -- load and writing whenever a screen sets a value on its owner and calls
@@ -24,6 +25,7 @@ local Damage = require("src.damage")
 local Orient = require("src.orient")
 local Haptics = require("src.haptics")
 local Dev = require("src.dev")
+local Intro = require("src.intro")
 
 local Options = {}
 
@@ -58,6 +60,9 @@ function Options.save()
         ("damage %s"):format(Damage.show),
         ("ask %d"):format(flag(Design.ask)),
         ("haptics %d"):format(flag(Haptics.on)),
+        -- Whether the opening has been seen (src/intro.lua). A file with no line
+        -- for it plays the opening, an older version's file included.
+        ("intro %d"):format(flag(Intro.seen)),
         -- DEV, out at launch with src/dev.lua. Written rather than defaulted so
         -- a dev who set ALL yesterday still has it; an unknown value defaults.
         ("unlocks %s"):format(Dev.unlocks),
@@ -102,6 +107,9 @@ function Options.load()
             -- costs a player nothing; a dev just taps three times again.
             local v = tonumber(value)
             if v then Dev.shown = v ~= 0 end
+        elseif key == "intro" then
+            local v = tonumber(value)
+            if v then Intro.seen = v ~= 0 end
         elseif key == "haptics" then
             -- Same reading as `ask`: only a number turns it off.
             local v = tonumber(value)

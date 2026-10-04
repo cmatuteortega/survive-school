@@ -137,7 +137,8 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   `src/coach.lua` (the hand that shows how: a dashed diagonal through the YES
   box and a dashed scribble over a monster in a run's first seconds, never a
   real mark).
-- **Screens:** `menu`, `settings`, `timetable`, `studio`, `library`, `canteen`,
+- **Screens:** `intro` (the first launch's opening, seen through a blinking eye
+  that opens on the title), `menu`, `settings`, `timetable`, `studio`, `library`, `canteen`,
   `homework` (the challenge list, read off `challenges`), `chance` (the
   revive-by-ad offer), `double` (the x2 box on the end cards), `blank` (the page with
   nothing on it, which nothing instances today), `pause`, `levelup`, `win`,

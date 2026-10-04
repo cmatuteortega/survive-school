@@ -171,6 +171,51 @@ that carries on into the next box changes the answer rather than being too
 late — and the border warms from slate through blue to red as it fills, so you
 can see the answer coming before you lift.
 
+## The opening
+
+The first time the book is opened it does not open on the title. It opens on a
+dark screen with a circle cut out of it, and the circle is your eye: first day
+back, seen from your desk. It opens slowly, the way an eye opens first thing in
+the morning, onto a blackboard that writes `BACK TO SCHOOL` on itself in the
+title's own 3x chalk. Every tap blinks to the next scene. The board says `MS
+TEACHER` and `FIRST LESSON`. The wall clock ticks over to 9:01. On the first
+lesson's page, someone (you, the bubble points left) whispers `... PST ... WHEN
+DOES THE CLASS END?` while two blobs and a cool S get doodled in the margin. The
+desk next to you (the bubble points right) says `AT 10`. The clock ticks over to
+9:03. The board says `SOMETHING, SOMETHING MATHS`. Then the eyes close and stay
+closed, and `...` is typed into the dark. One more tap and the eye opens one last
+time and keeps opening, past every edge of the screen, and what was behind it is
+the title page, already written.
+
+A blink is the circle squashing. It loses most of its height and a quarter of
+its width, closes to a slit and opens again. It never quite closes, because a
+real blink is over before you see the dark. Only two moments go fully dark: the
+first opening and the last scene, because those are the two times the eyes are
+really shut. The dark is ink, the darkest colour in the palette, drawn as lids:
+a span either side of the ellipse on every row. That way nothing is ever dimmed
+with alpha.
+
+A tap while something is still being written finishes it, and the next tap
+blinks. Nobody has to watch the lettering go down twice. A small arrow blinks at
+the foot of the eye once a scene has said everything it has to say. Chalk puffs
+off each letter like the title's graphite, and each line of chalk gets a swish.
+The clock's second hand jumps a second at a time and the minute hand clicks over
+on the third tick. That one tick is the joke, so it is also where a tap that
+cuts the scene short lands.
+
+It plays **once per book**. A joke told on every launch stops being one. Whether
+it has been seen is the `intro` line in `options.txt`, and a file with no such
+line plays it, so an update shows it once to everyone who already has the game.
+Delete the line, or set it to `0`, to see it again. `SKIP` sits in the top corner
+for anyone who has seen it, and it has to be **held** for a little over a second
+while it fills with blush. A stray tap on it would throw away the whole opening,
+and a tap anywhere else is already the way forward. Held or played through, the
+eye opens on the title the same way.
+
+The script is `Intro.scenes` in `src/intro.lua`, one row per scene. MS TEACHER is
+a name and stays a name in every language. The mumbled lesson is translated as
+mumbling, and it is always maths, whatever the timetable's first page is.
+
 ## The title screen
 
 **SURVIVE SCHOOL**, and under it `START?` with a YES box and a NO box. You
@@ -8570,8 +8615,10 @@ src/
                       and the Spanish for it
   lang/               the other four dictionaries, one file each: de, fr, it, pt
   options.lua         options.txt: the language, the two volumes, the stick's
-                      corner, the damage numbers and whether a new drawing is
-                      asked for
+                      corner, the damage numbers, whether a new drawing is
+                      asked for and whether the opening has been seen
+  intro.lua           the first launch's opening: eight scenes through a
+                      blinking eye, which opens at the end on the title
   settings.lua        the settings page: two bars and four steppers
   damage.lua          what a hit was worth, thrown up off the thing it hit
   subjects.lua        the pages of the book: how each is ruled, who is in it

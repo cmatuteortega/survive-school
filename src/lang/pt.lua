@@ -24,6 +24,14 @@ return {
     ["OR PRESS Y OR N"] = "OU TECLE S OU N",
     ["OR PRESS Y N OR C"] = "OU TECLE S N OU C",
 
+    --- the opening (src/intro.lua) -------------------------------------------
+
+    ["BACK TO SCHOOL"] = "VOLTA AS AULAS",
+    ["FIRST LESSON"] = "PRIMEIRA AULA",
+    ["... PST ... WHEN DOES THE CLASS END?"] = "... PSIU ... QUANDO ACABA A AULA?",
+    ["AT 10"] = "AS 10",
+    ["SOMETHING, SOMETHING MATHS"] = "ALGO, ALGO MATEMATICA",
+
     --- settings ---------------------------------------------------------------
 
     ["SETTINGS"] = "AJUSTES",

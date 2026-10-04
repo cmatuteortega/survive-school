@@ -16,6 +16,7 @@ local Coach = require("src.coach")
 local Spawner = require("src.spawner")
 local Hud = require("src.hud")
 local Menu = require("src.menu")
+local Intro = require("src.intro")
 local Timetable = require("src.timetable")
 local Library = require("src.library")
 local Homework = require("src.homework")
@@ -177,6 +178,10 @@ function Game:load(vw, vh)
         -- on it is a pen, wherever it lands.
         if self.state == "menu" then return false end
 
+        -- The opening sorts out its own presses on the press edge too: SKIP, or
+        -- a tap anywhere else to go on.
+        if self.state == "intro" then return false end
+
         -- The timetable is a page of written lines, and every press on it taps a
         -- tab, presses the corner button or draws -- and it sorts those out
         -- itself, on the pen's press edge, so that a press which starts a stroke
@@ -267,7 +272,36 @@ function Game:load(vw, vh)
     -- continue a run that had never happened, and closing the program would
     -- bookmark it over the real one.
     self.resumable = false
-    self:toMenu()
+
+    -- The first time the book is opened it opens on the first morning of school
+    -- (src/intro.lua), and the title is what the eye opens on at the end of it.
+    -- Every time after that it opens on the title.
+    if Intro.seen then
+        self:toMenu()
+    else
+        self:toIntro()
+    end
+end
+
+-- The opening. A state of its own, in front of the title rather than a phase of
+-- it, because nothing on the title exists yet: the title is what is behind the
+-- eye when it finally opens. That is `Game:wake`.
+function Game:toIntro()
+    self.state = "intro"
+    Intro:enter()
+    Input.releaseAll()
+end
+
+-- The eye opening on the title, from SKIP or from the end of the last scene.
+-- The title comes up already written, since it was there the whole time, and the
+-- lids are laid over it (`self.waking`) until they are off the screen. The book
+-- counts as having been opened from here, so closing the program while the eye
+-- is still opening does not play the morning again.
+function Game:wake()
+    self.waking = Intro:wake(self)
+    Intro.seen = true
+    Options.save()
+    self:toMenu(true)
 end
 
 -- The title screen owns the same page the run does, so it is a state of the
@@ -275,8 +309,10 @@ end
 -- it either way, which is what lets YES start one on the frame it is answered.
 -- `written` skips the intro and hands back a title already on the page, which is
 -- what coming back from the settings page wants: you did not re-open the book,
--- you looked at the inside of the cover and came back. Every other route in
--- (starting the program, quitting a run) is opening it, and gets the intro.
+-- you looked at the inside of the cover and came back. The eye opening on it at
+-- the end of the first launch's opening (Game:wake) wants it too, since the
+-- title was behind the eye the whole time. Every other route in (starting the
+-- program, quitting a run) is opening it, and gets the intro.
 function Game:toMenu(written)
     self.state = "menu"
     Menu:enter(self:canContinue())
@@ -4148,7 +4184,13 @@ function Game:update(dt)
     Store.update()
     Ads.update(dt)
 
+    if self.state == "intro" then
+        if Intro:update(dt, self) == "wake" then self:wake() end
+        return
+    end
+
     if self.state == "menu" then
+        if self.waking and self.waking:update(dt, self) then self.waking = nil end
         local answer = Menu:update(dt, self)
         if answer == "yes" then
             self:toTimetable()
@@ -4527,8 +4569,14 @@ local function byDepth(a, b)
 end
 
 function Game:draw()
+    if self.state == "intro" then
+        Intro:draw(self)
+        return
+    end
+
     if self.state == "menu" then
         Menu:draw(self)
+        if self.waking then self.waking:draw(self) end
         return
     end
 
@@ -4810,6 +4858,11 @@ function Game:draw()
 end
 
 function Game:keypressed(key)
+    if self.state == "intro" then
+        Intro:keypressed(key)
+        return
+    end
+
     if self.state == "menu" then
         Menu:keypressed(key)
         return

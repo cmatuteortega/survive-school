@@ -58,8 +58,11 @@ for it.
       **Being shown how**): a diagonal through the YES box after a few idle
       seconds on the title, and a scribble across a monster in a run's opening
       seconds until the first kill made while drawing.
-- [ ] **Story framing** — a short intro (first day of school) and an ending card
-      per course (`src/course.lua`).
+- [x] **Story framing** — a short intro (first day of school): the first launch
+      opens on eight scenes seen through a blinking eye, and the eye opens on
+      the title at the end (`src/intro.lua`, README **The opening**).
+- [ ] **Ending cards** — an ending card per course (`src/course.lua`), split out
+      of story framing when the intro shipped.
 - [x] **Accessibility**
   - [x] Colourblind / high-contrast palette option (a swapped eight-colour set,
         so the overprint rule still holds).

@@ -28,6 +28,14 @@ return {
     ["OR PRESS Y OR N"] = "OU TAPE Y OU N",
     ["OR PRESS Y N OR C"] = "OU TAPE Y N OU C",
 
+    --- the opening (src/intro.lua) -------------------------------------------
+
+    ["BACK TO SCHOOL"] = "C'EST LA RENTREE",
+    ["FIRST LESSON"] = "PREMIER COURS",
+    ["... PST ... WHEN DOES THE CLASS END?"] = "... PSST ... LE COURS FINIT QUAND?",
+    ["AT 10"] = "A 10 H",
+    ["SOMETHING, SOMETHING MATHS"] = "TRUC, TRUC, MATHS",
+
     --- settings ---------------------------------------------------------------
 
     ["SETTINGS"] = "REGLAGES",

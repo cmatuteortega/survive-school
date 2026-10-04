@@ -50,8 +50,8 @@ round, what every run so far *did* added up rather than the best of it (see
 `perks.txt` is what has been bought out of it (see **What the purse buys**),
 `course.txt` is how far up the difficulty ladder the book has enrolled and which
 rung the next run is sat at (see **Courses**), `options.txt` is the language, the two volumes, the stick's
-corner, how much of a hit the page says out loud and whether a new drawing is
-asked for (see **Settings and language**), and `bookmark.txt` is
+corner, how much of a hit the page says out loud, whether a new drawing is
+asked for and whether the opening has been seen (see **Settings and language**), and `bookmark.txt` is
 where the last run got to (see **Game states**). That last one is the only file
 here about a *run*, and it is deliberately not a save: twenty-odd numbers, no
 page. The music the second of those turns is one streamed,
@@ -195,10 +195,18 @@ pixel by pixel through the `Palette.overprint` lookup table. Consequences:
 
 ### Game states
 
-`src/game.lua` is one table with `self.state` ∈ `menu`, `settings`, `timetable`,
+`src/game.lua` is one table with `self.state` ∈ `intro`, `menu`, `settings`, `timetable`,
 `studio`, `library`, `homework`, `canteen`, `playing`, `paused`, `levelup`,
 `won`, `dead`, `retaking`, `chance`. `Game:update` and
-`Game:draw` both branch on it first. `menu`, `settings`, `timetable`, `studio`,
+`Game:draw` both branch on it first. `intro` is the opening (`src/intro.lua`):
+the first launch's eight scenes seen through a blinking eye. `Game:load` goes
+there instead of `menu` while `Intro.seen` is false. Its `update` hands back
+`"wake"` when the last scene is tapped through or SKIP has been held, and
+`Game:wake` marks the opening as seen, saves the options and switches to `menu`
+with the title already written. It also keeps the eye that is still opening as
+`Game.waking`, a small object that updates and draws its lids over the title
+until they are off every edge, then lets go of itself. The title never knows the
+lids were there. `menu`, `settings`, `timetable`, `studio`,
 `library`, `paused`, `levelup`, `won`, `dead`, `retaking` and `chance` each
 delegate to a module
 (`menu.lua`, `settings.lua`, `timetable.lua`, `studio.lua`, `library.lua`,
@@ -2716,7 +2724,10 @@ the screen:
   what knows which languages exist; the volumes live on `Sfx` because that is
   what knows what a volume does to a voice; `Input.stickSide`, `Damage.show`,
   `Haptics.on` and `Design.ask` live on `Input`, `Damage`, `Haptics` and
-  `Design` for the same reason again.
+  `Design` for the same reason again, and `Intro.seen` lives on `Intro`. That
+  last one is the only line in the file the player does not *set*: it records
+  that the opening has been watched, and it is in here because it is one
+  yes-or-no that belongs to the book and not to a run.
   Each of those modules also owns the *list* of values its setting may take
   (`Input.SIDES`, `Damage.MODES`), which is what a line is read back against: an
   unknown word keeps the default. A yes or no is written as `1` or `0`, so every
@@ -5818,6 +5829,11 @@ and are all the same 11x11 glyph.
 
 ## Extending
 
+- **Scene in the opening:** a row in `Intro.scenes` (`src/intro.lua`). It can be
+  a `board`, `clock`, `notebook` or `dark` scene, and its English goes into
+  `src/i18n.lua` and the four `src/lang/` files. Every scene is timed by
+  `Intro:sceneEnd` and drawn by its kind's `draw*`. A new *kind* is one branch in
+  each of those two, and in `Intro:draw`.
 - **Enemy:** sprite in `Sprites.enemies` + row in `Enemy.types` + row in `TABLE`
   in `src/spawner.lua` (unlock time, weight). A reference copy of the art goes in
   `art/vanilla/<name>.txt` with its size in `BASE` and its place in `ORDER` in
