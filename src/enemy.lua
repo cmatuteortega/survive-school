@@ -5,6 +5,7 @@ local Sfx = require("src.sfx")
 local Eyeball = require("src.eyeball")
 local EyeBoss = require("src.eyeboss")
 local Metronome = require("src.metronome")
+local Stamp = require("src.stamp")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -132,7 +133,11 @@ local BLARE_REACH = 34
 -- and nowhere else -- src/eyeboss.lua), `whistle` (the P.E. boss's four
 -- calls -- Game:updateWhistle) and `metronome` (the MUSIC boss's tempo and the
 -- three moves it plays on it -- src/metronome.lua, which is its brain the way
--- src/eyeboss.lua is the eye's). Every one of them but `boss` is optional and
+-- src/eyeboss.lua is the eye's), `stamp` (the FINANCE boss's leaps and the
+-- three moves it stamps the ledger with -- src/stamp.lua, a brain in the same
+-- socket) and `poses` (a `turns` body baked in more than one pose, each a ring
+-- of views, the brain saying which through `pose` -- art/stamp.py). Every one
+-- of them but `boss` is optional and
 -- read in one place, so a second boss is a row that picks which of them it is
 -- made of.
 --
@@ -553,6 +558,66 @@ Enemy.types = {
                                 damage = 10, hit = 3, sprite = "note", bars = 2,
                                 from = 2 },
                   } },
+
+    -- The FINANCE boss: an office rubber stamp, and the fight in the book about
+    -- *cells*. Its pad is one cell of the ledger and everything it does is come
+    -- down on one, outlined on the page first; the moves and how it picks
+    -- between them are src/stamp.lua, and why it is baked in four poses rather
+    -- than one is art/stamp.py.
+    --
+    -- The body keeps the eye's numbers where the fight is the same fight: 900
+    -- health for the measured half minute, the same knock, hold and 20 on
+    -- contact. The radius is the mount round the middle of it, with the long
+    -- ends of the pad outside. It never walks: `speed` is never read, because
+    -- every step it takes is a leap the brain draws, and its hops at you cover
+    -- about 25 a second between moves -- the eye's pace, in jumps.
+    -- `ground` is the front edge of the pad, where the shadow goes: the bottom
+    -- of the cell it is standing on (`foot` in Sprites.STAMP, and six more).
+    stamp = { name = "STAMP", sprite = "stamp", hp = 900, speed = 26, radius = 13,
+              damage = 20, xp = 250, shadow = 40, ground = 13, boss = true, turns = "stampViews",
+              poses = "stampPoses", knock = 0.06, hold = 0.3,
+              title = "THE STAMP", call = "THE STAMP COMES DOWN",
+              stamp = {
+                  -- Seconds hopping at you between moves, by phase (the eye's
+                  -- thirds).
+                  cool = { 2.2, 1.7, 1.3 },
+                  -- The hop: every `every` seconds, up to `reach` pixels at you
+                  -- in a leap `time` long and `high` up, rocked back for `rear`
+                  -- before it and flattened for `squash` after. 30 every 1.2s
+                  -- is the eye's 26 a second, near enough, in jumps.
+                  hop = { every = { 1.2, 1.0, 0.85 }, reach = 30, time = 0.34,
+                          high = 7, rear = 0.18, squash = 0.1 },
+                  -- A blot of ink at you every `every` seconds while it hops:
+                  -- the least of what it does.
+                  blot = { every = 2.6, speed = 62, damage = 9, hit = 3, life = 4 },
+                  -- What it prints: wet for as long as the move says, hurting
+                  -- for `damage` to stand in, then dry -- harmless, fading --
+                  -- for `dry` seconds.
+                  ink = { damage = 6, dry = 6 },
+                  -- The slam: rocked back for `rear` with your cell blinking,
+                  -- then a leap of `fly` seconds onto it. Half a second in the
+                  -- air is twenty nine pixels at your speed against a cell six
+                  -- deep either side of you: always room, never room to dither.
+                  -- Stuck for `rest` after, and from the second third the
+                  -- landing throws `splash` blots in a ring.
+                  slam = { rear = { 1.0, 0.85, 0.7 }, fly = 0.55, high = 34,
+                           damage = 16, wet = 2.4, knock = 2, rest = { 1.1, 1.0, 0.85 },
+                           splash = { 0, 6, 8 } },
+                  -- The run: rocked back for `rear`, then `count` hops along a
+                  -- row a cell (40px) every `step` -- 180 a second, three times
+                  -- your speed -- stepping a row towards you on each.
+                  run = { rear = 0.7, count = { 5, 6, 8 }, step = 0.22, high = 9,
+                          damage = 12, wet = 1.8, rest = 0.9 },
+                  -- The audit: from the second third, every other cell of a
+                  -- block `cols` by `rows` round you, counted in for `rear`,
+                  -- stamped a `step` apart and all wet until `wet` after the
+                  -- last. At the last third it does it `passes` times, the
+                  -- second the other colour, counted in for `again`.
+                  audit = { from = 2, cols = { 5, 5, 5 }, rows = { 9, 9, 11 },
+                            passes = { 1, 1, 2 }, rear = 1.3, again = 1.2,
+                            step = { 0.14, 0.14, 0.12 }, high = 10, damage = 12,
+                            wet = 0.6, rest = 1.2 },
+              } },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -797,13 +862,18 @@ function Enemy.new(kind, x, y, scale)
         -- The metronome's is the same socket with a different mind in it
         -- (src/metronome.lua): it keeps time rather than choosing moves off a
         -- rest, but steers through the same `drive`.
+        -- The stamp's is the same socket again (src/stamp.lua): it leaps from
+        -- cell to cell of the ledger and moves the body itself while it does.
         brain = def.attacks and EyeBoss.new(def)
-            or def.metronome and Metronome.new(def) or nil,
+            or def.metronome and Metronome.new(def)
+            or def.stamp and Stamp.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
         -- many pixels a brain has it off the ground (its hop on the beat).
-        face = nil, hop = 0,
+        -- And which of its poses a body baked in several is in (`poses`, the
+        -- stamp's stand / rear / lean / squash), nil for the first.
+        face = nil, hop = 0, pose = nil,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else
         -- (src/spiral.lua). Handed over rather than read off the page for the
@@ -1333,7 +1403,12 @@ function Enemy:footing()
     if self.fury then sprite = Sprites.enraged(sprite) end
     -- A body drawn from a ring of views is whichever one it has turned to, so
     -- the blank under it is that view's too.
-    if self.def.turns and self.view then sprite = Sprites[self.def.turns][self.view] end
+    -- And one baked in poses is that view of whichever pose the brain has it in.
+    if self.def.turns and self.view then
+        local ring = Sprites[self.def.turns]
+        if self.def.poses and self.pose then ring = Sprites[self.def.poses][self.pose] or ring end
+        sprite = ring[self.view]
+    end
 
     -- The recoil is folded in here and never into x/y, for both of the reasons
     -- this function exists. Where a thing is *standing* is what every hit
@@ -1492,9 +1567,14 @@ function Enemy:draw()
     -- grid, so `h` moves and `h - oy` does not, and the feet stay where they
     -- were. It also puts the shadow under the odd-height enemies rather than one
     -- pixel inside them, which is what half the height was quietly doing.
+    --
+    -- `ground` on the row says where the feet are instead, for a body whose box
+    -- is not its footprint: the stamp's poses share one box (art/stamp.py), and
+    -- the bottom of it is the bottom of the lowest pose rather than the edge of
+    -- the pad it stands on.
     love.graphics.rectangle("fill",
         math.floor(self.x) - math.floor(shadow / 2),
-        math.floor(self.y) + (sprite.h - sprite.oy) * grow - 1,
+        math.floor(self.y) + (self.def.ground or (sprite.h - sprite.oy)) * grow - 1,
         shadow, (stuck and 2 or 1) * grow)
 
     local ring = self:outlineColour()

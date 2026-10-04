@@ -6,7 +6,9 @@ eye boss's painted sphere, and how to do either for another character. The worki
 `src/enemy.lua`. The tracer itself -- everything that is not the model -- is
 `art/raytrace.py`, shared with the MUSIC metronome (`art/metronome.py`), which is
 also the example of a baked body with a part drawn live on top of it (see **A
-moving part on a baked body**).
+moving part on a baked body**), and the FINANCE stamp (`art/stamp.py`), the example
+of a body baked in several poses so it can animate (see **Poses: a body that
+moves**).
 
 The short version: **model the thing in 3D in a script, ray-trace it at sprite
 size straight into palette letters, do that once per heading, and bake the
@@ -16,8 +18,9 @@ pictures.
 
 ## Two ways to be solid
 
-The game has three bosses drawn as solid objects, made in two different ways --
-the metronome is the whistle's way with one part done the eye's. Pick the one that
+The game has four bosses drawn as solid objects, made in two different ways --
+the metronome is the whistle's way with one part done the eye's, and the stamp is
+the whistle's way with more than one picture per heading. Pick the one that
 fits the character before starting.
 
 | | **Baked views** (the whistle) | **Painted live** (the eye) |
@@ -303,6 +306,65 @@ Three things make it sit on the body rather than float over it:
 
 The same split would serve any boss with one moving part: a wheel, a lid, a
 needle. Bake what turns, plot what moves, and bake the numbers the plot needs.
+
+## Poses: a body that moves
+
+The stamp does not have a part that moves; the *whole thing* moves. It rocks back
+on its heel before it jumps, pitches forward as it comes down and flattens when it
+lands. None of that can be plotted on top of a picture, and none of it is a turn,
+so the answer is more pictures: each **pose** is the model bent into that shape and
+traced at every heading, a ring of its own.
+
+```
+stand    upright                          (at rest, and in the air)
+rear     rotated 20° about the back edge  (the wind-up: front off the page)
+lean     rotated 20° about the front edge (coming down: face first)
+squash   scaled 1.12 across, 0.68 up      (the impact)
+```
+
+How `art/stamp.py` does it:
+
+- **A pose is a function from the posed body back to the upright one.** `rear(p)`
+  rotates a point the other way about the heel and hands it to the ordinary
+  `model()`; `squash(p)` divides by the scale. The tracer marches the posed distance,
+  so the pose wraps the model rather than being built into it, and `shade()` is asked
+  about the *unposed* point, so the label stays on the label however the body leans.
+  A non-uniform scale is not an exact distance any more, so the distance is
+  multiplied by the smaller scale, which keeps every step of the march safe.
+- **Pose about the floor.** Each pose pivots on a point on the page -- the heel,
+  the toe, the middle of the pad -- so no pose lifts the body off its shadow. Lifting
+  is the game's job (`hop`, `Enemy:footing`), and a pose that lifted too would be
+  two answers to one question.
+- **One box for every pose.** `raytrace.share` crops every frame of every pose to
+  the union of all of them, symmetric about the pivot, with one origin. Swapping
+  `stand` for `rear` mid-air is then as still as swapping one heading for the next:
+  the pivot never moves. It does mean the bottom of the box is the bottom of the
+  lowest pose, not the foot, which is why the row carries `ground` for its shadow.
+- **Spend the symmetry.** The stamp is the same front and back, so heading *k* and
+  heading *k + 8* of an upright pose are the same picture, and leaning forward at
+  one heading is rearing back at the opposite one. So stand and squash are traced at
+  eight headings, rear at sixteen and lean not at all: sixty-four pictures in play
+  from thirty-two on disk, the rings put together in `Sprites.load`. A model without
+  that symmetry would bake all four rings in full.
+- **Bake what the game needs to line up.** The stamp's pad has to land in a ledger
+  cell, so the model is sized from the page (40px across is `40 * S` units; 12px down
+  the screen is a floor depth of `12 * S / sin(PITCH)` -- the floor is foreshortened by
+  the *sine* of the tilt and height by its *cosine*), and the bake writes `foot`, the
+  pixels from the origin down to the middle of the pad, for the brain to seat it by.
+- **Preview every pose.** `python3 art/stamp.py --preview out.png` draws the four
+  rings as the game builds them, on the ledger, with the cell the pad should cover
+  outlined under each. That outline is how the floor maths above was caught being
+  wrong the first time.
+
+The game side is one field more than `turns`: `poses = "stampPoses"` on the row,
+and the brain setting `e.pose` to a ring's name. `Enemy:footing` picks
+`Sprites[poses][pose][view]`, and the blank under it follows, so nothing else knows
+the body has more than one shape.
+
+Budget: a pose is a ring of views, so it costs what a second boss would. Thirty-two
+51x46 pictures are about 1,600 lines of `sprites.lua`. Pick poses that are held long
+enough to be seen -- a tell, a fall, an impact -- rather than in-betweens: at this
+size the eye fills the gap between two held poses by itself.
 
 ## Smaller than a boss: the teardrop
 

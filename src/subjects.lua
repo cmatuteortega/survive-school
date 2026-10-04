@@ -299,9 +299,9 @@ local BLANK = {
 --
 -- And each lesson names its **boss**: the `Enemy.types` row that walks into the
 -- box at the end of every cycle (`Spawner:sendBoss`). P.E. has a fight of its
--- own, the whistle, and MUSIC has the metronome; the other five are still the
--- eye, written out on every row rather than left to the fallback so that giving
--- a page a fight of its own is one word on its own row. A new boss is a row in
+-- own, the whistle, MUSIC has the metronome and FINANCE the stamp; the other
+-- four are still the eye, written out on every row rather than left to the
+-- fallback so that giving a page a fight of its own is one word on its own row. A new boss is a row in
 -- src/enemy.lua with `boss = true` on it; the dev boss test on the title screen
 -- (src/dev.lua) is how to fight it without the ten minutes in front of it.
 Subjects.list = {
@@ -363,7 +363,11 @@ Subjects.list = {
         name = "FINANCE",
         paper = LEDGER,
         tool = "ruler",
-        boss = "bosseye",
+        -- The stamp (src/stamp.lua): the page that is a grid of cells ends on
+        -- the thing that prints in them, and the fight is the one in the book
+        -- about *which box you are in* -- every move outlined in cells first,
+        -- and a pad one cell wide coming down on it.
+        boss = "stamp",
         -- A ledger is rows and columns and so is a grid: what walks onto this
         -- page is a table of figures, in step, four deep. The line is the same
         -- idea one row at a time, and the ruler is the tool that answers both --

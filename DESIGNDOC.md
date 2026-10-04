@@ -604,9 +604,9 @@ rather than a thing in it, and paper is the furthest thing from a rule there is.
 in it, which is where that is judged.
 
 Each row also names its **boss**: the `Enemy.types` key `Spawner:sendBoss` drops
-into the box at the end of every cycle. P.E. says `whistle` and MUSIC says
-`metronome` (see **The bosses**); the other five say `bosseye`, written out on
-every row rather than left to the
+into the box at the end of every cycle. P.E. says `whistle`, MUSIC says
+`metronome` and FINANCE says `stamp` (see **The bosses**); the other four say
+`bosseye`, written out on every row rather than left to the
 fallback (a row without one gets the eye) so that giving a page a fight of its own
 is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one.
@@ -1127,9 +1127,10 @@ ten minutes, plus one that is never spawned and two that only arrive at the end:
 | `eye` | 420 | 2 | 14 / 9 / 10 | shoots (`shot`) |
 | `grin` | 480 | 2 | 34 / 11 / 16 | shrugs off shoves (`knock`/`hold`) |
 | `redeye` | 540 | 2 | 14 / 34 / 10 | shoots and holds range (`keep`) |
-| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, five lessons |
+| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, four lessons |
 | `whistle` | 600 | — | 900 / 22 / 20 | the cycle boss, P.E. |
 | `metronome` | 600 | — | 900 / 50 / 20 | the cycle boss, MUSIC (hops on the beat, 25 on average) |
+| `stamp` | 600 | — | 900 / — / 20 | the cycle boss, FINANCE (never walks: every step is a leap its brain draws, about 25 a second between moves) |
 
 Every row walks at the player and every block is a way of not *only* doing that.
 The header comment over `Enemy.types` is the field reference; what matters
@@ -1138,8 +1139,8 @@ one place and nothing else in the game knows it exists:
 
 - **`shot`** and **`trail`** and **`tears`** and **`whistle`** — `Game:updateEnemies`
   (the last two through `Game:updateTears` and `Game:updateWhistle`).
-- **`attacks`** and **`metronome`** — the boss's `brain`, built in `Enemy.new`
-  (`src/eyeboss.lua` and `src/metronome.lua` respectively) and stepped from
+- **`attacks`**, **`metronome`** and **`stamp`** — the boss's `brain`, built in
+  `Enemy.new` (`src/eyeboss.lua`, `src/metronome.lua` and `src/stamp.lua`) and stepped from
   `Game:updateEnemies` before the walk, which it steers through `drive`.
 - **`keep`** — inside `Enemy:update`'s chase, as a *turn* applied to the heading
   everything else already computed. That placement is the whole reason it is
@@ -1205,11 +1206,11 @@ A boss is a row with `boss = true`, and everything else that makes it one is an
 optional field read in one place, so a second boss is a row choosing which of them
 it is made of rather than a branch anywhere. `title` is its name under the HUD's bar
 (`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
-walks on (`Game:spawnEnemy`). All three bosses sit on the eye's 900 health, knock, hold
+walks on (`Game:spawnEnemy`). All four bosses sit on the eye's 900 health, knock, hold
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
-**The eye** (`bosseye`, six lessons) is a fight about *ground*: `pupil` (the body is
+**The eye** (`bosseye`, four lessons) is a fight about *ground*: `pupil` (the body is
 a ball painted a pixel at a time off a turning sphere, `src/eyeball.lua`), `trail`
 (wet dragged behind it), `tears` (wet thrown, three ways, with rings at two thirds
 and one third), `attacks` (the five moves its brain picks between,
@@ -1293,6 +1294,42 @@ The scale's notes are ordinary shots with no speed that the brain places itself.
 stops the clock: nothing advances while it is frozen, a count-in is dropped for a rest
 to the next downbeat, and the wall's notes are given back the time so they do not run
 out of life half way across.
+
+**The stamp** (`stamp`, FINANCE) is a fight about *cells*. Its body is baked like the
+whistle's, but in **poses**: `turns = "stampViews"` is the ring the turning counts
+(sixteen), and `poses = "stampPoses"` names `Sprites.stampPoses`, four rings of
+sixteen -- `stand`, `rear` (rocked back on its heel), `lean` (pitched onto its toe)
+and `squash` (pressed into the page). `Enemy:footing` draws `stampPoses[e.pose][view]`
+when the brain has set `e.pose`, and the shadow goes at the row's `ground` (13px
+below the origin, the front edge of the pad) rather than at the bottom of the box,
+since the box is shared by every pose. `art/stamp.py` traces stand and squash at
+eight headings and rear at sixteen, all cut to one box (`raytrace.share`); the
+loader in `Sprites.load` repeats the first two after half a turn and builds `lean` as
+`rear` turned half round, which is true because the stamp is the same front and
+back. `Sprites.STAMP.foot` is how far below the origin the middle of the pad is.
+
+Its `brain` (`src/stamp.lua`) works in **ledger cells**: `colAt` / `rowAt` /
+`colLeft` / `rowTop` are the FINANCE page's own numbers (a 10px header column and
+five 40px cells to a 210px tile, an 8px header band and ten 12px rows to a 128px
+tile), and a header strip counts as the cell after it. A move picks cells, outlines
+and hatches them in `drawGround`, and leaps there: `Stamp:leap` moves the body itself
+along a line with a parabola of `hop` over it (no faster than 500px/s), `drive` held
+the whole time; `Stamp:strike` hurts whoever's middle is on the cell (±2px) and inks
+it. Contact damage is held off (`hitCooldown`) for every state but `idle` and
+`rest`: what hurts in a move is the pad.
+
+| move | tell | played |
+| --- | --- | --- |
+| idle | rocks back for 0.18s | a hop up to 30px at you every 1.2 / 1.0 / 0.85s; a blot at you every 2.6s |
+| `slam` | rocked back 1.0 / 0.85 / 0.7s, your cell blinking and following you | a 0.55s leap onto the locked cell, 16 damage, wet 2.4s; stuck 1.1 / 1.0 / 0.85s after; 0 / 6 / 8 blots in a ring |
+| `run` | rocked back 0.7s, the first cell outlined | 5 / 6 / 8 hops a cell (0.22s) along a row, a row towards you each, turning back at the box |
+| `audit` | from the second third (`AUDIT!`): a chequerboard of a 5 x 9 (11) block round you hatched, 1.3s | stamped 0.14 / 0.12s apart, a row at a time and back along the next, all wet until 0.6s after the last; twice at the last third, the other colour, counted in for 1.2s with the first pass's ink drying half way |
+
+Marks are kept on the brain (`marks`): wet ink hurts 6 to stand in on the player's
+invulnerability window, then dries for 6s (slate, graphite, blinking out) and does
+nothing. A cell stamped again is the same mark wetted again. Glue drops whatever it
+is doing -- a leap ends where it is, unstamped -- for a short rest. Every landing that prints
+plays `stamp` (a synthesised thump, `src/sfx/stamp.mp3`).
 
 ### Drills and surges
 
@@ -6053,12 +6090,14 @@ and are all the same 11x11 glyph.
   `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
   picked, and no page reskins it. What it does is the blocks it carries -- the
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
-  metronome's `turns`/`metronome`, and any of the horde's (`shot`, `charge`) -- see
+  metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, and
+  any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
-  boss with a mind of its own is a `brain` module like `src/eyeboss.lua` or
-  `src/metronome.lua`, built in `Enemy.new`. A solid body is a script beside
-  `art/whistle.py` over `art/raytrace.py` (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
+  boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
+  `src/metronome.lua` or `src/stamp.lua`, built in `Enemy.new`. A solid body is a
+  script beside `art/whistle.py` over `art/raytrace.py` (`3dmethod.md`); one that
+  animates is baked in poses like `art/stamp.py`. Keep it on the eye's 900 unless the fight has
   been re-measured, and fight it from the title's dev BOSS button.
 - **Tool:** append a row to `Tools.list` with an icon in `Sprites.icons`, *and* a
   `toolLine` in `Upgrades.list` naming it — the line's first level is what

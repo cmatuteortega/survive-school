@@ -125,6 +125,12 @@ local DEFS = {
     -- No pitch range, because every play names its own pitch: a beat that
     -- wandered would be a beat out of time.
     tick        = { gain = 1.0 * 0.6 },
+    -- The FINANCE boss's stamp (src/stamp.lua) coming down on a cell.
+    -- Synthesised -- a thump falling from 150 to 55Hz under a dulled slap of
+    -- noise, which is rubber on paper on a desk -- and written to the common
+    -- level at source. A small pitch range because the audit lands twenty in
+    -- a row and twenty of exactly the same sound is a machine, not a hand.
+    stamp       = { gain = 1.0, pitch = { 0.94, 1.06 } },
 
     rubbing     = { gain = 59, loop = true },
     eraser      = { gain = 0.89 },

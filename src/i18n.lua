@@ -510,6 +510,14 @@ local ES = {
     -- is FASTER!, which the page already says elsewhere.
     ["THE METRONOME"] = "EL METRONOMO",
     ["THE METRONOME TICKS"] = "EL METRONOMO MARCA EL COMPAS",
+    -- The FINANCE boss (`stamp` in src/enemy.lua): its name under the bar, the
+    -- line it walks on with, the word it prints in every cell it lands on
+    -- (src/stamp.lua) -- inside a cell forty across, so no wider than eight
+    -- letters -- and what the page says when its audit unlocks.
+    ["THE STAMP"] = "EL SELLO",
+    ["THE STAMP COMES DOWN"] = "CAE EL SELLO",
+    ["PAID"] = "PAGADO",
+    ["AUDIT!"] = "¡AUDITORIA!",
     -- The drills and the surges (`DRILLS` and `SURGES` in src/spawner.lua),
     -- which the run says the once, the first time each one happens. They are
     -- copy rather than labels -- the run is describing what has just started

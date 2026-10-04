@@ -1691,12 +1691,12 @@ eighty-one lines open. The same six runs now clear five of seventeen and read
 fifteen. A reward you cannot miss is not a reward.
 
 **Only three of them ask about a boss, and that is a ceiling.** The eye is
-provisional — one fight standing in for the five of seven nobody has drawn yet —
+provisional — one fight standing in for the four of seven nobody has drawn yet —
 so a ladder leaning on it is a ladder nobody can balance. *Sitting* a lesson is the
 half of the same question that does not care what walks on at minute ten, and it
 carries five quests to beating's three. Sit all seven and beat none and you are
 still holding twenty-nine of the thirty-six shelved lines and thirty-six of the
-forty-five fusions, which is what keeps the game tunable while five bosses are
+forty-five fusions, which is what keeps the game tunable while four bosses are
 missing.
 
 **The first two land inside the first run.** A collection has to be seen filling
@@ -1719,7 +1719,7 @@ which is when the boss walks on — and it is yours everywhere.
 *Sitting* and *beating* are two different words everywhere in this book, and this is
 the one that matters most. To sit a lesson is to still be on the page at minute ten;
 to beat it is to put down what walks on. The tool is behind the first and not the
-second, deliberately: five of the seven bosses have not been drawn yet, and hanging
+second, deliberately: four of the seven bosses have not been drawn yet, and hanging
 seven tools and the whole fusion shelf off fights that do not exist is not a ladder
 anybody could balance. When they are real, moving the tool behind beating its own
 lesson is the obvious next thing — it is the cleanest possible reading of "each
@@ -7105,6 +7105,62 @@ was in the middle of stops where it is, and a count-in it had started is dropped
 is the one tool-shaped answer this fight has, as it is the eye's, and for a
 metronome it is the obvious one.
 
+### FINANCE ends on the stamp
+
+The eye is about the ground, the whistle about the air and the metronome about
+time. The FINANCE page is a ledger -- cells forty across and twelve down, between
+two solid header bands -- and its fight is about the page itself: **which box you
+are in**. It ends on the thing that prints in boxes: an office rubber stamp in red,
+with a paper label on its top and a round knob to hold it by.
+
+**Its pad is one cell.** That is the whole design. The rubber is modelled so that,
+seen from the camera, it covers exactly one cell of the ledger, and every move
+lands it *between the page's own printed lines* -- the cells are worked out from the
+page's numbers, not from a grid of the stamp's own. So everything it does is said
+in cells: a cell about to be stamped is outlined and hatched on the page first, and
+the answer to every move is the same -- be in a different one. A cell is twelve deep,
+so a step up or down is enough; and the header bands count as the cell after them,
+so standing on one is not a hiding place.
+
+**It moves the way a stamp is used.** It rocks back on its heel before it goes,
+pitches forward as it comes down and flattens when it hits. Those are not tweens
+on one picture; they are four poses, each traced at every heading (see
+`3dmethod.md`), and the rock back is the tell for everything it does -- short for a
+hop, long for a move. A stamp leaning away from you is a stamp about to land.
+
+- **It hops at you.** Between moves it comes on in short leaps, about the eye's
+  pace, and every couple of seconds flicks a blot of ink at you, so standing still
+  is never free.
+- **The slam.** It rocks back and holds it while the cell you are in blinks under
+  you -- the outline follows you for as long as it leans -- then locks the cell and
+  leaps. Half a second in the air is plenty to leave a cell six pixels deep either
+  side of you and no time to dither. It lands hard and then *sticks* for a second,
+  which is the window the move paid for, and the ruler FINANCE hands you is the tool
+  that wants a second to aim. From the second third the landing throws ink in a ring.
+- **The run.** It reads along a row of the ledger a cell a hop -- three times your
+  speed -- stepping one row towards you on every hop. It cannot be outrun along the
+  row and it follows you up and down, so the answer is to *cross* its path rather
+  than leave it. It is the FINANCE page's line drill, turned into a boss.
+- **The audit.** From the second third: every other cell in a block round you is
+  hatched, a chequerboard, and then it stamps through all of them a row at a time,
+  back along the next, the way a ledger is read. Stand in a blank cell. At the last
+  third it audits twice, the second time the *other* colour, once the first pass's
+  ink has dried -- so the cell you hid in is the one cell you cannot stay in, and the
+  one you have to move into is ink you were just told not to stand on. It is the
+  page's grid drill, turned into a boss.
+
+**Every stamp leaves a mark**: PAID, in a box, inside the cell. Wet red ink for a
+moment, which hurts to stand in at the rate a puddle does, and then dry -- slate,
+then graphite, then gone -- a record of where it has been that does nothing. Wet ink
+is what makes the run a wall for a second and the audit's first pass a board you
+have to wait on.
+
+What hurts in a move is the pad on a cell and nothing else: the body brushing you on
+its way between two cells does not, or the cell beside a stamped one -- close enough
+to touch the body -- would not be somewhere you could stand. **Glue holds it to the
+page**: a glued stamp comes down where it is, without stamping, and stands for the
+rest of the hold.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was
@@ -9238,7 +9294,7 @@ src/
   quest nobody will ever re-price. **Price a `time` row above the term's ceiling**:
   seven minutes or less arrives while the player is opening pages, and a reward you
   cannot miss is not a reward. **Keep the boss count low** — three of seventeen ask
-  `beat`, because five of the seven bosses do not exist yet and `sat` asks the same
+  `beat`, because four of the seven bosses do not exist yet and `sat` asks the same
   question without them. Never put a **character's weapon** behind a quest — a
   bought hero's line has a lock of its own already, read off the roster, and the
   base hero's may have none at all, since his weapon is what a fresh book's first

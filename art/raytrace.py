@@ -189,3 +189,26 @@ class Rig:
         open(path, 'w').write(src[:a]+text+src[b:])
         print("baked %d views, %dx%d, origin %d,%d" % (self.views, len(self.rows[0][0]),
               len(self.rows[0]), self.ox, self.oy))
+
+# Several sets of views in one box -- a body with more than one pose (the
+# FINANCE stamp's stand, rear and squash) -- so that whichever picture is up,
+# the pivot is the same pixel. `sets` is a list of lists of frames, each frame
+# rendered at the same `half` and `unit`; what comes back is the same lists cut
+# to the shared box, and the origin in it. One box for every pose is the same
+# rule as one box for every heading, for the same reason: swapping pictures
+# must never move the thing.
+def share(sets):
+    n = len(sets[0][0])
+    piv = n//2
+    xs, ys = [], []
+    for frames in sets:
+        for f in frames:
+            for y in range(n):
+                for x in range(n):
+                    if f[y][x] != '.': xs.append(x); ys.append(y)
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    half = max(piv-x0, x1-piv)
+    x0, x1 = piv-half, piv+half
+    out = [[[''.join(f[y][x0:x1+1]) for y in range(y0, y1+1)] for f in frames]
+           for frames in sets]
+    return out, piv-x0, piv-y0
