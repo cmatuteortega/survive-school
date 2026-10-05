@@ -1,0 +1,353 @@
+# Bosses: attacks, patterns and phases
+
+A reference to read and iterate on. It covers every attack each boss has, what
+tells you it is coming, the numbers behind it, how the boss picks between
+attacks, and what changes from one phase to the next. Every number comes from
+the code as it stands. "Knobs" points at the table to edit.
+
+The *why* behind these numbers is in `DESIGNDOC.md` (**The bosses**) and in the
+comments over each row in `src/enemy.lua`. This file only describes the fights.
+
+---
+
+## The shared frame
+
+| | |
+| --- | --- |
+| **When** | At 10:00 of each cycle (`Spawner.BOSS_AT = 600`). Drills and surges are cleared and the horde stops spawning. |
+| **Arena** | `Game:openArena` puts a box round the page. The box comes down when the next cycle starts (`Spawner:nextCycle`). |
+| **Escort** | One arrival every 1.5s while fewer than 20 enemies are on the page. Weighted: bat 5, skull 3, eye 2, wad 2, bulb 2 (`ESCORT` in `src/spawner.lua`). |
+| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. |
+| **Damage** | Contact damage is 20 on every boss and steps ×1.18 per cycle (`DAMAGE_PER_CYCLE`). Move damages on the rows are cycle-1 values and scale the same way. |
+| **Body** | All bosses share `knock = 0.06` and `hold = 0.3`. Every boss is worth 250 xp. |
+| **Phases** | Health thirds: phase 1 above 66%, phase 2 above 33%, phase 3 for the rest. A list of three values on a row is one value per phase. The whistle is the exception: it has no phases, only health thresholds at 75/50/25%. |
+| **Selection** | Most brains take a weighted random pick based on your distance. The last move is multiplied by about 0.12–0.15 and the one before it by 0.6, so the same move rarely comes twice in a row. |
+| **Glue** | Every boss has a glue answer, listed per boss below. In most cases glue cancels a tell that is still winding up and puts the boss into a rest. |
+
+### At a glance
+
+| Boss | Subject | "About" | Moves | Unlocks later | Signature tell |
+| --- | --- | --- | --- | --- | --- |
+| The Eye | SCIENCE | ground | stare, bowl, slam, sink, weep | sink, weep (phase 2) | the 3D eye looks where it will hit |
+| The Whistle | P.E. | the air and the class | lunge, blast, jacks, squad, pump (clocks) | none (pump at 75/50/25%) | stands still blinking red |
+| The Metronome | MUSIC | time | sweep, chord, scale | scale (phase 2) | one full bar of count-in, weight blinks red |
+| The Stamp | FINANCE | cells | slam, run, audit | audit (phase 2) | rocks back on its heel, cells outlined |
+| The Dictionary | GRAMMAR | lines | clap, riffle, definition | definition (phase 2) | front board lifts (mouth open) |
+| The Die | MATHS | number | throw → roll → strike | shape changes d6 → d10 → d20 | the face it lands on |
+| The Still Life | ART | light | shade, drop, roll, top | roll (phase 2), top (phase 3) | the lamp moves, shadows grow |
+
+---
+
+## 1. The Eye: SCIENCE (`bosseye`)
+
+**Files:** row at `src/enemy.lua:317`, brain at `src/eyeboss.lua`, body at `src/eyeball.lua`
+**Callout:** "THE EYE IS OPEN" · **Body:** radius 20, speed 26 (yours is 58)
+
+### Entrance
+It drops from 170px above the page onto a marker 100px from you, clamped into
+the box, over 0.95s. The landing throws a dust ring that does no damage. It then
+lies with its eye shut for 0.75s, opens it on you, and walks for 1.0s before its
+first move.
+
+### Always on (clocks, paused while a move is playing)
+| Attack | Pattern | Numbers |
+| --- | --- | --- |
+| **Fan** (`shot`) | 5 red teardrops in a 1.05 rad arc, aimed at you | every 2.6s, range 190, speed 46, 12 dmg |
+| **Trail** | It leaves wet puddles behind it as it walks | every 0.5s, 9px apart, r12, lasts 7s, 6 dmg |
+| **Scatter tears** | 3 tears lobbed anywhere in the box, landing 34–130px out. These are not aimed at you. | every 3.2s |
+| **Lane tears** | 5 tears down the line to you, landing at 26, 50, 74, 98 and 122px. They make a wall across your path. A tear welling at the lid is the tell (last 0.7s). | every 7.5s |
+| **Ring tears** | A full ring of 14 tears at 50px | once each at 66% and 33% health |
+| **Brood** | 2 small `eye`s at 66%, 2 `redeye`s at 33% | with the rings |
+
+A tear is **lobbed**. Its shadow tracks the landing spot, and it only hurts as it
+comes down. It deals 8 and leaves a puddle (r10, 5.5s, 6 dmg).
+
+### Moves (`attacks`)
+Between moves it walks toward where you are going to be: your position plus 0.6s
+of your smoothed velocity. The gap between moves is `cool` = **2.6 / 2.0 / 1.5s**
+plus up to 0.6s.
+
+| Move | Tell | Attack | Phase scaling | Rest |
+| --- | --- | --- | --- | --- |
+| **Stare** | Stops and glares. A dotted line swings toward you (2.4 rad/s) for `aim`, then goes **solid and stops tracking** for `lock`. Stepping off the line during `lock` dodges it. | A beam 260 long and 5 wide, 14 dmg, lasting `fire`. From phase 2 the beam keeps sweeping the way it was turning, so step *against* the swing. | aim 0.85/0.75/0.65 · lock 0.5/0.42/0.36 · fire 0.45/0.55/0.65 · sweep 0/0.35/0.55 rad/s | 0.6 |
+| **Bowl** | Red blinking rim and an arrow for `wind`. The line locks at the start, leading you by 0.3s. | Rolls down the line at 104 for 1.7s, smearing a wet streak and bouncing off the box walls. | wind 0.75/0.65/0.55 · bounces 0/1/2 | 0.9, dizzy |
+| **Slam** | Crouches for 0.4s, then 0.85s in the air (46px high) toward where you will be (reach 150), with a marker on the ground the whole time | Lands in a shock ring. 12 dmg. From phase 2 it also throws a ring of tears (44px reach). | shock radius 48/54/60 · leaps 1/1/2 · tear ring 0/8/10 | 0.7 |
+| **Sink** *(phase 2+)* | Goes down into a puddle (0.45s). The surfacing spot bubbles while it is under (0.4s). | Comes up out of another puddle 45–140px from you (0.35s). In phase 3 it surfaces with a ring of 8 tears (40px). | ring 0/0/8 | 0.5 |
+| **Weep** *(phase 2+)* | Looks up and a tear wells for 0.7s | `volleys` rings of `count` tears, the first at 38px, each ring 30px further out and turned half a gap, 0.35s apart. The gaps never line up, so the way out is a zigzag. | volleys 0/3/4 · count 0/8/10 | 0.7 |
+
+**How it picks** (`EyeBoss:choose`, `src/eyeboss.lua:269`), where d is your distance:
+- stare: 1.2 if d > 70, else 0.35; ×1.3 if you are moving faster than 30
+- bowl: 1.1 if 45 < d < 190, else 0.3
+- slam: 1.6 if d < 95, else 0.6
+- sink (needs a puddle to come up from): 1.4 if d > 130, else 0.6; **×3 if it is stuck** (moved less than 14px in 1.6s)
+- weep: 1.0 if 45 < d < 170, else 0.45; ×1.5 if your speed is under 20
+- Last move ×0.12, the one before ×0.6
+
+### Phase changes
+- **→ 2 (66%):** it flinches, blinks and knocks the camera (2). The tear ring and 2 eyes arrive. Sink and weep unlock. The beam starts to sweep. Bowl gains a bounce. Slam adds a tear ring.
+- **→ 3 (33%):** the same flinch, a harder knock (3), and the iris turns **red**. The tear ring and 2 redeyes arrive. Slam leaps twice. Sink surfaces with a ring. Weep throws 4 volleys.
+
+### Glue
+Glue during any wind-up (stare aim or lock, bowl wind, slam crouch, sink down,
+weep well) **drops the move**. The eye goes dizzy and open for 0.4s.
+
+### Death
+It shivers for 0.9s, then bursts into puddles that do no damage. The win card
+shows 1.6s later. You cannot be hurt while it dies (`player.truce`).
+
+---
+
+## 2. The Whistle: P.E. (`whistle`)
+
+**File:** row at `src/enemy.lua:448`, all behaviour in `Game:updateWhistle`
+**Callout:** "THE WHISTLE BLOWS" · **Body:** radius 13, speed 22
+
+The Whistle has **no brain and no phases**. Every attack runs on its own clock,
+and the only escalation is the pump at three health thresholds.
+
+| Attack | Tell | Pattern | Numbers |
+| --- | --- | --- | --- |
+| **Spit** (`shot`) | none | 3 peas in a 0.42 rad arc, aimed at you | every 1.9s, range 200, speed 58, 9 dmg |
+| **Lunge** (`charge`) | Stands still with a red outline for 0.85s. The line locks at the start of the wind-up. | Dashes at 140 for 0.6s (84px), then rests 1.4s | every 7s, only when you are within 150 |
+| **Blast** | Stands still blinking red and shuddering for 0.9s, with red rings going out | 2 rings of 22 notes, 0.3s apart, with a 4-note gap at the **same angle** in both. The second ring is offset half a note. Get into the gap. | every 6s, speed 55, 10 dmg, notes live 4.5s |
+| **Jacks** | Graphite cross on each landing spot | 6 jacks lobbed to land within 50px of you (0.9s flight). Each becomes a spike that hurts on contact for 7s and blinks out over its last second. | every 4.6s, 8 dmg |
+| **Squad** ("FALL IN!") | none | A wall of 6 of one kind, 18px apart, marched across the box from one of its 4 square edges. The kind cycles skull → wad → blob → bat. | every 12s, only while there are fewer than 28 enemies |
+| **Pump** ("GROW!") | Long note, red rings | The 3 nearest ordinary enemies within 170px become **champions** in place. Any it could not find are spawned beside it as champions. | at 75%, 50%, 25% health |
+
+**Rules:** a blast never starts during a lunge, and the lunge's clock pauses
+during a blast, so the two red tells never overlap. Glue holds all four calls
+(blast, jacks, squad, pump).
+
+---
+
+## 3. The Metronome: MUSIC (`metronome`)
+
+**Files:** row at `src/enemy.lua:519`, brain at `src/metronome.lua`
+**Callout:** "THE METRONOME TICKS" · **Body:** radius 12, speed 50, but it hops for half of each beat, so it averages about 25
+
+Everything happens **on the beat**. Tempo is **60 / 80 / 100 bpm** by phase, at 4
+beats to the bar, and it says "FASTER!" at each phase change. The state machine
+`idle → count → play → rest` only moves on whole bars. Every move gets **one full
+bar of count-in** at the tempo it will be played at: 4.0s at 60 bpm, 3.0s at 80
+and 2.4s at 100. The weight on the arm blinks red through the count-in, and the
+tick is pitched up on beat one.
+
+### Idle
+It roams around you at about 70px (keep 85, aims 0.6 rad further round than it
+stands, changes direction every 3 bars) and fires **a note at you every 2 beats**
+(speed 62, 9 dmg). Between moves it waits **2 / 1 / 1 bars**, and rests 1 bar
+after each move. It keeps roaming through rests and the scale. It plants only for
+the sweep and the chord.
+
+| Move | Count-in (1 bar) | Played | Numbers |
+| --- | --- | --- | --- |
+| **Sweep** | A fan of ±0.8 rad toward you, 150 long, dashed on the floor. A ghost beam already swings with the arm. The body plants facing the fan. | A beam swings across the fan with the arm. Leave the fan; you cannot outrun the beam. | 5 wide, 14 dmg · bars 1/1/2 |
+| **Chord** | Rings at 30 / 66 / 102 (/138) dotted round where it stands. The first one blinks on the last beat. | One ring strikes per beat, inside out. Each band is 12px wide with 24px of safe room between bands. The next ring blinks before it goes. | rings 3/3/4 · 14 dmg |
+| **Scale** *(phase 2+)* | A wall of notes 16px apart along the box edge on the far side from you, with a **3-note gap** where you are | Marches across the box in 8 beat-steps. The gap climbs one note per beat: the note at its leading edge jumps to the trailing edge. | 10 dmg · 2 bars |
+
+**How it picks** (`Metronome:choose`, `src/metronome.lua:251`):
+- sweep: 1.4 if 40 < d < 150, else 0.5
+- chord: 1.5 if d < 110, else 0.6
+- scale (phase 2+): 1.4 if d > 90, else 0.8
+- Last move ×0.15, the one before ×0.6
+
+**Glue** stops the clock. Nothing advances while it is frozen. A count-in in
+progress is dropped and becomes a rest until the next downbeat. Notes already in
+the scale wall get their lost time back.
+
+---
+
+## 4. The Stamp: FINANCE (`stamp`)
+
+**Files:** row at `src/enemy.lua:587`, brain at `src/stamp.lua`
+**Callout:** "THE STAMP COMES DOWN" · **Body:** radius 13. It never walks; every step is a leap.
+
+It works in **ledger cells**: 5 columns of 40px and rows of 12px, matching the
+FINANCE page. Each move outlines and hatches its cells first, then leaps there.
+Contact damage applies only in `idle` and `rest`. During moves, only the pad
+hurts.
+
+**Ink:** a stamped cell stays **wet** for the time the move sets, dealing 6 to
+stand in, then dries for 6s and does nothing. Stamping a cell again re-wets it.
+
+### Idle
+It rocks back for 0.18s, then hops up to 30px at you every **1.2 / 1.0 / 0.85s**.
+It flicks an ink **blot** at you every 2.6s (speed 62, 9 dmg). The wait between
+moves is **2.2 / 1.7 / 1.3s**.
+
+| Move | Tell | Attack | Phase scaling | Rest |
+| --- | --- | --- | --- | --- |
+| **Slam** | Rocks back for `rear`. Your cell blinks and **follows you** until the lock. | A 0.55s leap (34 high) onto the locked cell. 16 dmg, ink wet for 2.4s, knockback. | rear 1.0/0.85/0.7 · splash blots in a ring 0/6/8 | 1.1/1.0/0.85 (stuck) |
+| **Run** | Rocks back for 0.7s with the first cell outlined | Hops one 40px cell every 0.22s along a row (about 180px/s), stepping one row toward you on each hop and turning back at the box edge. 12 dmg, wet 1.8s. | hops 5/6/8 | 0.9 |
+| **Audit** *(phase 2+, "AUDIT!")* | A **chequerboard** over a 5×9 block round you (5×11 in phase 3), hatched for 1.3s | Stamps every other cell 0.14s apart (0.12 in phase 3), one row at a time, snaking back along the next. All of it stays wet until 0.6s after the last stamp. 12 dmg. | Phase 3: **two passes**. The second pass hits the other colour, counted in for 1.2s, and the first pass's ink dries halfway through. | 1.2 |
+
+**How it picks** (`Stamp:choose`, `src/stamp.lua:335`):
+- slam: 1.5 if d < 140, else 0.8
+- run: 1.3 if d > 50, else 0.6
+- audit (phase 2+): 1.1 flat
+- Last ×0.15, before ×0.6
+
+**Phases:** it says "AUDIT!" at 66% and "FASTER!" at 33%.
+**Glue:** it drops whatever it is doing. A leap ends where it is with no stamp,
+and the Stamp takes a short rest.
+
+---
+
+## 5. The Dictionary: GRAMMAR (`dictionary`)
+
+**Files:** row at `src/enemy.lua:645`, brain at `src/dictionary.lua`
+**Callout:** "THE DICTIONARY OPENS" · **Body:** radius 14. It never walks.
+
+It works in **groups of the paired ruling**: 30px groups, with 12px lines inside
+them. It is the Stamp's skeleton with different attacks. The front board lifting
+(the mouth opening) is the tell for everything it does. Contact damage applies
+only in `idle` and `rest`.
+
+**Writing:** wet ink deals 12 to stand in, then dries for 5s. The words written
+are the five parts of speech.
+
+### Idle
+The board goes up for 0.22s, then it hops up to 30px at you every
+**1.2 / 1.0 / 0.85s**. It flicks a **leaf** at you every 2.6s (speed 62, 9 dmg).
+The wait between moves is **2.2 / 1.7 / 1.3s**.
+
+| Move | Tell | Attack | Phase scaling | Rest |
+| --- | --- | --- | --- | --- |
+| **Clap** | Board up for `rear`. Two pages, `reach` wide and `lines` groups deep, follow you as dashes. The spine is placed half a page short of you. | A 0.5s leap (30 high) onto the spine, landing **open**. It stays open for `hold`, then both fore-edges close to the spine over 0.3s: 16 dmg to anything an edge passes over. | rear 1.0/0.85/0.7 · reach 80/90/100 · lines 2/2/3 · hold 0.55/0.45/0.35 · splash leaves 0/6/8 | 1.2/1.0/0.9 (stuck) |
+| **Riffle** | Board up for 0.8s | `turns` page turns, each a fan of `leaves` leaves 0.3 rad apart, aimed where you were when that turn started. Every other fan is offset half a gap. | turns 5/6/8 · every 0.42/0.38/0.34s · leaves 5/7/7 | 0.9 |
+| **Definition** *(phase 2+, "DEFINITION!")* | The lines of every group within `rows` of yours are dashed across the box, with the pen blinking at the start, for 1.3s | Written left to right at **180px/s** (over 3× your speed, so step off the line). Each line starts 0.2s after the one above. Ink stays wet until 0.8s after the last letter. 12 dmg. | rows 2/2/3 · Phase 3: **second pass written between the lines**, counted in for 1.2s | 1.2 |
+
+**How it picks** (`Dictionary:choose`, `src/dictionary.lua:229`):
+- clap: 1.5 if d < 150, else 0.9
+- riffle: 1.2 if d > 60, else 0.6
+- definition (phase 2+): 1.0 flat
+- Last ×0.15, before ×0.6
+
+**Phases:** it says "DEFINITION!" at 66% and "FASTER!" at 33%.
+**Glue:** it drops whatever it is doing. A leap ends where it is, a clap is let go
+without shutting, and a half-written pass is left to dry.
+
+---
+
+## 6. The Die: MATHS (`die`)
+
+**Files:** row at `src/enemy.lua:710`, brain at `src/diceboss.lua`, body at `src/dice.lua`
+**Callout:** "THE DIE IS CAST" · **Body:** radius 14. It never walks; every move is a throw.
+
+The Die makes **no choices**. Each cycle is the same loop, and **the face it lands
+on decides the attack**. The number rolled hangs on a tag over it while it acts.
+
+### The loop
+1. **Wind:** the line is locked and dashed on the floor, aimed within ±0.3 rad of
+   you. It shudders and blinks red for **0.75 / 0.65 / 0.55s**.
+2. **Tumble:** slows linearly from `speed` to 0 over `time` (**150/165/180** over
+   **1.3/1.25/1.2s**), so it stops 97–108px away. Its peak speed is about 3× yours,
+   so step off the line. It makes 3 hops on the way, bounces off the box, and
+   spins randomly so the result is a genuine roll.
+3. **Settle** on a face.
+4. **Show:** strikes play from a queue, each with a tell and then a hot phase,
+   followed by the pip volley.
+5. **Rest:** **1.5 / 1.3 / 1.1s**.
+
+### What each roll does
+| Phase | Shape | Roll | Strike | Then |
+| --- | --- | --- | --- | --- |
+| 1 | **d6** | 1–6 | **Stamp:** a 3×3 grid of 30px cells round you. The cells where that face's pips sit go hot. Tell 1.2s, hot 0.35s, 14 dmg. | a **fan** of N pips at you (0.22 rad apart, speed 66, 9 dmg) |
+| 2 | **d10** | 1–10 | **Checker:** every 20px cell in the box whose column + row has the roll's parity. A safe cell is always one cell away. Tell 1.1s, hot 0.35s, 12 dmg. | a **ring** of N pips |
+| 3 | **d20** | 2–19 | **Spokes:** N lines out from it to the box edge (5 wide, 260 long), which swing a third of a gap while hot. A ghost of the swing loops during the count-in. Tell 1.0s, hot 0.6s, 12 dmg. | none |
+| 3 | d20 | **20** | **"CRITICAL!":** 20 spokes, then odd cells, then even cells, with count-ins of 1.0, 0.8 and 0.6s | none |
+| 3 | d20 | **1** | **"FUMBLE!":** lies on its side seeing stars for 3s and takes **×1.5 damage** | none |
+
+### Shape changes (phase transitions; glue cannot interrupt these)
+- **Unfold at 66% ("MORE SIDES!"):** it shudders for 0.5s, then disappears and
+  cannot be hit. A **net** (a cross of six 40px faces) is laid round where it
+  stood: counted in for 1.0s, hot for 0.4s at 14 dmg, then folded up over 0.3s.
+  It comes back as a d10.
+- **Recast at 33%, or straight from the d6 if both thresholds pass at once:** it
+  rises 220px over 0.45s. Its shadow and a dotted shock ring sit on where you
+  stood for 1.1s (about 90px of walking against a 56px ring, so you only get hit
+  by standing still). It comes down in 0.25s as a d20, with the ring hot at
+  14 dmg, and the landing becomes a roll.
+
+**Glue:** it drops any strike that is still counting in and rests. Glue that hits
+while the die is **tumbling or settling** loads the roll so it lands on **1**. On
+the d20 that is a guaranteed fumble.
+
+---
+
+## 7. The Still Life: ART (`stilllife`)
+
+**Files:** row at `src/enemy.lua:781`, brain at `src/stilllife.lua`, body at `src/plaster.lua`
+**Callout:** "DRAW WHAT YOU SEE" · **Body:** radius 16. A plaster cube, sphere and cone under a lamp.
+
+**Movement:** it never walks. When you are more than 90px away and nothing else
+is happening, it **lifts the table** and puts it down up to 60px closer (never
+nearer than 50), in a 0.45s hop.
+
+**The lamp** sits 80px out, clamped into the box, and drifts at 0.35 rad/s when
+no move is using it. Every piece on the table throws a shadow wedge away from the
+lamp. At rest the wedges are short and graphite, and they do no damage.
+
+### Moves run side by side
+This is the only boss that **overlaps its own attacks**. A new move starts `cool`
+(**2.0 / 1.6 / 1.3s**) after the last one started, as long as fewer than
+`together` (**1 / 2 / 3**) are running. Each piece does one thing at a time,
+only one shade can run at a time, and the move it started last is avoided when
+another is free. The pick among available moves is uniform, with no distance
+weighting.
+
+Pieces off the table are **hittable**. A stand-in enemy follows each one, and any
+damage dealt to it goes to the boss.
+
+| Move | From | Tell | Hot | Numbers |
+| --- | --- | --- | --- | --- |
+| **Shade** | phase 1 | The lamp eases round to the far side of the group from you (±0.35). The wedges grow from 14 to 320 long, hatched with marching rows and edged slate, turning red for the last 0.35s. | The wedges fill slate with red edges, 12 dmg to stand in. The lamp keeps going `swing` further round, so the shadows sweep (about 46px/s at 200 out). The space between the lamp and the group is always safe. | tell 1.4/1.25/1.1 · hot 0.9/1.3/1.5 · swing 0/0.3/0.3 · phase 3: **second lamp** 2 rad round throws a second fan |
+| **Drop** (cube) | phase 1 | The cube rises 200px off the table and out of sight (0.4s). A dotted shock ring and a growing shadow sit on where you stood for 1.1s. | It comes down square in 0.22s, ring hot, 14 dmg. It then **sits** for 1.4s as a block that hurts to touch and can be hit, then hops home (0.5s). | shock 24 |
+| **Roll** (sphere) | phase 2 | The line is dashed to the box edge and it shudders for 0.75s | Rolls out at 170 to the edge (or 260 max) and back at 0.8× that speed, hurting on contact (14) | |
+| **Top** (cone) | phase 3 | The cone flips end over end in the air (0.45s) | It spins on its point, leaning 0.3 and wobbling, and **wanders after you at 46** (you move at 58). It throws a chip every 0.16s, each 2.4 rad further round, making a spiral of pips (speed 60, 9 dmg). Then it falls on its side (0.35s) and is stood back up at home (0.55s). Contact deals 12. | time 2.6/2.6/3.2s |
+
+### Phase changes
+At each third **every move is dropped** and every piece is put back on the table.
+- **→ 2 ("THE LAMP MOVES!"):** the shade starts to sweep, the sphere joins, and up to 2 moves can run at once.
+- **→ 3 ("ANOTHER LAMP!"):** a second lamp is added, the cone joins, and up to 3 moves can run at once.
+
+**Glue holds the table, not the pieces already off it.** A shade still counting
+in is dropped, a lift is put down where it is, and no new move starts. A cube
+already in the air, a sphere already rolling or a cone already spinning carries
+on.
+
+---
+
+## Iteration notes
+
+These are observations from reading the code side by side, offered as things to
+look at. None of them are bugs.
+
+- **The Whistle is the odd one out.** It is the only boss with no phase-based
+  escalation of its moves: its clocks are the same at 100% and at 10%. Only the
+  pump marks progress. Every other boss gets shorter tells, more repetitions or a
+  new move per third. A cheap fix would be phase lists on `blast.every`,
+  `jacks.every` and `charge.every`.
+- **Stamp and Dictionary are close siblings.** Their idle (hop numbers, a filler
+  shot every 2.6s, cool times), their big move (slam/clap with the same rear,
+  rest and splash ladders), their phase-2 "fill the area" move (audit/definition
+  with rear 1.3, again 1.2 and a second pass in phase 3) and their weights all
+  match. That is fine if intended, but the two fights may feel alike. The obvious
+  places to tell them apart are the area moves and the filler shot.
+- **Phase-2 unlocks get flat weights.** Audit (1.1) and definition (1.0) ignore
+  distance, while the moves they join are distance-weighted. The Eye's sink and
+  weep, and the Metronome's scale, react to how far away you are.
+- **The Still Life picks uniformly.** It does not react to your distance or
+  movement at all, apart from the table lift. That is coherent with "still", but
+  it is the only boss whose choices you cannot influence.
+- **Glue strength varies a lot.** On the Die it is a guaranteed fumble if timed
+  during the tumble (×1.5 damage for 3s on the d20). On the Still Life it does
+  little once pieces are out. On the Eye and the Metronome it cancels the
+  current tell. The gap is worth a look if glue builds turn out dominant on
+  MATHS.
+- **Tell lengths cluster at about 0.5–1.3s** everywhere except the Metronome,
+  whose count-ins are 2.4–4s. That is by design, since the beat is the tell, but
+  it makes MUSIC the most readable and slowest fight.
+- **Fight-length check:** cycle-1 health is 1260 everywhere, and a strong build
+  deals about 30 DPS into a single target. The Die's fumble and the Still Life's
+  extra hittable pieces both shorten their fights relative to the others.
