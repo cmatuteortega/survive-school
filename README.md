@@ -7486,6 +7486,62 @@ as they go off.
 Glue holds an inside-out or a volley it is still counting in, and a net that has
 not started going off, as it holds the eye's tells.
 
+### And at a master's, MUSIC ends on the speaker
+
+The metronome is the thing you practise to. The speaker is what the music is
+played out of once the practising is done: a cylindrical bluetooth speaker, turned
+up far too loud. So MUSIC's second fight is about *volume* rather than time --
+sound as a thing that goes out across the page and shoves.
+
+It is a solid, painted a pixel at a time like the pig, and everything that makes
+it that speaker is on it: the knit, ribbed round the can so it reads as round; a
+big + over a big - on its front, which it turns to face you; a ring of lights
+round its top that says what it is doing; and a radiator on top that pumps with
+the bass. It keeps a beat, because everything that plays music does, but this beat
+is not a count-in to read the way the metronome's is. It is a groove: it bounces
+on it, squashing as it lands, puffs and notes coming off it, its lights chasing
+round. Being in a room with it should feel like being in a room with it.
+
+**The drop** is its signature, and it is built to be heard coming: a bar of build,
+the can stretching taller, its lights blinking red faster, the ticks rising and
+doubling into a roll -- then DROP!, it squashes flat, the crowd is thrown back,
+and the bass goes out of it as a ring across the whole box, then another every
+beat. A ring cannot be outrun and is too wide to step over. Every ring has a
+**quiet gap**, though, drawn on the floor in blue (yours, because it is the safe
+place) before the ring that carries it goes, and the gap steps round it a beat at
+a time. So the way through a drop is to dance: round it, in time, with the gap.
+Its numbers make that a walk rather than a race -- at the distance you will be
+standing, the gap moves at about three quarters of your speed and is a good deal
+wider than you. At the last third the beat switches and the gap goes back the
+other way, which is the one thing about it you have to watch for.
+
+**The roll** is what a can does. It plants, shows you its lane with the wad's
+blinking rim, tips onto its side and goes -- off the walls, bowling the crowd out
+of its way -- and then has to stand itself back up, which is the window. The
+3D body earns its keep here: the ribs going round are what make it read as
+rolling rather than sliding.
+
+**The shuffle** spits a handful of notes that do not stop at the walls. They
+bounce round the box like a screensaver until they run out, slower than you, so
+the move is a few seconds of the box getting busier rather than a volley.
+
+**Pairing**, from the second phase, is the move that makes the escort part of the
+fight. It turns its back to show you the bluetooth rune, its lights go blue, and
+it pairs with the nearest few of the crowd round you: a link drawn to each, and a
+red ring round each where it is about to go off. A few beats later they all play
+at once. Kill a paired thing first and it is disconnected; stand away from them
+and it is a crowd going off somewhere you are not. Your weapons are the answer to
+a boss move, which no other fight asks.
+
+It says VOLUME UP! at two thirds and VOLUME MAX! at one third, when its lights go
+red and every downbeat it walks on thumps round its foot -- so standing next to it
+stops being free, and the beat you have been hearing the whole fight is now a
+count you have to keep.
+
+Glue **mutes** it. Its lights go out, its beat stops, and a drop, roll, shuffle
+or pairing it was still counting in is dropped -- the obvious answer, and the one
+it should have.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was

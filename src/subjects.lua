@@ -406,6 +406,11 @@ Subjects.list = {
         -- in the book about *when* -- every move counted in for a bar and
         -- played on the tick.
         boss = "metronome",
+        -- And its encore (src/speakerboss.lua): what the music is played out
+        -- of once the practising is done. The metronome is about when; the
+        -- speaker is about how loud -- sound going out across the page as rings
+        -- with a quiet gap you dance round it to stay in.
+        encore = "speaker",
         -- Two shapes and they are the two things notation is made of. A chord is
         -- everything sounding at once, which is the ring; a scale is one thing
         -- after another along a line, which is the wall walking up the staves.

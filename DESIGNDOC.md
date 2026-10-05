@@ -611,7 +611,8 @@ row rather than left to the fallback (a row without one gets the eye) so that gi
 page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one. A row may also name an **encore**, the second boss the lesson ends on at
 a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom`,
-FINANCE's is `piggy` and MATHS's is `tesseract`, and the other four have none yet,
+FINANCE's is `piggy`, MATHS's is `tesseract` and MUSIC's is `speaker`, and the
+other three have none yet,
 so they end on their boss at every course.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
@@ -1378,6 +1379,34 @@ of spin. Glue drops a flip or a volley still being counted in, or a net none of
 whose cubes has gone yet. Every shape it puts on the floor is turned with the body
 (`yaw`) or laid on the page's squares, so the floor reads as the thing it came from.
 On death (`dropParts`) every corner bursts.
+
+**The speaker** (`speaker`, MUSIC's encore) is a fight about *volume*: the
+metronome is when, this is how loud. Its body is `src/speaker.lua`, a cylindrical
+bluetooth speaker ray-traced the pig's way (a cylinder's side and two flat caps),
+in a frame of three page vectors rather than a heading so it can tip over and roll
+(see `3dmethod.md`). The brain writes onto it every frame: `squash` (above zero a
+kick, below a stretch, foot kept on the page), `pump` (the radiator's light),
+`hop`, `shake`, `plus` (the + lit, on a turn of the volume), `rune` (the bluetooth
+rune on its back, while it pairs) and `lights` (the ring round its top: `lit` of
+twelve in a colour, `cycle`, or `off`). It has `arrive` (dropped in) and then
+switches itself on: twelve lights and twelve rising ticks over 1.2s.
+
+Its brain is `src/speakerboss.lua`, on a beat (`bpm`, 112 / 124 / 136 by phase) it
+bounces on: up off the page through each beat, squashing as it lands, a puff round
+its foot, a note floating up every other beat and a kick on the bar. Glue mutes
+it: the beat stops, the lights go out, and a tell still being counted in is
+dropped (`MUTED`). Its moves:
+
+| move | tell | what |
+| --- | --- | --- |
+| `drop` | `build` beats: it stretches, its lights blink red faster, the ticks rise and double up; the first ring's gap is drawn as a blue dashed wedge (yours: the safe place) off to one side of you | `DROP!`, a knock, the crowd within `shoveReach` thrown back, and a ring a beat, `waves` of them, out at `speed` across the whole box. Each ring has a gap `gap` wide and hurts once as it crosses you outside it; the gap steps `step` round a beat, and the next one is always drawn. Rings push the crowd they cross. At phase 3 the step reverses half way |
+| `roll` | the wad's blinking rim, a dashed lane, and it tips onto its side | down the lane at `speed`, off `bounces` walls, turning the can at each, bowling the crowd out of the lane (`fling`); then `rise` to stand up: the window |
+| `shuffle` | it spins, its lights chasing, the notes it is about to throw going round its top | `count` notes in a ring out of its top, bouncing off the box walls for `life` (two handfuls at phase 3) |
+| `pair` | phase 2+, with `least` of the crowd within `range` of you: it turns its back (the rune), its lights go blue, a link is drawn to each of the nearest `most`, and a red ring `blast` round each | `beats` beats later every paired thing still alive goes off at once. A paired thing killed first fizzles out |
+
+At phase 3 (`VOLUME MAX!`, after `VOLUME UP!` at phase 2) its lights go red, it
+trembles, and every downbeat while it walks thumps `thump.reach` round it. On death
+(`dropParts`) its rings and notes go and its lights go out.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
@@ -6401,12 +6430,12 @@ and are all the same 11x11 glyph.
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
   dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, and any of the horde's (`shot`, `charge`) -- see
+  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
   `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua`,
-  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua` or `src/tesseractboss.lua`, built in `Enemy.new`; one that comes
+  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua`, `src/tesseractboss.lua` or `src/speakerboss.lua`, built in `Enemy.new`; one that comes
   apart into several bosses answers `share` (the HUD's bar) and `heir` (who the bar
   goes to when the one it is on dies), as the atom's does. A solid body is a script beside `art/whistle.py` over
   `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or

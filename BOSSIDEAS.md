@@ -12,8 +12,10 @@ walks on ten minutes after the eye goes down at a master's and a doctorate, whic
 is how every second boss here is meant to arrive: named as the lesson's `encore`
 in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
 `src/course.lua`. The Piggy Bank is built the same way (`src/piggy.lua`,
-`src/piggyboss.lua`), and so is the Tesseract (`src/tesseract.lua`,
-`src/tesseractboss.lua`). The rest are still ideas only.
+`src/piggyboss.lua`), and so are the Tesseract (`src/tesseract.lua`,
+`src/tesseractboss.lua`) and, for MUSIC, the Speaker (`src/speaker.lua`,
+`src/speakerboss.lua`) -- built in place of the Gramophone below. The rest are
+still ideas only.
 
 | Lesson | Current boss | Second boss | Drawn as |
 |---|---|---|---|
@@ -21,7 +23,7 @@ in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
 | P.E. | whistle | **The Vaulting Box** | baked poses |
 | GRAMMAR | dictionary | **The Typewriter** | baked + live part |
 | FINANCE | stamp | **The Piggy Bank** (built) | painted live |
-| MUSIC | metronome | **The Gramophone** | baked + live part |
+| MUSIC | metronome | **The Speaker** (built; was the Gramophone) | painted live |
 | MATHS | die | **The Tesseract** (built) | lines, projected live |
 | ART | still life | **The Mannequin** | painted live under the lamp |
 
@@ -85,6 +87,23 @@ in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
   - **The needle skips:** it repeats its last attack two or three times, and the
     repeats get out of sync. A sibling of the metronome's beat, but about
     stuttering rather than keeping time.
+
+## MUSIC: The Speaker (built)
+
+Built instead of the Gramophone: a cylindrical bluetooth speaker.
+
+- **Drawn:** a cylinder painted live the piggy bank's way (a side and two flat
+  caps), in a frame that can tip over and roll. Ribbed knit, a big + and -, a
+  ring of lights round its top and a radiator that pumps on the beat. It squashes
+  and stretches.
+- **Fight:** about volume rather than time.
+  - **The drop:** a bar of build, then rings of bass across the whole box, one a
+    beat, each with a quiet gap that steps round it: you dance round it.
+  - **The roll:** it tips over and rolls down a lane, off the walls.
+  - **The shuffle:** notes that bounce round the box.
+  - **Pairing:** it pairs with the nearest of the crowd, which all go off
+    together on the beat.
+  - Glue mutes it.
 
 ## MATHS: The Tesseract (built)
 

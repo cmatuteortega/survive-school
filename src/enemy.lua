@@ -16,6 +16,8 @@ local Piggy = require("src.piggy")
 local PiggyBoss = require("src.piggyboss")
 local Tesseract = require("src.tesseract")
 local TesseractBoss = require("src.tesseractboss")
+local Speaker = require("src.speaker")
+local SpeakerBoss = require("src.speakerboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -595,6 +597,70 @@ Enemy.types = {
                       fold = { far = 110, out = 0.5, aim = { 1.1, 1.0, 0.9 }, back = 0.2,
                                shock = 34, damage = 14, rest = { 0.9, 0.8, 0.7 } },
                   } },
+    -- MUSIC's encore (`encore` in src/subjects.lua): the speaker, a cylindrical
+    -- bluetooth speaker turned up too far, dropped onto the page ten minutes
+    -- after the metronome goes down at a master's and a doctorate. The
+    -- metronome is the fight about when; this is the fight about how loud. The
+    -- moves and why they are these moves are src/speakerboss.lua; the body is
+    -- src/speaker.lua.
+    --
+    -- The eye's numbers where the fight is the same fight -- 900 health, the
+    -- knock, the hold, 20 on contact. It bounces at you on the beat at 24, the
+    -- metronome's average, and the hit circle is the can's own width round the
+    -- middle of its side.
+    speaker = { name = "SPEAKER", sprite = "speaker", hp = 900, speed = 24, radius = 13,
+                damage = 20, xp = 250, shadow = 24, boss = true, knock = 0.06, hold = 0.3,
+                title = "THE SPEAKER", call = "NOW PLAYING",
+                last = "DISCONNECTED", wreck = { ink = { "blue", "sky", "ink" }, rings = 4 },
+                arrive = true,
+                speaker = {
+                    -- Beats a minute, by phase (the eye's thirds): a groove
+                    -- rather than a count -- quicker than the metronome's 60 to
+                    -- 100, since nothing here is waiting a bar on it.
+                    bpm = { 112, 124, 136 },
+                    -- Seconds of bouncing between moves, plus up to 0.6 more,
+                    -- and how high a bounce is.
+                    cool = { 2.2, 1.8, 1.4 }, hop = 2,
+                    -- The drop: `build` beats of build-up (a bar: 2.1s at 112),
+                    -- then a ring a beat, `waves` of them, going out at `speed`
+                    -- -- a ring reaches you 60 out in about a beat. Each has a
+                    -- gap `gap` radians wide, stepped `step` round a beat: at 60
+                    -- out that is 40 to 44 a second against your 58 at every
+                    -- tempo -- the step shrinks as the beat quickens -- and the
+                    -- gap is 50 to 66px wide there, so it is a walk, not a race.
+                    -- `band` is how thick a ring is (the first two thicker); the
+                    -- first throws the crowd within `shoveReach` back by
+                    -- `shove`, and every ring pushes what it crosses by `push`.
+                    drop = { build = 4, waves = { 6, 8, 10 }, speed = { 84, 92, 100 },
+                             band = 3, gap = { 1.1, 1.0, 0.85 }, step = { 0.36, 0.34, 0.32 },
+                             damage = 12, shove = 260, shoveReach = 90, push = 110,
+                             rest = { 1.0, 0.9, 0.7 } },
+                    -- The roll: tipped over for `tip` (the tell, with a lane
+                    -- `lane` long drawn), then down it at `speed` -- over twice
+                    -- yours -- off `bounces` walls for at most `time`, flinging
+                    -- the crowd in its way by `fling`; then `rise` to stand back
+                    -- up, which is the window, and a rest.
+                    roll = { tip = { 0.75, 0.65, 0.55 }, speed = { 130, 140, 150 }, time = 2.2,
+                             bounces = { 1, 2, 3 }, lane = 90, fling = 220, rise = 0.5,
+                             rest = { 0.8, 0.7, 0.5 } },
+                    -- The shuffle: `count` notes out of its top in a ring,
+                    -- bouncing off the walls of the box at `speed` -- slower than
+                    -- you -- for `life`. Two handfuls at the last third, `gap`
+                    -- apart and turned half a step.
+                    shuffle = { tell = { 0.7, 0.6, 0.5 }, count = { 5, 6, 7 }, volleys = { 1, 1, 2 },
+                                gap = 0.45, speed = 52, life = 4.5, hit = 3, damage = 9,
+                                rest = { 0.7, 0.6, 0.5 } },
+                    -- Pairing, from phase `from`: at most `most` of the crowd
+                    -- within `range` of you, and only with `least` to pair with.
+                    -- They go off `beats` beats on, `blast` round -- a ring you can
+                    -- see from the start of the tell, so the answer is in reach.
+                    pair = { from = 2, most = { 0, 3, 4 }, least = 2, range = 150,
+                             beats = { 4, 4, 3 }, blast = 28, damage = 10,
+                             rest = { 0.8, 0.8, 0.6 } },
+                    -- And at the last third, the bass round its foot on every
+                    -- downbeat while it walks: `reach` round it.
+                    thump = { from = 3, reach = 34, damage = 8 },
+                } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
     -- wet you have to stop standing on -- and this is the other half of the
@@ -1287,6 +1353,9 @@ function Enemy.new(kind, x, y, scale)
         -- And the tesseract MATHS ends on at a master's (src/tesseract.lua): a
         -- cube of cubes turned through four dimensions and drawn as lines.
         tesseract = def.tesseract and Tesseract.new() or nil,
+        -- And the speaker MUSIC ends on at a master's (src/speaker.lua): a can
+        -- ray-traced the pig's way, which squashes, tips over and rolls.
+        speaker = def.speaker and Speaker.new() or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -1309,6 +1378,8 @@ function Enemy.new(kind, x, y, scale)
         -- like a wad and throws its coins about.
         -- And the tesseract's (src/tesseractboss.lua), which drifts like the
         -- atom and turns out of the page to get about.
+        -- And the speaker's (src/speakerboss.lua), which bounces on its own
+        -- beat and rolls like a can.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
@@ -1317,7 +1388,8 @@ function Enemy.new(kind, x, y, scale)
             or def.still and StillLife.new(def)
             or def.atom and AtomBoss.new(def)
             or def.piggy and PiggyBoss.new(def)
-            or def.tesseract and TesseractBoss.new(def) or nil,
+            or def.tesseract and TesseractBoss.new(def)
+            or def.speaker and SpeakerBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -1858,6 +1930,7 @@ function Enemy:footing()
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
         and not self.plaster and not self.nucleus and not self.piggy and not self.tesseract
+        and not self.speaker
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -1989,7 +2062,7 @@ function Enemy:drawSolid()
         return
     end
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract
+        or self.tesseract or self.speaker
     if painted then
         love.graphics.setColor(Palette.paper)
         painted:drawMask(x, y, self:outlineColour() and 1 or 0)
@@ -2043,7 +2116,7 @@ function Enemy:draw()
     -- The still life leaves none of its own: its shadows are thrown by its
     -- lamp, and drawn by its brain (src/stilllife.lua).
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract
+        or self.tesseract or self.speaker
     if painted then
         if painted.hidden then return end
         shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)

@@ -12,7 +12,9 @@ moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of 
 a part hinged off the body and one built about a different point (see **Poses with
 a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`,
 `src/plaster.lua` (the ART still life), `src/atom.lua` (SCIENCE's second boss,
-the atom) and `src/piggy.lua` (FINANCE's second boss, the piggy bank). The
+the atom), `src/piggy.lua` (FINANCE's second boss, the piggy bank) and
+`src/speaker.lua` (MUSIC's second boss, a bluetooth speaker; see **Painted live
+with flat ends: the speaker**). The
 MATHS tesseract (`src/tesseract.lua`) is neither: a solid in four dimensions,
 projected every frame and drawn as lines (see **Projected live as lines: the
 tesseract**).
@@ -25,7 +27,7 @@ pictures.
 
 ## Two ways to be solid
 
-The game has nine bosses drawn as solid objects, made in two different ways (and
+The game has ten bosses drawn as solid objects, made in two different ways (and
 a tenth, the tesseract, that is projected as lines rather than either) --
 the metronome is the whistle's way with one part done the eye's, the stamp and
 the dictionary are the whistle's way with more than one picture per heading, the MATHS die is
@@ -569,6 +571,40 @@ order of their distance from one spot, so the web grows out from where it starte
 Because the picture is now several solids and an edge pass, it is worked out once a
 frame into rows of runs (`Piggy:raster`) and kept: the blank under it, the hit's
 rim and the body all read the same rows.
+
+## Painted live with flat ends: the speaker
+
+MUSIC's second boss (`src/speaker.lua`) is a cylindrical bluetooth speaker, and a
+cylinder is the piggy bank's method with one change: the solid has flat ends, so
+every ray asks two kinds of question.
+
+1. **The side** is the ellipsoid's quadratic with the axis term left out: the
+   ray's body coordinates are `a + z * b` along the can's front, side and axis,
+   and the side is where `front^2 + side^2 = radius^2`. The nearer root counts
+   only if the axis coordinate there is inside the half height.
+2. **The caps** are planes, so a division: `z = (+-half - a_u) / b_u`, counted
+   only if that point is inside the radius. The nearest of the three hits wins.
+3. **A frame, not a heading.** The pig only turns about the upright. The speaker
+   tips over and rolls, so its orientation is three page vectors (front, side,
+   axis) turned by Rodrigues' formula each frame and put square again. Facing you
+   is a turn about the page's up; tipping is a turn about the way it will roll
+   (which lays the axis across it); rolling is a turn about `up x heading`, which
+   is the axis once it lies; a bounce turns the whole frame about the page's up by
+   the angle the box turned its heading. Standing up is a turn about `axis x up`.
+4. **Squash.** The radius and half height are scaled against each other and the
+   middle is put back at its new height off the page, so the foot stays put and
+   the can, not the page, gives.
+5. **Texture in the can's own coordinates.** Everything that makes it a speaker
+   is painted off where on the can a pixel is, not where on the screen: ribs of
+   the knit every few units up the axis (ellipses on the screen, the strongest
+   round cue in the picture, and what shows it roll), the + and - as lengths
+   round the can and up it with an ink keyline, a rune on the back, the ring of
+   lights by angle round the top, and the radiator lit off a normal pushed out by
+   `pump`, so its light swells on the beat while not one pixel of it moves.
+
+The rim and the depth edges are the pig's, and the picture is worked out once a
+frame into rows of runs (`Speaker:raster`). It is about the cost of the pig: one
+solid, but three questions per pixel instead of nine.
 
 ## Projected live as lines: the tesseract
 

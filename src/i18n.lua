@@ -555,6 +555,15 @@ local ES = {
     ["THE TESSERACT"] = "EL TESERACTO",
     ["THE FOURTH DIMENSION"] = "LA CUARTA DIMENSION",
     ["HYPERSPACE!"] = "¡HIPERESPACIO!",
+    -- MUSIC's encore (`speaker` in src/enemy.lua): its name, the line it is
+    -- switched on with, the drop, the two turns of its volume, and what the
+    -- page says when glue mutes it.
+    ["THE SPEAKER"] = "EL ALTAVOZ",
+    ["NOW PLAYING"] = "REPRODUCIENDO",
+    ["DROP!"] = "¡DROP!",
+    ["VOLUME UP!"] = "¡SUBE EL VOLUMEN!",
+    ["VOLUME MAX!"] = "¡VOLUMEN MAXIMO!",
+    ["MUTED"] = "SILENCIADO",
     -- What the page says as each boss goes down (`last` in src/enemy.lua).
     ["LIGHTS OUT"] = "SE APAGO",
     ["DECAYED"] = "DESINTEGRADO",
@@ -566,6 +575,7 @@ local ES = {
     ["THE END"] = "FIN",
     ["SNAKE EYES"] = "OJOS DE SERPIENTE",
     ["SIGNED"] = "FIRMADO",
+    ["DISCONNECTED"] = "DESCONECTADO",
     ["NOUN"] = "SUSTANTIVO",
     ["VERB"] = "VERBO",
     ["ADJECTIVE"] = "ADJETIVO",

@@ -33,7 +33,9 @@ sphere and a cone painted the same way and lit by a lamp that moves
 way with its orbits plotted round it (`src/atom.lua`), and the FINANCE piggy bank,
 nine ellipsoids painted the same way and turned to face where it goes
 (`src/piggy.lua`), and the MATHS tesseract, sixteen corners turned through four
-dimensions every frame and drawn as lines (`src/tesseract.lua`).
+dimensions every frame and drawn as lines (`src/tesseract.lua`), and the MUSIC
+speaker, a cylinder ray-traced the piggy bank's way that squashes on the beat,
+tips over and rolls (`src/speaker.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -195,7 +197,12 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   second boss's body: a hypercube turned in four dimensions, projected and drawn
   as lines), `tesseractboss` (its brain: the inside-out squares, the corners
   thrown, the numbered net of cubes going off in sequence, and the fold out of
-  the page and back in on you), `wreck` (how every boss but the eye comes apart
+  the page and back in on you), `speaker` (MUSIC's second boss's body: a
+  cylindrical bluetooth speaker painted a pixel at a time -- its knit, its +/-
+  buttons, its ring of lights and its pumping radiator -- in a frame that can tip
+  over and roll), `speakerboss` (its brain: a beat it bounces on, the drop's rings
+  with a quiet gap to dance round it in, the roll, the shuffle's notes bouncing
+  round the box, and pairing with the crowd so the escort goes off), `wreck` (how every boss but the eye comes apart
   once it is killed: kept, shaken, flickered, burst in its row's colours). A
   lesson's second boss is
   its `encore` in `subjects`; only the courses with `bosses = 2` (MASTERS, PHD)

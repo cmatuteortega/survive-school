@@ -6303,6 +6303,13 @@ function Sprites.load()
             for i = 1, 44 do rows[i] = ("r"):rep(44) end
             return rows
         end)()),
+        -- And MUSIC's, painted the same way (src/speaker.lua): the box the
+        -- speaker is measured off, stood up, the can and its top.
+        speaker = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 38 do rows[i] = ("r"):rep(24) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",

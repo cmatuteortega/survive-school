@@ -15,10 +15,10 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | | |
 | --- | --- |
 | **When** | At 10:00 of each cycle (`Spawner.BOSS_AT = 600`). Drills and surges are cleared and the horde stops spawning. |
-| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today SCIENCE has one (the Atom), FINANCE has one (the Piggy Bank) and MATHS has one (the Tesseract). |
+| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today SCIENCE has one (the Atom), FINANCE has one (the Piggy Bank), MATHS has one (the Tesseract) and MUSIC has one (the Speaker). |
 | **Arena** | `Game:openArena` puts a box round the page. The box comes down when the next cycle starts (`Spawner:nextCycle`). |
 | **Escort** | One arrival every 1.5s while fewer than 20 enemies are on the page. Weighted: bat 5, skull 3, eye 2, wad 2, bulb 2 (`ESCORT` in `src/spawner.lua`). |
-| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom, the Piggy Bank and the Tesseract are 2822 (Masters) and 3704 (PhD). |
+| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom, the Piggy Bank, the Tesseract and the Speaker are 2822 (Masters) and 3704 (PhD). |
 | **Damage** | Contact damage is 20 on every boss and steps ×1.18 per cycle (`DAMAGE_PER_CYCLE`). Move damages on the rows are cycle-1 values and scale the same way. |
 | **Body** | All bosses share `knock = 0.06` and `hold = 0.3`. Every boss is worth 250 xp. |
 | **Phases** | Health thirds: phase 1 above 66%, phase 2 above 33%, phase 3 for the rest. A list of three values on a row is one value per phase. The whistle is the exception: it has no phases, only health thresholds at 75/50/25%. |
@@ -39,6 +39,7 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | The Atom | SCIENCE (encore) | orbits | sweep, throw, fission | splits in two at 50%; double sweeps in the last fifth | a dashed red ring on the floor where the orbit will swell |
 | The Piggy Bank | FINANCE (encore) | greed | charge, recall, shatter | two charges in a row (phase 2); breaks open at 30%, then three charges and no bait | it turns its snout to you, a dashed red arrow down its lane |
 | The Tesseract | MATHS (encore) | dimension | inside-out, corners, net, fold | fold and the second, inverted flip (phase 2); turning squares, double volley, shuffled net (phase 3) | its shapes drawn on the floor first: two squares, a numbered net, a dashed square on you |
+| The Speaker | MUSIC (encore) | volume | drop, roll, shuffle, pair | pair (phase 2); thump on every downbeat, double shuffle, the drop's gap reverses (phase 3) | a bar of build-up, its ring of lights red, the quiet gap drawn in blue |
 
 ---
 
@@ -472,6 +473,57 @@ cubes has gone off yet, and it rests 0.4s.
 
 ### Death
 A burst at each of its sixteen corners, and a knock. Then the win card.
+
+## 11. The Speaker: MUSIC's encore (`speaker`)
+
+**Files:** row `speaker` in `src/enemy.lua`, brain at `src/speakerboss.lua`, body at `src/speaker.lua`
+**Callout:** "NOW PLAYING" · **Body:** radius 13, speed 24 (it bounces at you on the beat).
+**When:** Masters and PhD only, ten minutes after the Metronome goes down.
+
+### Entrance
+Dropped onto the page (`arrive`), then it switches itself on: its ring of twelve
+lights comes up one at a time with twelve rising ticks over 1.2s, then a thump, a
+puff and its first notes. It bounces for 0.8s before its first move.
+
+### The beat
+**112 / 124 / 136 bpm** by phase. On every beat it bounces off the page and
+squashes as it lands, its radiator pumps, a puff goes round its foot, and every
+other beat a note floats up; a kick on every bar. Moves are not counted in on the
+beat (only the drop's build and the pairing's fuse are counted in beats). Glue
+**mutes** it: the beat stops and its lights go out.
+
+### Idle
+Bounces straight at you, turned so its + faces you. Cool between moves:
+**2.2 / 1.8 / 1.4s** + up to 0.6s.
+
+### Moves
+Drop weighs 1.2. Roll 1.3 past 60px (else 0.6). Shuffle 1.0. Pair, from phase 2,
+1.4 when at least 2 of the crowd are within 150 of you (else 0). The last move is ×0.3.
+
+| Move | Tell | Hot | Numbers |
+| --- | --- | --- | --- |
+| **Drop** | 4 beats of build: it stretches tall and trembles, its lights blink red faster and faster, the ticks rise and double into a roll. The first ring's quiet gap is a blue dashed wedge, off to one side of you. | "DROP!": the crowd within 90 is thrown back (260) and a ring goes out across the whole box, then one per beat. Each ring is red with a gap; outside the gap it hits **12** once as it crosses you. The gap steps round each beat, and the next is always drawn in blue. Rings push the crowd they cross (110). | rings 6 / 8 / 10 · speed 84 / 92 / 100 · gap 1.1 / 1.0 / 0.85 rad · step 0.36 / 0.34 / 0.32 rad a beat (about 40–44px/s at 60 out) · phase 3: the step reverses half way · rest 1.0 / 0.9 / 0.7 |
+| **Roll** | The wad's blinking red rim, a dashed lane 90 long, and it tips onto its side. | Rolls down the lane at **130 / 140 / 150**, off the box walls (it turns with each bounce), throwing the crowd out of the lane (220). Contact is the usual 20. Then 0.5s standing back up: the window. | tip 0.75 / 0.65 / 0.55 · bounces 1 / 2 / 3 · up to 2.2s · a pen line stops it · rest 0.8 / 0.7 / 0.5 |
+| **Shuffle** | It spins, lights chasing, its handful of notes going round its top. | A ring of notes out of its top that **bounce off the box walls** at 52 (slower than you) for 4.5s, **9 dmg**, blinking out at the end. | tell 0.7 / 0.6 / 0.5 · notes 5 / 6 / 7 · handfuls 1 / 1 / 2 (0.45s apart, turned half a step) · rest 0.7 / 0.6 / 0.5 |
+| **Pair** (phase 2+) | It turns its back (the bluetooth rune blinks), its lights go blue, a dashed link to each of the nearest 3 / 4 of the crowd within 150 of you, and a red dotted ring 28 round each. | On the beat, every paired thing still alive goes off: **10** within 28 of it. Kill one first and it fizzles. | fuse 4 / 3 beats · rest 0.8 / 0.6 |
+
+### Phases
+Thirds, as the eye.
+
+- **2 (66%):** "VOLUME UP!", its + flashes red, the meter of lights goes to two
+  thirds, and pairing joins.
+- **3 (33%):** "VOLUME MAX!", its lights red and it trembles. Every downbeat while
+  it walks **thumps** 34 round its foot for **8**. Two handfuls of notes, and the
+  drop's gap turns back the other way half way through.
+
+### Glue
+Mutes it: its lights go out, the beat stops, and a drop being built, a roll being
+tipped, a shuffle being wound or a pairing being made is dropped ("MUTED"); it
+rests 0.4s. Rings and notes already out carry on.
+
+### Death
+"DISCONNECTED". Its rings and notes go, its lights go out, and it comes apart in
+blue, sky and ink with four rings (`src/wreck.lua`). Then the win card.
 
 ---
 
