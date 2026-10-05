@@ -14,6 +14,8 @@ local Atom = require("src.atom")
 local AtomBoss = require("src.atomboss")
 local Piggy = require("src.piggy")
 local PiggyBoss = require("src.piggyboss")
+local Tesseract = require("src.tesseract")
+local TesseractBoss = require("src.tesseractboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -526,6 +528,64 @@ Enemy.types = {
                   -- And what spills out of it when it goes down.
                   spill = 6,
               } },
+    -- MATHS's encore (`encore` in src/subjects.lua): the tesseract, which turns
+    -- into the page ten minutes after the die goes down at a master's and a
+    -- doctorate, and the fight about which side of a shape you are on when the
+    -- shape turns into something else. The moves and why they are these moves
+    -- are src/tesseractboss.lua; the body is src/tesseract.lua.
+    --
+    -- The eye's numbers where the fight is the same fight -- 900 health, the
+    -- knock, the hold, 20 on contact -- priced a cycle on by the spawner like
+    -- the atom. It drifts at you slower than anything else walks, because it
+    -- does not need to come to you: from the second phase it turns out of the
+    -- page and back into it wherever you are. The hit circle is a little inside
+    -- the outer cube's corners.
+    tesseract = { name = "TESSERACT", sprite = "tesseract", hp = 900, speed = 20, radius = 15,
+                  damage = 20, xp = 250, shadow = 28, boss = true, knock = 0.06, hold = 0.3,
+                  title = "THE TESSERACT", call = "THE FOURTH DIMENSION",
+                  tesseract = {
+                      -- Seconds of drifting between moves, plus up to 0.6 more:
+                      -- by phase (the eye's thirds).
+                      cool = { 2.3, 1.9, 1.5 },
+                      -- Inside-out. The inner square is `inner` out (half its
+                      -- width) -- ten pixels outside where its body would touch
+                      -- you, so hugging it is a real place to stand -- and the
+                      -- outer `outer`; the band between goes off for `hot` after
+                      -- `tell`. From the second phase the other way follows,
+                      -- counted in for `again`: the middle and a rim `rim` wide
+                      -- outside the outer square. A count-in of 1.1s is 64px of
+                      -- walking at your 58, more than the widest walk out of the
+                      -- band. `turn` is how far the squares turn while they go,
+                      -- the last third only; `fling` is the shove the crowd
+                      -- caught between them gets.
+                      flip = { inner = 30, outer = { 84, 92, 100 }, rim = 36,
+                               tell = { 1.1, 0.95, 0.85 }, again = 0.75, hot = 0.45,
+                               turn = { 0, 0, 0.6 }, damage = 14, fling = 260,
+                               rest = { 0.9, 0.8, 0.6 } },
+                      -- The corners: the outer eight, then all sixteen, thrown
+                      -- straight out the way they stick out -- the furthest at
+                      -- `speed`, the nearest at `slow` of it, so one volley is
+                      -- two rings, 40 and 80 against your 58. `volleys` by phase,
+                      -- the second spun on for `gap` and aimed for `again`.
+                      corners = { count = { 8, 16, 16 }, volleys = { 1, 1, 2 },
+                                  tell = { 0.8, 0.7, 0.6 }, again = 0.45, gap = 0.35,
+                                  speed = 80, slow = 0.5, hit = 3, life = 4, damage = 9,
+                                  rest = { 0.7, 0.6, 0.5 } },
+                      -- The net: eight cubes `cell` across -- three of the page's
+                      -- squares, half a second of walking -- opened out over
+                      -- `open`, the first going off `lead` after that and one
+                      -- more every `step`, each hot for `hot`. A little longer
+                      -- than the step, so the wave down the net is unbroken.
+                      net = { cell = 30, open = 0.5, lead = 0.7, step = { 0.42, 0.36, 0.3 },
+                              hot = 0.5, fold = 0.3, damage = 14, rest = { 0.9, 0.8, 0.6 } },
+                      -- Through the fourth dimension, from the second phase and
+                      -- only when you are `far` off: out of the page over `out`,
+                      -- the square on where you stood for `aim`, back in over
+                      -- `back` with a square shock `shock` out. Out and aim are
+                      -- 1.6s, ninety pixels of walking against a square of 34.
+                      fold = { far = 110, out = 0.5, aim = { 1.1, 1.0, 0.9 }, back = 0.2,
+                               shock = 34, damage = 14, rest = { 0.9, 0.8, 0.7 } },
+                  } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
     -- wet you have to stop standing on -- and this is the other half of the
@@ -1204,6 +1264,9 @@ function Enemy.new(kind, x, y, scale)
         -- And the piggy bank FINANCE ends on at a master's (src/piggy.lua): a
         -- pig of ellipsoids painted the eye's way, facing where it goes.
         piggy = def.piggy and Piggy.new() or nil,
+        -- And the tesseract MATHS ends on at a master's (src/tesseract.lua): a
+        -- cube of cubes turned through four dimensions and drawn as lines.
+        tesseract = def.tesseract and Tesseract.new() or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -1224,6 +1287,8 @@ function Enemy.new(kind, x, y, scale)
         -- splits itself in two.
         -- And the piggy bank's (src/piggyboss.lua), which trots and charges
         -- like a wad and throws its coins about.
+        -- And the tesseract's (src/tesseractboss.lua), which drifts like the
+        -- atom and turns out of the page to get about.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
@@ -1231,7 +1296,8 @@ function Enemy.new(kind, x, y, scale)
             or def.dice and DiceBoss.new(def)
             or def.still and StillLife.new(def)
             or def.atom and AtomBoss.new(def)
-            or def.piggy and PiggyBoss.new(def) or nil,
+            or def.piggy and PiggyBoss.new(def)
+            or def.tesseract and TesseractBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -1771,7 +1837,7 @@ function Enemy:footing()
     -- Stuck things stop bobbing, and an eye boss has a gait of its own instead
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
-        and not self.plaster and not self.nucleus and not self.piggy
+        and not self.plaster and not self.nucleus and not self.piggy and not self.tesseract
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -1903,6 +1969,7 @@ function Enemy:drawSolid()
         return
     end
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
+        or self.tesseract
     if painted then
         love.graphics.setColor(Palette.paper)
         painted:drawMask(x, y, self:outlineColour() and 1 or 0)
@@ -1956,6 +2023,7 @@ function Enemy:draw()
     -- The still life leaves none of its own: its shadows are thrown by its
     -- lamp, and drawn by its brain (src/stilllife.lua).
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
+        or self.tesseract
     if painted then
         if painted.hidden then return end
         shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)

@@ -7438,6 +7438,54 @@ its savings spill out round it, harmless — the fight's last offer.
 Glue holds a charge it is still winding up, and a recall it is still calling, as it
 holds the eye's tells; bait already spat stays on the floor.
 
+### And at a master's, MATHS ends on the tesseract
+
+The die is a fight about reading a number before it happens. Squared paper is a
+slice of something, and the tesseract is that something: a cube of cubes, turning
+through a direction the page does not have. So MATHS's second boss is a fight
+about *dimension*, which here means which side of a shape you are on when the
+shape turns into something else. Every move is drawn on the floor first in the
+shape it will be, then it is.
+
+It is drawn as **lines**, the only boss that is. A tesseract's faces would hide
+the cube inside it, and the cube inside is the whole picture. It turns in four
+dimensions all the time, so the inner cube is always flowing out to become the
+outer one. The struts that join the two cubes are red, because they are the part
+of it no cube has. The inner cube is a dithered blush heart, and as it is hurt the
+heart goes red and its edges start to glitch out of place.
+
+**Inside-out** is the move the picture promises. Two squares are drawn round it,
+turned the way the cube is turned, and the band between them is dotted. Then it
+turns half over through the fourth dimension and the band is crushed. You can
+dodge outward, past the outer square, or **inward**, right up against it inside
+the inner one. That makes it the one move in the book whose safe place is next
+to the boss. The crowd caught in the band is flung out, so the move clears its own
+escort out of your way. From the second phase it turns straight back inside out:
+the middle and a rim outside go off, and the band you dodged into is the only
+safe floor. So you can't just learn one place to stand.
+
+**The net** is the die's net grown up a dimension. It unfolds onto the squared
+paper as Dali's cross of eight cubes, laid towards you and **numbered**. The cubes
+go off in the order of their numbers, so the net is a sequence you stay ahead of.
+It runs root to tip, then tip to root, and at the last third in a shuffled order
+you can only know by reading. This is MATHS asking you to read a number again,
+which is the die's lesson carried into its encore.
+
+**The corners** are its body thrown. It holds still and its corners blink. Then
+each flies straight out the way it sticks out on the page, the far ones fast and
+the near ones slow. The volley is the shape you were just looking at, in two
+rings, so reading the body is reading the dodge.
+
+And when you have got well away, from the second phase, it does not walk after you
+(it drifts slower than anything on the page). It **turns out of the page**,
+shrinking to nothing, and comes back in where you were standing with a square
+shock. It's the die's recast without the leap: it didn't go up, it went
+elsewhere. At the last third it says HYPERSPACE!, spins up, and the squares turn
+as they go off.
+
+Glue holds an inside-out or a volley it is still counting in, and a net that has
+not started going off, as it holds the eye's tells.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was

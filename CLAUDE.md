@@ -32,7 +32,8 @@ sphere and a cone painted the same way and lit by a lamp that moves
 (`src/plaster.lua`), and the SCIENCE atom, a cluster of nucleons painted the eye's
 way with its orbits plotted round it (`src/atom.lua`), and the FINANCE piggy bank,
 nine ellipsoids painted the same way and turned to face where it goes
-(`src/piggy.lua`).
+(`src/piggy.lua`), and the MATHS tesseract, sixteen corners turned through four
+dimensions every frame and drawn as lines (`src/tesseract.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -190,7 +191,11 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   boss's body: a pig of ellipsoids painted a pixel at a time, cracking as it is
   hurt), `piggyboss` (its brain: the charge with bait coins in its lane, the
   recall of the coins left lying, and the shatter into rings of coins -- coins
-  that land are `coin` pickups and pay into the purse). A lesson's second boss is
+  that land are `coin` pickups and pay into the purse), `tesseract` (MATHS's
+  second boss's body: a hypercube turned in four dimensions, projected and drawn
+  as lines), `tesseractboss` (its brain: the inside-out squares, the corners
+  thrown, the numbered net of cubes going off in sequence, and the fold out of
+  the page and back in on you). A lesson's second boss is
   its `encore` in `subjects`; only the courses with `bosses = 2` (MASTERS, PHD)
   send it -- ten minutes after the first goes down -- and only it opens the win
   card.

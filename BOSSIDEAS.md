@@ -12,7 +12,8 @@ walks on ten minutes after the eye goes down at a master's and a doctorate, whic
 is how every second boss here is meant to arrive: named as the lesson's `encore`
 in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
 `src/course.lua`. The Piggy Bank is built the same way (`src/piggy.lua`,
-`src/piggyboss.lua`). The rest are still ideas only.
+`src/piggyboss.lua`), and so is the Tesseract (`src/tesseract.lua`,
+`src/tesseractboss.lua`). The rest are still ideas only.
 
 | Lesson | Current boss | Second boss | Drawn as |
 |---|---|---|---|
@@ -21,7 +22,7 @@ in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
 | GRAMMAR | dictionary | **The Typewriter** | baked + live part |
 | FINANCE | stamp | **The Piggy Bank** (built) | painted live |
 | MUSIC | metronome | **The Gramophone** | baked + live part |
-| MATHS | die | **The Tesseract** | painted live |
+| MATHS | die | **The Tesseract** (built) | lines, projected live |
 | ART | still life | **The Mannequin** | painted live under the lamp |
 
 ## SCIENCE: The Atom (built)
@@ -85,16 +86,28 @@ in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
     repeats get out of sync. A sibling of the metronome's beat, but about
     stuttering rather than keeping time.
 
-## MATHS: The Tesseract
+## MATHS: The Tesseract (built)
 
 - **Drawn:** a 4D cube spun live and projected onto the page. Its faces are
   painted like the die's (`src/dice.lua`), or it can simply be drawn as lines,
-  which `pixelart.line` allows at any angle.
+  which `pixelart.line` allows at any angle. (Built as lines: the far edges
+  slate, the near ones ink, and the struts along w red. The inner cube is
+  dithered blush as a heart, and the silhouette is the hull of the sixteen
+  corners.)
 - **Fight:**
   - **Inside-out:** the inner cube becomes the outer one, and anything caught
-    between the two gets crushed or flung.
+    between the two gets crushed or flung. (Built as two squares on the floor,
+    turned the way the cube is turned. The band between them goes off and the
+    crowd in it is flung out. From the second phase it turns back straight
+    after, and the middle and a rim go off instead.)
   - **Unfold:** it lays itself out on the squared paper as a net of cubes, and
-    the net's squares go dangerous in sequence.
+    the net's squares go dangerous in sequence. (Built as Dali's cross of eight,
+    numbered: root to tip, then tip to root, then shuffled.)
+  - (Added when built) **Corners:** its corners blink and fly straight out the
+    way they stick out on the page, the far ones fast and the near ones slow.
+  - (Added when built) **Through the fourth dimension:** from the second phase,
+    when you are far off, it turns out of the page and back in where you were
+    standing, with a square shock.
 
 ## ART: The Mannequin
 
@@ -115,4 +128,5 @@ The cheapest to build, because each is mostly an existing body with a new brain:
 - The Piggy Bank reuses the same painter, stretched into an ellipsoid (built).
 - The Mannequin reuses the still life's lamp.
 
-The Tesseract and the Typewriter would be the most new work.
+The Typewriter would be the most new work. (The Tesseract, built, turned out
+cheaper than expected: drawn as lines it needs no painter at all.)

@@ -550,6 +550,11 @@ local ES = {
     ["THE PIGGY BANK"] = "LA HUCHA",
     ["THE PIGGY BANK IS FULL"] = "LA HUCHA ESTA LLENA",
     ["BANKRUPT!"] = "¡BANCARROTA!",
+    -- MATHS's encore (`tesseract` in src/enemy.lua): its name, the line it
+    -- turns into the page with, and what the page says at its last third.
+    ["THE TESSERACT"] = "EL TESERACTO",
+    ["THE FOURTH DIMENSION"] = "LA CUARTA DIMENSION",
+    ["HYPERSPACE!"] = "¡HIPERESPACIO!",
     ["NOUN"] = "SUSTANTIVO",
     ["VERB"] = "VERBO",
     ["ADJECTIVE"] = "ADJETIVO",

@@ -15,10 +15,10 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | | |
 | --- | --- |
 | **When** | At 10:00 of each cycle (`Spawner.BOSS_AT = 600`). Drills and surges are cleared and the horde stops spawning. |
-| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today SCIENCE has one (the Atom) and FINANCE has one (the Piggy Bank). |
+| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today SCIENCE has one (the Atom), FINANCE has one (the Piggy Bank) and MATHS has one (the Tesseract). |
 | **Arena** | `Game:openArena` puts a box round the page. The box comes down when the next cycle starts (`Spawner:nextCycle`). |
 | **Escort** | One arrival every 1.5s while fewer than 20 enemies are on the page. Weighted: bat 5, skull 3, eye 2, wad 2, bulb 2 (`ESCORT` in `src/spawner.lua`). |
-| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom and the Piggy Bank are 2822 (Masters) and 3704 (PhD). |
+| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom, the Piggy Bank and the Tesseract are 2822 (Masters) and 3704 (PhD). |
 | **Damage** | Contact damage is 20 on every boss and steps ×1.18 per cycle (`DAMAGE_PER_CYCLE`). Move damages on the rows are cycle-1 values and scale the same way. |
 | **Body** | All bosses share `knock = 0.06` and `hold = 0.3`. Every boss is worth 250 xp. |
 | **Phases** | Health thirds: phase 1 above 66%, phase 2 above 33%, phase 3 for the rest. A list of three values on a row is one value per phase. The whistle is the exception: it has no phases, only health thresholds at 75/50/25%. |
@@ -38,6 +38,7 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | The Still Life | ART | light | shade, drop, roll, top | roll (phase 2), top (phase 3) | the lamp moves, shadows grow |
 | The Atom | SCIENCE (encore) | orbits | sweep, throw, fission | splits in two at 50%; double sweeps in the last fifth | a dashed red ring on the floor where the orbit will swell |
 | The Piggy Bank | FINANCE (encore) | greed | charge, recall, shatter | two charges in a row (phase 2); breaks open at 30%, then three charges and no bait | it turns its snout to you, a dashed red arrow down its lane |
+| The Tesseract | MATHS (encore) | dimension | inside-out, corners, net, fold | fold and the second, inverted flip (phase 2); turning squares, double volley, shuffled net (phase 3) | its shapes drawn on the floor first: two squares, a numbered net, a dashed square on you |
 
 ---
 
@@ -423,6 +424,54 @@ already spat stays on the floor; a charge in progress stops when glued in place.
 A burst of pink shards. Whatever coins were in the air land where they are, and
 **6 more spill out** round it, harmless. Then the win card (or, on ENDLESS, the
 next cycle with the coins still on the page).
+
+## 10. The Tesseract: MATHS's encore (`tesseract`)
+
+**Files:** row `tesseract` in `src/enemy.lua`, brain at `src/tesseractboss.lua`, body at `src/tesseract.lua`
+**Callout:** "THE FOURTH DIMENSION" · **Body:** radius 15, speed 20.
+**When:** Masters and PhD only, ten minutes after the Die goes down.
+
+### Entrance
+It walks on from the ring like the others, then turns into the page out of
+nothing over 1.3s, spinning down from six times its pace, and drifts for 0.8s
+before its first move. It can be hit while it forms.
+
+### Idle
+Drifts straight at you, slower than anything else on the page. It turns
+through four dimensions the whole time, faster the more it is hurt. Cool between
+moves: **2.3 / 1.9 / 1.5s** + up to 0.6s.
+
+### Moves
+Flip weighs 1.4 when you are within 1.1 × the outer square, 0.4 otherwise. Corners
+weigh 1.1 past 50px (0.6 nearer). The net is 0.9 always. Fold, from phase 2, is
+2.0 past 110px and 0.2 nearer. The last move is ×0.3.
+
+| Move | Tell | Hot | Numbers |
+| --- | --- | --- | --- |
+| **Inside-out** | It shivers and nearly stops turning. Two dashed squares on the floor round it, turned the way the cube is turned, the band between them dotted red. | It turns half over through w (the inner cube becomes the outer). The band between the squares is red for 0.45s: **14 dmg**. The crowd caught in it is flung out (260). | inner square 30 out · outer 84 / 92 / 100 · tell 1.1 / 0.95 / 0.85 · rest 0.9 / 0.8 / 0.6 |
+| **Inside out** (phase 2+) | Straight after the flip, 0.75s: the middle square and a 36px rim outside the outer square are dotted. | The middle and the rim go off. The band you dodged into is the only floor that stays safe. | same numbers |
+| **Corners** | It nearly stops turning. The outer 8 corners (all 16 from phase 2) blink red. | Each corner flies straight out the way it sticks out on the page, the furthest at **80** and the nearest at 40 (you move at 58): **9 dmg**, life 4s. | tell 0.8 / 0.7 / 0.6 · volleys 1 / 1 / 2 (the second spun on 0.35s and aimed 0.45s) · rest 0.7 / 0.6 / 0.5 |
+| **Net** | It unfolds a net of eight cubes, 30px each (three of the page's squares), from the square it hovers over towards you. The net is a cross: a column of four with two arms either side of the second. The cubes are numbered 1–8, and the next to go blinks. | Each cube goes red in its number's order, **0.5s each**, **14 dmg**. Then the net folds back up. | opens 0.5 · first after 0.7 more · one every 0.42 / 0.36 / 0.3 · order: root→tip / tip→root / shuffled |
+| **Fold** (phase 2+) | It shrinks and spins out of the page over 0.5s. A dashed spinning square marks where you stood (clamped into the box), with a grey square closing in on it. | It is back there in 0.2s with a square shock **34 out**: **14 dmg**. While it is out it can't be hit and has no contact damage. | aim 1.1 / 1.0 / 0.9 · rest 0.9 / 0.8 / 0.7 |
+
+### Phases
+Thirds, as the die.
+
+- **2 (66%):** fold joins, the flip turns back inside out straight after, the
+  corners volley is all sixteen, and the net runs from the tip back to the root.
+- **3 (33%):** "HYPERSPACE!", and 1.2s of spinning at triple speed. The flip's
+  squares turn 0.6 rad while they go off, two volleys of corners, and the net goes
+  off in a shuffled order: read the numbers.
+- From about 60% hurt one of its edges now and then jumps a pixel or two out of
+  place in red for a few frames. Its blush heart goes denser at a third, and red
+  at two thirds.
+
+### Glue
+Cancels an inside-out or a volley still being counted in, or a net none of whose
+cubes has gone off yet, and it rests 0.4s.
+
+### Death
+A burst at each of its sixteen corners, and a knock. Then the win card.
 
 ---
 

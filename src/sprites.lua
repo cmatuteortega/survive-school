@@ -6296,6 +6296,13 @@ function Sprites.load()
             for i = 1, 30 do rows[i] = ("r"):rep(44) end
             return rows
         end)()),
+        -- And MATHS's, drawn live as lines (src/tesseract.lua): the box the
+        -- tesseract is measured off, the outer cube turned to its widest.
+        tesseract = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 44 do rows[i] = ("r"):rep(44) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",
@@ -7159,6 +7166,17 @@ function Sprites.load()
         "orrrwo",
         "owwwwo",
         "oooooo",
+    })
+
+    -- A corner off the tesseract (`corners` in src/enemy.lua), thrown straight
+    -- out: the bead its corners blink as before they go (Tesseract.vertex), so
+    -- what is in the air is visibly the corner that was on it.
+    Sprites.vertex = pixelart.newSprite({
+        "..o..",
+        ".oro.",
+        "orkro",
+        ".oro.",
+        "..o..",
     })
 
     Sprites.pip = pixelart.newSprite({

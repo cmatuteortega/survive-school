@@ -424,6 +424,11 @@ Subjects.list = {
         -- a number before it happens -- a d6, a d10 and a d20, each roll's
         -- move stamped on the page's own squares.
         boss = "die",
+        -- And its encore (src/tesseractboss.lua): what squared paper is a
+        -- slice of. The die is about reading a number before it happens; the
+        -- tesseract is about which side of a shape you are on when the shape
+        -- turns through a direction the page does not have.
+        encore = "tesseract",
         -- The grid, obviously and heavily: squared paper is a grid, a times
         -- table is a grid, and a block of monsters arriving four by four on a
         -- page already ruled four by four is the single most on-the-nose thing

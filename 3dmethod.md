@@ -12,7 +12,10 @@ moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of 
 a part hinged off the body and one built about a different point (see **Poses with
 a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`,
 `src/plaster.lua` (the ART still life), `src/atom.lua` (SCIENCE's second boss,
-the atom) and `src/piggy.lua` (FINANCE's second boss, the piggy bank).
+the atom) and `src/piggy.lua` (FINANCE's second boss, the piggy bank). The
+MATHS tesseract (`src/tesseract.lua`) is neither: a solid in four dimensions,
+projected every frame and drawn as lines (see **Projected live as lines: the
+tesseract**).
 
 The short version: **model the thing in 3D in a script, ray-trace it at sprite
 size straight into palette letters, do that once per heading, and bake the
@@ -22,7 +25,8 @@ pictures.
 
 ## Two ways to be solid
 
-The game has nine bosses drawn as solid objects, made in two different ways --
+The game has nine bosses drawn as solid objects, made in two different ways (and
+a tenth, the tesseract, that is projected as lines rather than either) --
 the metronome is the whistle's way with one part done the eye's, the stamp and
 the dictionary are the whistle's way with more than one picture per heading, the MATHS die is
 the eye's way on flat faces (see **Painted live on flat faces: the die**), and the
@@ -565,6 +569,36 @@ order of their distance from one spot, so the web grows out from where it starte
 Because the picture is now several solids and an edge pass, it is worked out once a
 frame into rows of runs (`Piggy:raster`) and kept: the blank under it, the hit's
 rim and the body all read the same rows.
+
+## Projected live as lines: the tesseract
+
+MATHS's second boss (`src/tesseract.lua`) is the one solid here with no surface
+worth painting. A tesseract seen in three dimensions is a cube inside a cube with
+the corners joined, and painting its faces would hide the inner cube, which is
+the part that makes it a tesseract. So it is drawn as a wireframe, and the method
+is the simplest in this file:
+
+1. **Sixteen corners, thirty-two edges.** Every corner is +-1 on x, y, z and w.
+   Every edge joins two corners that differ on one axis, and the axis it runs
+   along is kept, because the eight that run along w are coloured apart.
+2. **Turn in four dimensions.** Each frame the corners are turned in the x-w and
+   z-w planes. A turn in a plane with w in it is what makes the inner cube flow
+   out through the faces of the outer one.
+3. **Perspective down w.** `k = DEPTH / (DEPTH - w)` and x, y, z are multiplied
+   by it: the cube further along w comes out smaller. This is the step that makes
+   it a cube *inside* a cube, and the same thing ordinary perspective does to z.
+4. **Then an ordinary solid.** What comes out is a 3D wireframe. It is turned
+   about the upright (`yaw`), looked at from `TILT` above the page, and projected
+   straight on. The depth that comes out of that only orders the edges.
+5. **Lines, back to front.** `pixelart.line` at any angle: far edges slate, near
+   ones ink, the w struts red. The silhouette is the convex hull of the projected
+   corners, filled a row at a time, so the blank, the rim and the flash are one
+   honest shape.
+
+It costs about a thousand single-pixel rectangles a frame, comparable to a
+painted body, and needs no lamp and no per-pixel ray. The trade is that it can't
+be shaded. The blush dither of the inner cube's hull is what stands in for a
+surface.
 
 ## Smaller than a boss: the teardrop
 

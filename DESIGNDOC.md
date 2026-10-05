@@ -610,9 +610,9 @@ ART says `stilllife` (see **The bosses**); SCIENCE says `bosseye`, written out o
 row rather than left to the fallback (a row without one gets the eye) so that giving a
 page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one. A row may also name an **encore**, the second boss the lesson ends on at
-a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom` and
-FINANCE's is `piggy`, and the other five have none yet, so they end on their boss
-at every course.
+a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom`,
+FINANCE's is `piggy` and MATHS's is `tesseract`, and the other four have none yet,
+so they end on their boss at every course.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
 because a tool line's first level is its unlock — issuing a tool is taking that
@@ -1332,6 +1332,37 @@ the air -- a lob of bait, a coin called home, a coin burst out -- is the brain's
 you is spent. On death (`dropParts`) everything in the air lands and six more spill
 out round it, harmless. Glue drops a charge's wind or a recall's tell; bait already
 spat stays.
+
+**The tesseract** (`tesseract`, MATHS's encore) is a fight about *dimension*:
+which side of a shape you are on when the shape turns into something else. Its
+body is `src/tesseract.lua`, and it is the one boss drawn as lines rather than
+painted or baked. Sixteen corners (every one of them +-1 on four axes) are turned
+each frame in the x-w and z-w planes, seen in perspective down w (`DEPTH`, so the
+far cube comes out half the near one), then turned about the upright and looked
+down on (`TILT`). The 32 edges go down back to front: slate behind, ink in front,
+and the eight struts along w red. The silhouette is the convex hull of the corners
+(`Tesseract.hullOf`, filled through `pixelart.fillPolygon`): that hull is the blank,
+the rim and the flash. The cube that started furthest along w is dithered blush
+inside it as a heart, denser at a third hurt and red at two thirds, and past 60%
+one edge now and then jumps out of place in red. `fold` scales it out of the page
+(0 is gone, and `drawMask` and `draw` then draw nothing), `flip` is extra x-w turn
+the brain asks for, `spin` multiplies its pace, and `hot` marks corners blinking to
+be thrown. The projection is worked out once a frame in `update` and shared.
+
+Its brain is `src/tesseractboss.lua`. It drifts at you; its moves:
+
+| move | tell | what |
+| --- | --- | --- |
+| inside-out (`flip`) | it nearly stops turning; two dashed squares round it, at the cube's own yaw, the band between dotted red | it turns half over through w (`body.flip` 0 to pi, which is the same tesseract, so it is reset without a jump). The band between the squares is hot for 0.45s and the crowd in it gets a 260 shove outward. From phase 2 a second pass, `again` later: the middle and a `rim` outside go off. At phase 3 the squares turn `turn` while hot |
+| `corners` | it nearly stops; the outer 8 (later all 16) corners blink red (`body.hot`) | each flies straight out from the middle through where it is on the page, at `speed` times between `slow` and 1 by how far out it sticks (`Tesseract:reachOf`): a ring of two speeds shaped like the body. `Sprites.vertex`. Two volleys at phase 3 |
+| `unfold` (the net) | eight cubes, `cell` across, open out of the root cell towards you (snapped to the four directions and the page's squares) as Dali's cross, numbered by the order they will go; the next to go blinks | each goes hot in turn for `hot`, `step` apart -- root to tip, tip to root, then shuffled by phase -- and the net folds back up |
+| `fold` | phase 2+, mostly when you are past `far`: it spins and shrinks out of the page (`fold` to 0, `ghost`), a dashed square on where you stood | it comes back in there with a square shock `shock` out |
+
+Phases are the eye's thirds; the third is announced with `HYPERSPACE!` and a burst
+of spin. Glue drops a flip or a volley still being counted in, or a net none of
+whose cubes has gone yet. Every shape it puts on the floor is turned with the body
+(`yaw`) or laid on the page's squares, so the floor reads as the thing it came from.
+On death (`dropParts`) every corner bursts.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
@@ -6354,12 +6385,12 @@ and are all the same 11x11 glyph.
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
   dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, the atom's `atom`, the piggy bank's `piggy`, and any of the horde's (`shot`, `charge`) -- see
+  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
   `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua`,
-  `src/stilllife.lua`, `src/atomboss.lua` or `src/piggyboss.lua`, built in `Enemy.new`; one that comes
+  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua` or `src/tesseractboss.lua`, built in `Enemy.new`; one that comes
   apart into several bosses answers `share` (the HUD's bar) and `heir` (who the bar
   goes to when the one it is on dies), as the atom's does. A solid body is a script beside `art/whistle.py` over
   `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or
