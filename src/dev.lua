@@ -7,7 +7,9 @@
 -- save full of records) are not opposites. The purse and the perks bought out
 -- of it are deliberately untouched: those are purchases, and src/refund.lua is
 -- their way back. Nothing is on the page until the word SETTINGS is tapped
--- three times (`Dev.showing`).
+-- three times (`Dev.showing`) -- and each time that gesture turns the controls
+-- on it pays `Dev.GIFT` into the purse, which is the dev way to the courses and
+-- the counter: they are bought, so the unlocks row cannot open them.
 --
 -- It also decides, once at load, whether the shop and the ads get desktop
 -- stand-ins (src/store.lua, src/ads.lua): love-iap's mock store and an ad that
@@ -19,7 +21,8 @@
 -- `Collection.lessonOpen` and `Characters.owns`, the `unlocks` and `dev` lines
 -- src/options.lua writes, the `Dev.showing` guards in src/pause.lua and
 -- src/game.lua's `keypressed`, the `Dev.showing()` that picks the stand-ins in
--- src/store.lua and src/ads.lua, the BOSS button in src/menu.lua and the
+-- src/store.lua and src/ads.lua, the `Dev.GIFT` paid in `Settings:tapHead`,
+-- the BOSS button in src/menu.lua and the
 -- `Dev.boss` read in src/game.lua (`Game:reset`, `Game:bankRun`,
 -- `Game:cashRun`, and the menu's "boss" answer) -- and then this file.
 
@@ -35,6 +38,9 @@ Dev.unlocks = "earned"
 -- Whether any of it is on the page. Saved too (src/options.lua), so the gesture
 -- is done once; off on a book nobody has done it on.
 Dev.shown = false
+
+-- What the gesture pays each time it turns the controls on.
+Dev.GIFT = 1000
 
 -- Asked by the two screens before they draw any of it. Not simply `Dev.shown`:
 -- a book left in ALL with the row put away would be lying with no visible way

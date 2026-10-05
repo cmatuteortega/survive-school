@@ -2987,8 +2987,16 @@ not touch the purse or the levels bought out of it -- those are things you bough
 rather than things the book opened, and the counter has its own way back for them
 (**What the purse buys**).
 
+**The one thing it does pay for is the gesture.** Each time three taps on the
+SETTINGS heading turn the dev controls *on*, `Settings:tapHead` pays `Dev.GIFT`
+(1000) through `Purse.earn` -- turning them off pays nothing, so a top-up is off and
+on again. It is the dev way to a course and the counter, which are bought and so
+are deliberately out of the unlocks row's reach, and it is a real deposit: the
+coins stay when the controls go away.
+
 Taking it out at launch is the row at the bottom of `ROWS` in `src/settings.lua`,
-the three `Dev.opened` calls, the `unlocks` line in `src/options.lua`, and the file.
+the three `Dev.opened` calls, the `Dev.GIFT` line in `Settings:tapHead`, the
+`unlocks` line in `src/options.lua`, and the file.
 
 **The boss test is the other thing it holds.** While `Dev.showing()`, the title
 grows a BOSS button in its bottom-right corner (the LANG button mirrored,

@@ -66,6 +66,7 @@ local Haptics = require("src.haptics")
 local Orient = require("src.orient")
 local Characters = require("src.characters")
 local Dev = require("src.dev")
+local Purse = require("src.purse")
 local Coach = require("src.coach")
 local util = require("src.util")
 
@@ -560,6 +561,10 @@ function Settings:tapHead()
 
     self.taps = 0
     Dev.shown = not Dev.shown
+    -- And a handful of coins every time it goes on (`Dev.GIFT`), so the
+    -- courses and the counter can be reached on a phone without an afternoon of
+    -- runs in front of them. Through `Purse.earn` like any other coin.
+    if Dev.shown then Purse.earn(Dev.GIFT) end
     self.dirty = true
     self:bank()
     -- The sound a box makes when it takes an answer, because that is what this
