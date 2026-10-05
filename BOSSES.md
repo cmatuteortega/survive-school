@@ -15,10 +15,10 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | | |
 | --- | --- |
 | **When** | At 10:00 of each cycle (`Spawner.BOSS_AT = 600`). Drills and surges are cleared and the horde stops spawning. |
-| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today only SCIENCE has one: the Atom. |
+| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today SCIENCE has one (the Atom) and FINANCE has one (the Piggy Bank). |
 | **Arena** | `Game:openArena` puts a box round the page. The box comes down when the next cycle starts (`Spawner:nextCycle`). |
 | **Escort** | One arrival every 1.5s while fewer than 20 enemies are on the page. Weighted: bat 5, skull 3, eye 2, wad 2, bulb 2 (`ESCORT` in `src/spawner.lua`). |
-| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom is 2822 (Masters) and 3704 (PhD). |
+| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom and the Piggy Bank are 2822 (Masters) and 3704 (PhD). |
 | **Damage** | Contact damage is 20 on every boss and steps ×1.18 per cycle (`DAMAGE_PER_CYCLE`). Move damages on the rows are cycle-1 values and scale the same way. |
 | **Body** | All bosses share `knock = 0.06` and `hold = 0.3`. Every boss is worth 250 xp. |
 | **Phases** | Health thirds: phase 1 above 66%, phase 2 above 33%, phase 3 for the rest. A list of three values on a row is one value per phase. The whistle is the exception: it has no phases, only health thresholds at 75/50/25%. |
@@ -37,6 +37,7 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | The Die | MATHS | number | throw → roll → strike | shape changes d6 → d10 → d20 | the face it lands on |
 | The Still Life | ART | light | shade, drop, roll, top | roll (phase 2), top (phase 3) | the lamp moves, shadows grow |
 | The Atom | SCIENCE (encore) | orbits | sweep, throw, fission | splits in two at 50%; double sweeps in the last fifth | a dashed red ring on the floor where the orbit will swell |
+| The Piggy Bank | FINANCE (encore) | greed | charge, recall, shatter | two charges in a row (phase 2); breaks open at 30%, then three charges and no bait | it turns its snout to you, a dashed red arrow down its lane |
 
 ---
 
@@ -369,6 +370,59 @@ Cancels a sweep or a throw still being counted in, and it rests for 0.4s.
 Killing the half the bar is hung off moves the bar to the other (`AtomBoss:heir`).
 The lesson ends when the second half goes down: no death animation, a burst, then
 the win card.
+
+## 9. The Piggy Bank: FINANCE's encore (`piggy`)
+
+**Files:** row `piggy` in `src/enemy.lua`, brain at `src/piggyboss.lua`, body at `src/piggy.lua`
+**Callout:** "THE PIGGY BANK IS FULL" · **Body:** radius 14, speed 30.
+**When:** Masters and PhD only, ten minutes after the Stamp goes down.
+
+### Coins
+Everything it does puts coins on the page, and **they are real**: each one you
+walk over is one coin in the purse at the end of the run (`banked`, a term of
+`Purse.forRun` outside the course's multiplier, kept across a bookmark). A coin on
+the floor is a pickup (`coin` in `src/pickup.lua`, never scattered, never counted
+against the scatter cap) and stays on the page after the fight. A coin in the air
+is the brain's until it lands.
+
+### Entrance
+It walks on from the ring like the others, stands rattling for 0.9s facing you,
+then trots for 0.8s before its first move.
+
+### Idle
+Trots straight at you, turning its body to face the way it is going (5 rad/s).
+Cool between moves: **2.2 / 1.8 / 1.2s** + up to 0.6s.
+
+### Moves
+Charge weighs 1.2 (×0.6 straight after a charge). Recall weighs 0.6 + 0.12 per
+coin on the floor of the box, needs at least 3, never follows itself, and is gone
+once it is broken.
+
+| Move | Tell | Hot | Numbers |
+| --- | --- | --- | --- |
+| **Charge** | Plants and faces you, nose down; the wad's blinking red rim; a dashed red arrow 90 long down the locked lane. During the wind it spits **bait** coins out of its slot, lobbed (0.45s) into the lane 34px out and every 22px after. | Runs the lane at **140** (you move at 58), bouncing off the box walls; a pen line stops it dead. Contact is the usual 20. Then stands dizzy. | wind 0.9 / 0.8 / 0.65 · charges in a row 1 / 2 / 3 (later ones wound for 0.45, no bait) · bait 3 / 4 / 0 · up to 1.5s · bounces 0 / 1 / 1 · dizzy 1.0 / 0.85 / 0.7 |
+| **Recall** ("savings") | Rears up, nose in the air; every coin on the floor of the box blinks red in a ring with a dashed line home. Coins picked up during the tell are yours. | Every called coin slides back to its slot at once, red, **8 dmg** to anything in the way (a coin that hits you is spent). Out after 3s at most. | tell 1.0 / 0.85 · speed 105 / 120 · rest 0.6 / 0.5 |
+
+### Phases
+Phase 1 above 65%; phase 2 below it; phase 3 once it has shattered.
+
+- **Cracks** spread across its back from one spot as it is hurt (from about 12%
+  gone), the body's way of showing the phases coming.
+- **Shatter (at 30%):** only from idle or a rest. 1.1s of shaking harder and
+  harder, then "BANKRUPT!": the shards round the crack's first spot are gone and
+  it bursts **3 rings of 14 coins**, 0.4s apart, each with a 2-coin hole and turned
+  half a step from the last. Coins fly at **85**, **9 dmg**, and land 60–110px out
+  as pickups. Then it rests 1.0s.
+- **3 (broken):** no bait and no recall; three charges in a row, shorter cools.
+
+### Glue
+Cancels a charge wind or a recall still being counted in, and it rests 0.4s. Bait
+already spat stays on the floor; a charge in progress stops when glued in place.
+
+### Death
+A burst of pink shards. Whatever coins were in the air land where they are, and
+**6 more spill out** round it, harmless. Then the win card (or, on ENDLESS, the
+next cycle with the coins still on the page).
 
 ---
 

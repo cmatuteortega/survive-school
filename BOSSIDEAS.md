@@ -11,14 +11,15 @@ The Atom is built (`src/atom.lua`, `src/atomboss.lua`; see `BOSSES.md`). It
 walks on ten minutes after the eye goes down at a master's and a doctorate, which
 is how every second boss here is meant to arrive: named as the lesson's `encore`
 in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
-`src/course.lua`. The rest are still ideas only.
+`src/course.lua`. The Piggy Bank is built the same way (`src/piggy.lua`,
+`src/piggyboss.lua`). The rest are still ideas only.
 
 | Lesson | Current boss | Second boss | Drawn as |
 |---|---|---|---|
 | SCIENCE | eye | **The Atom** (built) | painted live |
 | P.E. | whistle | **The Vaulting Box** | baked poses |
 | GRAMMAR | dictionary | **The Typewriter** | baked + live part |
-| FINANCE | stamp | **The Piggy Bank** | painted live |
+| FINANCE | stamp | **The Piggy Bank** (built) | painted live |
 | MUSIC | metronome | **The Gramophone** | baked + live part |
 | MATHS | die | **The Tesseract** | painted live |
 | ART | still life | **The Mannequin** | painted live under the lamp |
@@ -57,16 +58,21 @@ in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
   - **Backspace** erases your pen strokes.
   - **CAPS LOCK** turns the next wave into big versions of the enemies.
 
-## FINANCE: The Piggy Bank
+## FINANCE: The Piggy Bank (built)
 
 - **Drawn:** a painted ellipsoid, the eye's method stretched. Cracks spread
-  across it as it takes damage, the way the eye's veins do.
+  across it as it takes damage, the way the eye's veins do. (Built as nine
+  ellipsoids -- barrel, snout, ears, legs, tail -- seen from a little above, so it
+  can turn to face where it is going.)
 - **Fight:**
   - It trots and charges.
   - It drops coins out of its slot. They really are pickups, but they're laid
     out as bait in its charge lanes, so you trade greed against safety.
   - At low health it shatters, and coins burst out as a bullet ring. Survive it
     and you collect them.
+  - (Added when built) **Savings:** coins left lying are called back into its
+    slot all at once, and hurt on the way -- so leaving the money is its own
+    risk.
 
 ## MUSIC: The Gramophone
 
@@ -106,7 +112,7 @@ in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
 The cheapest to build, because each is mostly an existing body with a new brain:
 
 - The Atom reuses the eye's sphere painter.
-- The Piggy Bank reuses the same painter, stretched into an ellipsoid.
+- The Piggy Bank reuses the same painter, stretched into an ellipsoid (built).
 - The Mannequin reuses the still life's lamp.
 
 The Tesseract and the Typewriter would be the most new work.

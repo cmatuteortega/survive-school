@@ -14,6 +14,12 @@
 -- come near, is still there if you leave and come back, and once taken is gone
 -- for the run: it is a place on the page, not a beat on a clock, and knowing
 -- where one is is worth something.
+--
+-- And a fourth that is never scattered and never on the fixed layer: the coin
+-- the piggy bank puts on the page (src/piggyboss.lua), as bait in its charge
+-- lanes and as what bursts out of it. It is here rather than in its brain
+-- because it is the same thing as the other three -- touched means taken, and
+-- it stays on the page when the fight is over.
 
 local Sprites = require("src.sprites")
 local Palette = require("src.palette")
@@ -88,6 +94,14 @@ local TAKE = {
     diamond = function(game, x, y)
         game.player:levelUp()
         game.particles:burst(x, y, 8, Palette.sky)
+    end,
+    -- A coin the piggy bank put on the page (src/piggyboss.lua): never
+    -- scattered, only spat, burst or spilled out of it. One coin in the purse at
+    -- the end of the run (`banked`, Game:runWorth), which is the whole of why
+    -- it is worth walking into a charge lane for.
+    coin = function(game, x, y)
+        game.banked = (game.banked or 0) + 1
+        game.particles:burst(x, y, 6, Palette.blush)
     end,
 }
 
@@ -201,6 +215,9 @@ function Pickup.materialize(game)
 end
 
 function Pickup:update(dt, game)
+    -- Already gone: a coin the piggy bank called home this frame
+    -- (src/piggyboss.lua) is in the air now, and is not still here to be taken.
+    if self.dead then return end
     local player = game.player
     local dist = util.len(player.x - self.x, player.y - self.y)
 

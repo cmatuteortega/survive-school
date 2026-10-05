@@ -2175,6 +2175,12 @@ rather than a fifth term, because what a harder class is worth is everything you
 did reckoned higher, where a flat bonus for enrolling would pay a doctorate for
 walking onto the page.
 
+Plus one thing that is not reckoned at all: **every coin it picked up** off the
+page in the piggy bank's fight, one each, on top of the rate. They are coins
+already — the very coin the purse is drawn with — so one picked up is one in the
+purse, and the course has paid for them once already by making the fight they
+came out of.
+
 All of it banked into a purse the next run still has: one number, in one file,
 shared by the whole book.
 
@@ -7384,6 +7390,53 @@ other; the lesson is over when the second one goes. In the last fifth they sweep
 orbits at once.
 
 Glue holds a sweep or a throw it is still counting in, as it holds the eye's tells.
+
+### And at a master's, FINANCE ends on the piggy bank
+
+The stamp says which box you are in. The piggy bank is what the ledger was being
+kept for, and its fight is about the one question a ledger cannot answer: whether
+to go for the money. So it is FINANCE's second boss, trotting on ten minutes after
+the stamp goes down at a master's and a doctorate, and everything it does puts
+coins on the page — **real ones**. Every coin you walk over is a coin in the purse
+at the end of the run. That is the whole fight: greed against safety, every few
+seconds, and the game paying out in the currency the canteen takes so the greed is
+not pretend.
+
+It is drawn the eye's way, painted every frame (`src/piggy.lua`), but out of nine
+lumps rather than one — barrel, snout, ears, legs, tail — and seen from a little
+above, which is the first painted boss that can *face a way*. It turns its body to
+where it is going, so where the snout points is the next thing it is going to do;
+an animal lining its nose up on you is the oldest tell there is, and it costs the
+fight no extra drawing. It trots, its legs going in diagonal pairs. And as it is
+hurt, cracks spread across its back from one spot, the way the eye's veins come in:
+the phases are written on its body.
+
+**The charge is its big move.** It plants, points its snout down a lane at you,
+blinks the wad's red, and a dashed arrow on the floor says exactly where it is
+going. And while it digs in it **spits coins out of its slot into that lane** — bait,
+laid out between it and you. Then it goes, far faster than you, off the walls of the
+box, and stands dizzy at the end. Stepping out of the lane is safe and costs you the
+coins until it has passed; picking them up first is faster money and standing in the
+lane while it counts down. From the second phase it charges twice in a row, so the
+coins you left after the first are in the path of the second.
+
+**Coins left lying are not yours yet.** With enough of them on the floor it rears up,
+nose in the air, every coin it means to have back blinking in a red ring with a
+dashed line home — and then they all slide back into its slot at once, hitting
+anything in the way. Which closes the loop on the greed: the coins you leave become
+the next attack, and the cheapest way to dodge the recall is to have been greedy
+earlier. A coin picked up during the tell is yours, and is one fewer coming at you.
+
+**At under a third it breaks.** BANKRUPT — it shakes itself apart, the shards round
+where the cracks started fall out, and its savings burst out of it as rings of
+coins, red and hurting in the air, each ring with a gap and turned from the last so
+the way through is a zigzag. Every coin that misses you lands where it stops. Survive
+it and you collect them. What is left of it is broken, has nothing left to spit and
+nothing left to save, and it charges three times over. When it goes down the last of
+its savings spill out round it, harmless — the fight's last offer.
+
+Glue holds a charge it is still winding up, and a recall it is still calling, as it
+holds the eye's tells; bait already spat stays on the floor.
 
 ### The eye is a ball
 

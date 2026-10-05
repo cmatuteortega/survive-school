@@ -12,6 +12,8 @@ local DiceBoss = require("src.diceboss")
 local StillLife = require("src.stilllife")
 local Atom = require("src.atom")
 local AtomBoss = require("src.atomboss")
+local Piggy = require("src.piggy")
+local PiggyBoss = require("src.piggyboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -477,6 +479,53 @@ Enemy.types = {
                  halves = { size = 9, radius = 8, rings = 2, first = 16, step = 6,
                             keep = 64, turn = 0.6 },
              } },
+    -- FINANCE's encore (`encore` in src/subjects.lua): the piggy bank, which
+    -- trots on ten minutes after the stamp goes down at a master's and a
+    -- doctorate, and the fight about whether to go for the money. The moves and
+    -- why they are these moves are src/piggyboss.lua; the body is src/piggy.lua.
+    --
+    -- The eye's numbers where the fight is the same fight -- 900 health, the
+    -- knock, the hold, 20 on contact -- priced a cycle on by the spawner like
+    -- the atom. Trots a little faster than the eye walks, because its threat is
+    -- its body: every move but the recall is it running at you.
+    piggy = { name = "PIGGY BANK", sprite = "piggy", hp = 900, speed = 30, radius = 14,
+              damage = 20, xp = 250, shadow = 30, boss = true, knock = 0.06, hold = 0.3,
+              title = "THE PIGGY BANK", call = "THE PIGGY BANK IS FULL",
+              piggy = {
+                  -- The second phase, as a share of its health left.
+                  second = 0.65,
+                  -- Seconds of trotting between moves, plus up to 0.6 more: by
+                  -- phase, which is whole, past `second`, and broken.
+                  cool = { 2.2, 1.8, 1.2 },
+                  -- A coin: how big it is to be hit by, and the lob the bait is
+                  -- spat on.
+                  coin = { hit = 3, arc = { time = 0.45, high = 18 } },
+                  -- The charge. 140 is well over your 58 -- the wad's bargain, you
+                  -- step off the lane rather than outrun it. The arrow on the
+                  -- floor is `tell` long. `count` charges in a row, the later
+                  -- ones wound for `again`; `bait` coins spat into the lane on
+                  -- the first wind, from `near` out at `step` apart -- inside the
+                  -- arrow, so the money is where the danger is.
+                  charge = { wind = { 0.9, 0.8, 0.65 }, again = 0.45, count = { 1, 2, 3 },
+                             bait = { 3, 4, 0 }, near = 34, step = 22, speed = 140,
+                             time = 1.5, bounces = { 0, 1, 1 }, rest = { 1.0, 0.85, 0.7 },
+                             tell = 90 },
+                  -- Savings: at least `least` coins on the floor of the box for
+                  -- it to bother, the tell, and how fast they come home and what
+                  -- each hits for on the way. Out after `hold` whatever is left.
+                  recall = { least = 3, tell = { 1.0, 0.85, 0.85 }, speed = { 105, 120, 120 },
+                             damage = 8, hold = 3, rest = { 0.6, 0.5, 0.5 } },
+                  -- The shatter, at under `at` of its health: `time` of shaking,
+                  -- then `volleys` rings of `count` coins `gap` apart, each with
+                  -- a hole `hole` coins wide, flying `near` to `far` out at
+                  -- `speed` and landing there. 85 is ~1.5 times you, so a ring
+                  -- is stepped through rather than run from.
+                  shatter = { at = 0.3, time = 1.1, volleys = 3, count = 14, hole = 2,
+                              gap = 0.4, speed = 85, near = 60, far = 110, damage = 9,
+                              rest = 1.0 },
+                  -- And what spills out of it when it goes down.
+                  spill = 6,
+              } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
     -- wet you have to stop standing on -- and this is the other half of the
@@ -1152,6 +1201,9 @@ function Enemy.new(kind, x, y, scale)
         -- painted the eye's way, with its orbits round it.
         nucleus = def.atom and Atom.new(def.atom.size, def.atom.rings,
             def.atom.first, def.atom.step) or nil,
+        -- And the piggy bank FINANCE ends on at a master's (src/piggy.lua): a
+        -- pig of ellipsoids painted the eye's way, facing where it goes.
+        piggy = def.piggy and Piggy.new() or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -1170,13 +1222,16 @@ function Enemy.new(kind, x, y, scale)
         -- it holds, and lifts the whole table somewhere nearer when it must.
         -- And the atom's (src/atomboss.lua), which walks like the eye and
         -- splits itself in two.
+        -- And the piggy bank's (src/piggyboss.lua), which trots and charges
+        -- like a wad and throws its coins about.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
             or def.dictionary and Dictionary.new(def)
             or def.dice and DiceBoss.new(def)
             or def.still and StillLife.new(def)
-            or def.atom and AtomBoss.new(def) or nil,
+            or def.atom and AtomBoss.new(def)
+            or def.piggy and PiggyBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -1716,7 +1771,7 @@ function Enemy:footing()
     -- Stuck things stop bobbing, and an eye boss has a gait of its own instead
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
-        and not self.plaster and not self.nucleus
+        and not self.plaster and not self.nucleus and not self.piggy
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -1847,7 +1902,7 @@ function Enemy:drawSolid()
         self.eyeball:drawMask(x, y, self:outlineColour() and 1 or 0)
         return
     end
-    local painted = self.dice or self.plaster or self.nucleus
+    local painted = self.dice or self.plaster or self.nucleus or self.piggy
     if painted then
         love.graphics.setColor(Palette.paper)
         painted:drawMask(x, y, self:outlineColour() and 1 or 0)
@@ -1900,7 +1955,7 @@ function Enemy:draw()
     -- leaves none; one in the air leaves less of one the higher it is.
     -- The still life leaves none of its own: its shadows are thrown by its
     -- lamp, and drawn by its brain (src/stilllife.lua).
-    local painted = self.dice or self.plaster or self.nucleus
+    local painted = self.dice or self.plaster or self.nucleus or self.piggy
     if painted then
         if painted.hidden then return end
         shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)

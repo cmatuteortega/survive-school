@@ -551,7 +551,7 @@ function Game:cashRun()
 end
 
 -- What the run is worth in coins (src/purse.lua), and the one place the run is
--- turned into the four things the sum is made of. Three callers -- the money
+-- turned into the five things the sum is made of. Three callers -- the money
 -- actually being paid, and the two cards printing what it was -- so the terms are
 -- gathered here rather than three times over, and the day the sum grows a fifth
 -- term this is the only place that has to hand it over.
@@ -578,6 +578,7 @@ function Game:runWorth(won)
         skips = self.skipped,
         rung = Mark.rung(Mark.forRun(self.time or 0, won or false)),
         eyes = self.eyes,
+        coins = self.banked,
         pay = (self.course or Course.default).pay,
     })
     return self.doubled and coins * 2 or coins
@@ -754,6 +755,10 @@ function Game:reset()
     -- been to the canteen hands the draft no corner at all.
     self.perks = Perks.forRun()
     self.skipped = 0
+    -- The piggy bank's coins picked up off the page (`coin` in src/pickup.lua),
+    -- the fifth term of what the run pays out (`Purse.forRun`): real coins,
+    -- banked as they are taken and paid with the rest when the run ends.
+    self.banked = 0
     -- The two ad offers, each once a run (src/ads.lua): whether the run has been
     -- stood back up by one, and whether its pay has been doubled by the other.
     self.adRevived = false
@@ -1195,6 +1200,7 @@ function Game:openBookmark()
     -- Game:reset has just handed this run a full set out of what the *book* owns,
     -- and the bookmark is what the run had actually got down to.
     self.skipped = mark.skipped
+    self.banked = mark.banked
     -- The two ad offers stay spent across a bookmark: once a run means once.
     self.adRevived = mark.adRevived
     self.doubled = mark.doubled
@@ -2773,7 +2779,10 @@ function Game:updatePickups(dt)
 
         local scattered = 0
         for _, p in ipairs(self.pickups) do
-            if not p.cell then scattered = scattered + 1 end
+            -- Nor do the piggy bank's coins (src/piggyboss.lua), which are
+            -- the fight's and not the page's: a box carpeted in them must not
+            -- switch the scatter off either.
+            if not p.cell and p.kind ~= "coin" then scattered = scattered + 1 end
         end
         if scattered < Pickup.MAX then
             -- Nil when every roll landed on something already out there; the

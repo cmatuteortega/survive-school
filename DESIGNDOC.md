@@ -610,8 +610,9 @@ ART says `stilllife` (see **The bosses**); SCIENCE says `bosseye`, written out o
 row rather than left to the fallback (a row without one gets the eye) so that giving a
 page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one. A row may also name an **encore**, the second boss the lesson ends on at
-a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom`, and the
-other six have none yet, so they end on their boss at every course.
+a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom` and
+FINANCE's is `piggy`, and the other five have none yet, so they end on their boss
+at every course.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
 because a tool line's first level is its unlock — issuing a tool is taking that
@@ -1292,6 +1293,45 @@ when it has one). When the piece the bar is hung off dies, `Game:killEnemy` asks
 brain's `heir` and hangs the bar off the other; only the last piece going down is
 the boss going down. Glue drops a sweep or a throw still being counted in. The
 electron in the air is `Sprites.electron`.
+
+**The piggy bank** (`piggy`, FINANCE's encore) is a fight about *greed*: everything
+it does puts coins on the page, and the coins are real. Its body is
+`src/piggy.lua`, painted the eye's way but out of nine solids rather than one --
+a barrel, a snout, two ears, four legs and a tail, every one an ellipsoid in the
+pig's own frame -- and each pixel's ray is a quadratic against each solid it could
+be on, nearest kept. It is the one painted body seen from a little above rather than
+straight down (`ELEV`, half a radian), so it can turn on the page: `Piggy:face`
+eases its heading (`yaw`) round to where it is going, and the same body is a side
+view trotting, a snout coming at you and a rump going away; `pitch` tips its nose
+up for the recall and down for a charge. The legs are two diagonal pairs a half
+stride apart, the stride paid for in distance walked, so it trots when it moves and
+stands square when it stops. Ink goes round the silhouette and along any edge where
+one solid stands well in front of another (`EDGE`), which is what outlines an ear
+against the barrel. The **cracks** are the atom's seams on the barrel's ball:
+eighteen shards on a Fibonacci spiral, each reached at a share of hurt ranked by its
+distance from one spot on its back, a seam drawn once both shards either side of it
+are reached -- so they spread from one place, as the eye's veins do. Shattered
+(`broken`), the two shards nearest that spot are gone and drawn as the dark inside.
+The picture is worked out once a frame (`Piggy:raster`, rows of runs) and shared by
+the blank, the rim and the body.
+
+Its brain is `src/piggyboss.lua`. It trots at you facing its heading; its moves:
+
+| move | tell | what |
+| --- | --- | --- |
+| `charge` | plants facing the lane, the wad's blinking rim (`chargePhase = "wind"`), a dashed red arrow 90 long down the locked lane; spits `bait` coins out of its slot into the lane during the wind | runs the lane at 140 off the box walls (the eye's bowl at a pig's speed), stopped dead by a pen line, then dizzy -- `count` charges in a row, 1 / 2 / 3 by phase |
+| `recall` | with at least 3 coins on the floor of the box: rears nose up; each coin it is calling blinks in a red ring with a dashed line home | every called coin slides back into its slot at once, red, 8 to anything it crosses |
+| shatter | at 30%, from idle or a rest: shakes harder for 1.1s, `BANKRUPT!` | three rings of 14 coins, each with a two-coin hole and turned half a step, at 85 -- hurting (9) in the air and landing 60–110 out as pickups. Broken, it has no bait and no recall |
+
+A coin on the floor is a pickup like the heart (`coin` in `src/pickup.lua`):
+touched is taken, `Game.banked` goes up one, it is not counted against the
+scatter's cap, and it outlives the fight. `banked` is the fifth term of
+`Purse.forRun` (above the course's rate) and is written to the bookmark. A coin in
+the air -- a lob of bait, a coin called home, a coin burst out -- is the brain's
+(`flying`), drawn in `drawAir` and landed as a pickup when it stops; one that hits
+you is spent. On death (`dropParts`) everything in the air lands and six more spill
+out round it, harmless. Glue drops a charge's wind or a recall's tell; bait already
+spat stays.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
@@ -2073,8 +2113,10 @@ were on.
 four different kinds at a rate -- the body count over `PER_COIN` (100) floored,
 `PER_SKIP` (10) for every level the run sold back, `PER_GRADE` (1) for every rung
 of the grade, `PER_EYE` (8) for every eye put down, and then the whole of it
-multiplied by the course's `pay` (see **Courses**) and floored. The rate is a
-multiplier rather than a fifth term because what a harder class is worth is
+multiplied by the course's `pay` (see **Courses**) and floored -- plus a fifth,
+`coins`, added after the rate: the piggy bank's coins picked up off the page
+(`Game.banked`, see **The bosses**), which are coins already and one each. The rate is a
+multiplier rather than a sixth term because what a harder class is worth is
 *everything you did* reckoned higher, where a flat bonus for enrolling would pay a
 doctorate for walking onto the page. Read the payout through it and nothing else.
 
@@ -6312,12 +6354,12 @@ and are all the same 11x11 glyph.
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
   dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, the atom's `atom`, and any of the horde's (`shot`, `charge`) -- see
+  life's `still`, the atom's `atom`, the piggy bank's `piggy`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
   `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua`,
-  `src/stilllife.lua` or `src/atomboss.lua`, built in `Enemy.new`; one that comes
+  `src/stilllife.lua`, `src/atomboss.lua` or `src/piggyboss.lua`, built in `Enemy.new`; one that comes
   apart into several bosses answers `share` (the HUD's bar) and `heir` (who the bar
   goes to when the one it is on dies), as the atom's does. A solid body is a script beside `art/whistle.py` over
   `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or

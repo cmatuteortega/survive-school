@@ -385,6 +385,10 @@ Subjects.list = {
         -- about *which box you are in* -- every move outlined in cells first,
         -- and a pad one cell wide coming down on it.
         boss = "stamp",
+        -- And its encore (src/piggyboss.lua): what the ledger was being kept
+        -- for. The stamp says which box you are in; the piggy bank asks whether
+        -- the money in the box is worth standing in it for.
+        encore = "piggy",
         -- A ledger is rows and columns and so is a grid: what walks onto this
         -- page is a table of figures, in step, four deep. The line is the same
         -- idea one row at a time, and the ruler is the tool that answers both --

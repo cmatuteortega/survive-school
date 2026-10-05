@@ -8,8 +8,8 @@
 -- it is being saved up for is in the canteen and the canteen does not care which
 -- page you were on.
 --
--- **What a run is worth is one function and this is it**, and it is four terms
--- at a rate rather than one number because a run comes back with four different
+-- **What a run is worth is one function and this is it**, and it is five terms
+-- at a rate rather than one number because a run comes back with five different
 -- kinds of fact about itself and one about the terms it did them under. Every screen that shows the number asks here for it, exactly as
 -- both end cards ask src/mark.lua for the grade, and none of them knows what is
 -- in the sum -- which is what let the last two terms be added without a line
@@ -35,10 +35,16 @@
 --   part of it that is a *fight* rather than a crowd -- would be worth no more than
 --   any other ten. It is per eye rather than a bonus for winning, so ENDLESS goes
 --   on paying for the thing it is a bet on.
+-- - **The coins**, one a piece, picked up off the page in the piggy bank's
+--   fight (src/piggyboss.lua). The one term that is not reckoned at all: they
+--   are coins already, the very coin the purse is drawn as, so one picked up is
+--   one in the purse -- and they sit outside the course's rate below, because
+--   the course has already paid for them once by making the fight they came
+--   out of.
 --
--- And then the whole sum is multiplied by the **course** it was sat at
--- (src/course.lua), which is the one term here that is not a fact the run
--- counted. It is a multiplier rather than a fifth term for the reason a course is
+-- And then the whole sum but the coins is multiplied by the **course** it was
+-- sat at (src/course.lua), which is the one term here that is not a fact the run
+-- counted. It is a multiplier rather than a sixth term for the reason a course is
 -- one dial rather than five: what a harder class is worth is *everything you did*
 -- reckoned at a higher rate, and a flat bonus for enrolling would pay a doctorate
 -- for walking onto the page. Three times at the top of the ladder, which is what
@@ -131,7 +137,7 @@ function Purse.forRun(run)
         + (run.skips or 0) * Purse.PER_SKIP
         + (run.rung or 0) * Purse.PER_GRADE
         + (run.eyes or 0) * Purse.PER_EYE
-    return math.floor(coins * (run.pay or 1))
+    return math.floor(coins * (run.pay or 1)) + (run.coins or 0)
 end
 
 function Purse.save()

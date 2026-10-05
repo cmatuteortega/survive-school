@@ -11,8 +11,8 @@ of a body baked in several poses so it can animate (see **Poses: a body that
 moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of them
 a part hinged off the body and one built about a different point (see **Poses with
 a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`,
-`src/plaster.lua` (the ART still life) and `src/atom.lua` (SCIENCE's second boss,
-the atom).
+`src/plaster.lua` (the ART still life), `src/atom.lua` (SCIENCE's second boss,
+the atom) and `src/piggy.lua` (FINANCE's second boss, the piggy bank).
 
 The short version: **model the thing in 3D in a script, ray-trace it at sprite
 size straight into palette letters, do that once per heading, and bake the
@@ -22,14 +22,16 @@ pictures.
 
 ## Two ways to be solid
 
-The game has eight bosses drawn as solid objects, made in two different ways --
+The game has nine bosses drawn as solid objects, made in two different ways --
 the metronome is the whistle's way with one part done the eye's, the stamp and
 the dictionary are the whistle's way with more than one picture per heading, the MATHS die is
 the eye's way on flat faces (see **Painted live on flat faces: the die**), and the
 ART still life is the eye's way on three solids at once, lit by a lamp that moves
 (see **Painted live under a moving light: the still life**), and the atom is the
 eye's way on a lumpy sphere with rings round it (see **Painted live with rings round
-it: the atom**).
+it: the atom**), and the piggy bank is the eye's way on nine ellipsoids seen from
+above, turned to a heading (see **Painted live from above, facing a way: the piggy
+bank**).
 Pick the one that fits the character before starting.
 
 | | **Baked views** (the whistle) | **Painted live** (the eye) |
@@ -522,6 +524,47 @@ the nucleus covers it. Because the orbits are also what hurts, the brain
 drawing plots, so a ring hurts where it is drawn and nowhere else. The blank stamped
 under the body (`drawMask`) is the nucleus only: an orbit is a line on the page, and
 blanking under it would cut a white hoop through the ruling.
+
+## Painted live from above, facing a way: the piggy bank
+
+FINANCE's second boss (`src/piggy.lua`) is the eye's method with three things
+changed, and each is a small step rather than a new idea.
+
+**More than one solid, all ellipsoids.** A pig is a barrel, a snout, two ears, four
+legs and a tail, and each of them is an ellipsoid given as a middle and three
+half-lengths in the pig's own frame (nose, side, back). A pixel's ray is a straight
+line into the page, so in the pig's frame each of the three coordinates along it is
+`alpha + z * beta`, and "is it inside" is a quadratic in z: the nearer root is where
+the ray meets that solid. Every pixel asks the solids it could be on (a circle test
+on each one's screen position first) and keeps the nearest. The normal is the
+gradient of the solid's sum, turned back onto the screen, and the eye's lamp lights
+it; the snout's flat face, its nostrils, the eyes and the slot are picked off the
+hit point's coordinates on whichever solid it is.
+
+**Seen from above, so it can face a way.** The eye and the atom are looked at
+straight down, where every heading looks the same. The pig is looked at half a
+radian above the page (`ELEV`): the page's up-the-page becomes "into the screen and
+up", so its frame for a heading `yaw` is its nose along the heading on the page, its
+side across it, and its back tipped towards you. Turning the pig is changing `yaw`;
+nodding it is a `pitch` about its side. Nothing is rotated at draw time -- the
+picture is painted fresh for whatever way it is facing, which is exactly what the
+whistle's sixteen baked views do ahead of time.
+
+**Edges inside the silhouette.** One sphere has only a rim. Nine solids have places
+where one stands in front of another -- an ear against the barrel, a near leg against
+the belly -- and those need a line too, or the pig is one pink blob. The picture is
+worked out into a depth buffer first, and any pixel whose neighbour is more than
+`EDGE` nearer is drawn ink: a contour on the far side of every step in depth, the
+same one-pixel line the rim is.
+
+And the cracks are the atom's seams: the barrel's hit point, wobbled a little and
+normalised, is asked which of eighteen shards it is nearest, and the seam between
+the two nearest is drawn once both are reached by the damage. Shards are reached in
+order of their distance from one spot, so the web grows out from where it started.
+
+Because the picture is now several solids and an edge pass, it is worked out once a
+frame into rows of runs (`Piggy:raster`) and kept: the blank under it, the hit's
+rim and the body all read the same rows.
 
 ## Smaller than a boss: the teardrop
 

@@ -545,6 +545,11 @@ local ES = {
     ["THE ATOM IS UNSTABLE"] = "EL ATOMO ES INESTABLE",
     ["FISSION!"] = "¡FISION!",
     ["NOT DONE YET"] = "AUN NO HAS TERMINADO",
+    -- FINANCE's encore (`piggy` in src/enemy.lua): its name, the line it
+    -- walks on with, and what the page says when it shatters.
+    ["THE PIGGY BANK"] = "LA HUCHA",
+    ["THE PIGGY BANK IS FULL"] = "LA HUCHA ESTA LLENA",
+    ["BANKRUPT!"] = "¡BANCARROTA!",
     ["NOUN"] = "SUSTANTIVO",
     ["VERB"] = "VERBO",
     ["ADJECTIVE"] = "ADJETIVO",

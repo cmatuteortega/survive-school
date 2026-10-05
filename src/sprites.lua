@@ -6289,6 +6289,13 @@ function Sprites.load()
             for i = 1, 27 do rows[i] = ("r"):rep(27) end
             return rows
         end)()),
+        -- And FINANCE's, painted the same way (src/piggy.lua): the box the
+        -- piggy bank is measured off, side on, snout to tail and ears to feet.
+        piggy = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 30 do rows[i] = ("r"):rep(44) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",
@@ -9216,6 +9223,20 @@ function Sprites.load()
     -- which is what makes the rarest thing on the page read as an object lying
     -- on it rather than another ink doodle.
     Sprites.pickups = {
+        -- A coin off the piggy bank (src/piggyboss.lua): the purse's own coin
+        -- (`coin` in Sprites.icons), lying on the page, because picking one
+        -- up is exactly one of those in the purse.
+        coin = pixelart.newSprite({
+            "..ooooo..",
+            ".okkkkko.",
+            "okkkwkkko",
+            "okkwwkkko",
+            "okkkwkkko",
+            "okkkwkkko",
+            "okkwwwkko",
+            ".okkkkko.",
+            "..ooooo..",
+        }),
         heart = pixelart.newSprite({
             ".rrr.rrr.",
             "rkkkrkkkr",

@@ -66,6 +66,8 @@ function Bookmark.save(game)
         -- What the run has sold back, the second term of what it pays out
         -- (`Purse.forRun`); dropped, the run comes back poorer than it left.
         ("skipped %d"):format(game.skipped or 0),
+        -- And the piggy bank's coins it has picked up (`banked`): the same.
+        ("banked %d"):format(game.banked or 0),
         -- The two ad offers it has spent (src/ads.lua), each once a run: a run
         -- carried over a closed program is the same run.
         ("adrevived %d"):format(game.adRevived and 1 or 0),
@@ -172,6 +174,7 @@ function Bookmark.load()
         cycleStart = math.min(num(vals.cyclestart, 0), num(vals.time, 0)),
         lines = lines,
         skipped = int(vals.skipped, 0),
+        banked = int(vals.banked, 0),
         adRevived = int(vals.adrevived, 0) ~= 0,
         doubled = int(vals.doubled, 0) ~= 0,
         perks = perks,

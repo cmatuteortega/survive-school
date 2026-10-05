@@ -30,7 +30,9 @@ every frame off a turning sphere (`src/eyeball.lua`), the MATHS die, painted
 the same way off flat faces (`src/dice.lua`), and the ART still life, a cube, a
 sphere and a cone painted the same way and lit by a lamp that moves
 (`src/plaster.lua`), and the SCIENCE atom, a cluster of nucleons painted the eye's
-way with its orbits plotted round it (`src/atom.lua`).
+way with its orbits plotted round it (`src/atom.lua`), and the FINANCE piggy bank,
+nine ellipsoids painted the same way and turned to face where it goes
+(`src/piggy.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -184,7 +186,11 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   throws, the shade, and the cube dropped, the sphere bowled and the cone spun),
   `atom` (SCIENCE's second boss's body: a nucleus painted a pixel at a time and the
   tilted orbits round it), `atomboss` (its brain: the sweep, the thrown electron,
-  and the fission into two halves that share one bar). A lesson's second boss is
+  and the fission into two halves that share one bar), `piggy` (FINANCE's second
+  boss's body: a pig of ellipsoids painted a pixel at a time, cracking as it is
+  hurt), `piggyboss` (its brain: the charge with bait coins in its lane, the
+  recall of the coins left lying, and the shatter into rings of coins -- coins
+  that land are `coin` pickups and pay into the purse). A lesson's second boss is
   its `encore` in `subjects`; only the courses with `bosses = 2` (MASTERS, PHD)
   send it -- ten minutes after the first goes down -- and only it opens the win
   card.
