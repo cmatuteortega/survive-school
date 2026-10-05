@@ -808,7 +808,16 @@ function Game:reset()
 
     -- After the camera, since the box is pinned on the player and the boss walks
     -- on from the ring round the view.
-    if self.bossTest then self.spawner:sendBoss(self) end
+    --
+    -- At a course with two bosses to a lesson it is the *encore* that is sent
+    -- (`Spawner:toEncore`): the first boss is still a High School or Bachelor
+    -- boss test away, and the encore is otherwise ten minutes and a whole fight
+    -- behind it. The cycle is moved on with it, so it is priced and finishes the
+    -- lesson exactly as it would at the end of a real run.
+    if self.bossTest then
+        self.spawner:toEncore()
+        self.spawner:sendBoss(self)
+    end
 end
 
 -- Stopping the run, whatever stopped it: the pause button, or a level landing.

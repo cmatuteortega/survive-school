@@ -1227,8 +1227,10 @@ the run's `eyes` all count in cycles and are right about the encore without bein
 told it exists -- the encore is priced a cycle on from the boss it follows, exactly
 as a second eye on an endless run always was. The win card numbers its showings by
 `Spawner:round` (times round the lineup) rather than by cycle. A lesson with no
-encore yet ends on its boss at every course. The dev boss test sends the encore on
-the spot instead of after ten minutes.
+encore yet ends on its boss at every course. The dev boss test at such a course
+starts on the encore itself (`Spawner:toEncore` moves the cycle to the encore's, so
+it is priced as in a run and its death opens the win card); the first boss is
+tested at High School or Bachelor.
 
 A boss is a row with `boss = true`, and everything else that makes it one is an
 optional field read in one place, so a second boss is a row choosing which of them

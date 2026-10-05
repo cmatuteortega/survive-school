@@ -763,6 +763,13 @@ function Spawner:lessonOver()
     return self.cycle % #self:lineup() == 0
 end
 
+-- Straight to the last of the lineup, for the dev boss test (Game:reset): the
+-- cycle the encore ends, so it is priced as the encore is (BOSS_HP_PER_CYCLE)
+-- and going down is the lesson over. A lineup of one is left where it is.
+function Spawner:toEncore()
+    self.cycle = #self:lineup()
+end
+
 -- How many times round the whole lineup the run has been, counting the one it
 -- is on: what the win card numbers its second and later showings by.
 function Spawner:round()

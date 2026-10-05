@@ -57,7 +57,9 @@ end
 -- (`Game:reset`), so a boss can be iterated on without ten minutes of horde in
 -- front of every look at it. Which boss walks on is the lesson's `boss`
 -- (src/subjects.lua), which is the point -- pick the page on the timetable and
--- that page's boss is what you get.
+-- that page's boss is what you get. At MASTERS or PHD it is the page's `encore`
+-- where it has one, the second boss those courses end a lesson on
+-- (`Spawner:toEncore`); High School or Bachelor is how to get the first.
 --
 -- A run sat this way is not the book's business: it writes no record, no
 -- tally, no coins and no bookmark (`Game:bankRun`, `Game:cashRun`), since a
