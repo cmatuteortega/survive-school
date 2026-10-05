@@ -300,9 +300,9 @@ local BLANK = {
 -- And each lesson names its **boss**: the `Enemy.types` row that walks into the
 -- box at the end of every cycle (`Spawner:sendBoss`). P.E. has a fight of its
 -- own, the whistle, GRAMMAR has the dictionary, MUSIC the metronome, FINANCE
--- the stamp and MATHS the die; the other two are still the eye, written out on
--- every row rather than left to the fallback so that giving a page a fight of
--- its own is one word on its own row. A new boss is a row in src/enemy.lua with
+-- the stamp, MATHS the die and ART the still life; SCIENCE keeps the eye,
+-- written out on its row rather than left to the fallback so that giving a
+-- page a fight of its own is one word on its own row. A new boss is a row in src/enemy.lua with
 -- `boss = true` on it; the dev boss test on the title screen (src/dev.lua) is
 -- how to fight it without the ten minutes in front of it.
 Subjects.list = {
@@ -422,7 +422,11 @@ Subjects.list = {
         name = "ART",
         paper = BLANK,
         tool = "rubber",
-        boss = "bosseye",
+        -- The still life (src/stilllife.lua): the blank page ends on the
+        -- first thing an art class puts on one, and the fight is the one in
+        -- the book about *light* -- three plaster solids under a lamp that
+        -- moves, and the shadows they throw across the page.
+        boss = "stilllife",
         -- All five at the same weight and more often than anywhere else, which
         -- is the unruled page keeping its promise: there is no ruling here to say
         -- what shape a thing should be, so it is the one lesson where any of them

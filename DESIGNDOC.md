@@ -605,10 +605,10 @@ in it, which is where that is judged.
 
 Each row also names its **boss**: the `Enemy.types` key `Spawner:sendBoss` drops
 into the box at the end of every cycle. P.E. says `whistle`, GRAMMAR says
-`dictionary`, MUSIC says `metronome`, FINANCE says `stamp` and MATHS says `die`
-(see **The bosses**); the other two say `bosseye`, written out on every row rather
-than left to the fallback (a row without one gets the eye) so that giving a page a
-fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
+`dictionary`, MUSIC says `metronome`, FINANCE says `stamp`, MATHS says `die` and
+ART says `stilllife` (see **The bosses**); SCIENCE says `bosseye`, written out on its
+row rather than left to the fallback (a row without one gets the eye) so that giving a
+page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
@@ -1127,12 +1127,13 @@ ten minutes, plus one that is never spawned and two that only arrive at the end:
 | `eye` | 420 | 2 | 14 / 9 / 10 | shoots (`shot`) |
 | `grin` | 480 | 2 | 34 / 11 / 16 | shrugs off shoves (`knock`/`hold`) |
 | `redeye` | 540 | 2 | 14 / 34 / 10 | shoots and holds range (`keep`) |
-| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, two lessons |
+| `bosseye` | 600 | — | 900 / 26 / 20 | the cycle boss, SCIENCE |
 | `whistle` | 600 | — | 900 / 22 / 20 | the cycle boss, P.E. |
 | `metronome` | 600 | — | 900 / 50 / 20 | the cycle boss, MUSIC (hops on the beat, 25 on average) |
 | `stamp` | 600 | — | 900 / — / 20 | the cycle boss, FINANCE (never walks: every step is a leap its brain draws, about 25 a second between moves) |
 | `dictionary` | 600 | — | 900 / 0 / 20 | the cycle boss, GRAMMAR (never walks: hops like the stamp, about 25 a second between moves) |
 | `die` | 600 | — | 900 / 0 / 20 | the cycle boss, MATHS (never walks: thrown, 97–108px a throw) |
+| `stilllife` | 600 | — | 900 / 0 / 20 | the cycle boss, ART (never walks: lifted up to 60px nearer when you are 90 off) |
 
 Every row walks at the player and every block is a way of not *only* doing that.
 The header comment over `Enemy.types` is the field reference; what matters
@@ -1141,11 +1142,13 @@ one place and nothing else in the game knows it exists:
 
 - **`shot`** and **`trail`** and **`tears`** and **`whistle`** — `Game:updateEnemies`
   (the last two through `Game:updateTears` and `Game:updateWhistle`).
-- **`attacks`**, **`metronome`**, **`stamp`**, **`dictionary`** and **`dice`** — the
-  boss's `brain`, built in `Enemy.new` (`src/eyeboss.lua`, `src/metronome.lua`,
-  `src/stamp.lua`, `src/dictionary.lua` and `src/diceboss.lua` respectively) and
-  stepped from `Game:updateEnemies` before the walk, which it steers through `drive`. `dice` also builds the body
-  (`src/dice.lua`) the way `pupil` builds the eye's.
+- **`attacks`**, **`metronome`**, **`stamp`**, **`dictionary`**, **`dice`** and
+  **`still`** — the boss's `brain`, built in `Enemy.new` (`src/eyeboss.lua`,
+  `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua` and
+  `src/stilllife.lua` respectively) and stepped from `Game:updateEnemies` before the
+  walk, which it steers through `drive`. `dice` also builds the body
+  (`src/dice.lua`) the way `pupil` builds the eye's, and `still` builds its
+  (`src/plaster.lua`, through `StillLife.body`).
 - **`keep`** — inside `Enemy:update`'s chase, as a *turn* applied to the heading
   everything else already computed. That placement is the whole reason it is
   cheap: a shooter holding its distance still rounds a pen line, still skids on
@@ -1210,11 +1213,11 @@ A boss is a row with `boss = true`, and everything else that makes it one is an
 optional field read in one place, so a second boss is a row choosing which of them
 it is made of rather than a branch anywhere. `title` is its name under the HUD's bar
 (`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
-walks on (`Game:spawnEnemy`). All six bosses sit on the eye's 900 health, knock, hold
+walks on (`Game:spawnEnemy`). All seven bosses sit on the eye's 900 health, knock, hold
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
-**The eye** (`bosseye`, two lessons) is a fight about *ground*: `pupil` (the body is
+**The eye** (`bosseye`, SCIENCE) is a fight about *ground*: `pupil` (the body is
 a ball painted a pixel at a time off a turning sphere, `src/eyeball.lua`), `trail`
 (wet dragged behind it), `tears` (wet thrown, three ways, with rings at two thirds
 and one third), `attacks` (the five moves its brain picks between,
@@ -1417,6 +1420,49 @@ strike still counting in for a rest; glue that lands while it is in `tumble` or
 `settle` also marks that landing loaded: `settle` is given `want = 1`, so it lands on 1
 -- the fumble, on the d20. Only while rolling, or a glue build could keep a d20
 fumbling for the whole last third.
+
+**The still life** (`stilllife`, ART) is a fight about *light*: a plaster cube,
+sphere and cone under a lamp, the first thing an art class draws. Its body is painted
+live by `src/plaster.lua`, because the one thing the fight is about is the one thing a
+baked view cannot do -- the lamp moves, and every solid's lit side has to follow it.
+Three pieces, each solved per pixel rather than traced: the cube is the die's six
+planes (turned by its own axes, so it tumbles), the sphere the eye's disc, and the
+cone a quadratic -- `(Q.D)^2 = c2 |Q|^2` off its apex `A` and unit axis `D`, with the
+base a plane a height down the axis -- so standing, lying and spinning on its point are
+the same code with a different `apex`/`axis`. Nearest hit wins; each pixel keeps
+`piece * 16 + face` for its edges (the die's test) and its screen normal for the
+light. `Plaster:raster` runs only when `touch` says the shape changed; the lamp
+moving changes only `draw`, which lights each piece from its own middle to
+`lamp` (room coordinates off the group's floor point) and steps the pencil ramp --
+paper, paper/graphite checker, graphite, graphite/slate checker, slate -- with a
+`FILL` of light from the viewer so a lamp behind the group still leaves a cube
+reading as a cube. Plaster, not red: the body is the study, and what makes it theirs
+is everything it does. The group stands `FOOT` (8) below the boss's middle so its
+bulk sits over the hitbox. `shadowScale` is 0 (its shadows are the lamp's) except
+under glue.
+
+The `brain` (`src/stilllife.lua`) holds `drive` and never walks; past `move.far` it
+lifts the table and puts it down up to `move.reach` nearer (a hop through `hop`).
+The lamp (or two, from the last third) sits `lamp.ring` out at an angle, clamped
+into the box, drifting `lamp.drift` a second when no move has it, and every piece
+on the table throws a wedge across the floor away from it: from the piece's spot,
+out at the angle the piece subtends from the lamp. Short and graphite at rest;
+`drawGround` draws them, and the lamps and anything off the table are `drawAir`.
+Moves are picked off `still.moves[phase]`, never the same twice running; a piece off
+the table is a second `Plaster` of one piece (`lift` / `home`).
+
+| move | from | tell | hot |
+| --- | --- | --- | --- |
+| `shade` | first third | the lamp eases round to the far side of the group from you (± `spread`), the wedges growing from `short` to `length`, hatched with marching rows and edged slate, red over the last 0.35s | the wedges filled slate, red-edged, 12 to stand in; the lamp goes `swing` further round (0 / 0.3 / 0.3 rad) so they sweep; from the last third a second lamp `apart` (2 rad) round throws a second fan |
+| `drop` | first third | the cube up off the table (`high` 200) and out of sight; a dotted `shock` ring and a growing shadow on where you stood for `aim` | down square on the floor with the ring hot (14); sits `sit` (1.4s) as a block that hurts to touch, then hops home |
+| `roll` | middle third | the sphere's line dashed to the box edge, `blowT` shudder for `wind` | out at 170 to the edge and back at 0.8 of that, hurting on contact |
+| `top` | last third | the cone flips end over end in the air (`flip`) | on its point, precessing at `lean`, wandering after you at 46 (under your 58), a chip off it every 0.16s each 2.4 rad further round (a spiral of `pip`s); then falls on its side and is stood back home |
+
+The thirds are states of their own (`change`): everything off the table is put back,
+the page says `THE LAMP MOVES!` (two thirds, and the shade starts to sweep) or
+`ANOTHER LAMP!` (one third). **Glue holds the table**: a shade still being counted in
+is dropped and a lift is put down where it is, but a cube in the air, a sphere rolling
+or a top spinning carries on -- glue holds the group, not what has already left it.
 
 ### Drills and surges
 
@@ -6178,15 +6224,17 @@ and are all the same 11x11 glyph.
   picked, and no page reskins it. What it does is the blocks it carries -- the
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
-  dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, and any of the horde's (`shot`, `charge`) -- see
+  dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
+  life's `still`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
-  `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua` or `src/diceboss.lua`,
-  built in `Enemy.new`. A solid body is a script beside `art/whistle.py` over
+  `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua` or
+  `src/stilllife.lua`, built in `Enemy.new`. A solid body is a script beside `art/whistle.py` over
   `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or
   `art/dictionary.py`), or -- for anything convex that
-  has to tumble -- a face list in `Dice.solids` painted live (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
+  has to tumble -- a face list in `Dice.solids` painted live, or for a few simple
+  solids under a light that moves, pieces in a `Plaster` group (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
   been re-measured, and fight it from the title's dev BOSS button.
 - **Tool:** append a row to `Tools.list` with an icon in `Sprites.icons`, *and* a
   `toolLine` in `Upgrades.list` naming it — the line's first level is what

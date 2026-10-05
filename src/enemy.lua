@@ -9,6 +9,7 @@ local Stamp = require("src.stamp")
 local Dictionary = require("src.dictionary")
 local Dice = require("src.dice")
 local DiceBoss = require("src.diceboss")
+local StillLife = require("src.stilllife")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -141,7 +142,10 @@ local BLARE_REACH = 34
 -- src/diceboss.lua), `stamp` (the FINANCE boss's leaps and the three moves it
 -- stamps the ledger with -- src/stamp.lua, a brain in the same socket),
 -- `dictionary` (the GRAMMAR boss's hops and the three moves it makes off the
--- paired ruling -- src/dictionary.lua, the same socket again) and
+-- paired ruling -- src/dictionary.lua, the same socket again), `still` (the
+-- ART boss: three plaster solids painted a pixel at a time and lit by a lamp
+-- that moves, src/plaster.lua, with its brain in the same socket,
+-- src/stilllife.lua) and
 -- `poses` (a `turns` body baked in more than one pose, each a ring of views,
 -- the brain saying which through `pose` -- art/stamp.py). Every one of them but
 -- `boss` is optional and
@@ -760,6 +764,74 @@ Enemy.types = {
                 fumble = { time = 3, soften = 1.5 },
                 crit = { tell = { 1.0, 0.8, 0.6 } },
             } },
+
+    -- The ART boss: a still life, and the fight in the book about *light*. A
+    -- plaster cube, sphere and cone under a lamp, the first thing an art class
+    -- draws, painted a pixel at a time (src/plaster.lua) so the lit side of
+    -- every solid follows the lamp round. It never walks: the lamp moves, the
+    -- shadows the solids throw are what hurt, and the pieces leave the table
+    -- one at a time to come at you -- the cube dropped, the sphere bowled, the
+    -- cone spun on its point. The moves are src/stilllife.lua.
+    --
+    -- The eye's numbers where the fight is the same fight: 900 health, the
+    -- same knock, hold and 20 on contact. The radius is the group's bulk, the
+    -- three solids standing together. No speed, because a still life holds
+    -- still; when you get far from it, the table is lifted and put down nearer.
+    stilllife = { name = "STILL LIFE", sprite = "stilllife", hp = 900, speed = 0, radius = 16,
+                  damage = 20, xp = 250, shadow = 30, boss = true, knock = 0.06, hold = 0.3,
+                  title = "THE STILL LIFE", call = "DRAW WHAT YOU SEE",
+                  still = {
+                      -- Stood still between moves, by phase (the eye's thirds).
+                      cool = { 2.0, 1.6, 1.3 },
+                      -- What it picks between, by phase: a piece joins the
+                      -- fight each third.
+                      moves = { { "shade", "drop" }, { "shade", "drop", "roll" },
+                                { "shade", "drop", "roll", "top" } },
+                      -- The lamp: `ring` out from the group, `high` off the
+                      -- floor (low, so the light rakes and the shading turns
+                      -- hard as it goes round), drifting `drift` radians a
+                      -- second when nothing else has it.
+                      lamp = { ring = 80, high = 26, drift = 0.35 },
+                      -- Lifted and put down nearer, once you are `far` off:
+                      -- up to `reach`, never closer than `near`.
+                      move = { far = 90, near = 50, reach = 60, time = 0.45, high = 10 },
+                      -- The shade: the lamp swings to the far side of the
+                      -- group from you, give or take `spread`, over the first
+                      -- part of `tell`, the shadows growing from `short` to
+                      -- `length` as it goes; then hot for `hot`, the lamp going
+                      -- `swing` further round. A swing of 0.3 over 1.3 seconds
+                      -- moves a shadow's edge 46 pixels a second at 200 out
+                      -- from the lamp -- under your 58, so you can walk with a
+                      -- gap -- and nothing at all between the lamp and the
+                      -- group, which is the light you can always stand in.
+                      -- The second lamp of the last third is `apart` round.
+                      shade = { tell = { 1.4, 1.25, 1.1 }, hot = { 0.9, 1.3, 1.5 }, fade = 0.3,
+                                swing = { 0, 0.3, 0.3 }, spread = 0.35, apart = 2.0,
+                                short = 14, length = 320, damage = 12 },
+                      -- The cube: up for `up`, its shadow on where you were
+                      -- for `aim`, down in `down` with a ring `shock` wide,
+                      -- sitting there for `sit` and home in `back`. Up and
+                      -- aim are 1.5 seconds: eighty pixels of walking against
+                      -- a ring of 24.
+                      drop = { up = 0.4, aim = 1.1, down = 0.22, high = 200, shock = 24,
+                               damage = 14, sit = 1.4, back = 0.5, hop = 14 },
+                      -- The sphere: a line to you and a shudder for `wind`,
+                      -- out at `speed` to the edge of the box (or `length`)
+                      -- and back at `back` of it. Three times your pace: a
+                      -- line you step off, the eye's bowl.
+                      roll = { wind = 0.75, speed = 170, back = 0.8, length = 260, damage = 14 },
+                      -- The cone: over in `flip`, then on its point for
+                      -- `time`, leaning `lean` and going round `whirl` radians
+                      -- a second, wandering after you at `speed` -- under your
+                      -- pace, so it is walked away from -- with a chip off it
+                      -- every `every`, each `turn` further round: a spiral.
+                      -- Then over in `fall`, and home in `back`.
+                      top = { flip = 0.45, time = { 2.6, 2.6, 3.2 }, lean = 0.3, whirl = 10,
+                              wobble = 0.6, speed = 46, every = 0.16, turn = 2.4, damage = 12,
+                              fall = 0.35, back = 0.55,
+                              chip = { speed = 60, damage = 9, hit = 3, life = 3.5,
+                                       sprite = "pip" } },
+                  } },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -998,6 +1070,9 @@ function Enemy.new(kind, x, y, scale)
         -- The die the MATHS boss is drawn as (src/dice.lua), painted the eye's
         -- way: nil on everything else.
         dice = def.dice and Dice.new(def.dice.shapes[1]) or nil,
+        -- And the still life the ART boss is drawn as (src/plaster.lua), the
+        -- same way again.
+        plaster = def.still and StillLife.body() or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -1012,11 +1087,14 @@ function Enemy.new(kind, x, y, scale)
         -- So is the dictionary's (src/dictionary.lua), which hops the same way.
         -- And the die's (src/diceboss.lua), which throws it rather than
         -- walking it: it holds `drive` and moves the body itself.
+        -- And the still life's (src/stilllife.lua), which never walks at all:
+        -- it holds, and lifts the whole table somewhere nearer when it must.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
             or def.dictionary and Dictionary.new(def)
-            or def.dice and DiceBoss.new(def) or nil,
+            or def.dice and DiceBoss.new(def)
+            or def.still and StillLife.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -1542,6 +1620,7 @@ function Enemy:footing()
     -- Stuck things stop bobbing, and an eye boss has a gait of its own instead
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
+        and not self.plaster
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -1670,9 +1749,10 @@ function Enemy:drawSolid()
         self.eyeball:drawMask(x, y, self:outlineColour() and 1 or 0)
         return
     end
-    if self.dice then
+    local painted = self.dice or self.plaster
+    if painted then
         love.graphics.setColor(Palette.paper)
-        self.dice:drawMask(x, y, self:outlineColour() and 1 or 0)
+        painted:drawMask(x, y, self:outlineColour() and 1 or 0)
         return
     end
 
@@ -1719,9 +1799,12 @@ function Enemy:draw()
     -- And a die off the page altogether (opened out into its net, or up out of
     -- sight in its leap, where the brain draws the shadow coming down itself)
     -- leaves none; one in the air leaves less of one the higher it is.
-    if self.dice then
-        if self.dice.hidden then return end
-        shadow = math.floor(shadow * self.dice:shadowScale(self.hop) + 0.5)
+    -- The still life leaves none of its own: its shadows are thrown by its
+    -- lamp, and drawn by its brain (src/stilllife.lua).
+    local painted = self.dice or self.plaster
+    if painted then
+        if painted.hidden then return end
+        shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)
     end
     -- Struck off the bottom edge of the sprite -- `h - oy` -- rather than off
     -- half its height, which is Sprites.shadow's own expression and makes it the
@@ -1761,17 +1844,18 @@ function Enemy:draw()
         end
         return
     end
-    -- The die the same way, off its own painter (src/dice.lua).
-    if self.dice then
+    -- The die the same way, off its own painter (src/dice.lua), and the still
+    -- life off its (src/plaster.lua).
+    if painted then
         if ring then
             love.graphics.setColor(ring)
-            self.dice:drawMask(x, y, 1)
+            painted:drawMask(x, y, 1)
         end
         if lit then
             love.graphics.setColor(lit)
-            self.dice:drawMask(x, y, 0)
+            painted:drawMask(x, y, 0)
         else
-            self.dice:draw(x, y)
+            painted:draw(x, y)
         end
         return
     end

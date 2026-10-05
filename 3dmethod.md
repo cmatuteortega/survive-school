@@ -10,7 +10,8 @@ moving part on a baked body**), and the FINANCE stamp (`art/stamp.py`), the exam
 of a body baked in several poses so it can animate (see **Poses: a body that
 moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of them
 a part hinged off the body and one built about a different point (see **Poses with
-a hinge: the dictionary**).
+a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`
+and `src/plaster.lua` (the ART still life).
 
 The short version: **model the thing in 3D in a script, ray-trace it at sprite
 size straight into palette letters, do that once per heading, and bake the
@@ -20,10 +21,12 @@ pictures.
 
 ## Two ways to be solid
 
-The game has six bosses drawn as solid objects, made in two different ways --
+The game has seven bosses drawn as solid objects, made in two different ways --
 the metronome is the whistle's way with one part done the eye's, the stamp and
-the dictionary are the whistle's way with more than one picture per heading, and the MATHS die is
-the eye's way on flat faces (see **Painted live on flat faces: the die**).
+the dictionary are the whistle's way with more than one picture per heading, the MATHS die is
+the eye's way on flat faces (see **Painted live on flat faces: the die**), and the
+ART still life is the eye's way on three solids at once, lit by a lamp that moves
+(see **Painted live under a moving light: the still life**).
 Pick the one that fits the character before starting.
 
 | | **Baked views** (the whistle) | **Painted live** (the eye) |
@@ -447,6 +450,53 @@ To make another convex thing this way, add a face list to `Dice.solids` (unit
 normals, one `h`, labels) and the rest follows. Anything with a hole or a dent is
 not convex and is back to the whistle's tracer.
 
+## Painted live under a moving light: the still life
+
+The ART boss (`src/plaster.lua`) is a plaster cube, sphere and cone on a table under a
+lamp, and it is painted live for a reason none of the others needed: **the light
+moves.** Every other boss in this file is lit from one window fixed on the screen, so
+a baked view only ever has to be lit once. The still life's whole fight is the lamp
+going round it (`src/stilllife.lua`), and the body has to show where the lamp is --
+the lit side of each solid following it round -- before the shadows on the floor say
+so. Baking would be a picture for every heading of the lamp on top of every heading
+of the body. Painted, it is one dot product per pixel.
+
+What is new here, against the die:
+
+- **Three kinds of solid, nearest wins.** Each piece is met by the ray its own way:
+  the cube is the die's planes (with its own turnable axes, so it can tumble when
+  thrown), the sphere is the eye's disc, and the cone is a quadratic off its apex `A`
+  and unit axis `D` -- the points `Q = X - A` with `(Q.D)^2 = c2 |Q|^2`, `c2` the
+  squared cosine of its half-angle, `0 <= Q.D <= h`, plus the base as a plane a whole
+  height down the axis. Its outward normal is `c2 Q - (Q.D) D`. Given by apex and axis,
+  one piece of code stands it on its base, lays it on its side and spins it on its
+  point. Every piece answers a depth, and the nearest is the pixel's.
+- **The silhouette and the light are kept apart.** The raster keeps, per pixel, an
+  id (`piece * 16 + face`) and the screen normal. It is redone only when a piece moves
+  (`Plaster:touch`); the lamp moving redoes nothing but the shading, which is the
+  normal dotted with the direction from that piece's middle to the lamp. A lamp
+  brought in close lights the near side of the group and not the far.
+- **Edges from ids,** the die's test across pieces as well as faces: the line where
+  the sphere sits in front of the cube comes out of the same check as the cube's own
+  creases.
+- **A pencil ramp, and fill light.** Plaster is drawn in pencil, so the ramp is
+  paper, graphite and slate with checkers between, not red. Lit only by the lamp, a
+  group with the lamp behind it is three slate holes; a `FILL` of light from where you
+  are looking (the page bouncing it back) keeps the faces turned to you a step
+  lighter than the ones turned away, so a cube lit from behind still reads as one.
+- **Its shadows are the brain's.** Each piece's shadow is a wedge on the floor from
+  the piece away from the lamp, as wide as the angle the piece subtends from it. Those
+  are gameplay (the shade move fills them, and they hurt), so they are drawn and hit
+  in page coordinates by `src/stilllife.lua`, not painted by the body.
+- **Pieces leave the group.** A piece thrown off the table is hidden in the group and
+  painted by a second `Plaster` of one piece where it is on the page, lit from the
+  same lamp. Putting it back copies its turn into the group's piece, set square on the
+  floor so a cube is never left balanced on an edge.
+
+To add a solid of another kind, give it a constructor, a `prepare` (into the screen
+once per raster) and a hit function answering depth, face and normal, and add it to
+`HIT`. To make another boss this way, a group is a list of pieces and a `lamp`.
+
 ## Smaller than a boss: the teardrop
 
 The live method also works at five pixels across, for things whose *heading* is
@@ -463,6 +513,8 @@ per drop, which is fine for the few dozen a boss throws.
 - **Convex and tumbling:** a die, a block, a crystal -- anything flat-faced that has
   to turn every way rather than face you -- is a face list painted live (the die),
   not baked.
+- **Lit by something that moves:** a few simple solids whose shading has to follow a
+  light around the page are a `Plaster` group (the still life), not baked.
 - **Good fits:** bosses and anything else big (the whistle is 63 by 41 pixels
   per view), and objects whose heading matters, such as something that aims, or
   a weapon that should point the way it's going.

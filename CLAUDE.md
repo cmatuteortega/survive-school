@@ -26,8 +26,10 @@ views ahead of time (`art/whistle.py`, `art/metronome.py`, `art/stamp.py`,
 `art/raytrace.py` -- the metronome's pendulum plotted live on top, the stamp baked
 in four poses so it can rock, dive and squash, the dictionary in three so it can
 bite and lie open), the eye, painted a pixel at a time
-every frame off a turning sphere (`src/eyeball.lua`), and the MATHS die, painted
-the same way off flat faces (`src/dice.lua`).
+every frame off a turning sphere (`src/eyeball.lua`), the MATHS die, painted
+the same way off flat faces (`src/dice.lua`), and the ART still life, a cube, a
+sphere and a cone painted the same way and lit by a lamp that moves
+(`src/plaster.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -175,7 +177,10 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   `stamp` (the FINANCE boss's brain: the ledger's cells, its leaps and poses, the
   slam, run and audit, and the PAID marks it leaves), `dictionary` (the
   GRAMMAR boss's brain: the paired ruling's groups, its hops and poses, the
-  clap, riffle and definition, and the words it writes on the lines).
+  clap, riffle and definition, and the words it writes on the lines), `plaster`
+  (the ART boss's body: a cube, a sphere and a cone painted a pixel at a time and
+  lit from wherever its lamp is), `stilllife` (its brain: the lamp, the shadows it
+  throws, the shade, and the cube dropped, the sphere bowled and the cone spun).
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.

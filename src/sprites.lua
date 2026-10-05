@@ -6273,6 +6273,14 @@ function Sprites.load()
             for i = 1, 35 do rows[i] = ("r"):rep(35) end
             return rows
         end)()),
+        -- And the ART boss, painted the same way (src/plaster.lua): the box
+        -- the still life is measured off and nothing more, 44 across, the
+        -- three solids standing together near enough.
+        stilllife = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 44 do rows[i] = ("r"):rep(44) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",

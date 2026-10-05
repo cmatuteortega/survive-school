@@ -526,6 +526,10 @@ local ES = {
     ["THE DIE IS CAST"] = "LA SUERTE ESTA ECHADA",
     ["MORE SIDES!"] = "¡MAS CARAS!",
     ["FUMBLE!"] = "¡PIFIA!",
+    ["THE STILL LIFE"] = "EL BODEGON",
+    ["DRAW WHAT YOU SEE"] = "DIBUJA LO QUE VES",
+    ["THE LAMP MOVES!"] = "¡LA LAMPARA SE MUEVE!",
+    ["ANOTHER LAMP!"] = "¡OTRA LAMPARA!",
     ["CRITICAL!"] = "¡CRITICO!",
     -- The GRAMMAR boss (`dictionary` in src/enemy.lua): its name, the line
     -- it walks on with, what the page says when it starts to write, and the

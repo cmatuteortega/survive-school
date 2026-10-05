@@ -7267,6 +7267,52 @@ close enough to touch. **Glue shuts it**: a glued dictionary comes down where it
 lets go of a clap without closing it, leaves a half-written line to dry, and lies
 there for the rest of the hold.
 
+### ART ends on the still life
+
+The eye is about the ground, the whistle the air, the metronome time, the stamp which
+cell you are in, the die number and the dictionary lines. ART is the page with nothing
+ruled on it, and the seventh answer is a fight about **light**. The first thing an art
+class puts on a blank page is a white cube, a white sphere and a white cone under a
+lamp, and you draw what the light does to them -- so that is what walks into the box.
+It does not walk, being a still life. It holds still and the lamp goes round it.
+
+It is painted live, like the eye and the die, and for a reason neither of them had:
+**the light moves.** A baked view can turn a whistle to face you, but no set of
+pictures can light a cube from wherever the lamp has got to. Painted fresh every
+frame, the side of each solid that faces the lamp is the paper, the side that turns
+away is slate, and the lamp drifting round the group turns the lit sides after it.
+That is how you read where the light is before the shadows say so. It is plaster, so
+it is drawn in pencil -- paper, graphite and slate with ink round every edge -- the
+one boss in the book that is not red. The body is the study; what makes it theirs is
+everything it does, and all of that is red.
+
+Every solid throws its shadow across the floor directly away from the lamp. Most of
+the time those are short smudges under the group, and they are there to teach you to
+read the light.
+
+- **The shade.** The lamp swings round to the far side of the group from you and the
+  three shadows grow out across the box, hatched while they are counted in, then
+  filled -- and a filled shadow hurts. Each solid throws its own, fanned out from the
+  lamp, so there are strips of light between them as well as round them, and the
+  ground between the lamp and the group is always lit: walk towards the light. From
+  the middle third the lamp keeps going round while they are filled, slowly enough
+  that a gap can be walked with; in the last third there are two lamps and two fans.
+- **The cube is dropped.** It goes up off the table and out of sight, its shadow
+  comes down on where you were standing, and then the cube does. It sits there for a
+  moment, a block in the way, before it hops home.
+- **The sphere is bowled** (from the middle third). A line drawn from it to you, a
+  shudder, and it rolls down the line to the edge of the box and back -- the eye's
+  bowl, three times your pace, a line you step off.
+- **The cone spins like a top** (in the last third). It turns over in the air, lands
+  on its point and wanders after you, wobbling, slower than you walk, throwing chips
+  of plaster off in a spiral. Then it falls on its side and is stood back up.
+- **When you are far off,** the table is lifted and put down nearer you: a still life
+  being rearranged rather than a monster walking.
+
+**Glue holds the table.** A glued still life cannot move its lamp, so a shade it was
+counting in is dropped, and it cannot be lifted somewhere nearer. What has already
+left the table carries on: glue holds the group, not a cube in the air.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was
