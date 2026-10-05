@@ -35,7 +35,9 @@ nine ellipsoids painted the same way and turned to face where it goes
 (`src/piggy.lua`), and the MATHS tesseract, sixteen corners turned through four
 dimensions every frame and drawn as lines (`src/tesseract.lua`), and the MUSIC
 speaker, a cylinder ray-traced the piggy bank's way that squashes on the beat,
-tips over and rolls (`src/speaker.lua`).
+tips over and rolls (`src/speaker.lua`), and the GRAMMAR red pen, a click pen
+longer than the screen ray-traced the speaker's way along its own length, seen
+obliquely so the page stays one to one (`src/redpen.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -202,8 +204,15 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   buttons, its ring of lights and its pumping radiator -- in a frame that can tip
   over and roll), `speakerboss` (its brain: a beat it bounces on, the drop's rings
   with a quiet gap to dance round it in, the roll, the shuffle's notes bouncing
-  round the box, and pairing with the crowd so the escort goes off), `wreck` (how every boss but the eye comes apart
-  once it is killed: kept, shaken, flickered, burst in its row's colours). A
+  round the box, and pairing with the crowd so the escort goes off), `redpen`
+  (GRAMMAR's second boss's body: a red click pen far longer than the screen,
+  painted a pixel at a time along its own length -- tip, ribbed grip, glossy barrel
+  with its clip and print, a button that clicks), `redpenboss` (its brain: red ink
+  that hurts while wet, the cursive scrawl, the WRONG ring shut on you, the whole
+  pen falling flat across the box, the shake and its blots, the F written over you,
+  and the stand-ins that let the barrel be hit), `wreck` (how every boss but the
+  eye comes apart once it is killed: kept, shaken, flickered, burst in its row's
+  colours, and the brain's `sweep` of whatever it stood on the page for itself). A
   lesson's second boss is
   its `encore` in `subjects`; only the courses with `bosses = 2` (MASTERS, PHD)
   send it -- ten minutes after the first goes down -- and only it opens the win

@@ -67,6 +67,17 @@ function Wreck:colour(k)
 end
 
 function Wreck:update(dt, game)
+    -- Whatever the boss had standing in the horde for parts of it (the red pen's
+    -- barrel, src/redpenboss.lua) is taken off the page here, on the first frame
+    -- after the kill. Not in the kill itself: that can land inside any walk of
+    -- the horde, and the walk is in depth order by then, so a part can be at an
+    -- index under the one being walked -- taking it out would shift the list
+    -- under the walk's feet. This runs after every walk has finished.
+    if not self.swept then
+        self.swept = true
+        local brain = self.e.brain
+        if brain and brain.sweep then brain:sweep(game) end
+    end
     self.t = self.t + dt
     if self.popped then return self.t < DONE end
 

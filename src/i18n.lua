@@ -564,6 +564,15 @@ local ES = {
     ["VOLUME UP!"] = "¡SUBE EL VOLUMEN!",
     ["VOLUME MAX!"] = "¡VOLUMEN MAXIMO!",
     ["MUTED"] = "SILENCIADO",
+    -- GRAMMAR's encore (`redpen` in src/enemy.lua): its name, the line it is
+    -- dropped in on, the two turns of its temper, a ring shutting, what the
+    -- page says when glue clicks it shut.
+    ["THE RED PEN"] = "EL BOLI ROJO",
+    ["PENS DOWN!"] = "¡SOLTAD LOS BOLIS!",
+    ["RED INK!"] = "¡TINTA ROJA!",
+    ["SEE ME!"] = "¡VEN A VERME!",
+    ["WRONG!"] = "¡MAL!",
+    ["CLICK!"] = "¡CLIC!",
     -- What the page says as each boss goes down (`last` in src/enemy.lua).
     ["LIGHTS OUT"] = "SE APAGO",
     ["DECAYED"] = "DESINTEGRADO",
@@ -576,6 +585,7 @@ local ES = {
     ["SNAKE EYES"] = "OJOS DE SERPIENTE",
     ["SIGNED"] = "FIRMADO",
     ["DISCONNECTED"] = "DESCONECTADO",
+    ["OUT OF INK"] = "SIN TINTA",
     ["NOUN"] = "SUSTANTIVO",
     ["VERB"] = "VERBO",
     ["ADJECTIVE"] = "ADJETIVO",

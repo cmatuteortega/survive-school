@@ -15,10 +15,10 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | | |
 | --- | --- |
 | **When** | At 10:00 of each cycle (`Spawner.BOSS_AT = 600`). Drills and surges are cleared and the horde stops spawning. |
-| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today SCIENCE has one (the Atom), FINANCE has one (the Piggy Bank), MATHS has one (the Tesseract) and MUSIC has one (the Speaker). |
+| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today SCIENCE has one (the Atom), FINANCE has one (the Piggy Bank), MATHS has one (the Tesseract), MUSIC has one (the Speaker) and GRAMMAR has one (the Red Pen). |
 | **Arena** | `Game:openArena` puts a box round the page. The box comes down when the next cycle starts (`Spawner:nextCycle`). |
 | **Escort** | One arrival every 1.5s while fewer than 20 enemies are on the page. Weighted: bat 5, skull 3, eye 2, wad 2, bulb 2 (`ESCORT` in `src/spawner.lua`). |
-| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom, the Piggy Bank, the Tesseract and the Speaker are 2822 (Masters) and 3704 (PhD). |
+| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom, the Piggy Bank, the Tesseract, the Speaker and the Red Pen are 2822 (Masters) and 3704 (PhD). |
 | **Damage** | Contact damage is 20 on every boss and steps ×1.18 per cycle (`DAMAGE_PER_CYCLE`). Move damages on the rows are cycle-1 values and scale the same way. |
 | **Body** | All bosses share `knock = 0.06` and `hold = 0.3`. Every boss is worth 250 xp. |
 | **Phases** | Health thirds: phase 1 above 66%, phase 2 above 33%, phase 3 for the rest. A list of three values on a row is one value per phase. The whistle is the exception: it has no phases, only health thresholds at 75/50/25%. |
@@ -40,6 +40,7 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | The Piggy Bank | FINANCE (encore) | greed | charge, recall, shatter | two charges in a row (phase 2); breaks open at 30%, then three charges and no bait | it turns its snout to you, a dashed red arrow down its lane |
 | The Tesseract | MATHS (encore) | dimension | inside-out, corners, net, fold | fold and the second, inverted flip (phase 2); turning squares, double volley, shuffled net (phase 3) | its shapes drawn on the floor first: two squares, a numbered net, a dashed square on you |
 | The Speaker | MUSIC (encore) | volume | drop, roll, shuffle, pair | pair (phase 2); thump on every downbeat, double shuffle, the drop's gap reverses (phase 3) | a bar of build-up, its ring of lights red, the quiet gap drawn in blue |
+| The Red Pen | GRAMMAR (encore) | corrections | wrong (ring), strike-through (fall), shake, grade | the grade and a roll after a fall (phase 2); two rings, two falls, two flicks, the F circled (phase 3) | a dotted ring round you, a strip as long as it is across the page, the F's strokes dashed in |
 
 ---
 
@@ -526,6 +527,69 @@ rests 0.4s. Rings and notes already out carry on.
 blue, sky and ink with four rings (`src/wreck.lua`). Then the win card.
 
 ---
+
+## 12. The Red Pen: GRAMMAR's encore (`redpen`)
+
+**Files:** row `redpen` in `src/enemy.lua`, brain at `src/redpenboss.lua`, body at `src/redpen.lua`; the barrel's stand-ins are the row `penpart`
+**Callout:** "PENS DOWN!" · **Body:** radius 13 round the nib and grip; the pen is 260 long, stood up it goes off the top of the screen.
+**When:** Masters and PhD only, ten minutes after the Dictionary goes down.
+
+### Entrance
+Dropped onto the page (`arrive`) upright, tip in. Then it clicks itself ready --
+out, in, out, three rising ticks over 0.65s -- and leans over to write, leaving a
+first dot of ink. It writes for 0.8s before its first move.
+
+### Ink
+Everything it writes is red ink: **wet** (red) it hurts whoever crosses it, **dry**
+(blush) it is only a mark, and at the end of its life it drops out a segment at a
+time. The scrawl's line is wet 1.1s and hurts 6; a ring's 1.4s and 8; a grade
+stroke's 1.4s and 12. A strike-through is never wet: a record, not a hazard.
+
+### Idle
+Writes at you: the line under its nib goes at you at **28 / 32 / 36** until 26
+away, and the nib loops round it (7 out, 7 rad/s) -- a cursive scrawl that is ink.
+A blot is lobbed at you every **2.6 / 2.3 / 2.0s** (8 on landing, a pool that hurts
+5). It twiddles itself now and then (a full turn in its fingers) and clicks
+nervously -- every few seconds, then constantly at phase 3. Cool between moves:
+**2.0 / 1.6 / 1.25s** + up to 0.5s.
+
+### Moves
+Wrong weighs 1.4 under 140px (else 0.9). Strike-through 1.3 past 50px (else 0.7).
+Shake 1.0. Grade, from phase 2, 1.1. The last move is ×0.2, the one before ×0.6.
+
+| Move | Tell | Hot | Numbers |
+| --- | --- | --- | --- |
+| **Wrong** | A dotted ring round you that follows you while the pen lifts and is carried to its near side. | The nib runs round it, drawing a wet line. When it closes: **18** if you are inside, 40 to each of the crowd inside (never the last of their health), a red flash and a cross, "WRONG!". | aim 0.65 / 0.55 / 0.5 · radius 56 / 52 / 48 · lap 1.45 / 1.3 / 1.15s · rings 1 / 1 / 2 (the second 0.72 the size, aimed 0.8 as long) · rest 0.9 / 0.8 / 0.6 |
+| **Strike-through** | It teeters back off its nib, a strip its own length (and 10 either side of its axis) dashed across the page through you -- following you for the first 60%, then locked, blinking and hatched, the pen rocking. | It falls flat, accelerating (about half a second): **22** under it, 30 to the crowd under it (never the last of their health) and they are thrown out sideways, a big knock, crumbs along its length and a red line left where it fell. It bounces, rattles and lies there -- the window. | tell 1.1 / 0.95 / 0.85 · lie 1.3 / 1.1 / 0.9 · rise 0.6 · falls 1 / 1 / 2 (the second's tell 0.7 as long) · rest 0.8 / 0.7 / 0.5 |
+| **Roll** (phase 2+, inside a strike-through) | Half way through lying, the far edge of the ground it will cover is dashed in on your side. | It rolls 44 / 60 towards you at 52 (under your speed), the clip going round: **14** if it rolls over you, the crowd shoved along. | |
+| **Shake** | It whips its top back and forth across the screen, wider and faster, shaking, specks off the nib. | Flicks a fan of blots round you, 30 to 120 out: **8** where one lands on you, then a pool (10 across, 4.5s, 6). | tell 0.85 / 0.75 / 0.65 · blots 5 / 7 / 9 · flicks 1 / 1 / 2 (0.5s apart, the second shifted half a gap) · rest 0.7 / 0.6 / 0.5 |
+| **Grade** (phase 2+) | An F 100 tall and 62 wide over you, every stroke dashed in blush, the next one blinking red, the middle bar through you. | Written stroke by stroke at **300 / 330 / 360**, a hop between strokes: each stroke a wet band 4 wide (**12**). At phase 3 it then rings the F (a Wrong round the letter, not following you). | rear 1.15 / 1.05 / 0.95 · rest 1.0 / 0.9 / 0.7 |
+
+### Phases
+Thirds, as the eye.
+
+- **2 (66%):** "RED INK!" -- the grade joins, and a strike-through rolls before it
+  gets up.
+- **3 (33%):** "SEE ME!" -- it clicks itself constantly, rings you twice, falls
+  twice, flicks twice, and circles its F.
+
+### Glue
+Clicks it shut: the tip goes in, and a ring, a strike-through, a shake or a grade
+being aimed or written is dropped ("CLICK!"), a ring left open and a letter left
+unfinished; it rests 0.5s. A fall already going finishes, and a pen lying down
+stays down until it is let go.
+
+### Being hit
+Its nib and grip are the body (radius 13, 20 on contact). The barrel is stood for
+by 8 bodies 28 apart up it (`penpart`, radius 9) that every weapon finds and that
+pass what they take to the pen; they never hurt anyone, and are off the page
+outside the box. A hit on the barrel lights the pen in a blink of blush, at most
+every 0.22s.
+
+### Death
+"OUT OF INK". Its stand-ins come off the page, the ink still wet dries, the tip goes
+in and what was left in it runs out of the nib as a pool that hurts nobody; it comes
+apart in red, blush and ink with three rings (`src/wreck.lua`). Then the win card.
 
 ## Iteration notes
 

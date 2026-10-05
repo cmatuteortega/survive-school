@@ -18,6 +18,8 @@ local Tesseract = require("src.tesseract")
 local TesseractBoss = require("src.tesseractboss")
 local Speaker = require("src.speaker")
 local SpeakerBoss = require("src.speakerboss")
+local RedPen = require("src.redpen")
+local PenBoss = require("src.redpenboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -661,6 +663,78 @@ Enemy.types = {
                     -- downbeat while it walks: `reach` round it.
                     thump = { from = 3, reach = 34, damage = 8 },
                 } },
+    -- GRAMMAR's encore (`encore` in src/subjects.lua): the red pen, a teacher's
+    -- click pen far longer than the page is tall, dropped onto the page ten
+    -- minutes after the dictionary goes down at a master's and a doctorate. The
+    -- dictionary is the fight about lines; this is the fight about corrections --
+    -- being circled, crossed out and graded, in ink that is wet before it is
+    -- dry. The moves and why they are these moves are src/redpenboss.lua; the
+    -- body is src/redpen.lua.
+    --
+    -- The eye's numbers where the fight is the same fight -- 900 health, the
+    -- knock, the hold, 20 on contact. No walking speed, because it never walks:
+    -- the nib writes its way across the page (`write`), about 30 a second
+    -- between moves, the eye's pace. The hit circle is round the nib and the
+    -- grip; the rest of it is stood for by `penpart`, below. No shadow of its
+    -- own on the row: its lamp throws one as long as it is (src/redpenboss.lua).
+    redpen = { name = "RED PEN", sprite = "redpen", hp = 900, speed = 0, radius = 13,
+               damage = 20, xp = 250, shadow = 0, boss = true, knock = 0.06, hold = 0.3,
+               title = "THE RED PEN", call = "PENS DOWN!",
+               last = "OUT OF INK", wreck = { ink = { "red", "blush", "ink" }, rings = 3 },
+               arrive = true,
+               redpen = {
+                   -- Seconds writing at you between moves, by phase (the eye's
+                   -- thirds), plus up to half a second more.
+                   cool = { 2.0, 1.6, 1.25 },
+                   -- The scrawl: the line it writes along goes at you at
+                   -- `speed` until it is `near`, and the nib loops round it
+                   -- `loop` out at `spin` radians a second -- 49 round a loop
+                   -- against 28 to 36 along, so the loops cross themselves.
+                   write = { speed = { 28, 32, 36 }, loop = 7, spin = 7, near = 26 },
+                   -- What the scrawl leaves: a line of ink every `step` pixels,
+                   -- wet (and hurting `damage`) for `wet`, dry for `dry`.
+                   trail = { step = 3, wet = 1.1, dry = 3.0, damage = 6 },
+                   -- A blot flicked at you every `every` seconds while it
+                   -- writes, lobbed `high` at `speed`, a pool where it lands.
+                   flick = { every = { 2.6, 2.3, 2.0 }, speed = 90, high = 24, damage = 8,
+                             puddle = { radius = 8, life = 3.5, damage = 5, drops = 4 } },
+                   -- WRONG: aimed (following you) for `aim`, then a ring
+                   -- `radius` round you drawn in `lap` -- a hundred and twenty
+                   -- pixels of walking against the fifty-odd out of it -- and
+                   -- shut on `damage` to you and `crowd` to anything in there
+                   -- with you. The line it draws is wet for `wet` and hurts
+                   -- `line`. `loops` rings, each `again` of the last's aim.
+                   circle = { aim = { 0.65, 0.55, 0.5 }, radius = { 56, 52, 48 },
+                              lap = { 1.45, 1.3, 1.15 }, loops = { 1, 1, 2 }, again = 0.8,
+                              damage = 18, crowd = 40, line = 8, wet = 1.4, dry = 3.5,
+                              rest = { 0.9, 0.8, 0.6 } },
+                   -- The strike-through: teetering for `tell` -- the strip
+                   -- following you for the first `lock` of it, then locked --
+                   -- then flat on the page in half a second: `damage` to you
+                   -- under it and `crowd` to the crowd. Lying for `lie`, rolling
+                   -- `roll` towards you at `rollSpeed` (under yours) on the way,
+                   -- and `rise` getting up. `falls` in a row, each tell `again`
+                   -- of the first.
+                   fall = { tell = { 1.1, 0.95, 0.85 }, lock = 0.6, damage = 22, crowd = 30,
+                            lie = { 1.3, 1.1, 0.9 }, roll = { 0, 44, 60 }, rollSpeed = 52,
+                            rollDamage = 14, rise = 0.6, falls = { 1, 1, 2 }, again = 0.7,
+                            rest = { 0.8, 0.7, 0.5 } },
+                   -- The shake: whipped for `tell`, then `blots` lobbed in a fan
+                   -- round you, `near` to `far` out. `volleys` of them, `gap`
+                   -- apart, every other one shifted half a gap.
+                   shake = { tell = { 0.85, 0.75, 0.65 }, blots = { 5, 7, 9 }, volleys = { 1, 1, 2 },
+                             gap = 0.5, near = 30, far = 120, speed = 110, high = 30, damage = 8,
+                             puddle = { radius = 10, life = 4.5, damage = 6, drops = 6 },
+                             rest = { 0.7, 0.6, 0.5 } },
+                   -- The grade, from phase `from`: an F `tall` by `wide`, every
+                   -- stroke shown for `rear`, written at `speed` -- five times
+                   -- yours, so a stroke is stepped off rather than outrun --
+                   -- `width` thick, wet for `wet` and dry for `dry`, `hop`
+                   -- between strokes. Circled when done from phase `circle`.
+                   grade = { from = 2, rear = { 1.15, 1.05, 0.95 }, tall = 100, wide = 62,
+                             speed = { 300, 330, 360 }, hop = 0.14, width = 4, damage = 12,
+                             wet = 1.4, dry = 4.0, circle = 3, rest = { 1.0, 0.9, 0.7 } },
+               } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
     -- wet you have to stop standing on -- and this is the other half of the
@@ -1102,6 +1176,13 @@ Enemy.types = {
     -- wherever its piece is. Its `damage` is set by the move that lifted it.
     stillpiece = { sprite = "stilllife", hp = 1e9, speed = 0, radius = 8, damage = 14,
                    xp = 0, shadow = 0, boss = true, knock = 0, hold = 0 },
+    -- What stands for a stretch of the red pen's barrel (src/redpenboss.lua),
+    -- the still life's stand-in for a pen too long to be hit only at its nib:
+    -- found, aimed at and hurt like anything else, with what it takes going to
+    -- the pen (`stand`, Enemy:hurt). Never hurting anyone -- the barrel is up in
+    -- the air -- which its brain sees to by keeping its `hitCooldown` up.
+    penpart = { sprite = "redpen", hp = 1e9, speed = 0, radius = 9, damage = 0,
+                xp = 0, shadow = 0, boss = true, knock = 0, hold = 0 },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -1356,6 +1437,9 @@ function Enemy.new(kind, x, y, scale)
         -- And the speaker MUSIC ends on at a master's (src/speaker.lua): a can
         -- ray-traced the pig's way, which squashes, tips over and rolls.
         speaker = def.speaker and Speaker.new() or nil,
+        -- And the red pen GRAMMAR ends on at a master's (src/redpen.lua): a click
+        -- pen longer than the page, ray-traced along its own length.
+        redpen = def.redpen and RedPen.new() or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -1380,6 +1464,8 @@ function Enemy.new(kind, x, y, scale)
         -- atom and turns out of the page to get about.
         -- And the speaker's (src/speakerboss.lua), which bounces on its own
         -- beat and rolls like a can.
+        -- And the red pen's (src/redpenboss.lua), which writes its way about and
+        -- falls over on you.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
@@ -1389,7 +1475,8 @@ function Enemy.new(kind, x, y, scale)
             or def.atom and AtomBoss.new(def)
             or def.piggy and PiggyBoss.new(def)
             or def.tesseract and TesseractBoss.new(def)
-            or def.speaker and SpeakerBoss.new(def) or nil,
+            or def.speaker and SpeakerBoss.new(def)
+            or def.redpen and PenBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -1930,7 +2017,7 @@ function Enemy:footing()
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
         and not self.plaster and not self.nucleus and not self.piggy and not self.tesseract
-        and not self.speaker
+        and not self.speaker and not self.redpen
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -2062,7 +2149,7 @@ function Enemy:drawSolid()
         return
     end
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract or self.speaker
+        or self.tesseract or self.speaker or self.redpen
     if painted then
         love.graphics.setColor(Palette.paper)
         painted:drawMask(x, y, self:outlineColour() and 1 or 0)
@@ -2116,7 +2203,7 @@ function Enemy:draw()
     -- The still life leaves none of its own: its shadows are thrown by its
     -- lamp, and drawn by its brain (src/stilllife.lua).
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract or self.speaker
+        or self.tesseract or self.speaker or self.redpen
     if painted then
         if painted.hidden then return end
         shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)

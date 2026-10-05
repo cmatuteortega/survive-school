@@ -14,7 +14,8 @@ a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.
 `src/plaster.lua` (the ART still life), `src/atom.lua` (SCIENCE's second boss,
 the atom), `src/piggy.lua` (FINANCE's second boss, the piggy bank) and
 `src/speaker.lua` (MUSIC's second boss, a bluetooth speaker; see **Painted live
-with flat ends: the speaker**). The
+with flat ends: the speaker**) and `src/redpen.lua` (GRAMMAR's second boss, a pen
+longer than the screen; see **Painted live along its own length: the red pen**). The
 MATHS tesseract (`src/tesseract.lua`) is neither: a solid in four dimensions,
 projected every frame and drawn as lines (see **Projected live as lines: the
 tesseract**).
@@ -27,8 +28,8 @@ pictures.
 
 ## Two ways to be solid
 
-The game has ten bosses drawn as solid objects, made in two different ways (and
-a tenth, the tesseract, that is projected as lines rather than either) --
+The game has eleven bosses drawn as solid objects, made in two different ways (and
+a twelfth, the tesseract, that is projected as lines rather than either) --
 the metronome is the whistle's way with one part done the eye's, the stamp and
 the dictionary are the whistle's way with more than one picture per heading, the MATHS die is
 the eye's way on flat faces (see **Painted live on flat faces: the die**), and the
@@ -37,7 +38,8 @@ ART still life is the eye's way on three solids at once, lit by a lamp that move
 eye's way on a lumpy sphere with rings round it (see **Painted live with rings round
 it: the atom**), and the piggy bank is the eye's way on nine ellipsoids seen from
 above, turned to a heading (see **Painted live from above, facing a way: the piggy
-bank**).
+bank**), and the red pen is the eye's way on a solid of revolution too long for a
+box (see **Painted live along its own length: the red pen**).
 Pick the one that fits the character before starting.
 
 | | **Baked views** (the whistle) | **Painted live** (the eye) |
@@ -605,6 +607,56 @@ every ray asks two kinds of question.
 The rim and the depth edges are the pig's, and the picture is worked out once a
 frame into rows of runs (`Speaker:raster`). It is about the cost of the pig: one
 solid, but three questions per pixel instead of nine.
+
+## Painted live along its own length: the red pen
+
+GRAMMAR's second boss (`src/redpen.lua`) is a click pen 260 long, and it is the
+speaker's method with three changes, each forced by the length.
+
+1. **Cones as well as cylinders.** A pen is a solid of revolution: a metal tip, a
+   cone in front of the grip, the long body, a narrower button. Each piece is a
+   radius that changes linearly along the axis, `r = c + m * u` (a cylinder is
+   `m = 0`), and with the ray as `A + t B`, the point's axis coordinate is
+   `u = A.U + t B.U`, so `|A + t B|^2 - u^2 - (c + m u)^2 = 0` is one quadratic in
+   `t` for every piece. The nearer root counts if its `u` is inside the piece; if
+   not, the further one (the inside of a cone seen past its rim). The two flat
+   ends -- the barrel's, round the button, and the button's own -- are the
+   speaker's planes. The normal on a cone is the radial direction minus `m` times
+   the axis. One function (`piece`) answers all four.
+2. **An oblique view, one to one.** The speaker is seen from above at an angle, its
+   depth squeezed into the screen. The pen cannot be: when it falls, the line it
+   lands on is a line on the page, and the strip it warned you about has to be
+   that line to the pixel. So a point `(x, y, h)` on the page is drawn at
+   `(x, y - K h)` -- the page itself one to one, as everything else on it is drawn,
+   and height going up the screen at `K` (0.8). The ray for a pixel is then the line
+   through the page under it going `(0, K, 1)`: up, and towards you.
+3. **A band, not a box, and only what is seen.** Stood up it goes off the top of
+   the screen; lying down it crosses the whole box. Tracing a square round its
+   middle would be most of a screen of rays, nearly all missing. So the rows are
+   walked over the band round the projected axis (as wide as the barrel can look,
+   `R * sqrt(1 + K^2)`), cut to the camera's view (`Camera.bounds`, squared off to
+   a 32px grid so a camera following you a pixel at a time is not a new view), and
+   each ray is asked only about the pieces near its end of the band. It is traced
+   again only when its axis, lift, roll or tip has moved: lying still, or glued,
+   it costs nothing.
+
+**Its frame** is just its axis `U`, set by the brain every frame. The front -- what
+the print and the clip are placed round from -- is the direction back up the ray
+with the axis taken out, so unrolled the print faces you whichever way the pen
+points; `roll` turns it about the axis, which is what twiddling it and rolling it
+across the page both are.
+
+**Texture by where on the pen.** The grip's rings every few units of `u`, chrome
+bands at two lengths, the clip as an angle round from the front over a stretch of
+`u`, "0.7" as a 3x5 glyph laid along `u` and round the front -- all off the point's
+own coordinates, so they turn and foreshorten with it.
+
+It is the most expensive picture in the book, a couple of milliseconds at full
+length on a desktop, against about one for the speaker. Most of that is the number
+of rays: it is a solid several screens of pixels long. The hot loop is split in two
+(`ray`, which piece; `shade`, what colour) and avoids parallel assignments, both
+so LuaJIT can keep it in registers; a row's buffers are arrays from the row's own
+first column rather than tables keyed by screen columns, which go negative.
 
 ## Projected live as lines: the tesseract
 

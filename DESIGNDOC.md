@@ -611,8 +611,8 @@ row rather than left to the fallback (a row without one gets the eye) so that gi
 page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one. A row may also name an **encore**, the second boss the lesson ends on at
 a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom`,
-FINANCE's is `piggy`, MATHS's is `tesseract` and MUSIC's is `speaker`, and the
-other three have none yet,
+FINANCE's is `piggy`, MATHS's is `tesseract`, MUSIC's is `speaker` and GRAMMAR's
+is `redpen`, and the other two have none yet,
 so they end on their boss at every course.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
@@ -1253,7 +1253,11 @@ the eye to `Wreck.new` (`src/wreck.lua`), in the eye's socket (`Game.fallen`, un
 its own `Enemy:draw`, shaking and flickering through the hit flash's blush and
 paper stages faster and faster for `POP`, spitting specks, then bursting into the
 colours on its `wreck` row with that many rings rolling out and its `sound`. A boss
-with no `wreck` row gets red, ink and blue and one ring. Every boss sits on the eye's 900 health, knock, hold
+with no `wreck` row gets red, ink and blue and one ring. On its first update the
+wreck asks the brain to `sweep` (if it has one): what it left standing in the horde
+for parts of itself -- the red pen's barrel -- comes off the page there, after every
+walk of the horde has finished, because the kill itself can land inside one and the
+draw's depth sort can have put a part under the index being walked. Every boss sits on the eye's 900 health, knock, hold
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
@@ -1407,6 +1411,42 @@ dropped (`MUTED`). Its moves:
 At phase 3 (`VOLUME MAX!`, after `VOLUME UP!` at phase 2) its lights go red, it
 trembles, and every downbeat while it walks thumps `thump.reach` round it. On death
 (`dropParts`) its rings and notes go and its lights go out.
+
+**The red pen** (`redpen`, GRAMMAR's encore) is a fight about *corrections*: the
+dictionary is where words go, this is what happens to them once they are written.
+Its body is `src/redpen.lua`, a teacher's click pen 260 long -- longer than the
+screen is tall -- painted the speaker's way but as a solid of revolution (a tip, a
+cone, the body and a button, each `radius = c + m * u` along one axis, and two flat
+ends), seen obliquely so the page stays one to one (height goes up the screen at
+`K`), and traced along a band round its own axis cut to the camera rather than in a
+box round its middle (see `3dmethod.md`). The brain writes onto it every frame: its
+axis `U` (nib to button), `roll` about it, `lift` (the nib off the page), `tip` (how
+far the refill is clicked out; the button goes in as it comes out) and `shake`. Its
+nib's foot is `NIBY` below `e.y`, so the hit circle covers the nib and the grip. It
+has `arrive` and then clicks itself ready (out, in, out) and leans over to write.
+
+Its brain is `src/redpenboss.lua`, and everything it puts down is **ink**: a list of
+lines, each wet (red, hurting) for `wet` and dry (blush) for `dry`, dropping out a
+segment at a time at the end. Between moves it writes at you (`write`): a line goes
+at you and the nib loops round it, a cursive scrawl that is ink (`trail`), with a
+blot lobbed every `flick.every` (the eye's tear, `drop = "red"`, landing as a pool).
+Its moves:
+
+| move | tell | what |
+| --- | --- | --- |
+| `circle` (WRONG) | a dotted ring `radius` round you that follows you for `aim` while the pen is carried to its near side | the nib runs round it in `lap`, a wet line; shut, everything inside is hit (`damage`; the crowd `crowd`, never its last health), a flash and a cross, `WRONG!`. `loops` rings, each smaller |
+| `fall` (the strike-through) | it teeters back; a strip its length across the page from its foot through you, following for `lock` of `tell` then locked, blinking and hatched | it falls flat (`PULL`, accelerating) across the box: `damage` under it, the crowd flattened and thrown aside, a dry red line left where it fell; it bounces and lies for `lie` (the window), rolls `roll` towards you from phase 2 (the far edge dashed in first), and gets up over `rise`. `falls` in a row |
+| `shake` | it whips its top across the screen, wider and faster, specks off the nib | `blots` lobbed in a fan round you, landing as pools; `volleys` flicks, every other one shifted half a gap |
+| `grade` | phase `from`+: an F `tall` by `wide` over you, every stroke dashed, the next blinking | each stroke written at `speed` as a wet band `width` wide, a hop between; from phase `circle` the F is then rung (`circle` round the letter) |
+
+Glue clicks it shut (`CLICK!`): the tip goes in and anything being aimed or written
+is dropped, a fall finishes, a pen lying down stays down. Phase lines are `RED INK!`
+and `SEE ME!` (constant nervous clicking). The barrel is stood for by `PARTS` bodies
+(`penpart`) up it that pass hits to the pen (`stand`, Enemy:hurt) and never hurt
+anyone; a hit on one lights the pen in a short blink at most every `BLINK_EVERY`. Its
+hits on the crowd are never lethal (`mark`): a kill from inside its own turn would
+pull a body out of the horde mid-walk. On death (`dropParts`) its wet ink dries, the
+stand-ins are ghosted (and taken off in `sweep`), and it leaks a harmless pool.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
@@ -6430,14 +6470,18 @@ and are all the same 11x11 glyph.
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
   dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, and any of the horde's (`shot`, `charge`) -- see
+  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, the red pen's `redpen`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
   `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua`,
-  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua`, `src/tesseractboss.lua` or `src/speakerboss.lua`, built in `Enemy.new`; one that comes
+  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua`, `src/tesseractboss.lua`, `src/speakerboss.lua` or `src/redpenboss.lua`, built in `Enemy.new`; one that comes
   apart into several bosses answers `share` (the HUD's bar) and `heir` (who the bar
-  goes to when the one it is on dies), as the atom's does. A solid body is a script beside `art/whistle.py` over
+  goes to when the one it is on dies), as the atom's does. One too big to be hit at
+  a point stands bodies of its own on the page for the rest of itself (`stand` on
+  them, Enemy:hurt: the still life's `stillpiece`, the red pen's `penpart`), moves
+  them from its turn, and takes them off in `sweep` (`src/wreck.lua`), never in
+  `dropParts`. A solid body is a script beside `art/whistle.py` over
   `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or
   `art/dictionary.py`), or -- for anything convex that
   has to tumble -- a face list in `Dice.solids` painted live, or for a few simple

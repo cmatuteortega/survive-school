@@ -7542,6 +7542,81 @@ Glue **mutes** it. Its lights go out, its beat stops, and a drop, roll, shuffle
 or pairing it was still counting in is dropped -- the obvious answer, and the one
 it should have.
 
+### And at a master's, GRAMMAR ends on the red pen
+
+The dictionary is where the words come from. The red pen is what happens to them
+once they are written: they are circled, crossed out and graded. So GRAMMAR's
+second fight is about *corrections* -- and since what a school page comes back
+with is a letter in red pen at the top (`src/mark.lua`), it is the one boss in the
+book made of the thing the game marks you with.
+
+It is a teacher's click pen, and it is **far too long**. Stood on its nib by your
+feet, writing, it goes up and out of the top of the screen -- the hand holding it
+is somewhere off the page -- and when it falls over it lies across the whole box.
+That length is the fight: the one move it is named for is the body itself coming
+down on you. It is painted a pixel at a time like the speaker (see `3dmethod.md`),
+a solid of revolution -- a metal tip, a ribbed rubber grip, a long glossy red
+barrel with "0.7" printed on it, a chrome band, a clip and a push button -- and the
+grip's rings and the clip going round are what make it read as a round thing that
+turns in its fingers and rolls.
+
+Everything it puts down is red ink, and **red ink is wet before it is dry.** Wet,
+it hurts to cross; dry, it is a blush mark on the page, only a record of what it
+thought of you. That one rule is the whole fight's grammar, and it is why the page
+fills up with its handwriting as the fight goes on and why that handwriting stops
+mattering a second or so after it is written.
+
+**It writes at you.** Between moves the nib comes across the page in a cursive
+scrawl -- loops, the "eeee" every hand writes when it is not spelling anything --
+and the scrawl is ink. Walk it round in circles and you are walking through its
+handwriting. Every couple of seconds it flicks a blot at you, so standing off it is
+not free either.
+
+**WRONG.** It rings you. A dotted circle is drawn round where you are standing and
+follows you while the pen lifts and hops to the near side of it; then the nib runs
+round it, fast, and when the ring closes everything inside is marked wrong -- you,
+and whatever of the crowd was caught in there with you -- with a red flash, a cross
+through it and the page shouting it. The ring it draws is wet, so the answer is the
+gap still ahead of the nib, taken before it closes, or straight out across the ink
+for the smaller hit. At the last third it rings you twice, the second ring tighter.
+
+**The strike-through** is the move the length is for. It teeters back off its nib
+while a strip as long as it is is marked across the page from its foot through
+where you are -- following you, then locked and blinking -- and it falls: half a
+second from upright to flat, accelerating the way a long thing does, and the whole
+pen slams down across the box. Under it is a hit and the crowd under it is
+flattened; it bounces, rattles and lies there, which is the window, and leaves a
+red line through the page where it fell -- a strike-through, in dry ink, a record
+and not a hazard. From the second third it rolls a little way towards you before it
+gets back up (the strip it is about to cover is dashed in), and at the last third
+it falls twice.
+
+**The shake.** A pen that will not write gets shaken. It whips its top back and
+forth across the screen, wider and faster, specks coming off the nib, and then
+flicks: a fan of blots lobbed round you that land as pools of ink. Two flicks at the
+last third, the second shifted half a gap so the gap you stood in is where a blot
+lands next.
+
+**The grade**, from the second third, is the move only this boss could have. It
+writes an F over you -- a hundred pixels tall, every stroke shown before it is
+written and the next blinking, and the middle bar through where you are standing.
+The strokes are thick and wet, written five times faster than you walk, so a stroke
+is stepped off rather than outrun. At the last third it circles the F when it is
+done.
+
+It says RED INK! at two thirds and SEE ME! at one third, when it starts clicking
+itself nervously all the time. Glue **clicks it shut**: the tip goes back in with a
+click, and a pen with its tip in cannot write, so the ring is left open and the
+letter unfinished. A pen already falling still falls -- glue does not argue with
+gravity -- and one lying down stays down until it is let go. Its last words are OUT
+OF INK, and what was left in it runs out of the nib onto the page.
+
+A boss this long had to be hittable along its length, not just at its nib, or most
+of what you could see would be scenery. So the barrel is stood for by a row of
+bodies on the page, the still life's stand-in (`penpart`), that every weapon finds
+and hurts and that pass what they take to the pen; they never hurt you, because
+the barrel is in the air. The nib is the body that hurts to walk into.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was

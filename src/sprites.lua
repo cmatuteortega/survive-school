@@ -6310,6 +6310,14 @@ function Sprites.load()
             for i = 1, 38 do rows[i] = ("r"):rep(24) end
             return rows
         end)()),
+        -- And GRAMMAR's, painted the same way (src/redpen.lua): the grip round
+        -- the nib, the part of the pen the hit circle is. The rest of it is far
+        -- too long for a box and is not measured off one.
+        redpen = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 26 do rows[i] = ("r"):rep(14) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",

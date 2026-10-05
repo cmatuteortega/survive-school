@@ -368,6 +368,11 @@ Subjects.list = {
         -- book about *lines* -- pages a whole number of groups deep shutting on
         -- you from both sides, and words written along the pairs of rules.
         boss = "dictionary",
+        -- And its encore (src/redpenboss.lua): what happens to the words once
+        -- they are written. The dictionary is about where words go; the red pen
+        -- is about what is wrong with them -- circled, crossed out by a pen
+        -- longer than the page falling across it, and graded.
+        encore = "redpen",
         -- Grouped paper is ruling that arrives in clauses, and the drills follow
         -- it: the pincer is two of something on either side of where you are
         -- standing, which is the shape of the page said out loud. The only

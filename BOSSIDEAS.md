@@ -14,14 +14,15 @@ in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
 `src/course.lua`. The Piggy Bank is built the same way (`src/piggy.lua`,
 `src/piggyboss.lua`), and so are the Tesseract (`src/tesseract.lua`,
 `src/tesseractboss.lua`) and, for MUSIC, the Speaker (`src/speaker.lua`,
-`src/speakerboss.lua`) -- built in place of the Gramophone below. The rest are
-still ideas only.
+`src/speakerboss.lua`) -- built in place of the Gramophone below -- and, for
+GRAMMAR, the Red Pen (`src/redpen.lua`, `src/redpenboss.lua`), built in place of
+the Typewriter. The rest are still ideas only.
 
 | Lesson | Current boss | Second boss | Drawn as |
 |---|---|---|---|
 | SCIENCE | eye | **The Atom** (built) | painted live |
 | P.E. | whistle | **The Vaulting Box** | baked poses |
-| GRAMMAR | dictionary | **The Typewriter** | baked + live part |
+| GRAMMAR | dictionary | **The Red Pen** (built; was the Typewriter) | painted live, along its own length |
 | FINANCE | stamp | **The Piggy Bank** (built) | painted live |
 | MUSIC | metronome | **The Speaker** (built; was the Gramophone) | painted live |
 | MATHS | die | **The Tesseract** (built) | lines, projected live |
@@ -60,6 +61,24 @@ still ideas only.
   - **Ding:** the carriage return slams back and sweeps that row.
   - **Backspace** erases your pen strokes.
   - **CAPS LOCK** turns the next wave into big versions of the enemies.
+
+## GRAMMAR: The Red Pen (built)
+
+Built instead of the Typewriter: a teacher's red click pen, longer than the screen
+is tall.
+
+- **Drawn:** a solid of revolution painted live (cones and cylinders about one
+  axis, and two flat ends), traced along its own length and cut to what the camera
+  sees. Ribbed grip, glossy red barrel with "0.7" printed on it, a clip, a button
+  that goes in as the tip clicks out.
+- **Fight:** about corrections. Everything it writes is red ink, wet (hurts) and
+  then dry (doesn't).
+  - **Wrong:** it rings you and shuts the ring on everything inside.
+  - **The strike-through:** the whole pen falls flat across the box along a strip
+    it marks first; from the second third it rolls towards you before getting up.
+  - **The shake:** it whips its top across the screen and flicks blots that pool.
+  - **The grade:** it writes an F over you, the middle bar through you.
+  - Glue clicks it shut.
 
 ## FINANCE: The Piggy Bank (built)
 
@@ -147,5 +166,7 @@ The cheapest to build, because each is mostly an existing body with a new brain:
 - The Piggy Bank reuses the same painter, stretched into an ellipsoid (built).
 - The Mannequin reuses the still life's lamp.
 
-The Typewriter would be the most new work. (The Tesseract, built, turned out
-cheaper than expected: drawn as lines it needs no painter at all.)
+The Typewriter would have been the most new work, and GRAMMAR got the Red Pen
+instead: the speaker's painter, laid along an axis and made of cones as well as
+cylinders. (The Tesseract, built, turned out cheaper than expected: drawn as lines
+it needs no painter at all.)
