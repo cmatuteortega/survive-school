@@ -1899,6 +1899,9 @@ function Game:killEnemy(index)
     -- finished.
     if e == self.boss then
         self.boss = nil
+        -- And whatever was standing on the page for pieces of it -- the still
+        -- life's pieces off the table (src/stilllife.lua) -- goes with it.
+        if e.brain and e.brain.dropParts then e.brain:dropParts(self) end
         -- Not straight to the card: the eye comes apart first (EyeBoss.fall),
         -- and the win is noticed when it has finished. Nothing hurts you while
         -- it does, and whatever it had in the air falls out of it.

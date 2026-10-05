@@ -7286,15 +7286,17 @@ it is drawn in pencil -- paper, graphite and slate with ink round every edge -- 
 one boss in the book that is not red. The body is the study; what makes it theirs is
 everything it does, and all of that is red.
 
-Every solid throws its shadow across the floor directly away from the lamp. Most of
-the time those are short smudges under the group, and they are there to teach you to
-read the light.
+Every solid throws its shadow across the floor directly away from the lamp, wherever
+it is -- in the group, or out on the page in the middle of a move. Most of the time
+those are short smudges, and they are there to teach you to read the light.
 
 - **The shade.** The lamp swings round to the far side of the group from you and the
   three shadows grow out across the box, hatched while they are counted in, then
   filled -- and a filled shadow hurts. Each solid throws its own, fanned out from the
   lamp, so there are strips of light between them as well as round them, and the
-  ground between the lamp and the group is always lit: walk towards the light. From
+  ground between the lamp and the group is always lit: walk towards the light. A
+  cube sitting out on the page or a sphere half way down its line throws its shadow
+  from where it is, so a shade with the pieces spread is a different shape to read. From
   the middle third the lamp keeps going round while they are filled, slowly enough
   that a gap can be walked with; in the last third there are two lamps and two fans.
 - **The cube is dropped.** It goes up off the table and out of sight, its shadow
@@ -7308,6 +7310,18 @@ read the light.
   of plaster off in a spiral. Then it falls on its side and is stood back up.
 - **When you are far off,** the table is lifted and put down nearer you: a still life
   being rearranged rather than a monster walking.
+
+**The lower it gets, the more of it moves at once.** One move at a time in the first
+third; two in the middle -- the cube coming down while the sphere is rolling, or
+either of them under a shade -- and three in the last. It is the same three pieces
+and the same lamp, so what changes is how much of the page you have to read at once,
+which is the right thing for the end of a fight to ask.
+
+**A piece off the table can be hit.** It is the boss as much as the group is, so
+whatever lands on a cube sitting out on the page or a sphere rolling past comes off
+the boss's bar. The pieces leaving is when they come to you, and a fight where they
+came to you and could not be touched would be a fight about waiting for them to go
+home.
 
 **Glue holds the table.** A glued still life cannot move its lamp, so a shade it was
 counting in is dropped, and it cannot be lifted somewhere nearer. What has already

@@ -1445,24 +1445,46 @@ The `brain` (`src/stilllife.lua`) holds `drive` and never walks; past `move.far`
 lifts the table and puts it down up to `move.reach` nearer (a hop through `hop`).
 The lamp (or two, from the last third) sits `lamp.ring` out at an angle, clamped
 into the box, drifting `lamp.drift` a second when no move has it, and every piece
-on the table throws a wedge across the floor away from it: from the piece's spot,
-out at the angle the piece subtends from the lamp. Short and graphite at rest;
-`drawGround` draws them, and the lamps and anything off the table are `drawAir`.
-Moves are picked off `still.moves[phase]`, never the same twice running; a piece off
-the table is a second `Plaster` of one piece (`lift` / `home`).
+on the floor throws a wedge across it away from the lamp -- on the table or off it,
+from wherever the piece has got to (a piece in the air, or out of sight, throws
+none): from the piece's spot, out at the angle the piece subtends from the lamp.
+Short and graphite at rest; `drawGround` draws them, clipped to the box, and the
+lamps and anything off the table are `drawAir`.
+
+Moves run **side by side**, each an entry in `acts` with its own clock (`step_*`
+answers when it is done): a new one starts `cool` after the last started, while
+fewer than `together` (1 / 2 / 3 by third) are going, picked off
+`still.moves[phase]` among those whose piece is on the table, never the move it
+started last if another is free. One shade at a time; each piece does one thing at
+a time. The table is only lifted nearer (`move`) when nothing is going on and every
+piece is home.
+
+A piece off the table is a second `Plaster` of one piece (`lift` / `home`), and a
+**stand-in** on the page: a `stillpiece` enemy appended to `Game.enemies` after the
+boss (so taking it back off from inside the boss's own turn is safe: the horde is
+walked backwards), moved onto the piece every frame (`syncParts`), as wide as it is,
+`ghost` while the piece is in the air or hidden. Every weapon finds it like anything
+else. `Enemy:hurt` on it hurts the boss (`stand`) -- softened and counted as the
+boss's -- and puts the boss's own flash, recoil and pending number back, lighting and
+numbering the stand-in instead; it never answers that it died. The boss notices a
+death dealt through a piece at the top of its own turn and kills itself there, and
+`Game:killEnemy` hands a dying boss's `dropParts` the page so its stand-ins go with
+it. A stand-in's contact damage is its move's (14 for the cube and sphere, 12 for the
+top), through the ordinary contact pass.
 
 | move | from | tell | hot |
 | --- | --- | --- | --- |
 | `shade` | first third | the lamp eases round to the far side of the group from you (± `spread`), the wedges growing from `short` to `length`, hatched with marching rows and edged slate, red over the last 0.35s | the wedges filled slate, red-edged, 12 to stand in; the lamp goes `swing` further round (0 / 0.3 / 0.3 rad) so they sweep; from the last third a second lamp `apart` (2 rad) round throws a second fan |
-| `drop` | first third | the cube up off the table (`high` 200) and out of sight; a dotted `shock` ring and a growing shadow on where you stood for `aim` | down square on the floor with the ring hot (14); sits `sit` (1.4s) as a block that hurts to touch, then hops home |
+| `drop` | first third | the cube up off the table (`high` 200) and out of sight; a dotted `shock` ring and a growing shadow on where you stood for `aim` | down square on the floor with the ring hot (14); sits `sit` (1.4s) as a block that hurts to touch and can be hit, then hops home |
 | `roll` | middle third | the sphere's line dashed to the box edge, `blowT` shudder for `wind` | out at 170 to the edge and back at 0.8 of that, hurting on contact |
 | `top` | last third | the cone flips end over end in the air (`flip`) | on its point, precessing at `lean`, wandering after you at 46 (under your 58), a chip off it every 0.16s each 2.4 rad further round (a spiral of `pip`s); then falls on its side and is stood back home |
 
-The thirds are states of their own (`change`): everything off the table is put back,
+The thirds drop every move: everything off the table is put back (stand-ins and all),
 the page says `THE LAMP MOVES!` (two thirds, and the shade starts to sweep) or
 `ANOTHER LAMP!` (one third). **Glue holds the table**: a shade still being counted in
-is dropped and a lift is put down where it is, but a cube in the air, a sphere rolling
-or a top spinning carries on -- glue holds the group, not what has already left it.
+is dropped, a lift is put down where it is and nothing new starts, but a cube in the
+air, a sphere rolling or a top spinning carries on -- glue holds the group, not what
+has already left it.
 
 ### Drills and surges
 

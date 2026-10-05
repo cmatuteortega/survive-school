@@ -10,17 +10,21 @@
 --
 -- **The lamp** is always on the page, drifting round the group, and the body
 -- is lit from wherever it is (src/plaster.lua): the side of every solid that
--- faces it is the paper, the side that turns away is slate. Each solid throws
--- its shadow across the floor directly away from it. Most of the time those are
--- short smudges, and what they are for is teaching you to read the light.
+-- faces it is the paper, the side that turns away is slate. Every solid throws
+-- its shadow across the floor directly away from it -- on the table or off it,
+-- wherever it has got to. Most of the time those are short smudges, and what
+-- they are for is teaching you to read the light.
 --
 -- **The shade** is the move that cashes that in. The lamp swings round to the
--- far side of the group from you and the three shadows grow out across the
--- box, hatched while they are counted in, then filled -- and a filled shadow
--- hurts. Each solid throws its own, fanned out from the lamp, so there are
--- gaps of light between them as well as round them. From the middle third the
--- lamp keeps moving while they are filled, so the shadows sweep and you walk
--- with them; in the last third there are two lamps, and two fans.
+-- far side of the group from you and every shadow grows out across the box,
+-- hatched while it is counted in, then filled -- and a filled shadow hurts.
+-- Each solid throws its own, fanned out from the lamp, so there are gaps of
+-- light between them as well as round them; a cube sitting out on the page or a
+-- sphere half way down its line throws one from where it is, so a shade with
+-- the pieces spread is a different shape from one with them together. From the
+-- middle third the lamp keeps moving while they are filled, so the shadows
+-- sweep and you walk with them; in the last third there are two lamps, and
+-- two fans.
 --
 -- **The cube** leaves the group: up off the table and out of sight, its shadow
 -- coming down on where you were standing, then down onto it -- and it sits
@@ -33,10 +37,22 @@
 -- top, wandering after you and throwing chips of plaster off in a spiral,
 -- until it falls over and is put back.
 --
+-- **The lower it gets, the more of it moves at once.** One move at a time in
+-- the first third; from the middle third two -- the cube coming down while the
+-- sphere is rolling, or either under a shade -- and three in the last. Each
+-- piece can only be doing one thing, and there is only one shade at a time.
+--
+-- **A piece off the table can be hit.** It is the boss as much as the group
+-- is, so while it is out it is stood for by a body of its own on the page
+-- (`stillpiece` in src/enemy.lua) that everything in the game can find, aim at
+-- and hurt, and whatever it takes comes off the boss (Enemy:hurt). It never
+-- dies of it: it is only ever taken off the page again, when the piece goes
+-- home. Off the page in the air, it is not there to be hit.
+--
 -- **Glue holds the table.** A glued still life cannot move its lamp, so a
--- shade it was counting in is dropped, and it cannot be lifted to somewhere
--- nearer you. What is already off the table goes on doing what it was doing:
--- glue holds the group, not a cube in the air.
+-- shade it was counting in is dropped, nothing new is started, and it cannot be
+-- lifted to somewhere nearer you. What is already off the table goes on doing
+-- what it was doing: glue holds the group, not a cube in the air.
 --
 -- The body is src/plaster.lua, painted every frame; this file only moves the
 -- lamp, takes pieces off the table and puts them back, and reads them.
@@ -71,6 +87,9 @@ end
 local FOOT = 8
 local CUBE, SPHERE, CONE = 1, 2, 3
 
+-- Which piece each move takes off the table; the shade takes none.
+local PIECE = { drop = CUBE, roll = SPHERE, top = CONE }
+
 function StillLife.body()
     return Plaster.new({
         Plaster.cube(-11, 2, 7),
@@ -85,16 +104,25 @@ function StillLife.new(def)
         phase = 1,
         -- It walks on resting: the first thing the player should see it do is
         -- nothing, with the lamp going round it.
-        state = "rest", t = 1.6,
+        coolT = 1.6,
+        acts = {},        -- the moves going on now, each its own clock
+        out = {},         -- the pieces off the table, by index
+        hopping = nil,    -- the table being lifted somewhere nearer
         last = nil,
         lamps = nil,
-        loose = nil,      -- the piece that is off the table, if one is
         e = nil,
     }, StillLife)
 end
 
 function StillLife:busy()
-    return self.state ~= "rest"
+    return #self.acts > 0 or self.hopping ~= nil
+end
+
+-- The move of this kind going on now, if one is.
+function StillLife:act(kind)
+    for _, a in ipairs(self.acts) do
+        if a.kind == kind then return a end
+    end
 end
 
 --- the loop -------------------------------------------------------------------
@@ -109,6 +137,15 @@ function StillLife:update(dt, game, e)
         self.lamps = { { a = a } }
         self:placeLamps(e)
     end
+
+    -- Killed through a piece. Enemy:hurt on a piece never answers that it
+    -- died -- the piece is not what dies -- so the group notices for itself, on
+    -- its own turn, which is a place in the frame a kill is safe to make.
+    if e.hp <= 0 then
+        e.hitCooldown = 1
+        game:killEnemyAt(e)
+        return
+    end
     if self.shockT then self.shockT = math.max(0, self.shockT - dt) end
 
     -- The phase, at the eye's thirds: another piece joins in, and the lamp
@@ -118,7 +155,7 @@ function StillLife:update(dt, game, e)
     if phase > self.phase then
         self.phase = phase
         self:clear(game, e)
-        self.state, self.t = "change", 0.9
+        self.coolT = 0.9
         game.particles:burst(e.x, e.y, phase >= 3 and 24 or 14, Palette.red)
         Camera.knock(2)
         Sfx.play("pin", 0.7)
@@ -134,37 +171,49 @@ function StillLife:update(dt, game, e)
     e.drive = { hold = true }
 
     -- Stuck to the page: the lamp is stuck with it. A shade still being counted
-    -- in is dropped and a lift to somewhere else is put down where it is; what
-    -- is off the table already carries on.
-    if e.frozen > 0 then
-        if self.state == "shade" and self.sub == "tell" then
-            self.state, self.t, self.wedges = "rest", pick(self.def.cool, self.phase), nil
-        elseif self.state == "move" then
-            e.hop = 0
-            self.state, self.t = "rest", pick(self.def.cool, self.phase)
+    -- in is dropped, a lift to somewhere else is put down where it is, and
+    -- nothing new is started; what is off the table already carries on.
+    local stuck = e.frozen > 0
+    if stuck then
+        for i = #self.acts, 1, -1 do
+            local a = self.acts[i]
+            if a.kind == "shade" and a.sub == "tell" then table.remove(self.acts, i) end
+        end
+        if self.hopping then
+            e.hop, self.hopping = 0, nil
         end
         e.blowT = 0
-        if self.state == "rest" or self.state == "change" then
-            self:light(e, body)
-            return
+    end
+
+    if not self:act("shade") then self:drift(dt) end
+    if self.hopping then
+        self:stepHop(dt, game, e)
+    elseif not stuck then
+        self.coolT = self.coolT - dt
+        if self.coolT <= 0 then self:choose(game, e, body) end
+    end
+
+    for i = #self.acts, 1, -1 do
+        local a = self.acts[i]
+        a.t = a.t - dt
+        if self["step_" .. a.kind](self, a, dt, game, e, body) then
+            table.remove(self.acts, i)
         end
     end
 
-    self.t = self.t - dt
-    if self.state ~= "shade" and self.state ~= "change" then self:drift(dt) end
-    self[self.state](self, dt, game, e, body)
     self:placeLamps(e)
     self:light(e, body)
+    self:syncParts()
 end
 
 -- Every piece back on the table and every move dropped: the change of phase.
 function StillLife:clear(game, e)
     local body = e.plaster
-    if self.loose then
-        game.particles:burst(self.loose.x, self.loose.y, 8, Palette.graphite)
-        self:home(e, body)
+    for k, loose in pairs(self.out) do
+        game.particles:burst(loose.x, loose.y, 8, Palette.graphite)
+        self:home(e, body, k)
     end
-    self.wedges, self.mark, self.aim = nil, nil, nil
+    self.acts, self.mark, self.hopping = {}, nil, nil
     e.blowT, e.hop = 0, 0
 end
 
@@ -194,60 +243,76 @@ function StillLife:light(e, body)
     local l = self.lamps[1]
     local high = self.def.lamp.high
     body.lamp[1], body.lamp[2], body.lamp[3] = l.x - e.x, l.y - (e.y + FOOT), high
-    local loose = self.loose
-    if loose then
+    for _, loose in pairs(self.out) do
         loose.painter.lamp[1] = l.x - loose.x
         loose.painter.lamp[2] = l.y - loose.y
         loose.painter.lamp[3] = high
     end
 end
 
--- Resting between moves, and then picking the next: never the same one twice
--- running, so a phase with two moves in it alternates.
-function StillLife:rest(dt, game, e)
-    if self.t > 0 then return end
+-- Whether a move can start: the shade if no shade is going, a piece's move if
+-- that piece is on the table.
+function StillLife:free(kind)
+    if self:act(kind) then return false end
+    local k = PIECE[kind]
+    return not (k and self.out[k])
+end
+
+-- The next move, once the last one started has had its `cool`: anything free
+-- that is not the move it started last, up to `together` going at once. Or,
+-- when you are far off and nothing is going on, the table lifted nearer.
+function StillLife:choose(game, e, body)
+    if #self.acts >= pick(self.def.together, self.phase) then return end
     local p = game.player
     local dist = util.len(p.x - e.x, p.y - e.y)
     local mv = self.def.move
-    if dist > mv.far and self.state ~= "move" and self.last ~= "move" then
+    if #self.acts == 0 and next(self.out) == nil and dist > mv.far and self.last ~= "move" then
         local dx, dy = (p.x - e.x) / dist, (p.y - e.y) / dist
         local go = math.min(mv.reach, dist - mv.near)
         local tx, ty = e.x + dx * go, e.y + dy * go
         if self.box then tx, ty = self.box:clamp(tx, ty, e.radius + 8) end
-        self.from = { x = e.x, y = e.y }
-        self.to = { x = tx, y = ty }
-        self.state, self.t, self.last = "move", mv.time, "move"
+        self.hopping = { fx = e.x, fy = e.y, tx = tx, ty = ty, t = mv.time }
+        self.last = "move"
         return
     end
-    local moves = self.def.moves[self.phase]
-    local choice
-    repeat
-        choice = moves[love.math.random(#moves)]
-    until #moves == 1 or choice ~= self.last
-    self.last = choice
-    self["start_" .. choice](self, game, e, e.plaster)
+    local options = {}
+    for _, kind in ipairs(self.def.moves[self.phase]) do
+        if self:free(kind) and kind ~= self.last then options[#options + 1] = kind end
+    end
+    if #options == 0 then
+        for _, kind in ipairs(self.def.moves[self.phase]) do
+            if self:free(kind) then options[#options + 1] = kind end
+        end
+    end
+    if #options == 0 then
+        self.coolT = 0.3
+        return
+    end
+    local kind = options[love.math.random(#options)]
+    self.last = kind
+    local a = self["start_" .. kind](self, game, e, body)
+    a.kind = kind
+    self.acts[#self.acts + 1] = a
+    self.coolT = pick(self.def.cool, self.phase)
 end
 
 -- The whole group lifted and set down nearer you: how a thing that never walks
 -- keeps up. A hop rather than a slide, so it is the table being rearranged and
 -- not the table creeping.
-function StillLife:move(dt, game, e)
-    local mv = self.def.move
-    local f = 1 - math.max(0, self.t) / mv.time
-    e.x = self.from.x + (self.to.x - self.from.x) * f
-    e.y = self.from.y + (self.to.y - self.from.y) * f
+function StillLife:stepHop(dt, game, e)
+    local h, mv = self.hopping, self.def.move
+    h.t = h.t - dt
+    local f = 1 - math.max(0, h.t) / mv.time
+    e.x = h.fx + (h.tx - h.fx) * f
+    e.y = h.fy + (h.ty - h.fy) * f
     e.hop = floor(math.sin(math.pi * f) * mv.high + 0.5)
-    if self.t <= 0 then
-        e.hop = 0
+    if h.t <= 0 then
+        e.hop, self.hopping = 0, nil
         Sfx.play("tick", 0.8)
         Camera.knock(1)
         game.particles:burst(e.x, e.y + FOOT, 6, Palette.graphite)
-        self.state, self.t = "rest", 0.5
+        self.coolT = math.max(self.coolT, 0.5)
     end
-end
-
-function StillLife:change(dt, game, e)
-    if self.t <= 0 then self.state, self.t = "rest", 0.6 end
 end
 
 --- shadows --------------------------------------------------------------------
@@ -262,6 +327,13 @@ end
 local function width(p)
     if p.kind == "cube" then return p.half * 1.2 end
     return p.r
+end
+
+-- How high a loose piece is off the floor: a piece in the air throws no
+-- shadow on the floor you could stand in, and is not there to be hit.
+local function lift(p)
+    if p.kind == "cone" then return p.apex[3] end
+    return p.lift or 0
 end
 
 -- A shadow: the wedge a lamp at (lx, ly) throws past something `r` wide at
@@ -294,13 +366,19 @@ local function inWedge(w, x, y, pr)
     return math.abs(wrap(math.atan2(dy, dx) - w.a)) <= w.b + pr / d
 end
 
--- Every shadow on the page this frame, at `len`: one per lamp per piece on the
--- table.
+-- Every shadow on the page this frame, at `len`: one per lamp per piece, on
+-- the table or out on the floor wherever it has got to. A piece in the air or
+-- out of sight throws none.
 function StillLife:shadows(e, len)
     local out = {}
     for _, l in ipairs(self.lamps) do
-        for _, p in ipairs(e.plaster.pieces) do
-            if not p.hidden then
+        for k, p in ipairs(e.plaster.pieces) do
+            local loose = self.out[k]
+            if loose then
+                if not loose.painter.hidden and lift(loose.piece) < 6 then
+                    out[#out + 1] = wedge(l.x, l.y, loose.x, loose.y, width(loose.piece), len)
+                end
+            elseif not p.hidden then
                 local x, y = spot(e, p)
                 out[#out + 1] = wedge(l.x, l.y, x, y, width(p), len)
             end
@@ -326,29 +404,29 @@ function StillLife:start_shade(game, e)
         l.from = l.a
         l.to = l.a + wrap(l.to - l.a)
     end
-    self.swing = pick(sh.swing, self.phase) * (love.math.random() < 0.5 and -1 or 1)
-    self.state, self.sub, self.t = "shade", "tell", pick(sh.tell, self.phase)
-    self.len = sh.short
     Sfx.play("tick", 0.7)
+    return {
+        sub = "tell", t = pick(sh.tell, self.phase), len = sh.short,
+        swing = pick(sh.swing, self.phase) * (love.math.random() < 0.5 and -1 or 1),
+    }
 end
 
-function StillLife:shade(dt, game, e)
+function StillLife:step_shade(a, dt, game, e)
     local sh = self.def.shade
-    if self.sub == "tell" then
+    if a.sub == "tell" then
         local total = pick(sh.tell, self.phase)
-        local f = math.min(1, (1 - math.max(0, self.t) / total) / 0.6)
+        local f = math.min(1, (1 - math.max(0, a.t) / total) / 0.6)
         local ease = f * f * (3 - 2 * f)
         for _, l in ipairs(self.lamps) do l.a = l.from + (l.to - l.from) * ease end
-        self.len = sh.short + (sh.length - sh.short) * ease
-        if self.t <= 0 then
-            self.sub, self.t = "hot", pick(sh.hot, self.phase)
-            self.len = sh.length
+        a.len = sh.short + (sh.length - sh.short) * ease
+        if a.t <= 0 then
+            a.sub, a.t, a.len = "hot", pick(sh.hot, self.phase), sh.length
             Camera.knock(2)
             Sfx.play("pin", 0.8)
         end
-    elseif self.sub == "hot" then
+    elseif a.sub == "hot" then
         local hot = pick(sh.hot, self.phase)
-        for _, l in ipairs(self.lamps) do l.a = l.a + self.swing / hot * dt end
+        for _, l in ipairs(self.lamps) do l.a = l.a + a.swing / hot * dt end
         self:placeLamps(e)
         local p = game.player
         for _, w in ipairs(self:shadows(e, sh.length)) do
@@ -359,39 +437,64 @@ function StillLife:shade(dt, game, e)
                 break
             end
         end
-        if self.t <= 0 then self.sub, self.t = "fade", sh.fade end
+        if a.t <= 0 then a.sub, a.t = "fade", sh.fade end
     else
-        self.len = sh.short + (sh.length - sh.short) * math.max(0, self.t) / sh.fade
-        if self.t <= 0 then
-            self.len = nil
-            self.state, self.t = "rest", pick(self.def.cool, self.phase)
-        end
+        a.len = sh.short + (sh.length - sh.short) * math.max(0, a.t) / sh.fade
+        if a.t <= 0 then return true end
     end
 end
 
 --- off the table --------------------------------------------------------------
 
+-- The body that stands for a piece while it is off the table: on the page in
+-- the horde, so every weapon finds it the way it finds anything else, and
+-- appended *after* the boss. That is what makes it safe to take back off from
+-- inside the boss's own turn: the horde is walked backwards (Game:updateEnemies,
+-- and every weapon's pass), so everything after the boss has already been
+-- walked when the boss is.
+local function standIn(game, e, damage)
+    local Enemy = require("src.enemy")
+    local part = Enemy.new("stillpiece", e.x, e.y)
+    part.stand = e
+    part.damage = damage
+    part.ghost = true
+    game.enemies[#game.enemies + 1] = part
+    return part
+end
+
+local function dropStandIn(game, part)
+    part.gone = true
+    for i = #game.enemies, 1, -1 do
+        if game.enemies[i] == part then
+            table.remove(game.enemies, i)
+            return
+        end
+    end
+end
+
 -- A piece taken off the table into a painter of its own, drawn where it is on
 -- the page rather than where it stood in the group.
-function StillLife:lift(e, body, k, piece)
+function StillLife:lift(game, e, body, k, piece, damage)
     local x, y = spot(e, body.pieces[k])
     body.pieces[k].hidden = true
     body:touch()
-    self.loose = { k = k, x = x, y = y, piece = piece, painter = Plaster.new({ piece }, 0) }
-    return self.loose
+    local loose = { k = k, x = x, y = y, piece = piece, painter = Plaster.new({ piece }, 0),
+                    part = standIn(game, e, scaled(e, damage)) }
+    self.out[k] = loose
+    self.game = game
+    return loose
 end
 
 -- And put back: the piece is shown in the group again, turned the way it came
 -- back (a cube) or stood up again (the cone and sphere have no way round).
-function StillLife:home(e, body)
-    local loose = self.loose
+function StillLife:home(e, body, k)
+    local loose = self.out[k]
     if not loose then return end
-    local p = body.pieces[loose.k]
+    local p = body.pieces[k]
     if p.kind == "cube" then
-        local q = loose.piece
-        for i = 1, 3 do p.ax[i], p.ay[i], p.az[i] = q.ax[i], q.ay[i], q.az[i] end
         -- Put down flat: whichever way it is turned, set square on the floor
         -- about the upright, so a cube is never left balanced on an edge.
+        local q = loose.piece
         local yaw = math.atan2(q.ax[2], q.ax[1])
         p.ax[1], p.ax[2], p.ax[3] = math.cos(yaw), math.sin(yaw), 0
         p.ay[1], p.ay[2], p.ay[3] = -math.sin(yaw), math.cos(yaw), 0
@@ -399,20 +502,38 @@ function StillLife:home(e, body)
     end
     p.hidden = false
     body:touch()
-    self.loose = nil
+    if self.game then dropStandIn(self.game, loose.part) end
+    self.out[k] = nil
+end
+
+-- Every stand-in off the page: the boss has gone (Game:killEnemy asks), and
+-- what was standing for its pieces goes with it.
+function StillLife:dropParts(game)
+    for k, loose in pairs(self.out) do
+        dropStandIn(game, loose.part)
+        self.out[k] = nil
+    end
+end
+
+-- The stand-ins follow their pieces: at the middle of what you see, as wide as
+-- it is, and not there at all while the piece is in the air or out of sight.
+function StillLife:syncParts()
+    for _, loose in pairs(self.out) do
+        local part, piece = loose.part, loose.piece
+        local up = lift(piece)
+        local away = loose.painter.hidden or up > 10
+        local tall = piece.kind == "cube" and piece.half or piece.kind == "sphere" and piece.r
+            or piece.h * 0.4
+        part.x, part.y = loose.x, loose.y - tall
+        part.radius = width(piece) + 1
+        part.ghost = away
+        if away then part.hitCooldown = math.max(part.hitCooldown, 0.1) end
+    end
 end
 
 -- Where a piece's home spot in the group is on the page.
 function StillLife:homeSpot(e, k)
     return spot(e, e.plaster.pieces[k])
-end
-
--- Hurt you if you are within `r` of where a loose piece is on the floor.
-local function bump(game, e, x, y, r, damage)
-    local p = game.player
-    if util.len(p.x - x, p.y - y) < r + p.radius and p:hurt(scaled(e, damage)) then
-        game.particles:burst(p.x, p.y, 6, Palette.red)
-    end
 end
 
 --- the cube -------------------------------------------------------------------
@@ -422,40 +543,41 @@ function StillLife:start_drop(game, e, body)
     local cube = Plaster.cube(0, 0, body.pieces[CUBE].half)
     local src = body.pieces[CUBE]
     for i = 1, 3 do cube.ax[i], cube.ay[i], cube.az[i] = src.ax[i], src.ay[i], src.az[i] end
-    self:lift(e, body, CUBE, cube)
-    self.state, self.sub, self.t = "drop", "up", dr.up
+    self:lift(game, e, body, CUBE, cube, dr.damage)
     Sfx.play("tick", 0.6)
+    return { sub = "up", t = dr.up }
 end
 
-function StillLife:drop(dt, game, e, body)
+function StillLife:step_drop(a, dt, game, e, body)
     local dr = self.def.drop
-    local loose = self.loose
+    local loose = self.out[CUBE]
     local cube = loose.piece
-    if self.sub == "up" then
-        local f = 1 - math.max(0, self.t) / dr.up
+    if a.sub == "up" then
+        local f = 1 - math.max(0, a.t) / dr.up
         cube.lift = dr.high * f * f
         Plaster.turn(cube, 1, 0.4, 0, dt * 12)
         loose.painter:touch()
-        if self.t <= 0 then
+        if a.t <= 0 then
             local p = game.player
             local x, y = p.x, p.y
             if self.box then x, y = self.box:clamp(x, y, cube.half + 4) end
-            self.mark = { x = x, y = y }
+            self.mark = { x = x, y = y, t = dr.aim }
             loose.painter.hidden = true
-            self.sub, self.t = "aim", dr.aim
+            a.sub, a.t = "aim", dr.aim
         end
-    elseif self.sub == "aim" then
-        if self.t <= 0 then
+    elseif a.sub == "aim" then
+        self.mark.t = a.t
+        if a.t <= 0 then
             loose.x, loose.y = self.mark.x, self.mark.y
             loose.painter.hidden = false
-            self.sub, self.t = "down", dr.down
+            a.sub, a.t = "down", dr.down
         end
-    elseif self.sub == "down" then
-        local f = math.max(0, self.t) / dr.down
+    elseif a.sub == "down" then
+        local f = math.max(0, a.t) / dr.down
         cube.lift = dr.high * f * f
         Plaster.turn(cube, 0.3, 1, 0, dt * 12)
         loose.painter:touch()
-        if self.t <= 0 then
+        if a.t <= 0 then
             cube.lift = 0
             -- Square on the floor, as it would land: anything else balances a
             -- cube on an edge for as long as it sits there.
@@ -465,7 +587,11 @@ function StillLife:drop(dt, game, e, body)
             cube.az[1], cube.az[2], cube.az[3] = 0, 0, 1
             loose.painter:touch()
             self.mark = nil
-            bump(game, e, loose.x, loose.y, dr.shock, dr.damage)
+            local p = game.player
+            if util.len(p.x - loose.x, p.y - loose.y) < dr.shock + p.radius
+                and p:hurt(scaled(e, dr.damage)) then
+                game.particles:burst(p.x, p.y, 6, Palette.red)
+            end
             self.shockAt, self.shockT = { x = loose.x, y = loose.y }, 0.3
             Camera.knock(4)
             Sfx.play("pin", 0.5)
@@ -473,26 +599,25 @@ function StillLife:drop(dt, game, e, body)
             for _ = 1, 8 do
                 game.particles:crumb(loose.x, loose.y, nil, nil, cube.half, Palette.graphite)
             end
-            self.sub, self.t = "sit", dr.sit
+            a.sub, a.t = "sit", dr.sit
         end
-    elseif self.sub == "sit" then
-        bump(game, e, loose.x, loose.y, cube.half + 2, dr.damage)
-        if self.t <= 0 then
-            self.from = { x = loose.x, y = loose.y }
-            self.sub, self.t = "back", dr.back
+    elseif a.sub == "sit" then
+        if a.t <= 0 then
+            a.fx, a.fy = loose.x, loose.y
+            a.sub, a.t = "back", dr.back
         end
     else
         local hx, hy = self:homeSpot(e, CUBE)
-        local f = 1 - math.max(0, self.t) / dr.back
-        loose.x = self.from.x + (hx - self.from.x) * f
-        loose.y = self.from.y + (hy - self.from.y) * f
+        local f = 1 - math.max(0, a.t) / dr.back
+        loose.x = a.fx + (hx - a.fx) * f
+        loose.y = a.fy + (hy - a.fy) * f
         cube.lift = math.sin(math.pi * f) * dr.hop
-        Plaster.turn(cube, hy - self.from.y, self.from.x - hx, 0, dt * 6)
+        Plaster.turn(cube, hy - a.fy, a.fx - hx, 0, dt * 6)
         loose.painter:touch()
-        if self.t <= 0 then
-            self:home(e, body)
+        if a.t <= 0 then
+            self:home(e, body, CUBE)
             Sfx.play("tick", 0.9)
-            self.state, self.t = "rest", pick(self.def.cool, self.phase)
+            return true
         end
     end
 end
@@ -518,33 +643,35 @@ function StillLife:start_roll(game, e, body)
     local x, y = self:homeSpot(e, SPHERE)
     local dx, dy = util.normalize(p.x - x, p.y - y)
     if dx == 0 and dy == 0 then dx = 1 end
-    self.aim = { x = x, y = y, dx = dx, dy = dy,
-                 len = reach(self.box, x, y, dx, dy, rl.length, body.pieces[SPHERE].r + 2) }
-    self.state, self.sub, self.t = "roll", "wind", rl.wind
+    return {
+        sub = "wind", t = rl.wind,
+        aim = { x = x, y = y, dx = dx, dy = dy,
+                len = reach(self.box, x, y, dx, dy, rl.length, body.pieces[SPHERE].r + 2) },
+    }
 end
 
-function StillLife:roll(dt, game, e, body)
+function StillLife:step_roll(a, dt, game, e, body)
     local rl = self.def.roll
-    if self.sub == "wind" then
-        e.blowT = math.max(0, self.t)
-        if self.t <= 0 then
+    if a.sub == "wind" then
+        e.blowT = math.max(0, a.t)
+        if a.t <= 0 then
             e.blowT = 0
             local ball = Plaster.sphere(0, 0, body.pieces[SPHERE].r)
-            self:lift(e, body, SPHERE, ball)
-            self.gone = 0
-            self.sub = "out"
+            self:lift(game, e, body, SPHERE, ball, rl.damage)
+            a.gone = 0
+            a.sub = "out"
             Sfx.play("tick", 0.8)
         end
         return
     end
-    local loose = self.loose
-    local a = self.aim
+    local loose = self.out[SPHERE]
+    local aim = a.aim
     local r = loose.piece.r
-    if self.sub == "out" then
-        self.gone = math.min(a.len, self.gone + rl.speed * dt)
-        loose.x, loose.y = a.x + a.dx * self.gone, a.y + a.dy * self.gone
-        if self.gone >= a.len then
-            self.sub = "back"
+    if a.sub == "out" then
+        a.gone = math.min(aim.len, a.gone + rl.speed * dt)
+        loose.x, loose.y = aim.x + aim.dx * a.gone, aim.y + aim.dy * a.gone
+        if a.gone >= aim.len then
+            a.sub = "back"
             Camera.knock(2)
             Sfx.play("tick", 1.0)
             game.particles:burst(loose.x, loose.y, 6, Palette.graphite)
@@ -554,18 +681,15 @@ function StillLife:roll(dt, game, e, body)
         local dx, dy, d = util.normalize(hx - loose.x, hy - loose.y)
         local step = rl.speed * rl.back * dt
         if d <= step then
-            self:home(e, body)
-            self.aim = nil
+            self:home(e, body, SPHERE)
             Sfx.play("tick", 0.9)
-            self.state, self.t = "rest", pick(self.def.cool, self.phase)
-            return
+            return true
         end
         loose.x, loose.y = loose.x + dx * step, loose.y + dy * step
     end
     if love.math.random() < dt * 20 then
         game.particles:crumb(loose.x, loose.y + r, nil, nil, 2, Palette.graphite)
     end
-    bump(game, e, loose.x, loose.y, r, rl.damage)
 end
 
 --- the cone -------------------------------------------------------------------
@@ -581,86 +705,82 @@ end
 function StillLife:start_top(game, e, body)
     local src = body.pieces[CONE]
     local cone = Plaster.cone(0, 0, src.r, src.h)
-    self:lift(e, body, CONE, cone)
-    self.phi, self.psi = math.pi, 0
-    self.spray, self.chipT = love.math.random() * TAU, 0
-    self.state, self.sub, self.t = "top", "flip", self.def.top.flip
+    self:lift(game, e, body, CONE, cone, self.def.top.damage)
     Sfx.play("tick", 0.7)
+    return { sub = "flip", t = self.def.top.flip, phi = math.pi, psi = 0,
+             spray = love.math.random() * TAU, chipT = 0 }
 end
 
-function StillLife:top(dt, game, e, body)
+function StillLife:step_top(a, dt, game, e, body)
     local tp = self.def.top
-    local loose = self.loose
+    local loose = self.out[CONE]
     local cone = loose.piece
     local lying = math.pi / 2 - math.atan(cone.r / cone.h)
-    if self.sub == "flip" then
+    if a.sub == "flip" then
         -- Over in the air, end for end: apex up to apex down.
-        local f = 1 - math.max(0, self.t) / tp.flip
-        self.phi = math.pi * (1 - f) + tp.lean * f
-        setAxis(cone, self.phi, self.psi)
+        local f = 1 - math.max(0, a.t) / tp.flip
+        a.phi = math.pi * (1 - f) + tp.lean * f
+        setAxis(cone, a.phi, a.psi)
         cone.apex[3] = cone.h * (1 - f) + math.sin(math.pi * f) * 14
-        if self.t <= 0 then
+        if a.t <= 0 then
             cone.apex[3] = 0
-            self.sub, self.t = "spin", pick(tp.time, self.phase)
+            a.sub, a.t = "spin", pick(tp.time, self.phase)
             Camera.knock(2)
             Sfx.play("pin", 0.9)
             game.particles:burst(loose.x, loose.y, 8, Palette.graphite)
         end
-    elseif self.sub == "spin" then
+    elseif a.sub == "spin" then
         -- On its point, wobbling round, wandering after you.
-        self.psi = self.psi + tp.whirl * dt
-        self.phi = tp.lean
-        setAxis(cone, self.phi, self.psi)
+        a.psi = a.psi + tp.whirl * dt
+        a.phi = tp.lean
+        setAxis(cone, a.phi, a.psi)
         local p = game.player
         local dx, dy = util.normalize(p.x - loose.x, p.y - loose.y)
-        local w = math.sin(self.psi * 0.5) * tp.wobble
+        local w = math.sin(a.psi * 0.5) * tp.wobble
         local x = loose.x + (dx - dy * w) * tp.speed * dt
         local y = loose.y + (dy + dx * w) * tp.speed * dt
         if self.box then x, y = self.box:clamp(x, y, cone.r + 2) end
         loose.x, loose.y = x, y
         -- Chips off it in a spiral: one every `every`, a little further round.
-        self.chipT = self.chipT - dt
-        if self.chipT <= 0 then
-            self.chipT = tp.every
-            self.spray = self.spray + tp.turn
+        a.chipT = a.chipT - dt
+        if a.chipT <= 0 then
+            a.chipT = tp.every
+            a.spray = a.spray + tp.turn
             local ch = tp.chip
             game.shots[#game.shots + 1] = {
                 x = loose.x, y = loose.y - cone.h * 0.6,
-                dx = math.cos(self.spray), dy = math.sin(self.spray), speed = ch.speed,
+                dx = math.cos(a.spray), dy = math.sin(a.spray), speed = ch.speed,
                 damage = scaled(e, ch.damage), life = ch.life, sprite = ch.sprite,
                 radius = ch.hit * e.reach, grow = e.grow,
             }
             Sfx.play("tick", 1.5)
         end
-        bump(game, e, loose.x, loose.y, cone.r + 2, tp.damage)
-        if self.t <= 0 then
-            self.sub, self.t = "fall", tp.fall
-            self.phiFrom = self.phi
+        if a.t <= 0 then
+            a.sub, a.t, a.from = "fall", tp.fall, a.phi
         end
-    elseif self.sub == "fall" then
-        local f = 1 - math.max(0, self.t) / tp.fall
-        self.phi = self.phiFrom + (lying - self.phiFrom) * f * f
-        setAxis(cone, self.phi, self.psi)
-        if self.t <= 0 then
+    elseif a.sub == "fall" then
+        local f = 1 - math.max(0, a.t) / tp.fall
+        a.phi = a.from + (lying - a.from) * f * f
+        setAxis(cone, a.phi, a.psi)
+        if a.t <= 0 then
             Camera.knock(1)
             Sfx.play("tick", 0.8)
             game.particles:burst(loose.x, loose.y, 6, Palette.graphite)
-            self.from = { x = loose.x, y = loose.y }
-            self.sub, self.t = "back", tp.back
+            a.fx, a.fy = loose.x, loose.y
+            a.sub, a.t = "back", tp.back
         end
     else
         -- Picked up and stood back on its base where it belongs.
         local hx, hy = self:homeSpot(e, CONE)
-        local f = 1 - math.max(0, self.t) / tp.back
-        loose.x = self.from.x + (hx - self.from.x) * f
-        loose.y = self.from.y + (hy - self.from.y) * f
-        self.phi = lying + (math.pi - lying) * f
-        setAxis(cone, self.phi, self.psi)
+        local f = 1 - math.max(0, a.t) / tp.back
+        loose.x = a.fx + (hx - a.fx) * f
+        loose.y = a.fy + (hy - a.fy) * f
+        a.phi = lying + (math.pi - lying) * f
+        setAxis(cone, a.phi, a.psi)
         cone.apex[3] = cone.h * f + math.sin(math.pi * f) * 10
-        if self.t <= 0 then
-            self:home(e, body)
-            self.state, self.t = "rest", pick(self.def.cool, self.phase)
-            return
+        if a.t <= 0 then
+            self:home(e, body, CONE)
+            return true
         end
     end
     loose.painter:touch()
@@ -688,10 +808,22 @@ function StillLife:fillWedge(w, step, shift)
     end)
 end
 
-local function edges(w)
+-- A shadow's two long sides, a pixel at a time and only inside the board, the
+-- way its fill is: a side running on past the edge of the box would be a
+-- shadow the page says is there and the hit test says is not.
+function StillLife:edges(w)
+    local x0, y0, x1, y1 = self:board()
     local p = w.poly
-    pixelart.line(floor(p[1]), floor(p[2]), floor(p[3]), floor(p[4]))
-    pixelart.line(floor(p[7]), floor(p[8]), floor(p[5]), floor(p[6]))
+    for _, side in ipairs({ { p[1], p[2], p[3], p[4] }, { p[7], p[8], p[5], p[6] } }) do
+        local ax, ay, bx, by = side[1], side[2], side[3], side[4]
+        local n = math.max(1, floor(math.max(math.abs(bx - ax), math.abs(by - ay))))
+        for i = 0, n do
+            local x, y = floor(ax + (bx - ax) * i / n), floor(ay + (by - ay) * i / n)
+            if x >= x0 and x < x1 and y >= y0 and y < y1 then
+                love.graphics.rectangle("fill", x, y, 1, 1)
+            end
+        end
+    end
 end
 
 -- Dashes along a line, marching outwards: the bowl's line.
@@ -720,40 +852,26 @@ function StillLife:drawGround(time)
     if not e or not self.lamps then return end
     local sh = self.def.shade
 
-    local shading = self.state == "shade"
-    local len = shading and self.len or sh.short
-    local ws = self:shadows(e, len or sh.short)
-    if shading and self.sub == "hot" then
+    local shade = self:act("shade")
+    local ws = self:shadows(e, shade and shade.len or sh.short)
+    if shade and shade.sub == "hot" then
         for _, w in ipairs(ws) do
             love.graphics.setColor(Palette.slate)
             self:fillWedge(w, 1, 0)
             love.graphics.setColor(Palette.red)
-            edges(w)
+            self:edges(w)
         end
-    elseif shading and self.sub == "tell" then
-        local blink = self.t < 0.35 and floor(time * 10) % 2 == 0
+    elseif shade and shade.sub == "tell" then
+        local blink = shade.t < 0.35 and floor(time * 10) % 2 == 0
         for _, w in ipairs(ws) do
             love.graphics.setColor(Palette.graphite)
             self:fillWedge(w, 3, floor(time * 12))
             love.graphics.setColor(blink and Palette.red or Palette.slate)
-            edges(w)
+            self:edges(w)
         end
     else
         love.graphics.setColor(Palette.graphite)
         for _, w in ipairs(ws) do self:fillWedge(w, 2, 0) end
-    end
-
-    -- What is off the table throws a short shadow of its own while it is on
-    -- the floor.
-    local loose = self.loose
-    if loose and not loose.painter.hidden then
-        local lift = loose.piece.lift or (loose.piece.apex and loose.piece.apex[3]) or 0
-        if lift < 6 then
-            love.graphics.setColor(Palette.graphite)
-            for _, l in ipairs(self.lamps) do
-                self:fillWedge(wedge(l.x, l.y, loose.x, loose.y, width(loose.piece), sh.short), 2, 0)
-            end
-        end
     end
 
     if self.mark then
@@ -761,7 +879,7 @@ function StillLife:drawGround(time)
         love.graphics.setColor(floor(time * 8) % 2 == 0 and Palette.red or Palette.slate)
         dottedRing(self.mark.x, self.mark.y, dr.shock, floor(time * 6))
         love.graphics.setColor(Palette.graphite)
-        local f = self.sub == "aim" and 1 - math.max(0, self.t) / dr.aim or 1
+        local f = 1 - math.max(0, self.mark.t) / dr.aim
         pixelart.circleFill(floor(self.mark.x), floor(self.mark.y), floor(3 + f * 8))
     end
     if self.shockT and self.shockT > 0 and self.shockAt then
@@ -770,10 +888,11 @@ function StillLife:drawGround(time)
         if r > 0 then pixelart.circleOutline(floor(self.shockAt.x), floor(self.shockAt.y), r) end
     end
 
-    if self.state == "roll" and self.sub == "wind" and self.aim then
-        local a = self.aim
+    local roll = self:act("roll")
+    if roll and roll.sub == "wind" then
+        local aim = roll.aim
         love.graphics.setColor(floor(time * 10) % 2 == 0 and Palette.red or Palette.slate)
-        dashes(a.x, a.y, a.dx, a.dy, a.len, time * 30)
+        dashes(aim.x, aim.y, aim.dx, aim.dy, aim.len, time * 30)
     end
 end
 
@@ -792,13 +911,28 @@ local function drawLamp(l, warn)
     end
 end
 
--- Over the crowd: the lamps, and whatever is off the table.
+-- How long a hit lights a loose piece, and the paper stage of it: the body's
+-- own numbers (Enemy:draw), so a piece taking a hit flashes like the group does.
+local HIT_FLASH, HIT_WHITE = 0.14, 0.06
+
+-- Over the crowd: the lamps, and whatever is off the table -- lit, rimmed and
+-- blown out by a hit the way the group is, off its stand-in's flash.
 function StillLife:drawAir(time, e)
     if not self.lamps then return end
-    local warn = self.state == "shade" and self.sub == "tell" and floor(time * 10) % 2 == 0
+    local shade = self:act("shade")
+    local warn = shade and shade.sub == "tell" and floor(time * 10) % 2 == 0
     for _, l in ipairs(self.lamps) do drawLamp(l, warn) end
-    local loose = self.loose
-    if loose then loose.painter:draw(loose.x, loose.y) end
+    for _, loose in pairs(self.out) do
+        local flash = loose.part.flash
+        if flash > 0 then
+            love.graphics.setColor(Palette.red)
+            loose.painter:drawMask(loose.x, loose.y, 1)
+            love.graphics.setColor(flash > HIT_FLASH - HIT_WHITE and Palette.paper or Palette.blush)
+            loose.painter:drawMask(loose.x, loose.y, 0)
+        else
+            loose.painter:draw(loose.x, loose.y)
+        end
+    end
 end
 
 return StillLife

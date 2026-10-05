@@ -770,8 +770,9 @@ Enemy.types = {
     -- draws, painted a pixel at a time (src/plaster.lua) so the lit side of
     -- every solid follows the lamp round. It never walks: the lamp moves, the
     -- shadows the solids throw are what hurt, and the pieces leave the table
-    -- one at a time to come at you -- the cube dropped, the sphere bowled, the
-    -- cone spun on its point. The moves are src/stilllife.lua.
+    -- to come at you -- the cube dropped, the sphere bowled, the cone spun on
+    -- its point -- more of them at once the lower it gets, and hittable while
+    -- they are out (`stillpiece`, below). The moves are src/stilllife.lua.
     --
     -- The eye's numbers where the fight is the same fight: 900 health, the
     -- same knock, hold and 20 on contact. The radius is the group's bulk, the
@@ -781,8 +782,13 @@ Enemy.types = {
                   damage = 20, xp = 250, shadow = 30, boss = true, knock = 0.06, hold = 0.3,
                   title = "THE STILL LIFE", call = "DRAW WHAT YOU SEE",
                   still = {
-                      -- Stood still between moves, by phase (the eye's thirds).
+                      -- Between one move starting and the next, by phase (the
+                      -- eye's thirds), and how many may be going at once: one,
+                      -- then two (the cube coming down while the sphere rolls),
+                      -- then three. Each piece does one thing at a time, and
+                      -- there is one shade at a time.
                       cool = { 2.0, 1.6, 1.3 },
+                      together = { 1, 2, 3 },
                       -- What it picks between, by phase: a piece joins the
                       -- fight each third.
                       moves = { { "shade", "drop" }, { "shade", "drop", "roll" },
@@ -832,6 +838,18 @@ Enemy.types = {
                               chip = { speed = 60, damage = 9, hit = 3, life = 3.5,
                                        sprite = "pip" } },
                   } },
+
+    -- A piece of the still life while it is off the table: the body that
+    -- stands for it on the page so everything in the game can find it, aim at
+    -- it and hurt it (src/stilllife.lua puts it down, moves it and takes it
+    -- away). It is never sent and never killed. What it takes goes to the boss
+    -- it stands for (`stand`, Enemy:hurt), and its own health is only there
+    -- because every body has some. `boss` keeps it out of the crowd's way and
+    -- the crowd out of its way, keeps it on the page however far off you are,
+    -- and off the homework list; no knock and no hold, because where it is is
+    -- wherever its piece is. Its `damage` is set by the move that lifted it.
+    stillpiece = { sprite = "stilllife", hp = 1e9, speed = 0, radius = 8, damage = 14,
+                   xp = 0, shadow = 0, boss = true, knock = 0, hold = 0 },
 }
 
 -- `scale` is how much harder the run has got since it started (Game:enemyScale)
@@ -1455,6 +1473,20 @@ function Enemy:hurt(amount)
     -- the enemy rather than being known to any of the dozen things that hit.
     -- Underground, or still falling onto the page: not there to be hit.
     if self.ghost then return false end
+    -- A piece of the still life off its table (`stillpiece`): the hit is the
+    -- boss's, softened and counted as the boss's, but lit and numbered here
+    -- where it landed -- so the boss's own flash and recoil are put back as
+    -- they were. Never answers that it died: the piece is not what dies, and
+    -- the boss notices its own end on its own turn (src/stilllife.lua).
+    if self.stand then
+        local boss = self.stand
+        local took, flash, bumpT = boss.took, boss.flash, boss.bumpT
+        boss:hurt(amount)
+        self.took = self.took + (boss.took - took)
+        boss.took, boss.flash, boss.bumpT = took, flash, bumpT
+        self.flash = HIT_FLASH
+        return false
+    end
     if self.glue and self.frozen > 0 and self.glue.soften then
         amount = amount * self.glue.soften
     end
@@ -1742,6 +1774,8 @@ end
 -- Not the shadow, which is the one thing here that really is on the paper: a
 -- smear of graphite goes on darkening over a rule like every other mark.
 function Enemy:drawSolid()
+    -- A still life's piece off the table is painted by its brain, where it is.
+    if self.stand then return end
     local sprite, x, y = self:footing()
 
     if self.eyeball then
@@ -1764,6 +1798,7 @@ function Enemy:drawSolid()
 end
 
 function Enemy:draw()
+    if self.stand then return end
     local sprite, x, y = self:footing()
     local stuck = self.frozen > 0
 
