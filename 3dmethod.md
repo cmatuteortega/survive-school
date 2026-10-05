@@ -10,8 +10,9 @@ moving part on a baked body**), and the FINANCE stamp (`art/stamp.py`), the exam
 of a body baked in several poses so it can animate (see **Poses: a body that
 moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of them
 a part hinged off the body and one built about a different point (see **Poses with
-a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`
-and `src/plaster.lua` (the ART still life).
+a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`,
+`src/plaster.lua` (the ART still life) and `src/atom.lua` (SCIENCE's second boss,
+the atom).
 
 The short version: **model the thing in 3D in a script, ray-trace it at sprite
 size straight into palette letters, do that once per heading, and bake the
@@ -21,12 +22,14 @@ pictures.
 
 ## Two ways to be solid
 
-The game has seven bosses drawn as solid objects, made in two different ways --
+The game has eight bosses drawn as solid objects, made in two different ways --
 the metronome is the whistle's way with one part done the eye's, the stamp and
 the dictionary are the whistle's way with more than one picture per heading, the MATHS die is
 the eye's way on flat faces (see **Painted live on flat faces: the die**), and the
 ART still life is the eye's way on three solids at once, lit by a lamp that moves
-(see **Painted live under a moving light: the still life**).
+(see **Painted live under a moving light: the still life**), and the atom is the
+eye's way on a lumpy sphere with rings round it (see **Painted live with rings round
+it: the atom**).
 Pick the one that fits the character before starting.
 
 | | **Baked views** (the whistle) | **Painted live** (the eye) |
@@ -496,6 +499,29 @@ What is new here, against the die:
 To add a solid of another kind, give it a constructor, a `prepare` (into the screen
 once per raster) and a hit function answering depth, face and normal, and add it to
 `HIT`. To make another boss this way, a group is a list of pieces and a `lamp`.
+
+## Painted live with rings round it: the atom
+
+SCIENCE's second boss (`src/atom.lua`) is the eye's sphere asked a different
+question. Where the eye turns each pixel into the ball's frame and asks iris, pupil,
+vein or white, the atom asks **which of twenty nucleons it is nearest** -- unit
+vectors on a Fibonacci spiral, dealt protons and neutrons alternately -- and paints
+an ink seam where the nearest two are nearly tied. That alone is a football. What
+makes it a cluster of balls is shading each nucleon as **its own dome**: the light is
+taken off a normal tipped away from that nucleon's middle (`BULGE` times the point's
+offset from it, added to the sphere's own normal), so every ball has its own lit side
+and its own shadow under the one fixed lamp. Nothing else is new; the turn, the
+squaring-up and the row-run painting are the eye's.
+
+The orbits are the other half, and they are not painted, they are **plotted**: each is
+a circle in 3D given by a tilt off the page and a bearing (`Atom.point`), sampled a
+pixel apart and projected straight down, with z only deciding whether a point is in
+front of the nucleus or behind it -- the back half of every orbit is drawn first and
+the nucleus covers it. Because the orbits are also what hurts, the brain
+(`src/atomboss.lua`) tests the player against the same `Atom.point` samples the
+drawing plots, so a ring hurts where it is drawn and nowhere else. The blank stamped
+under the body (`drawMask`) is the nucleus only: an orbit is a line on the page, and
+blanking under it would cut a white hoop through the ruling.
 
 ## Smaller than a boss: the teardrop
 

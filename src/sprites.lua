@@ -6281,6 +6281,14 @@ function Sprites.load()
             for i = 1, 44 do rows[i] = ("r"):rep(44) end
             return rows
         end)()),
+        -- And SCIENCE's encore, painted the same way (src/atom.lua): the box
+        -- the atom is measured off and nothing more, the whole nucleus 27
+        -- across. Its orbits are lines round it, not part of the box.
+        atom = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 27 do rows[i] = ("r"):rep(27) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",
@@ -7095,6 +7103,22 @@ function Sprites.load()
         "orrro",
         "orrro",
         ".ooo.",
+    })
+
+    -- An electron off the atom (`throw` in src/enemy.lua), thrown to come
+    -- after you: the bead its orbits carry (Atom.electron), with the blur of
+    -- the orbit it left round it, so what is in the air is visibly the thing
+    -- that was going round.
+    Sprites.electron = pixelart.newSprite({
+        "..g...g..",
+        ".........",
+        "g..ooo..g",
+        "..okrro..",
+        "..orrro..",
+        "..orrro..",
+        "g..ooo..g",
+        ".........",
+        "..g...g..",
     })
 
     -- A jack: the spiky thing. Thrown to land round where you are standing and

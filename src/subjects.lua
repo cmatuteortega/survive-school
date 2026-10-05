@@ -305,6 +305,13 @@ local BLANK = {
 -- page a fight of its own is one word on its own row. A new boss is a row in src/enemy.lua with
 -- `boss = true` on it; the dev boss test on the title screen (src/dev.lua) is
 -- how to fight it without the ten minutes in front of it.
+--
+-- A lesson may name a second, its **encore**, and at the courses that ask for
+-- two (`bosses` on a row of src/course.lua: a master's and a doctorate) the
+-- first going down is not the end of the lesson. The horde comes back for
+-- another ten minutes and the encore walks on at the end of them, and it is the
+-- encore going down that opens the win card. A lesson with no encore yet ends
+-- on its boss at every course, so this is a word added a page at a time.
 Subjects.list = {
     {
         key = "science",
@@ -312,6 +319,11 @@ Subjects.list = {
         paper = RULED,
         tool = "pencil",
         boss = "bosseye",
+        -- And its encore (src/atomboss.lua): the page that ends on the eye
+        -- carries on, at a master's and a doctorate, to the thing the eye was
+        -- looking at -- an atom, the one thing a science page draws more often
+        -- than an eye.
+        encore = "atom",
         -- The plainest hand in the book, and the slowest, because this is the
         -- page a first run is on: it teaches the two drills that arrive first
         -- and then leaves you alone with them. The line is the ruling read

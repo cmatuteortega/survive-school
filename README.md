@@ -1174,6 +1174,7 @@ it, and there are eight of those multiples:
 | how fast champions reach their ceiling | 1.25× | 1.6× | 2× |
 | how soon the next one is drawn three times the size | 3× | 9× | 60× |
 | how soon the next one walks on enraged | — | — | 60× |
+| how many bosses a lesson ends on | 1 | 2 | 2 |
 | **what the run pays** | **1.4×** | **2×** | **3×** |
 
 Which comes out as a blob — 4 health, the pencil's own number — being 5, 6 and 8
@@ -1181,6 +1182,19 @@ before the ramp has started, and 19, 28 and 40 by the time the eye walks on agai
 high school's 14. And an eye of 1260 being 2646 at the top. At a fixed rate of
 damage a doctorate clears 44% of the bodies high school does in the same ten
 minutes.
+
+**At a master's the lesson does not end on its boss.** It is the end of the first
+ten minutes. The bar goes, the box comes down, the page says NOT DONE YET, and the
+horde comes back for ten more — and at the end of them the lesson's *second* boss
+walks on, and it is that one going down that puts the card up. Then ENDLESS is the
+two of them again, and again. It is the one row of the eight that is not a
+multiple of anything, and it is there for the reason fury is: what the top of the
+ladder had run out of was not numbers, it was fights. Somebody who has beaten the
+eye on seven pages at a bachelor's is not asking for an eye with more health. They
+are asking for something they have not seen. So a master's is a lesson twice as
+long with a fight at the end you only meet there, and a doctorate is that with
+everything else turned up as well. A page whose second boss has not been drawn yet
+ends on its first, at every course: the dial asks for one, it does not invent one.
 
 **The first rung is where the game's most basic sentence stops being true.** Four
 health times 1.25 is 5, so a bachelor's pencil no longer kills a blob in one hit.
@@ -7326,6 +7340,50 @@ home.
 **Glue holds the table.** A glued still life cannot move its lamp, so a shade it was
 counting in is dropped, and it cannot be lifted somewhere nearer. What has already
 left the table carries on: glue holds the group, not a cube in the air.
+
+### And at a master's, SCIENCE ends on the atom
+
+The eye is the thing a science page draws most, and the atom is the thing it draws
+second, so it is SCIENCE's second boss: the one that walks on ten minutes after the
+eye goes down, at a master's and a doctorate. The eye is a fight about the ground —
+everything it does is wet you have to stop standing on. The atom is a fight about
+the space *round* a body: everything it does is an orbit, and an orbit is a ring you
+are either inside or outside of.
+
+It is drawn the eye's way, painted off a turning sphere every frame
+(`src/atom.lua`) — only the sphere is a cluster of red and white balls, protons and
+neutrons, each shaded as its own little dome, so the nucleus tumbles as a lump of
+marbles rather than turning as an eyeball. Round it go three orbits, each a circle
+tilted off the page, so what you see of one is a circle face on, an ellipse tipped
+over and a line edge on — and each one swings round all the time, like a hoop spun
+on a table. Every orbit carries an electron that hurts to touch, which is the
+standing reason not to stand on top of it.
+
+**The sweep is its big move.** One orbit swells out across the box and goes hot. A
+dashed red ring on the floor says where it is going to be first, already swinging
+round the way it will — and then the ring is there, a red band, for a couple of
+seconds. How it swings is how it was tilted, and it re-tilts its orbits between
+moves, so the same move is three different problems: nearly face on it is a wall
+round it you must not cross; tipped it is an ellipse sweeping round the atom; nearly
+edge on it is a bar turning like a lighthouse. Outside the ring is always safe, and
+the tip of the bar is going about 50px a second against your 58 — outwalkable, just,
+which is the bargain the eye's beam makes too.
+
+**It throws electrons.** An orbit blinks, and its electron leaves on a curve and
+comes after you. It is slower than you and slow to turn, so you do not outrun it,
+you step round it at the last moment — and after five seconds it falls apart on its
+own. Its orbit stays empty for a while afterwards, which is the atom telling you how
+many it has left to throw.
+
+**At half its health it splits.** FISSION — it shudders, stretches, and comes apart
+into two smaller atoms, each with two orbits rather than three, flung apart to
+either side of you. They share what was left of it and the bar is the two of them
+together. Then they walk *round* you, on opposite sides, the same way round, so
+whichever way you face one of them is behind you. Kill one and the bar moves to the
+other; the lesson is over when the second one goes. In the last fifth they sweep two
+orbits at once.
+
+Glue holds a sweep or a throw it is still counting in, as it holds the eye's tells.
 
 ### The eye is a ball
 

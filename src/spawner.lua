@@ -6,6 +6,15 @@
 -- (src/win.lua); carrying on hands the spawner another cycle, harder than the
 -- last. The spawner owns that clock because it already owns every other one --
 -- what phase the run is in is a fact about what is being spawned.
+--
+-- At a course that asks for two bosses (`bosses` in src/course.lua) a lesson is
+-- two cycles rather than one: the lesson's boss at the end of the first, its
+-- encore at the end of the second (`Spawner:lineup`), and only the encore going
+-- down opens the win card. Two cycles rather than one long one with two bosses
+-- in it, because a cycle is already exactly "ten minutes of horde and a boss" --
+-- the health curve, the damage step, the drills widening and the bookmark all
+-- count in cycles, and every one of them is right about the encore without
+-- being told it exists.
 
 local Enemy = require("src.enemy")
 local Subjects = require("src.subjects")
@@ -729,6 +738,37 @@ function Spawner:hordeMost()
         MAX_ENEMIES - DRILL_ROOM * (1 + DRILL_GROWTH * (self.cycle - 1))))
 end
 
+-- The bosses a lesson is, in the order they walk on: the page's own, and its
+-- encore where the page has one and the course asks for two. Never empty, so a
+-- cycle always has somebody to send.
+function Spawner:lineup()
+    local list = { self.subject.boss or "bosseye" }
+    if self.subject.encore and (self.course.bosses or 1) >= 2 then
+        list[2] = self.subject.encore
+    end
+    return list
+end
+
+-- Which of the lineup this cycle ends on. Round and round on an endless run, so
+-- ENDLESS at a doctorate is the eye and the atom again, and again.
+function Spawner:bossKind()
+    local list = self:lineup()
+    return list[(self.cycle - 1) % #list + 1]
+end
+
+-- Whether the boss this cycle sent was the last of the lesson's -- the one that
+-- opens the win card rather than another ten minutes. Asked before the cycle
+-- turns over (Game:update).
+function Spawner:lessonOver()
+    return self.cycle % #self:lineup() == 0
+end
+
+-- How many times round the whole lineup the run has been, counting the one it
+-- is on: what the win card numbers its second and later showings by.
+function Spawner:round()
+    return math.ceil(self.cycle / #self:lineup())
+end
+
 function Spawner:bossAt()
     return self.cycleStart + Spawner.BOSS_AT
 end
@@ -1375,8 +1415,9 @@ end
 -- the edge this time is enormous.
 --
 -- Which boss is the page's to say (`boss` on its row in src/subjects.lua), so
--- every lesson can end on a fight of its own; the dev boss test (src/dev.lua) is
--- the quick way to look at one.
+-- every lesson can end on a fight of its own -- and, at a course that asks for
+-- two, which of its two this cycle is (`Spawner:bossKind`). The dev boss test
+-- (src/dev.lua) is the quick way to look at one.
 --
 -- The box goes up at the same moment (src/arena.lua), pinned where the player is
 -- standing rather than where the eye is: you get the middle of it, and the eye
@@ -1390,7 +1431,7 @@ function Spawner:sendBoss(game)
     game:openArena()
     -- The lesson's own (src/subjects.lua), and the eye where a page has not
     -- named one.
-    self:drop(game, self:ring(game) + 20, self.subject.boss or "bosseye")
+    self:drop(game, self:ring(game) + 20, self:bossKind())
 end
 
 -- The P.E. whistle's squad (`squad` in src/enemy.lua): a wall of one kind
@@ -1404,8 +1445,8 @@ function Spawner:squad(game, kind, n, gap)
     self:wall(game, a, n, gap, kind)
 end
 
--- The boss is down and the run went on rather than ending. The next cycle's ten
--- minutes start now, so the pause the fight took is not deducted from them --
+-- The boss is down and the run went on rather than ending -- ENDLESS, or a
+-- lesson with its encore still to come. The next cycle's ten minutes start now, so the pause the fight took is not deducted from them --
 -- and the box comes down, because the next ten minutes are horde again and the
 -- horde is the half of the game that is played on an open page.
 function Spawner:nextCycle(game)

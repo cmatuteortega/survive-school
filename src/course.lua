@@ -122,6 +122,17 @@
 --   It is also the one thing in this file that touches what a hit costs you, and
 --   the note below still holds: what that forbids is a class quietly repricing a
 --   blob, and this reprices one arrival that is wearing red while it does it.
+-- - `bosses` is how many of a lesson's bosses stand between the run and the win
+--   card (`Spawner:lineup`), and the second gate on this ladder after `fury`. A
+--   lesson ends on its boss at high school and a bachelor's; at a master's and a
+--   doctorate the boss going down is the end of the first ten minutes rather than
+--   of the lesson, and the lesson's *second* boss (`encore` on its row in
+--   src/subjects.lua) walks on ten minutes after that. Two rather than "harder",
+--   for the reason fury is a gate: what the top of the ladder has run out of is
+--   not numbers, it is fights, and a doctorate that is the same eye with more
+--   health is the eighth eye the note at the top of this file is about. A lesson
+--   that has no second boss yet ends on its first at every rung -- the dial asks
+--   for one, it does not invent one.
 -- - `pay` is the other side of the bargain and the reason anybody enrols
 --   (`Purse.forRun`): a doctorate pays three times what high school does, so the
 --   counter it was bought over is also what it is spent on.
@@ -183,6 +194,7 @@ Course.list = {
         key = "school", name = "HIGH SCHOOL",
         clock = 1, hp = 1, ramp = 1, speed = 1,
         elite = 1, blown = 1, fury = 0, pay = 1,
+        bosses = 1,
     },
     -- A first departure, and it is meant to be one you take *because* you have
     -- stopped losing rather than because you want a harder time: a quarter more
@@ -197,6 +209,7 @@ Course.list = {
         key = "bachelor", name = "BACHELOR",
         clock = 1.2, hp = 1.25, ramp = 1.08, speed = 1.04,
         elite = 1.25, blown = 3, fury = 0, pay = 1.4,
+        bosses = 1,
     },
     -- The middle of the ladder, and where the numbers stop being trim: 1.6 times
     -- the health under a curve 16% steeper comes out near twice the horde's
@@ -206,6 +219,7 @@ Course.list = {
         key = "masters", name = "MASTERS",
         clock = 1.4, hp = 1.6, ramp = 1.16, speed = 1.08,
         elite = 1.6, blown = 9, fury = 0, pay = 2,
+        bosses = 2,
     },
     -- And the top of it, at three times the health, two thirds again the crowd,
     -- half again as many champions on the page and about 1.6 times as many
@@ -216,6 +230,7 @@ Course.list = {
         key = "phd", name = "PHD",
         clock = 1.65, hp = 2.1, ramp = 1.25, speed = 1.12,
         elite = 2, blown = 60, fury = 60, pay = 3,
+        bosses = 2,
     },
 }
 

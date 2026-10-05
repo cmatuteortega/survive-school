@@ -102,6 +102,9 @@ function Win:courseLine()
     return I18n.t("SAT AT %s"):format(I18n.t(self.course))
 end
 
+-- Which time round the lesson this is (`Spawner:round`): a cycle at a course
+-- with one boss to a lesson, a pair of them at a course with two, so the card
+-- counts the times it has been shown rather than the bosses behind it.
 function Win:tallyLine()
     if self.cycle <= 1 then return nil end
     return I18n.t("EYE %d DOWN"):format(self.cycle)

@@ -916,7 +916,11 @@ local function drawBoss(game)
     -- row now, so the first free line is past the bars either side of it.
     local y = ins.t + 4 + BAR_H + 3
 
-    bar(x, y, BOSS_BAR_W, BOSS_BAR_H, boss.hp / boss.maxHp, Palette.red)
+    -- A boss in pieces (the atom's fission) says what is left of all of it,
+    -- not of whichever piece the bar happens to be hung off.
+    local share = boss.brain and boss.brain.share and boss.brain:share(boss)
+        or boss.hp / boss.maxHp
+    bar(x, y, BOSS_BAR_W, BOSS_BAR_H, share, Palette.red)
 
     love.graphics.setColor(Palette.ink)
     -- What the boss is called under its bar (`title` on its row, src/enemy.lua),

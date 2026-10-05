@@ -29,7 +29,8 @@ bite and lie open), the eye, painted a pixel at a time
 every frame off a turning sphere (`src/eyeball.lua`), the MATHS die, painted
 the same way off flat faces (`src/dice.lua`), and the ART still life, a cube, a
 sphere and a cone painted the same way and lit by a lamp that moves
-(`src/plaster.lua`).
+(`src/plaster.lua`), and the SCIENCE atom, a cluster of nucleons painted the eye's
+way with its orbits plotted round it (`src/atom.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -180,7 +181,13 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   clap, riffle and definition, and the words it writes on the lines), `plaster`
   (the ART boss's body: a cube, a sphere and a cone painted a pixel at a time and
   lit from wherever its lamp is), `stilllife` (its brain: the lamp, the shadows it
-  throws, the shade, and the cube dropped, the sphere bowled and the cone spun).
+  throws, the shade, and the cube dropped, the sphere bowled and the cone spun),
+  `atom` (SCIENCE's second boss's body: a nucleus painted a pixel at a time and the
+  tilted orbits round it), `atomboss` (its brain: the sweep, the thrown electron,
+  and the fission into two halves that share one bar). A lesson's second boss is
+  its `encore` in `subjects`; only the courses with `bosses = 2` (MASTERS, PHD)
+  send it -- ten minutes after the first goes down -- and only it opens the win
+  card.
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.

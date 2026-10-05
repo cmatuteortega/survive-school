@@ -7,11 +7,15 @@ fought after or instead of the first depending on the course rung
 lesson already has, and each names the version of the 3D method
 (`3dmethod.md`) that suits it.
 
-None of this is built. These are ideas only.
+The Atom is built (`src/atom.lua`, `src/atomboss.lua`; see `BOSSES.md`). It
+walks on ten minutes after the eye goes down at a master's and a doctorate, which
+is how every second boss here is meant to arrive: named as the lesson's `encore`
+in `src/subjects.lua`, sent by the courses whose `bosses` is 2 in
+`src/course.lua`. The rest are still ideas only.
 
 | Lesson | Current boss | Second boss | Drawn as |
 |---|---|---|---|
-| SCIENCE | eye | **The Atom** | painted live |
+| SCIENCE | eye | **The Atom** (built) | painted live |
 | P.E. | whistle | **The Vaulting Box** | baked poses |
 | GRAMMAR | dictionary | **The Typewriter** | baked + live part |
 | FINANCE | stamp | **The Piggy Bank** | painted live |
@@ -19,7 +23,7 @@ None of this is built. These are ideas only.
 | MATHS | die | **The Tesseract** | painted live |
 | ART | still life | **The Mannequin** | painted live under the lamp |
 
-## SCIENCE: The Atom
+## SCIENCE: The Atom (built)
 
 - **Drawn:** the nucleus is a painted sphere, as the eye is (`src/eyeball.lua`).
   The electrons go round it on tilted rings, drawn in front of or behind the

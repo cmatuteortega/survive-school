@@ -10,6 +10,8 @@ local Dictionary = require("src.dictionary")
 local Dice = require("src.dice")
 local DiceBoss = require("src.diceboss")
 local StillLife = require("src.stilllife")
+local Atom = require("src.atom")
+local AtomBoss = require("src.atomboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -420,6 +422,61 @@ Enemy.types = {
                            count = { 0, 8, 10 }, near = 38, step = 30, gap = 0.35,
                            rest = 0.7 },
               } },
+    -- SCIENCE's encore (`encore` in src/subjects.lua): the atom, which walks on
+    -- ten minutes after the eye goes down at a master's and a doctorate
+    -- (`bosses` in src/course.lua), and the fight about the space round a body
+    -- rather than the ground under it. The moves and why they are these moves
+    -- are src/atomboss.lua; the body is src/atom.lua.
+    --
+    -- The eye's numbers where the fight is the same fight -- 900 health for the
+    -- measured half minute, the knock, the hold, 20 on contact -- and the
+    -- spawner prices it a cycle on from the eye (BOSS_HP_PER_CYCLE), since it
+    -- walks on at the end of the second ten minutes. Slower than the eye,
+    -- because what it reaches you with is its orbits and not its body; the hit
+    -- circle is the nucleus alone, so a shot through the rings is a shot that
+    -- missed.
+    atom = { name = "ATOM", sprite = "atom", hp = 900, speed = 22, radius = 12, damage = 20,
+             xp = 250, shadow = 24, boss = true, knock = 0.06, hold = 0.3,
+             title = "THE ATOM", call = "THE ATOM IS UNSTABLE",
+             atom = {
+                 -- The whole: a nucleus 27 across with three orbits round it,
+                 -- 22, 28 and 34 out -- inside your reach of it with a short
+                 -- weapon, so going in for damage is going in among them.
+                 size = 13, rings = 3, first = 22, step = 6,
+                 -- What each orbit's electron hits for, and how big it is.
+                 orbit = { damage = 8, hit = 2 },
+                 -- Seconds of walking between moves, plus up to 0.6 more: by
+                 -- phase, which is whole, split, and the last fifth of the two.
+                 cool = { 2.4, 2.0, 1.5 },
+                 -- The sweep. `reach` is how far the orbit swells (the box is
+                 -- 480 by 270, so 90 is a third of its width either side), the
+                 -- dashed ring is up for `tell`, it takes `out` to swell and as
+                 -- long to fall back, and is out for `hold` in all. `tilts`
+                 -- are the three lies it may sweep at -- near face on (a wall
+                 -- round it), tipped (an ellipse going round) and near edge on
+                 -- (a turning bar) -- and `swing` how fast it goes round,
+                 -- radians a second: 0.55 at 90 is ~50px a second at the tip,
+                 -- just under your 58. `count` orbits at once, by phase.
+                 sweep = { reach = { 90, 72, 72 }, tell = { 0.95, 0.85, 0.7 },
+                           out = 0.3, hold = 2.6, tilts = { 0.25, 0.95, 1.4 },
+                           swing = { 0.5, 0.55, 0.65 }, count = { 1, 1, 2 },
+                           width = 3, damage = 14, rest = { 0.9, 0.8, 0.6 } },
+                 -- The throw. Slower than you (44 to your 58) and slow to turn
+                 -- (1.7 radians a second is a turn 26px across), so it is
+                 -- stepped round rather than outrun; gone after `life`. Its
+                 -- orbit stays empty for `empty`.
+                 throw = { tell = { 0.65, 0.55, 0.5 }, count = { 1, 1, 2 },
+                           speed = 44, turn = 1.7, life = 5, damage = 9, hit = 3,
+                           empty = 3, rest = { 0.6, 0.5, 0.4 } },
+                 -- Fission, at half its health: `time` of shuddering, then two
+                 -- halves flung apart at `speed` for `fling`.
+                 fission = { at = 0.5, time = 1.1, fling = 0.45, speed = 110 },
+                 -- A half: a nucleus 19 across with two orbits, circling you
+                 -- `keep` out, aiming `turn` radians further round than it
+                 -- stands, the other half on the far side of you.
+                 halves = { size = 9, radius = 8, rings = 2, first = 16, step = 6,
+                            keep = 64, turn = 0.6 },
+             } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
     -- wet you have to stop standing on -- and this is the other half of the
@@ -1091,6 +1148,10 @@ function Enemy.new(kind, x, y, scale)
         -- And the still life the ART boss is drawn as (src/plaster.lua), the
         -- same way again.
         plaster = def.still and StillLife.body() or nil,
+        -- And the atom SCIENCE ends on at a master's (src/atom.lua): a nucleus
+        -- painted the eye's way, with its orbits round it.
+        nucleus = def.atom and Atom.new(def.atom.size, def.atom.rings,
+            def.atom.first, def.atom.step) or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -1107,12 +1168,15 @@ function Enemy.new(kind, x, y, scale)
         -- walking it: it holds `drive` and moves the body itself.
         -- And the still life's (src/stilllife.lua), which never walks at all:
         -- it holds, and lifts the whole table somewhere nearer when it must.
+        -- And the atom's (src/atomboss.lua), which walks like the eye and
+        -- splits itself in two.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
             or def.dictionary and Dictionary.new(def)
             or def.dice and DiceBoss.new(def)
-            or def.still and StillLife.new(def) or nil,
+            or def.still and StillLife.new(def)
+            or def.atom and AtomBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -1652,7 +1716,7 @@ function Enemy:footing()
     -- Stuck things stop bobbing, and an eye boss has a gait of its own instead
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
-        and not self.plaster
+        and not self.plaster and not self.nucleus
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -1783,7 +1847,7 @@ function Enemy:drawSolid()
         self.eyeball:drawMask(x, y, self:outlineColour() and 1 or 0)
         return
     end
-    local painted = self.dice or self.plaster
+    local painted = self.dice or self.plaster or self.nucleus
     if painted then
         love.graphics.setColor(Palette.paper)
         painted:drawMask(x, y, self:outlineColour() and 1 or 0)
@@ -1836,7 +1900,7 @@ function Enemy:draw()
     -- leaves none; one in the air leaves less of one the higher it is.
     -- The still life leaves none of its own: its shadows are thrown by its
     -- lamp, and drawn by its brain (src/stilllife.lua).
-    local painted = self.dice or self.plaster
+    local painted = self.dice or self.plaster or self.nucleus
     if painted then
         if painted.hidden then return end
         shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)
@@ -1857,7 +1921,8 @@ function Enemy:draw()
     -- the pad it stands on.
     love.graphics.rectangle("fill",
         math.floor(self.x) - math.floor(shadow / 2),
-        math.floor(self.y) + (self.def.ground or (sprite.h - sprite.oy)) * grow - 1,
+        math.floor(self.y) + ((painted and painted.ground) or self.def.ground
+            or (sprite.h - sprite.oy)) * grow - 1,
         shadow, (stuck and 2 or 1) * grow)
 
     local ring = self:outlineColour()

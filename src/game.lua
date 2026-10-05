@@ -1358,7 +1358,7 @@ function Game:openWin()
     -- What the run is worth is shown but not yet paid: the eye going down is not
     -- the end of a run, `END` is (Game:cashRun), and ENDLESS is a bet that the
     -- number on the card will be bigger by the time it is collected.
-    self.win:open(self.time, self.kills, self.spawner.cycle, self:runWorth(true),
+    self.win:open(self.time, self.kills, self.spawner:round(), self:runWorth(true),
         (self.course or Course.default).name, self:doubleOffer(true))
 end
 
@@ -1373,6 +1373,21 @@ end
 function Game:beginNextCycle()
     self.spawner:nextCycle(self)
     self:resumeRun()
+end
+
+-- A boss is down and the lesson has another (`encore`, src/subjects.lua, at a
+-- course that asks for two): no card, just the box coming down and the horde
+-- coming back for the ten minutes in front of the next one. Said on the page,
+-- since nothing else on it says the lesson is not over -- the bar has gone and
+-- the clock is still running, which is exactly what winning looked like.
+--
+-- A dev boss test has no ten minutes to sit through, so the next one is sent
+-- on the spot: the test is of the fights, and the encore is one of them.
+function Game:nextBoss()
+    self.pendingWin = false
+    self.spawner:nextCycle(self)
+    self:say("NOT DONE YET")
+    if self.bossTest then self.spawner:sendBoss(self) end
 end
 
 -- The index is a slot on the strip, so it wraps around what this run has
@@ -1897,7 +1912,14 @@ function Game:killEnemy(index)
     -- froze the run half way through one would close the stroke out from under
     -- the code still walking it. Game:update spends it once the frame is
     -- finished.
-    if e == self.boss then
+    -- A boss that has come apart (the atom's fission, src/atomboss.lua) is not
+    -- down until the last of it is: whichever piece the HUD was hung off hands
+    -- the bar to one still standing, and the rest of this is skipped.
+    local heir = e == self.boss and e.brain and e.brain.heir and e.brain:heir(e)
+    if heir then
+        self.boss = heir
+        self.particles:burst(e.x, e.y, 24, Palette.red)
+    elseif e == self.boss then
         self.boss = nil
         -- And whatever was standing on the page for pieces of it -- the still
         -- life's pieces off the table (src/stilllife.lua) -- goes with it.
@@ -2319,6 +2341,17 @@ function Game:updateEnemyShots(dt)
     local player = self.player
     for i = #self.shots, 1, -1 do
         local s = self.shots[i]
+        -- A thrown electron comes after you (`throw` in src/enemy.lua): its
+        -- heading turns towards you at most `home` radians a second, which is
+        -- what makes it a thing you step round rather than a thing you outrun.
+        if s.home then
+            local want = math.atan2(player.y - s.y, player.x - s.x)
+            local at = math.atan2(s.dy, s.dx)
+            local d = (want - at + math.pi) % (math.pi * 2) - math.pi
+            local most = s.home * dt
+            at = at + math.max(-most, math.min(most, d))
+            s.dx, s.dy = math.cos(at), math.sin(at)
+        end
         s.x = s.x + s.dx * s.speed * dt
         s.y = s.y + s.dy * s.speed * dt
         s.life = s.life - dt
@@ -4824,7 +4857,15 @@ function Game:update(dt)
             -- own: the win is the bigger event and the levels are banked, so
             -- taking ENDLESS opens them straight afterwards and taking END
             -- never needed them.
-            self:openWin()
+            --
+            -- Unless the lesson has another boss to come (`Spawner:lineup`):
+            -- then it was not a win but the end of the first ten minutes, and
+            -- the run simply goes on -- the draft opening on the frame after.
+            if self.spawner:lessonOver() then
+                self:openWin()
+            else
+                self:nextBoss()
+            end
         elseif self.player.pending > 0 then
             -- Only once the frame is otherwise finished, and never over a run
             -- that has just ended: dying on the level that would have promoted

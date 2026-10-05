@@ -15,9 +15,10 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | | |
 | --- | --- |
 | **When** | At 10:00 of each cycle (`Spawner.BOSS_AT = 600`). Drills and surges are cleared and the horde stops spawning. |
+| **Two to a lesson** | At Masters and PhD (`bosses = 2` in `src/course.lua`) a lesson with an `encore` (`src/subjects.lua`) is two cycles: its boss ends the first, "NOT DONE YET" is said, the box comes down and ten more minutes of horde follow, then the encore ends the second. Only the encore opens the win card (`Spawner:lessonOver`). Endless repeats the pair. Today only SCIENCE has one: the Atom. |
 | **Arena** | `Game:openArena` puts a box round the page. The box comes down when the next cycle starts (`Spawner:nextCycle`). |
 | **Escort** | One arrival every 1.5s while fewer than 20 enemies are on the page. Weighted: bat 5, skull 3, eye 2, wad 2, bulb 2 (`ESCORT` in `src/spawner.lua`). |
-| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. |
+| **Health** | 900 on every row × `1.4^cycle` × the course's `hp`. In cycle 1 that is **1260** (High School), 1575 (Bachelor), 2016 (Masters), 2646 (PhD). Bosses sit outside the horde's per-minute health curve. An encore arrives in cycle 2, so the Atom is 2822 (Masters) and 3704 (PhD). |
 | **Damage** | Contact damage is 20 on every boss and steps ×1.18 per cycle (`DAMAGE_PER_CYCLE`). Move damages on the rows are cycle-1 values and scale the same way. |
 | **Body** | All bosses share `knock = 0.06` and `hold = 0.3`. Every boss is worth 250 xp. |
 | **Phases** | Health thirds: phase 1 above 66%, phase 2 above 33%, phase 3 for the rest. A list of three values on a row is one value per phase. The whistle is the exception: it has no phases, only health thresholds at 75/50/25%. |
@@ -35,6 +36,7 @@ comments over each row in `src/enemy.lua`. This file only describes the fights.
 | The Dictionary | GRAMMAR | lines | clap, riffle, definition | definition (phase 2) | front board lifts (mouth open) |
 | The Die | MATHS | number | throw → roll → strike | shape changes d6 → d10 → d20 | the face it lands on |
 | The Still Life | ART | light | shade, drop, roll, top | roll (phase 2), top (phase 3) | the lamp moves, shadows grow |
+| The Atom | SCIENCE (encore) | orbits | sweep, throw, fission | splits in two at 50%; double sweeps in the last fifth | a dashed red ring on the floor where the orbit will swell |
 
 ---
 
@@ -315,6 +317,58 @@ At each third **every move is dropped** and every piece is put back on the table
 in is dropped, a lift is put down where it is, and no new move starts. A cube
 already in the air, a sphere already rolling or a cone already spinning carries
 on.
+
+---
+
+## 8. The Atom: SCIENCE's encore (`atom`)
+
+**Files:** row `atom` in `src/enemy.lua`, brain at `src/atomboss.lua`, body at `src/atom.lua`
+**Callout:** "THE ATOM IS UNSTABLE" · **Body:** radius 12 (the nucleus only; a shot through the orbits misses). Speed 22.
+**When:** Masters and PhD only, ten minutes after the Eye goes down.
+
+### Entrance
+It walks on from the ring like the others and **forms**: its three orbits grow out
+of the nucleus over 1.2s, during which nothing about it hurts except contact.
+
+### Always on
+Three orbits at 22 / 28 / 34 out, each tilted off the page and swinging round
+(0.35–0.55 rad/s), each with an electron going round at 2.4–3 rad/s. **Touching an
+electron deals 8** (hit radius 2). Between moves (`rest`) every orbit is given a
+new tilt between 0.2 and 1.4 rad, so the next sweep is never the last one's shape.
+
+### Idle
+The whole atom walks straight at you. After fission, each half walks **round** you
+64px out, aiming 0.6 rad further round than it stands, so the two hold opposite
+sides of you. Cool between moves: **2.4 / 2.0 / 1.5s** + up to 0.6s.
+
+### Moves
+The pick is weighted by distance: sweep 1.4 if you are inside 1.1× its reach (else
+0.6), throw 1.2 beyond 60px (else 0.5). The last move is ×0.35.
+
+| Move | Tell | Hot | Numbers |
+| --- | --- | --- | --- |
+| **Sweep** | The orbit blinks; a dashed red ring is drawn on the floor at the size it will swell to, already swinging the way it will. The nucleus shivers. | The orbit swells out in 0.3s to `reach` and is a red band (width 3, **14 dmg**) for 2.6s with three electrons racing round it, then falls back in 0.3s. It is tipped to one of three lies: **0.25** (near face on: a wall round the atom), **0.95** (an ellipse sweeping round) or **1.4** (near edge on: a turning bar). | reach 90 / 72 / 72 · tell 0.95 / 0.85 / 0.7 · swing 0.5 / 0.55 / 0.65 rad/s (~50px/s at the tip of a 90 ring) · orbits at once 1 / 1 / 2 · rest 0.9 / 0.8 / 0.6 |
+| **Throw** | The orbit blinks red with its electron on it | The electron leaves on a curve and **homes**: speed 44 (you move at 58), turning at most 1.7 rad/s, gone after 5s, **9 dmg**. Its orbit is empty for 3s. | tell 0.65 / 0.55 / 0.5 · count 1 / 1 / 2 · rest 0.6 / 0.5 / 0.4 |
+
+### Phases
+Not thirds. Phase 1 is the whole atom; phase 2 is the two halves; phase 3 is the
+last fifth of their combined health. The HUD bar is the halves together.
+
+- **Fission (at 50%):** only from idle or a rest, so it never cuts a sweep off.
+  "FISSION!", 1.1s of shudder and stretch, then two halves (nucleus 19 across, hit
+  radius 8, two orbits at 16 / 22) sharing the health left, flung apart at 110 for
+  0.45s at right angles to you. The second half rests 1.2s longer so the two do not
+  count in together.
+- **→ 3 (20% left):** a knock and a burst; shorter tells and two orbits per sweep
+  and two electrons per throw, from each half.
+
+### Glue
+Cancels a sweep or a throw still being counted in, and it rests for 0.4s.
+
+### Death
+Killing the half the bar is hung off moves the bar to the other (`AtomBoss:heir`).
+The lesson ends when the second half goes down: no death animation, a burst, then
+the win card.
 
 ---
 

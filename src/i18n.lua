@@ -538,6 +538,13 @@ local ES = {
     ["THE DICTIONARY"] = "EL DICCIONARIO",
     ["THE DICTIONARY OPENS"] = "SE ABRE EL DICCIONARIO",
     ["DEFINITION!"] = "¡DEFINICION!",
+    -- SCIENCE's encore (`atom` in src/enemy.lua): its name, the line it walks
+    -- on with, what the page says when it splits, and what it says when the
+    -- eye goes down at a course with two bosses to a lesson (Game:nextBoss).
+    ["THE ATOM"] = "EL ATOMO",
+    ["THE ATOM IS UNSTABLE"] = "EL ATOMO ES INESTABLE",
+    ["FISSION!"] = "¡FISION!",
+    ["NOT DONE YET"] = "AUN NO HAS TERMINADO",
     ["NOUN"] = "SUSTANTIVO",
     ["VERB"] = "VERBO",
     ["ADJECTIVE"] = "ADJETIVO",

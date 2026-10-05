@@ -609,7 +609,9 @@ into the box at the end of every cycle. P.E. says `whistle`, GRAMMAR says
 ART says `stilllife` (see **The bosses**); SCIENCE says `bosseye`, written out on its
 row rather than left to the fallback (a row without one gets the eye) so that giving a
 page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
-look at one.
+look at one. A row may also name an **encore**, the second boss the lesson ends on at
+a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom`, and the
+other six have none yet, so they end on their boss at every course.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
 because a tool line's first level is its unlock — issuing a tool is taking that
@@ -955,6 +957,7 @@ The three below it are written as multiples of it.
 | `elite` | divides `ELITE_RAMP` — how fast the champion chance tops out | 1.25 | 1.6 | 2 |
 | `blown` | `BLOWN_RISE`, the blow-up meter | 3 | 9 | 60 |
 | `fury` | `FURY_RISE`, the enraged meter — a gate, not a lean | 0 | 0 | 60 |
+| `bosses` | how many of a lesson's bosses stand before the win card (`Spawner:lineup`) — a gate | 1 | 2 | 2 |
 | `pay` | the whole of what a run is worth | 1.4 | 2 | 3 |
 
 Which comes out as a blob of 4 health being 5, 6 and 8 in the grace minute and 19,
@@ -1209,11 +1212,29 @@ one place and nothing else in the game knows it exists:
 
 ### The bosses
 
+**Two to a lesson at the top of the ladder.** A lesson's row in `Subjects.list`
+names its `boss` and may name an `encore`. At a course whose `bosses` is 2
+(`MASTERS`, `PHD`) the lesson is two cycles rather than one: `Spawner:lineup` is
+`{ boss, encore }`, `Spawner:bossKind` sends the one this cycle is (round and round
+on an endless run), and when a boss goes down `Game:update` asks
+`Spawner:lessonOver` -- the last of the lineup opens the win card as always, and
+any other calls `Game:nextBoss`, which turns the cycle over (`Spawner:nextCycle`:
+the box comes down, the next ten minutes start now), says `NOT DONE YET`, and lets
+the run go on. Two *cycles* rather than one long one, because a cycle is already
+"ten minutes of horde and a boss": the health curve, the per-cycle damage step,
+`BOSS_HP_PER_CYCLE`, the drills widening, the bookmark (`cycle`, `cycleStart`) and
+the run's `eyes` all count in cycles and are right about the encore without being
+told it exists -- the encore is priced a cycle on from the boss it follows, exactly
+as a second eye on an endless run always was. The win card numbers its showings by
+`Spawner:round` (times round the lineup) rather than by cycle. A lesson with no
+encore yet ends on its boss at every course. The dev boss test sends the encore on
+the spot instead of after ten minutes.
+
 A boss is a row with `boss = true`, and everything else that makes it one is an
 optional field read in one place, so a second boss is a row choosing which of them
 it is made of rather than a branch anywhere. `title` is its name under the HUD's bar
 (`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
-walks on (`Game:spawnEnemy`). All seven bosses sit on the eye's 900 health, knock, hold
+walks on (`Game:spawnEnemy`). Every boss sits on the eye's 900 health, knock, hold
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
@@ -1236,6 +1257,39 @@ up leaving the eye and lands head first. Its shadow is on the page under it the
 whole way, and it can hit you only once `Game.tearDown` says it is coming down
 onto the page -- in the air it is over your head, like a lobbed jack. The tear
 welling at the lid before a lane or a weep is the same drop, hanging.
+
+**The atom** (`atom`, SCIENCE's encore) is a fight about *orbits*: the space round
+a body rather than the ground under it. Its body is `src/atom.lua`, painted the
+eye's way -- a nucleus 27 across, every pixel a point on a turning sphere asked
+which of twenty nucleons it is nearest (red protons, white neutrons, an ink seam
+between), each shaded as its own dome off a normal tipped away from its middle, lit
+by the eye's screen-fixed lamp -- with three orbits round it. An orbit is a circle
+in three dimensions tilted `tilt` off the page towards the bearing `az`, which
+turns all the time (`prec`): face on it projects to a circle, tipped to an ellipse
+swinging round, edge on to a bar through the nucleus. `Atom.point` is the one
+projection, used by the drawing and by every hit test, so a ring hurts where it is
+drawn; the half of each orbit behind the nucleus is drawn before it. The hit circle
+is the nucleus alone (12), and `ground` on the body puts the shadow under it.
+
+Its brain is `src/atomboss.lua`, in the same socket. It forms (its orbits grow out
+of it over 1.2s, harmless), walks at you, and between moves every orbit is given a
+new lie. Every orbit's electron hurts to touch (8) whatever else is happening.
+
+| move | tell | what |
+| --- | --- | --- |
+| `sweep` | the orbit it will swell blinks; a dashed red ring on the floor where it is going to be, at `reach` (90, then 72 for a half), already swinging the way it will | the orbit swells out over 0.3s to `reach` and is a red band 3 wide for 2.6s with three electrons racing round it (14 on touch), then falls back. Tipped to one of `tilts` -- near face on (a wall round it), tipped (an ellipse sweeping round), near edge on (a turning bar) -- swinging at `swing` (0.5–0.65 rad/s, ~50px/s at the tip, under your 58). Two orbits at once in the last fifth |
+| `throw` | the orbit blinks red with its electron on it | the electron leaves on a curve and comes after you: an ordinary enemy shot with `home` (radians a second it may turn towards you, `Game:updateEnemyShots`), speed 44, turn 1.7, 5s, 9. Its orbit is empty for 3s |
+| fission | at half its health, from idle or a rest: `FISSION!`, it shudders and stretches for 1.1s | it becomes two halves, each a nucleus 19 across with two orbits, sharing what health was left, flung apart either side of you. The second is a new `atom` made in `AtomBoss:split` at the whole's `scale` and added to the horde directly (not walked on, so it is not `game.boss`) |
+
+The halves walk *round* you, 64 out, aiming 0.6 rad further round than they stand,
+so they hold opposite sides; the second rests a beat longer after the split so the
+two never count in together. Phases are whole / split / the last fifth of the two of
+them, read off `AtomBoss:share` -- what is left of every piece over what walked on --
+which is also what the HUD's bar shows (`Hud`'s `drawBoss` asks the brain's `share`
+when it has one). When the piece the bar is hung off dies, `Game:killEnemy` asks the
+brain's `heir` and hangs the bar off the other; only the last piece going down is
+the boss going down. Glue drops a sweep or a throw still being counted in. The
+electron in the air is `Sprites.electron`.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
@@ -6241,18 +6295,21 @@ and are all the same 11x11 glyph.
   it dies", that is `Game:killEnemy` and nothing else.
 - **Boss:** a sprite in `Sprites.enemies` and a row in `Enemy.types` with `boss =
   true`, a `title` and a `call` (both through `I18n.t`, so a line each in the `ES`
-  table and the four `src/lang/` files), named by a lesson's `boss` in
-  `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
+  table and the four `src/lang/` files), named by a lesson's `boss` -- or its
+  `encore`, the second boss a lesson ends on at a course whose `bosses` is 2 --
+  in `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
   picked, and no page reskins it. What it does is the blocks it carries -- the
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
   dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, and any of the horde's (`shot`, `charge`) -- see
+  life's `still`, the atom's `atom`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
-  `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua` or
-  `src/stilllife.lua`, built in `Enemy.new`. A solid body is a script beside `art/whistle.py` over
+  `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua`,
+  `src/stilllife.lua` or `src/atomboss.lua`, built in `Enemy.new`; one that comes
+  apart into several bosses answers `share` (the HUD's bar) and `heir` (who the bar
+  goes to when the one it is on dies), as the atom's does. A solid body is a script beside `art/whistle.py` over
   `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or
   `art/dictionary.py`), or -- for anything convex that
   has to tumble -- a face list in `Dice.solids` painted live, or for a few simple
@@ -6506,7 +6563,8 @@ and are all the same 11x11 glyph.
   <weight> } }` — see **Drills and surges**; a row without one gets `DRILL_MIX`
   at `DRILL_EVERY`, and a hand must hold two of `line`/`ring`/`grid` or the page
   stutters before minute six), a `boss` naming an `Enemy.types` row with `boss =
-  true` (the eye if left out -- see **The bosses**), and optionally the two dials `crowd` and `clock`
+  true` (the eye if left out -- see **The bosses**), optionally an `encore` naming
+  a second one for the courses that ask for two, and optionally the two dials `crowd` and `clock`
   (no subject turns either). Argue the drill weights from the *ruling* rather
   than from difficulty — the ruling is the thing the player is looking at, and a
   page dealing the shapes its own lines already suggest is what makes a lesson
