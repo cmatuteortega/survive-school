@@ -36,6 +36,7 @@ local Puddle = require("src.puddle")
 local Spike = require("src.spike")
 local Teardrop = require("src.teardrop")
 local EyeBoss = require("src.eyeboss")
+local Wreck = require("src.wreck")
 local Arena = require("src.arena")
 local Loadout = require("src.loadout")
 local Design = require("src.design")
@@ -765,9 +766,10 @@ function Game:reset()
     self.doubled = false
     self.state = "playing"
     self.pendingWin = false
-    -- The eye coming apart once it is killed (EyeBoss.fall), which the win card
-    -- waits for.
+    -- The boss coming apart once it is killed (EyeBoss.fall, src/wreck.lua),
+    -- which the win card waits for, and the dust off one landing (Game:dropIn).
     self.fallen = nil
+    self.thud = nil
     -- Whether this run is worth going back to, which is the one question both
     -- halves of CONTINUE are asked (Game:continueRun, src/bookmark.lua): it is
     -- what puts the box on the title screen for a run still standing in memory,
@@ -1508,6 +1510,7 @@ function Game:spawnEnemy(kind, x, y, scale)
     if e.def.boss then
         self.boss = e
         if e.def.call then self:say(e.def.call) end
+        if e.def.arrive then self:dropIn(e) end
     end
 
     -- Handed back for the drills (src/spawner.lua), which spawn a shape and then
@@ -1515,6 +1518,76 @@ function Game:spawnEnemy(kind, x, y, scale)
     -- nothing else should have to: an ordinary arrival is finished the moment it
     -- is on the page.
     return e
+end
+
+--- the drop-in ----------------------------------------------------------------
+
+-- A boss with no entrance of its own (`arrive` on its row in src/enemy.lua) is
+-- dropped onto the page rather than walked in from the ring. Walking in, it came
+-- out of the edge of the box looking like one more of the escort, and the first
+-- you knew of the fight was a bar at the top of the screen; dropped, it is a
+-- shadow you watch a ring close round, and then a thud. The eye's entrance
+-- (EyeBoss:enter) without the eye: put down between you and where the spawner
+-- sent it, far enough out that it never lands on you, and not there to be hit
+-- or to hit you until it has.
+local ARRIVE_HIGH, ARRIVE_TIME, ARRIVE_DIST = 160, 0.9, 100
+-- The dust ring out of the landing: how far it rolls and for how long. Dust,
+-- not a hit -- it has not seen you yet.
+local THUD_REACH, THUD_TIME = 46, 0.4
+
+function Game:dropIn(e)
+    local p = self.player
+    local dx, dy = util.normalize(e.x - p.x, e.y - p.y)
+    if dx == 0 and dy == 0 then dx, dy = 0, -1 end
+    local x, y = p.x + dx * ARRIVE_DIST, p.y + dy * ARRIVE_DIST
+    if self.arena then x, y = self.arena:clamp(x, y, e.radius + 8) end
+    e.x, e.y = x, y
+    e.arrive, e.ghost, e.hop = ARRIVE_TIME, true, ARRIVE_HIGH
+end
+
+-- Falling, eased in so it is slow at the top and fast at the bottom, the way a
+-- thing dropped falls. `hop` is how high it is drawn over its shadow
+-- (Enemy:footing), so the shadow is on the page from the first frame and is
+-- where it lands.
+function Game:arriving(dt, e)
+    e.arrive = e.arrive - dt
+    local f = 1 - math.max(0, e.arrive) / ARRIVE_TIME
+    e.hop = math.floor(ARRIVE_HIGH * (1 - f * f))
+    if e.arrive > 0 then return end
+
+    e.arrive, e.ghost, e.hop = nil, false, 0
+    local fx, fy = e.x, e.y + e.radius * 0.5
+    for k = 1, 24 do
+        local a = k / 24 * math.pi * 2
+        self.particles:crumb(fx, fy, math.cos(a), math.sin(a), e.radius, Palette.graphite)
+    end
+    self.particles:burst(e.x, e.y, 16, Palette.ink)
+    self.thud = { x = math.floor(fx), y = math.floor(fy), r = e.radius, at = self.time }
+    Camera.knock(4)
+    Sfx.play("stamp")
+end
+
+-- On the page under the crowd: while a boss is falling, a ring closing round
+-- the spot it will land on, going red for the last of the drop; once it has, the
+-- dust rolling out from it.
+function Game:drawDropIn()
+    local e = self.boss
+    if e and e.arrive then
+        local f = 1 - math.max(0, e.arrive) / ARRIVE_TIME
+        local r = math.floor(e.radius * (3 - 2 * f))
+        love.graphics.setColor(f > 0.7 and Palette.red or Palette.graphite)
+        pixelart.circleOutline(math.floor(e.x), math.floor(e.y + e.radius * 0.5), r)
+    end
+    local t = self.thud
+    if t then
+        local f = (self.time - t.at) / THUD_TIME
+        if f >= 1 then
+            self.thud = nil
+        elseif f > 0 then
+            love.graphics.setColor(f < 0.5 and Palette.slate or Palette.graphite)
+            pixelart.circleOutline(t.x, t.y, math.floor(t.r + f * THUD_REACH))
+        end
+    end
 end
 
 -- `speed` is optional and the block that fired the pellet is what says it (see
@@ -1672,128 +1745,135 @@ function Game:updateEnemies(dt, grid)
 
     for i = #self.enemies, 1, -1 do
         local e = self.enemies[i]
-        -- The eye boss decides what it is doing before it does it
-        -- (src/eyeboss.lua): the brain steers through `drive`, which the walk
-        -- below reads.
-        if e.brain then e.brain:update(dt, self, e) end
-        e:update(dt, player, self.walls, self.hasSlick and self:slickAt(e.x, e.y) or nil)
-        -- The dust off the eye boss's landings and rolls (src/eyeball.lua).
-        if e.eyeball then e.eyeball:spill(self, e) end
+        -- A boss still dropping onto the page (Game:dropIn) is not in the
+        -- fight yet: nothing it would decide, walk or fire happens until it
+        -- has landed.
+        if e.arrive then
+            self:arriving(dt, e)
+        else
+            -- The eye boss decides what it is doing before it does it
+            -- (src/eyeboss.lua): the brain steers through `drive`, which the walk
+            -- below reads.
+            if e.brain then e.brain:update(dt, self, e) end
+            e:update(dt, player, self.walls, self.hasSlick and self:slickAt(e.x, e.y) or nil)
+            -- The dust off the eye boss's landings and rolls (src/eyeball.lua).
+            if e.eyeball then e.eyeball:spill(self, e) end
 
-        -- Keep the horde from stacking into a single pixel. Glued enemies are
-        -- immovable, so the crowd jams up against them instead of squeezing
-        -- them out of the smear -- and so is the boss, which is the same clause
-        -- for the same reason: a 40px body being shoved by every blob that walks
-        -- into it would be carried across the page by its own escort.
-        if e.frozen <= 0 and not e.def.boss then
-            eachNeighbour(grid, e.x, e.y, function(other)
-                if other == e then return end
-                local dx, dy = e.x - other.x, e.y - other.y
-                local d2 = dx * dx + dy * dy
-                local min = e.radius + other.radius
-                if d2 > 0 and d2 < min * min then
-                    local d = math.sqrt(d2)
-                    local push = (min - d) * SEPARATION
-                    e.x = e.x + (dx / d) * push
-                    e.y = e.y + (dy / d) * push
-                end
-            end)
-        end
-
-        -- Last word on where it ended up: whatever the chase and the crowd did,
-        -- it does not get to be standing inside a pen line.
-        if self.walls.count > 0 then
-            e:resolveWalls(self.walls)
-        end
-
-        -- And the box gets the word after that (src/arena.lua). It is a clamp
-        -- rather than something to path around, so it goes last and always wins
-        -- -- which is also what makes it a surface worth shoving things against:
-        -- a ruler swing into the edge of the box has nowhere to send the crowd.
-        if self.arena then
-            e.x, e.y = self.arena:clamp(e.x, e.y, e.radius)
-        end
-
-        -- Contact damage, rate-limited per enemy. Off the enemy rather than off
-        -- its row in the table: what it hits for was fixed when it spawned
-        -- (Enemy.new), so a cycle rolling over doesn't sharpen the horde already
-        -- standing on the page.
-        local dist = util.len(player.x - e.x, player.y - e.y)
-        if dist < e.radius + player.radius and e.hitCooldown <= 0 then
-            if player:hurt(e.damage) then
-                e.hitCooldown = 0.6
-                self.particles:burst(player.x, player.y, 6, Palette.red)
+            -- Keep the horde from stacking into a single pixel. Glued enemies are
+            -- immovable, so the crowd jams up against them instead of squeezing
+            -- them out of the smear -- and so is the boss, which is the same clause
+            -- for the same reason: a 40px body being shoved by every blob that walks
+            -- into it would be carried across the page by its own escort.
+            if e.frozen <= 0 and not e.def.boss then
+                eachNeighbour(grid, e.x, e.y, function(other)
+                    if other == e then return end
+                    local dx, dy = e.x - other.x, e.y - other.y
+                    local d2 = dx * dx + dy * dy
+                    local min = e.radius + other.radius
+                    if d2 > 0 and d2 < min * min then
+                        local d = math.sqrt(d2)
+                        local push = (min - d) * SEPARATION
+                        e.x = e.x + (dx / d) * push
+                        e.y = e.y + (dy / d) * push
+                    end
+                end)
             end
-        end
 
-        -- Shooters fire on their own beat, seeded at spawn. The clock keeps
-        -- running while the player is out of range and the beat just passes
-        -- unspent -- if it only ran in range, stepping into view of a crowd of
-        -- eyes would be answered with an instant volley from all of them.
-        -- Held, clock and all, while the eye boss is in the middle of a move
-        -- (EyeBoss:busy): a fan fired across a beam is two things to read at once.
-        local shot = e.def.shot
-        if shot and e.frozen <= 0 and not (e.brain and e.brain:busy()) then
-            e.shotT = e.shotT - dt
-            if e.shotT <= 0 then
-                e.shotT = shot.every
-                if dist < shot.range then
-                    self:fireEnemyShot(e, shot)
+            -- Last word on where it ended up: whatever the chase and the crowd did,
+            -- it does not get to be standing inside a pen line.
+            if self.walls.count > 0 then
+                e:resolveWalls(self.walls)
+            end
+
+            -- And the box gets the word after that (src/arena.lua). It is a clamp
+            -- rather than something to path around, so it goes last and always wins
+            -- -- which is also what makes it a surface worth shoving things against:
+            -- a ruler swing into the edge of the box has nowhere to send the crowd.
+            if self.arena then
+                e.x, e.y = self.arena:clamp(e.x, e.y, e.radius)
+            end
+
+            -- Contact damage, rate-limited per enemy. Off the enemy rather than off
+            -- its row in the table: what it hits for was fixed when it spawned
+            -- (Enemy.new), so a cycle rolling over doesn't sharpen the horde already
+            -- standing on the page.
+            local dist = util.len(player.x - e.x, player.y - e.y)
+            if dist < e.radius + player.radius and e.hitCooldown <= 0 then
+                if player:hurt(e.damage) then
+                    e.hitCooldown = 0.6
+                    self.particles:burst(player.x, player.y, 6, Palette.red)
                 end
             end
-        end
 
-        -- The boss wets the page behind it (src/puddle.lua). The clock only pays
-        -- out once it has walked clear of the last blot, so a boss held still --
-        -- glued, or just stood over you -- leaves one puddle rather than a
-        -- growing pool it is standing in the middle of.
-        --
-        -- An eye boss only drips while it glides: a hop leaves splats where it
-        -- lands and a roll a streak (Eyeball:spill), so the floor says how it
-        -- moved. Its drips are drawn long down the way it was going, at its
-        -- feet, and a little different in size each, so a trail reads as a
-        -- trail rather than as a string of the same coin.
-        local trail = e.def.trail
-        local drips = not e.eyeball or e.eyeball:dripping()
-        if trail and e.frozen <= 0 and drips then
-            e.trailT = e.trailT - dt
-            if e.trailT <= 0 and (e.trailX == nil
-                or util.len(e.x - e.trailX, e.y - e.trailY) >= trail.gap) then
-                e.trailT = trail.every
-                e.trailX, e.trailY = e.x, e.y
-                local x, y, def = e.x, e.y, trail
-                if e.eyeball then
-                    local dx, dy = util.normalize(e.headX, e.headY)
-                    y = y + e.radius * 0.5
-                    def = { radius = trail.radius * (0.8 + love.math.random() * 0.35),
-                        life = trail.life, stretch = 1.35, dx = dx, dy = dy,
-                        drops = love.math.random(0, 2) }
+            -- Shooters fire on their own beat, seeded at spawn. The clock keeps
+            -- running while the player is out of range and the beat just passes
+            -- unspent -- if it only ran in range, stepping into view of a crowd of
+            -- eyes would be answered with an instant volley from all of them.
+            -- Held, clock and all, while the eye boss is in the middle of a move
+            -- (EyeBoss:busy): a fan fired across a beam is two things to read at once.
+            local shot = e.def.shot
+            if shot and e.frozen <= 0 and not (e.brain and e.brain:busy()) then
+                e.shotT = e.shotT - dt
+                if e.shotT <= 0 then
+                    e.shotT = shot.every
+                    if dist < shot.range then
+                        self:fireEnemyShot(e, shot)
+                    end
                 end
-                self.puddles[#self.puddles + 1] = Puddle.new(x, y, def,
-                    e.trailDamage, love.math.random(2 ^ 20), e.reach)
             end
-        end
 
-        -- And it cries, which is the half of the same idea it does not have to
-        -- walk to. Frozen stops it exactly as it stops the trail: a glued eye
-        -- is a held eye, and the whole bargain of the hold is that it buys a
-        -- moment of the boss not doing anything.
-        if e.def.tears and e.frozen <= 0 then
-            self:updateTears(dt, e)
-        end
+            -- The boss wets the page behind it (src/puddle.lua). The clock only pays
+            -- out once it has walked clear of the last blot, so a boss held still --
+            -- glued, or just stood over you -- leaves one puddle rather than a
+            -- growing pool it is standing in the middle of.
+            --
+            -- An eye boss only drips while it glides: a hop leaves splats where it
+            -- lands and a roll a streak (Eyeball:spill), so the floor says how it
+            -- moved. Its drips are drawn long down the way it was going, at its
+            -- feet, and a little different in size each, so a trail reads as a
+            -- trail rather than as a string of the same coin.
+            local trail = e.def.trail
+            local drips = not e.eyeball or e.eyeball:dripping()
+            if trail and e.frozen <= 0 and drips then
+                e.trailT = e.trailT - dt
+                if e.trailT <= 0 and (e.trailX == nil
+                    or util.len(e.x - e.trailX, e.y - e.trailY) >= trail.gap) then
+                    e.trailT = trail.every
+                    e.trailX, e.trailY = e.x, e.y
+                    local x, y, def = e.x, e.y, trail
+                    if e.eyeball then
+                        local dx, dy = util.normalize(e.headX, e.headY)
+                        y = y + e.radius * 0.5
+                        def = { radius = trail.radius * (0.8 + love.math.random() * 0.35),
+                            life = trail.life, stretch = 1.35, dx = dx, dy = dy,
+                            drops = love.math.random(0, 2) }
+                    end
+                    self.puddles[#self.puddles + 1] = Puddle.new(x, y, def,
+                        e.trailDamage, love.math.random(2 ^ 20), e.reach)
+                end
+            end
 
-        -- And the whistle blows, which is held by glue the same way: a held
-        -- boss buys a moment of it not doing anything, whichever boss it is.
-        if e.def.whistle and e.frozen <= 0 then
-            self:updateWhistle(dt, e)
-        end
+            -- And it cries, which is the half of the same idea it does not have to
+            -- walk to. Frozen stops it exactly as it stops the trail: a glued eye
+            -- is a held eye, and the whole bargain of the hold is that it buys a
+            -- moment of the boss not doing anything.
+            if e.def.tears and e.frozen <= 0 then
+                self:updateTears(dt, e)
+            end
 
-        -- The boss is the one thing on the page that cannot be walked away
-        -- from: everything else the page can afford to forget once it is four
-        -- hundred pixels behind you, and the fight cannot.
-        if dist > DESPAWN_DIST and not e.def.boss then
-            e.gone = true
-            table.remove(self.enemies, i)
+            -- And the whistle blows, which is held by glue the same way: a held
+            -- boss buys a moment of it not doing anything, whichever boss it is.
+            if e.def.whistle and e.frozen <= 0 then
+                self:updateWhistle(dt, e)
+            end
+
+            -- The boss is the one thing on the page that cannot be walked away
+            -- from: everything else the page can afford to forget once it is four
+            -- hundred pixels behind you, and the fight cannot.
+            if dist > DESPAWN_DIST and not e.def.boss then
+                e.gone = true
+                table.remove(self.enemies, i)
+            end
         end
     end
 end
@@ -1939,19 +2019,19 @@ function Game:killEnemy(index)
         -- And whatever was standing on the page for pieces of it -- the still
         -- life's pieces off the table (src/stilllife.lua) -- goes with it.
         if e.brain and e.brain.dropParts then e.brain:dropParts(self) end
-        -- Not straight to the card: the eye comes apart first (EyeBoss.fall),
-        -- and the win is noticed when it has finished. Nothing hurts you while
-        -- it does, and whatever it had in the air falls out of it.
-        if e.eyeball then
-            self.fallen = EyeBoss.fall(e)
-            self.player.truce = true
-            for _, s in ipairs(self.shots) do
-                self.particles:burst(s.x, s.y, 2, Palette.blue)
-            end
-            self.shots = {}
-        else
-            self.pendingWin = true
+        -- Not straight to the card: the boss comes apart first -- the eye its
+        -- own way (EyeBoss.fall), the rest shivering and bursting as themselves
+        -- (src/wreck.lua) -- and the win is noticed when it has finished.
+        -- Nothing hurts you while it does, and whatever it had in the air falls
+        -- out of it. Its last word goes up the moment it is hit, so it is on the
+        -- page for the whole of the coming apart rather than under the card.
+        self.fallen = e.eyeball and EyeBoss.fall(e) or Wreck.new(e)
+        self.player.truce = true
+        for _, s in ipairs(self.shots) do
+            self.particles:burst(s.x, s.y, 2, Palette.blue)
         end
+        self.shots = {}
+        if e.def.last then self:say(e.def.last) end
         -- Counted here for the same reason the win is noticed here: this is the
         -- one door every kill in the game comes through, so it is the one place
         -- that has to know an eye is worth something (`Game:runWorth`).
@@ -5127,7 +5207,12 @@ function Game:draw()
     for _, k in ipairs(self.spikes) do k:draw() end
     -- Where the eye boss is about to land or come up (src/eyeboss.lua): on the
     -- page with the wet, since it is a place on the floor to keep off.
-    if self.boss and self.boss.brain then self.boss.brain:drawGround(self.time) end
+    -- Not while it is still dropping in (Game:dropIn): its brain has not
+    -- started, and a tell for a fight that has not begun is not one.
+    if self.boss and self.boss.brain and not self.boss.arrive then
+        self.boss.brain:drawGround(self.time)
+    end
+    self:drawDropIn()
 
     -- And the other half of that: ground a weapon of yours has taken away rather
     -- than ground the boss has -- the bomb's burning crater, which is the boss's
@@ -5231,7 +5316,9 @@ function Game:draw()
 
     -- The eye boss's moves, over the crowd: a beam or an arrow under a blob is a
     -- tell you did not get.
-    if self.boss and self.boss.brain then self.boss.brain:drawAir(self.time, self.boss) end
+    if self.boss and self.boss.brain and not self.boss.arrive then
+        self.boss.brain:drawAir(self.time, self.boss)
+    end
 
     -- Over the crowd rather than sorted into it: one of these may be in the air
     -- on its way down, and the rest are standing proud of the paper. A pin you

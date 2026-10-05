@@ -7609,6 +7609,22 @@ Killed, it shivers with its eye rolled up and its pupil blown, flattens, and
 bursts into the puddles it was made of -- none of them hurt, nothing on the page
 can hurt you while it plays, and the win card waits a beat and a half for it.
 
+**So does every other boss.** Until the eye, a boss walked in out of the edge of
+the box looking like one more of the escort -- the first you knew of the fight was
+a bar at the top of the screen -- and went off the page in the frame it was
+killed, so the hit that ended ten minutes looked exactly like the hit that ended a
+skull. Now the ones with no entrance of their own (the whistle, the metronome, the
+stamp, the dictionary, the still life) are *dropped*: a shadow a hundred pixels
+from you, a ring closing round it that goes red for the last of the fall, and a
+thud of dust. And every boss comes apart as itself rather than as a puff: held
+where it died in whatever pose it was caught in, shaking and flickering through
+the hit flash faster and faster for the eye's beat, then bursting into its own
+colours with rings rolling out -- three for the whistle, which blows its last, four
+for the metronome on a final tick -- while the page says its last word: FULL TIME,
+OUT OF TIME, CANCELLED, THE END, SNAKE EYES, SIGNED, DECAYED, BROKE, Q.E.D., and
+LIGHTS OUT for the eye. Same truce, same beat and a half, so every fight ends to
+the same count.
+
 ### The weights held still
 
 Blob and bat are still half the horde between them and everything else is trim.

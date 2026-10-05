@@ -195,7 +195,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   second boss's body: a hypercube turned in four dimensions, projected and drawn
   as lines), `tesseractboss` (its brain: the inside-out squares, the corners
   thrown, the numbered net of cubes going off in sequence, and the fold out of
-  the page and back in on you). A lesson's second boss is
+  the page and back in on you), `wreck` (how every boss but the eye comes apart
+  once it is killed: kept, shaken, flickered, burst in its row's colours). A
+  lesson's second boss is
   its `encore` in `subjects`; only the courses with `bosses = 2` (MASTERS, PHD)
   send it -- ten minutes after the first goes down -- and only it opens the win
   card.

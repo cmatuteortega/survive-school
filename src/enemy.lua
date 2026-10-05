@@ -153,7 +153,12 @@ local BLARE_REACH = 34
 -- that moves, src/plaster.lua, with its brain in the same socket,
 -- src/stilllife.lua) and
 -- `poses` (a `turns` body baked in more than one pose, each a ring of views,
--- the brain saying which through `pose` -- art/stamp.py). Every one of them but
+-- the brain saying which through `pose` -- art/stamp.py), `last` (the line the
+-- page says as it goes down), `wreck` (how it comes apart: the colours it
+-- bursts into, how many rings roll out of the burst, and the sound --
+-- src/wreck.lua; the eye comes apart its own way, EyeBoss.fall) and `arrive`
+-- (dropped onto the page rather than walked in, for a boss with no entrance of
+-- its own -- Game:dropIn). Every one of them but
 -- `boss` is optional and
 -- read in one place, so a second boss is a row that picks which of them it is
 -- made of.
@@ -323,6 +328,7 @@ Enemy.types = {
     bosseye = { name = "BOSS EYE", sprite = "bosseye", hp = 900, speed = 26, radius = 20, damage = 20,
               xp = 250, shadow = 34, boss = true, pupil = true, knock = 0.06, hold = 0.3,
               title = "THE EYE", call = "THE EYE IS OPEN",
+              last = "LIGHTS OUT",
               shot = { range = 190, every = 2.6, speed = 46, damage = 12, hit = 4,
                        spread = 5, arc = 1.05, drop = "red" },
               trail = { every = 0.5, gap = 9, radius = 12, life = 7, damage = 6 },
@@ -442,6 +448,7 @@ Enemy.types = {
     atom = { name = "ATOM", sprite = "atom", hp = 900, speed = 22, radius = 12, damage = 20,
              xp = 250, shadow = 24, boss = true, knock = 0.06, hold = 0.3,
              title = "THE ATOM", call = "THE ATOM IS UNSTABLE",
+             last = "DECAYED", wreck = { ink = { "blue", "sky", "ink" }, rings = 3 },
              atom = {
                  -- The whole: a nucleus 27 across with three orbits round it,
                  -- 22, 28 and 34 out -- inside your reach of it with a short
@@ -493,6 +500,7 @@ Enemy.types = {
     piggy = { name = "PIGGY BANK", sprite = "piggy", hp = 900, speed = 30, radius = 14,
               damage = 20, xp = 250, shadow = 30, boss = true, knock = 0.06, hold = 0.3,
               title = "THE PIGGY BANK", call = "THE PIGGY BANK IS FULL",
+              last = "BROKE", wreck = { ink = { "blush", "red", "ink" }, rings = 1 },
               piggy = {
                   -- The second phase, as a share of its health left.
                   second = 0.65,
@@ -543,6 +551,7 @@ Enemy.types = {
     tesseract = { name = "TESSERACT", sprite = "tesseract", hp = 900, speed = 20, radius = 15,
                   damage = 20, xp = 250, shadow = 28, boss = true, knock = 0.06, hold = 0.3,
                   title = "THE TESSERACT", call = "THE FOURTH DIMENSION",
+                  last = "Q.E.D.", wreck = { ink = { "ink", "blue", "red" }, rings = 4 },
                   tesseract = {
                       -- Seconds of drifting between moves, plus up to 0.6 more:
                       -- by phase (the eye's thirds).
@@ -614,6 +623,8 @@ Enemy.types = {
     whistle = { name = "WHISTLE", sprite = "whistle", hp = 900, speed = 22, radius = 13, damage = 20,
                 xp = 250, shadow = 26, boss = true, turns = "whistleViews", knock = 0.06, hold = 0.3,
                 title = "THE WHISTLE", call = "THE WHISTLE BLOWS",
+                last = "FULL TIME", wreck = { ink = { "red", "ink", "slate" }, rings = 3, sound = "whistle" },
+                arrive = true,
                 shot = { range = 200, every = 1.9, speed = 58, damage = 9, hit = 3,
                          spread = 3, arc = 0.42, sprite = "pea" },
                 charge = { range = 150, every = 7, wind = 0.85, speed = 140,
@@ -686,6 +697,8 @@ Enemy.types = {
                   damage = 20, xp = 250, shadow = 30, boss = true, turns = "metronomeViews",
                   knock = 0.06, hold = 0.3,
                   title = "THE METRONOME", call = "THE METRONOME TICKS",
+                  last = "OUT OF TIME", wreck = { ink = { "ink", "slate", "red" }, rings = 4, sound = "tick" },
+                  arrive = true,
                   metronome = {
                       -- Beats a minute, by phase (the eye's thirds), and how
                       -- many to the bar. Every move is counted in for a bar and
@@ -754,6 +767,8 @@ Enemy.types = {
               damage = 20, xp = 250, shadow = 40, ground = 13, boss = true, turns = "stampViews",
               poses = "stampPoses", knock = 0.06, hold = 0.3,
               title = "THE STAMP", call = "THE STAMP COMES DOWN",
+              last = "CANCELLED", wreck = { ink = { "red", "blush", "ink" }, rings = 1 },
+              arrive = true,
               stamp = {
                   -- Seconds hopping at you between moves, by phase (the eye's
                   -- thirds).
@@ -812,6 +827,8 @@ Enemy.types = {
                    damage = 20, xp = 250, shadow = 40, ground = 16, boss = true,
                    turns = "dictionaryViews", poses = "dictionaryPoses", knock = 0.06, hold = 0.3,
                    title = "THE DICTIONARY", call = "THE DICTIONARY OPENS",
+                   last = "THE END", wreck = { ink = { "ink", "slate", "graphite" }, rings = 2 },
+                   arrive = true,
                    dictionary = {
                        -- Seconds hopping at you between moves, by phase (the
                        -- eye's thirds).
@@ -876,6 +893,7 @@ Enemy.types = {
     die = { name = "DIE", sprite = "die", hp = 900, speed = 0, radius = 14, damage = 20,
             xp = 250, shadow = 28, boss = true, knock = 0.06, hold = 0.3,
             title = "THE DIE", call = "THE DIE IS CAST",
+            last = "SNAKE EYES", wreck = { ink = { "ink", "red", "slate" }, rings = 2 },
             dice = {
                 -- What it is, by phase (the eye's thirds).
                 shapes = { "d6", "d10", "d20" },
@@ -947,6 +965,8 @@ Enemy.types = {
     stilllife = { name = "STILL LIFE", sprite = "stilllife", hp = 900, speed = 0, radius = 16,
                   damage = 20, xp = 250, shadow = 30, boss = true, knock = 0.06, hold = 0.3,
                   title = "THE STILL LIFE", call = "DRAW WHAT YOU SEE",
+                  last = "SIGNED", wreck = { ink = { "graphite", "slate", "sky" }, rings = 2 },
+                  arrive = true,
                   still = {
                       -- Between one move starting and the next, by phase (the
                       -- eye's thirds), and how many may be going at once: one,

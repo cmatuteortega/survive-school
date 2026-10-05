@@ -1237,7 +1237,22 @@ A boss is a row with `boss = true`, and everything else that makes it one is an
 optional field read in one place, so a second boss is a row choosing which of them
 it is made of rather than a branch anywhere. `title` is its name under the HUD's bar
 (`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
-walks on (`Game:spawnEnemy`). Every boss sits on the eye's 900 health, knock, hold
+walks on (`Game:spawnEnemy`). `last` is the line it says as it goes down
+(`Game:killEnemy`, said the instant it is killed so it is up for the whole of the
+coming apart). `arrive` drops a boss with no entrance of its own onto the page
+(`Game:dropIn`): put down a hundred pixels from you between you and where the
+spawner sent it, `ghost` and skipped by `Game:updateEnemies` (brain, walk,
+contact, fire) for `ARRIVE_TIME` while `hop` lifts it off its shadow and a ring
+closes round the spot (`Game:drawDropIn`, red for the last of it), then a thud of
+dust, a knock and a ring rolling out. Its brain's `drawGround`/`drawAir` are not
+called until it lands. The eye, the die, the atom, the piggy bank and the
+tesseract have entrances of their own and no `arrive`. A kill hands every boss but
+the eye to `Wreck.new` (`src/wreck.lua`), in the eye's socket (`Game.fallen`, under
+`player.truce`, `pendingWin` waiting on it): the body is kept and drawn through
+its own `Enemy:draw`, shaking and flickering through the hit flash's blush and
+paper stages faster and faster for `POP`, spitting specks, then bursting into the
+colours on its `wreck` row with that many rings rolling out and its `sound`. A boss
+with no `wreck` row gets red, ink and blue and one ring. Every boss sits on the eye's 900 health, knock, hold
 and contact damage, because the measured half-minute is the same fight length
 whichever thing you are fighting; what differs is what they make you do.
 
@@ -6377,8 +6392,9 @@ and are all the same 11x11 glyph.
   sense scaled up; if it is "what happens when
   it dies", that is `Game:killEnemy` and nothing else.
 - **Boss:** a sprite in `Sprites.enemies` and a row in `Enemy.types` with `boss =
-  true`, a `title` and a `call` (both through `I18n.t`, so a line each in the `ES`
-  table and the four `src/lang/` files), named by a lesson's `boss` -- or its
+  true`, a `title`, a `call` and a `last` (all through `I18n.t`, so a line each in
+  the `ES` table and the four `src/lang/` files), a `wreck` row for how it comes
+  apart and `arrive = true` unless its brain has an entrance of its own, named by a lesson's `boss` -- or its
   `encore`, the second boss a lesson ends on at a course whose `bosses` is 2 --
   in `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
   picked, and no page reskins it. What it does is the blocks it carries -- the
