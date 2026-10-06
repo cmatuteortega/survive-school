@@ -573,6 +573,14 @@ local ES = {
     ["SEE ME!"] = "¡VEN A VERME!",
     ["WRONG!"] = "¡MAL!",
     ["CLICK!"] = "¡CLIC!",
+    -- P.E.'s encore (`deodorant` in src/enemy.lua): its name, the line the
+    -- cap comes off with, the two turns of its strength, and what the page
+    -- says when glue clogs its nozzle.
+    ["THE DEODORANT"] = "EL DESODORANTE",
+    ["FRESH!"] = "¡FRESCOR!",
+    ["EXTRA STRONG!"] = "¡EXTRA FUERTE!",
+    ["SHAKE WELL!"] = "¡AGITAR BIEN!",
+    ["CLOGGED!"] = "¡ATASCADO!",
     -- What the page says as each boss goes down (`last` in src/enemy.lua).
     ["LIGHTS OUT"] = "SE APAGO",
     ["DECAYED"] = "DESINTEGRADO",
@@ -586,6 +594,7 @@ local ES = {
     ["SIGNED"] = "FIRMADO",
     ["DISCONNECTED"] = "DESCONECTADO",
     ["OUT OF INK"] = "SIN TINTA",
+    ["EMPTY"] = "VACIO",
     ["NOUN"] = "SUSTANTIVO",
     ["VERB"] = "VERBO",
     ["ADJECTIVE"] = "ADJETIVO",

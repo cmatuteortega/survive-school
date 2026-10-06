@@ -1997,6 +1997,12 @@ function Game:killEnemy(index)
     -- an index above the one being stepped is an index already passed.
     if e.def.split then self:splitEnemy(e, e.def.split) end
     if e.def.burst then self:burstEnemy(e, e.def.burst) end
+    -- And a boss that wants to know: the deodorant's mist goes down with
+    -- whatever went down in it (src/deodorantboss.lua).
+    local boss = self.boss
+    if boss and boss ~= e and boss.brain and boss.brain.onKill then
+        boss.brain:onKill(self, e)
+    end
 
     -- The eye going down is the end of the run, and it is noticed here rather
     -- than watched for anywhere else: every weapon in the game kills through

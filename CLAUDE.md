@@ -37,7 +37,9 @@ dimensions every frame and drawn as lines (`src/tesseract.lua`), and the MUSIC
 speaker, a cylinder ray-traced the piggy bank's way that squashes on the beat,
 tips over and rolls (`src/speaker.lua`), and the GRAMMAR red pen, a click pen
 longer than the screen ray-traced the speaker's way along its own length, seen
-obliquely so the page stays one to one (`src/redpen.lua`).
+obliquely so the page stays one to one (`src/redpen.lua`), and the P.E.
+deodorant, a can of body spray ray-traced the speaker's way out of three stacked
+solids with AXE across its front (`src/deodorant.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -210,7 +212,14 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   with its clip and print, a button that clicks), `redpenboss` (its brain: red ink
   that hurts while wet, the cursive scrawl, the WRONG ring shut on you, the whole
   pen falling flat across the box, the shake and its blots, the F written over you,
-  and the stand-ins that let the barrel be hit), `wreck` (how every boss but the
+  and the stand-ins that let the barrel be hit), `deodorant` (P.E.'s second
+  boss's body: a black can of body spray painted a pixel at a time -- can,
+  shoulder and button, AXE on a panel between red bands, a nozzle that goes red
+  -- turned to point at you and swelling when glued), `deodorantboss` (its brain:
+  the cloud -- a grid of how thick the air is that spreads, thins, is parted by
+  you, cleared by kills and carried by the draught, slowing you thin and hurting
+  thick -- and the spritz, the full body spray, the draught that shoves you, shake
+  well, the leak, and the clog glue builds up), `wreck` (how every boss but the
   eye comes apart once it is killed: kept, shaken, flickered, burst in its row's
   colours, and the brain's `sweep` of whatever it stood on the page for itself). A
   lesson's second boss is

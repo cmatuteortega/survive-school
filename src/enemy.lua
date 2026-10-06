@@ -20,6 +20,8 @@ local Speaker = require("src.speaker")
 local SpeakerBoss = require("src.speakerboss")
 local RedPen = require("src.redpen")
 local PenBoss = require("src.redpenboss")
+local Deodorant = require("src.deodorant")
+local DeoBoss = require("src.deodorantboss")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -735,6 +737,75 @@ Enemy.types = {
                              speed = { 300, 330, 360 }, hop = 0.14, width = 4, damage = 12,
                              wet = 1.4, dry = 4.0, circle = 3, rest = { 1.0, 0.9, 0.7 } },
                } },
+    -- P.E.'s encore (`encore` in src/subjects.lua): the deodorant, a can of body
+    -- spray, dropped onto the page ten minutes after the whistle goes down at a
+    -- master's and a doctorate. The whistle is the fight about what is in the
+    -- air; this is the fight about the air itself -- a cloud that spreads, thins
+    -- and is pushed about, which you wade, wait out or clear. The moves and why
+    -- they are these moves are src/deodorantboss.lua; the body is
+    -- src/deodorant.lua.
+    --
+    -- The eye's numbers where the fight is the same fight -- 900 health, the
+    -- knock, the hold, 20 on contact. It walks at you at 24, the eye's pace and
+    -- well under your 58, because everything it does reaches further than it
+    -- does; the hit circle is the can's own width.
+    deodorant = { name = "DEODORANT", sprite = "deodorant", hp = 900, speed = 24, radius = 11,
+                  damage = 20, xp = 250, shadow = 20, boss = true, knock = 0.06, hold = 0.3,
+                  title = "THE DEODORANT", call = "FRESH!",
+                  last = "EMPTY", wreck = { ink = { "red", "blush", "ink" }, rings = 3 },
+                  arrive = true,
+                  deodorant = {
+                      -- Seconds walking at you between moves, by phase (the eye's
+                      -- thirds), plus up to 0.6 more.
+                      cool = { 2.2, 1.8, 1.4 },
+                      -- The air. A cell spreads `spread` of the difference with
+                      -- its neighbours a second and keeps for about `life` --
+                      -- longer as the fight goes on, so the box gets harder to
+                      -- breathe in. Over `thin` it slows you by up to `drag`;
+                      -- over `thick` it hurts `damage` every `every`. You part
+                      -- `part` round you, `wade` a second at a walk, and a kill
+                      -- in it clears `clear` round it.
+                      cloud = { spread = 1.6, life = { 3.5, 4.0, 4.5 }, thin = 0.14, thick = 0.6,
+                                drag = 0.4, damage = 8, every = 0.6, part = 10, wade = 1.2,
+                                clear = 20 },
+                      -- A puff every `every` while it walks, out to `reach` at
+                      -- `speed` -- slower than a pellet, so you see it go -- and
+                      -- blooming `size` round where it stops, thick in the middle.
+                      spritz = { every = { 2.4, 2.1, 1.8 }, speed = 90, reach = 90, size = 16,
+                                 dose = 1.2 },
+                      -- Three of them at once, `spread` apart, in the first third.
+                      fan = { tell = { 0.6, 0.55, 0.5 }, spread = 0.42, rest = { 0.6, 0.5, 0.4 } },
+                      -- The full body spray: the fan `arc` wide and `reach` long
+                      -- dotted for `tell`, then swept in `time`, laying `rate` a
+                      -- second along the stream. 110 out at the slowest sweep is
+                      -- 77px a second against your 58 -- the far end is stepped
+                      -- out of, not outrun.
+                      spray = { tell = { 0.85, 0.75, 0.65 }, arc = { 1.5, 1.8, 2.1 }, reach = 110,
+                                time = { 2.0, 2.2, 2.4 }, rate = 4, rest = { 0.8, 0.7, 0.5 } },
+                      -- The draught, from phase `from`: the door shown for
+                      -- `tell`, then `time` of wind carrying the cloud at `speed`
+                      -- and shoving you at `shove` -- under half your pace, so
+                      -- walking across it is a walk -- and the crowd at `crowd`;
+                      -- a puff of `dose` every `puff` into it from upwind.
+                      draught = { from = 2, tell = { 1.3, 1.2, 1.1 }, time = { 4, 4, 4.5 },
+                                  speed = 46, shove = 24, crowd = 30, puff = 0.3, dose = 1.0,
+                                  size = 14, rest = { 0.9, 0.8, 0.6 } },
+                      -- Shake well, from phase `from`: rattling for `tell`, the
+                      -- circle following you for the first `follow` of it, then
+                      -- `radius` round where it locked filled thick. Locked for
+                      -- 1.1s, 64px of walking at your 58 against 52 to the edge.
+                      shake = { from = 3, tell = 1.5, follow = 0.4, radius = 52, dose = 1.4,
+                                rest = { 0.9, 0.8, 0.7 } },
+                      -- The leak, from phase `from`: `tell` of the dent popping,
+                      -- then `time` spinning at `spin` with a jet `reach` long,
+                      -- pushed about at `speed`.
+                      leak = { from = 3, tell = 0.6, time = 1.8, spin = 5, reach = 40, rate = 8,
+                               speed = 45, rest = { 0.9, 0.8, 0.7 } },
+                      -- Glue: the swell takes `fill` to come all the way up, and
+                      -- what comes out when it is let go is `radius` round it and
+                      -- `more` for a full swell.
+                      clog = { fill = 1.6, radius = 26, more = 24, dose = 1.3 },
+                  } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
     -- wet you have to stop standing on -- and this is the other half of the
@@ -1440,6 +1511,9 @@ function Enemy.new(kind, x, y, scale)
         -- And the red pen GRAMMAR ends on at a master's (src/redpen.lua): a click
         -- pen longer than the page, ray-traced along its own length.
         redpen = def.redpen and RedPen.new() or nil,
+        -- And the deodorant P.E. ends on at a master's (src/deodorant.lua): a can
+        -- of body spray ray-traced the speaker's way, turned to point its nozzle.
+        deodorant = def.deodorant and Deodorant.new() or nil,
         -- And what it decides to do (src/eyeboss.lua): the moves a row with
         -- `attacks` makes between walking at you. The brain steers through
         -- `drive` -- nil to chase like anything else, `hold` to stand, `seek` to
@@ -1466,6 +1540,8 @@ function Enemy.new(kind, x, y, scale)
         -- beat and rolls like a can.
         -- And the red pen's (src/redpenboss.lua), which writes its way about and
         -- falls over on you.
+        -- And the deodorant's (src/deodorantboss.lua), which walks at you and
+        -- fills the air.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
@@ -1476,7 +1552,8 @@ function Enemy.new(kind, x, y, scale)
             or def.piggy and PiggyBoss.new(def)
             or def.tesseract and TesseractBoss.new(def)
             or def.speaker and SpeakerBoss.new(def)
-            or def.redpen and PenBoss.new(def) or nil,
+            or def.redpen and PenBoss.new(def)
+            or def.deodorant and DeoBoss.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
@@ -2017,7 +2094,7 @@ function Enemy:footing()
     -- (src/eyeball.lua) that a one-pixel jog on top of would only blur.
     local bob = self.frozen <= 0 and self.bob >= 1 and not self.eyeball and not self.dice
         and not self.plaster and not self.nucleus and not self.piggy and not self.tesseract
-        and not self.speaker and not self.redpen
+        and not self.speaker and not self.redpen and not self.deodorant
     local y = bob and self.y - 1 or self.y
     -- And a body a brain has hopping (the metronome's walk on the beat), lifted
     -- off its shadow: drawing only, for the recoil's reason below.
@@ -2149,7 +2226,7 @@ function Enemy:drawSolid()
         return
     end
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract or self.speaker or self.redpen
+        or self.tesseract or self.speaker or self.redpen or self.deodorant
     if painted then
         love.graphics.setColor(Palette.paper)
         painted:drawMask(x, y, self:outlineColour() and 1 or 0)
@@ -2203,7 +2280,7 @@ function Enemy:draw()
     -- The still life leaves none of its own: its shadows are thrown by its
     -- lamp, and drawn by its brain (src/stilllife.lua).
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract or self.speaker or self.redpen
+        or self.tesseract or self.speaker or self.redpen or self.deodorant
     if painted then
         if painted.hidden then return end
         shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)

@@ -195,6 +195,9 @@ function Player:update(dt, game)
     local slick = game.hasSlick and game:slickAt(self.x, self.y) or nil
     self.slick = slick ~= nil
     local speed = SPEED * self.loadout.stats.speed
+    -- Coughing in a boss's mist (src/deodorantboss.lua), which sets this every
+    -- frame you are in it and clears it when you are not.
+    if self.drag then speed = speed * self.drag end
     if slick then speed = speed * slick.boost end
 
     -- The other surface underfoot, and the only one you did not have to draw:

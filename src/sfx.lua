@@ -131,6 +131,13 @@ local DEFS = {
     -- level at source. A small pitch range because the audit lands twenty in
     -- a row and twenty of exactly the same sound is a machine, not a hand.
     stamp       = { gain = 1.0, pitch = { 0.94, 1.06 } },
+    -- The P.E. encore's spray (src/deodorantboss.lua): a puff, a long hold and
+    -- the test spray it walks on with. Synthesised -- white noise through a
+    -- high band, 4 to 9kHz, with a hard attack and a quarter second of hiss --
+    -- and written to the common level at source. Every play names its pitch,
+    -- the longer sprays played lower, and the gap is what keeps a held button
+    -- re-sounding every half second from piling up into a roar.
+    spray       = { gain = 1.0, gap = 0.1, pitch = { 0.95, 1.05 } },
 
     rubbing     = { gain = 59, loop = true },
     eraser      = { gain = 0.89 },

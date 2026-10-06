@@ -14,8 +14,10 @@ a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.
 `src/plaster.lua` (the ART still life), `src/atom.lua` (SCIENCE's second boss,
 the atom), `src/piggy.lua` (FINANCE's second boss, the piggy bank) and
 `src/speaker.lua` (MUSIC's second boss, a bluetooth speaker; see **Painted live
-with flat ends: the speaker**) and `src/redpen.lua` (GRAMMAR's second boss, a pen
-longer than the screen; see **Painted live along its own length: the red pen**). The
+with flat ends: the speaker**), `src/redpen.lua` (GRAMMAR's second boss, a pen
+longer than the screen; see **Painted live along its own length: the red pen**) and
+`src/deodorant.lua` (P.E.'s second boss, a can of body spray; see **Painted live
+out of stacked solids: the deodorant**). The
 MATHS tesseract (`src/tesseract.lua`) is neither: a solid in four dimensions,
 projected every frame and drawn as lines (see **Projected live as lines: the
 tesseract**).
@@ -657,6 +659,31 @@ of rays: it is a solid several screens of pixels long. The hot loop is split in 
 (`ray`, which piece; `shade`, what colour) and avoids parallel assignments, both
 so LuaJIT can keep it in registers; a row's buffers are arrays from the row's own
 first column rather than tables keyed by screen columns, which go negative.
+
+## Painted live out of stacked solids: the deodorant
+
+P.E.'s second boss (`src/deodorant.lua`) is a can of body spray, and it is the
+speaker's method made smaller in one way and larger in another.
+
+1. **A heading, not a frame.** It never tips over, so the speaker's three page
+   vectors come back down to the pig's single `yaw`, and the frame is built from it
+   each raster: front, side and up, already on the screen.
+2. **Three solids, nearest wins.** The can is a cylinder (side and top cap), its
+   shoulder is the top half of an ellipsoid sat on the can's top -- one quadratic,
+   kept only above the join -- and the button is a smaller cylinder through the
+   shoulder. Each pixel asks all three and keeps the nearest front hit, which is
+   the pig's rule for its nine ellipsoids with three solids instead.
+3. **Print laid flat across the face, not round it.** AXE is three letters of a
+   3x5 face on a can 16 across, and laid out by distance *round* the can its outside
+   columns turned away and smeared. Laid out by distance *across* the can (the side
+   coordinate rather than the angle), facing you it sits a letter column to a pixel,
+   and as the can turns the word squeezes off round the side the way print does. It
+   is printed on a black panel whatever the lamp is doing, or the letters on the lit
+   side are paper on graphite and vanish.
+
+Everything else is the speaker's: the eye's lamp, ink at depth edges, rows of runs
+worked out once a frame (`Deodorant:raster`). `swell` widens the solids for a glued
+can's pressure, with the foot kept on the page.
 
 ## Projected live as lines: the tesseract
 

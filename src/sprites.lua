@@ -6318,6 +6318,13 @@ function Sprites.load()
             for i = 1, 26 do rows[i] = ("r"):rep(14) end
             return rows
         end)()),
+        -- And P.E.'s, painted the same way (src/deodorant.lua): the box the
+        -- deodorant is measured off, the can stood up with its button on top.
+        deodorant = pixelart.newSprite((function()
+            local rows = {}
+            for i = 1, 36 do rows[i] = ("r"):rep(20) end
+            return rows
+        end)()),
         -- Skull: slow tank, arrives later still.
         skull = pixelart.newSprite({
             "..oooooo..",

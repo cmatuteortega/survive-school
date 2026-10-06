@@ -341,6 +341,11 @@ Subjects.list = {
         -- bullet hell in the book -- rings of notes, lobbed jacks, squads
         -- marched across the box, and the class grown into giants.
         boss = "whistle",
+        -- And its encore (src/deodorantboss.lua): what the changing room smells
+        -- of once the whistle has blown. The whistle is about what is in the
+        -- air; the deodorant is about the air itself -- a cloud that spreads,
+        -- thins and is pushed about, which you wade, wait out or clear.
+        encore = "deodorant",
         -- The one page where the word means what it means everywhere else: a
         -- class does drills, and a class drills in *lines*. Walls and pincers
         -- above all, more often than anywhere but the unruled page, and no grid

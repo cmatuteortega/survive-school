@@ -611,9 +611,9 @@ row rather than left to the fallback (a row without one gets the eye) so that gi
 page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one. A row may also name an **encore**, the second boss the lesson ends on at
 a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom`,
-FINANCE's is `piggy`, MATHS's is `tesseract`, MUSIC's is `speaker` and GRAMMAR's
-is `redpen`, and the other two have none yet,
-so they end on their boss at every course.
+FINANCE's is `piggy`, MATHS's is `tesseract`, MUSIC's is `speaker`, GRAMMAR's
+is `redpen` and P.E.'s is `deodorant`, and ART has none yet,
+so it ends on its boss at every course.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
 because a tool line's first level is its unlock — issuing a tool is taking that
@@ -1448,6 +1448,48 @@ hits on the crowd are never lethal (`mark`): a kill from inside its own turn wou
 pull a body out of the horde mid-walk. On death (`dropParts`) its wet ink dries, the
 stand-ins are ghosted (and taken off in `sweep`), and it leaks a harmless pool.
 
+**The deodorant** (`deodorant`, P.E.'s encore) is a fight about *the air itself*:
+the whistle is what is in the air, this is the air. Its body is
+`src/deodorant.lua`, a can of body spray ray-traced the speaker's way -- a cylinder,
+half an ellipsoid for its shoulder and a smaller cylinder for the button -- in
+black metal with AXE across a black panel between two red bands, laid out across
+the can's face rather than round it so facing you it sits a letter column to a
+pixel. It never tips over, so its frame is a heading, `yaw`, the way the nozzle
+points. The brain writes `swell` (a glued can's pressure, widening it), `shake`,
+`hop` and `hot` (the nozzle lit: the tell for every move) onto it every frame, and
+reads `nozzle(x, y)` back: where on the page the spray starts and where on the
+screen it comes out. It has `arrive`, then takes its cap off and gives the air a
+test spray (`FRESH!`).
+
+Its brain is `src/deodorantboss.lua`, and every move it has is spent on one thing,
+**the cloud**: a grid over the box, a cell every 8px, holding how thick the spray is
+there. Each frame (in steps of at most 1/40s) every cell spreads `spread` of the
+difference with its four neighbours, thins over `life`, and -- while the draught
+blows -- is carried along the wind, read back up it, fresh air coming in at the
+upwind edge. It is read between cells (bilinear), so a cloud has soft edges. Over
+`thin` the player's `drag` (read in `Player:update`) slows them by up to `drag`; over
+`thick` they are hurt `damage` every `every`. You *part* it (`part` round you,
+`wade` a second at a walk, laid round the ring outside), and anything killed in it
+clears `clear` round it (`onKill`, called from `Game:killEnemy` on whichever boss
+has the method). It is drawn on the floor as dots off a hash re-picked five times a
+second, blush where it is thin and red where it hurts, never more than 60% cover, so
+the page shows through. Between moves it walks at you and puffs a `spritz` every
+`every`: a puff that does nothing in flight and blooms `size` round where it stops.
+Its moves:
+
+| move | tell | what |
+| --- | --- | --- |
+| `fan` | it turns to you, nozzle blinking | three spritzes `spread` apart (heavier in phase 1) |
+| `spray` | planted; the fan `arc` wide and `reach` long dotted on the floor, an arrow at the edge it starts from | it holds the button down and sweeps the fan in `time`, a jet (a solid red line falling to the floor, droplets round it) laying `rate` along it -- a curtain of mist that stays |
+| `draught` | phase `from`+: the edge it blows from dashed in blue, streaks coming in | `time` of wind along the axis from the can to you: the cloud carried at `speed`, you shoved at `shove`, the crowd at `crowd`, and a puff of `dose` every `puff` into it from upwind -- a plume to walk across |
+| `shake` | phase `from`+: rattling (the ball's clack quickening); a circle `radius` follows you for `follow`, then locks solid | the circle filled thick from edge to edge (`dose`, soft 10px rim) |
+| `leak` | phase `from`+: a dent pops | `time` spinning at `spin` on a jet `reach` long, pushed about the box away from the jet at `speed`; its reach drawn as a solid circle round it |
+
+Glue **clogs** it (`CLOGGED!`): a tell or a move is dropped and `clog` fills over
+`fill` (the body's `swell`); let go, it bursts `radius` + `more` x the swell round
+itself. Phase lines are `EXTRA STRONG!` and `SHAKE WELL!`. On death (`dropParts`) the
+air clears and `drag` is let go.
+
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
 sixteenth of a turn, ray-traced at size by `art/whistle.py` and baked between the
@@ -1474,7 +1516,8 @@ all in `Game:updateWhistle`:
 A blast never starts during a lunge and a lunge's clock does not run during a blast,
 so the two red tells never mean two things at once. Glue holds all four calls, as it
 holds the eye's tears. The blast and the pump draw `blareT` -- two red rings going out
-(`Enemy:draw`) -- and play `whistle`, the one synthesised sound in `src/sfx/`.
+(`Enemy:draw`) -- and play `whistle`, synthesised like `tick`, `stamp` and the
+deodorant's `spray` rather than recorded.
 
 `Spike` is a puddle with corners: same hurt-on-contact rule on the player's own
 invulnerability window (`Game:updateSpikes`, beside `Game:updatePuddles`), drawn on
@@ -6470,12 +6513,12 @@ and are all the same 11x11 glyph.
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
   dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, the red pen's `redpen`, and any of the horde's (`shot`, `charge`) -- see
+  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, the red pen's `redpen`, the deodorant's `deodorant`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
   `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua`,
-  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua`, `src/tesseractboss.lua`, `src/speakerboss.lua` or `src/redpenboss.lua`, built in `Enemy.new`; one that comes
+  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua`, `src/tesseractboss.lua`, `src/speakerboss.lua`, `src/redpenboss.lua` or `src/deodorantboss.lua`, built in `Enemy.new`; one that comes
   apart into several bosses answers `share` (the HUD's bar) and `heir` (who the bar
   goes to when the one it is on dies), as the atom's does. One too big to be hit at
   a point stands bodies of its own on the page for the rest of itself (`stand` on

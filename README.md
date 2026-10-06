@@ -7617,6 +7617,68 @@ bodies on the page, the still life's stand-in (`penpart`), that every weapon fin
 and hurts and that pass what they take to the pen; they never hurt you, because
 the barrel is in the air. The nib is the body that hurts to walk into.
 
+### And at a master's, P.E. ends on the deodorant
+
+The whistle calls the game. What is left once it has blown is the changing room,
+and what a P.E. changing room is, more than anything, is a smell: a can of body
+spray, emptied by thirty people at once. So P.E.'s second fight is about **the air
+itself**. The whistle's fight is about what is in the air -- notes and jacks, things
+you see coming and step round. Nothing the deodorant does is a thing you step
+round. It is a cloud, and a cloud is something you get out of, wait out or clear.
+
+That needed something no boss had: a hazard that **moves after it is put down**.
+The eye's wet stays where it fell and the red pen's ink dries where it was
+written; every hazard in the book is a shape on the floor that is the same shape
+until it goes. The deodorant's mist is a grid of how thick the air is, and every
+frame it spreads, softens and thins, so a puff blooms and goes and a curtain of it
+drifts out across the box. And it is **pushed by what moves through it**: you,
+walking, part it round you; anything your weapons kill inside it takes the air
+round it with it; and the draught carries all of it at once. Thin mist, in blush,
+slows you down, because you are coughing. Thick mist, in red, hurts at the rate a
+puddle does. Red is theirs, as it is everywhere, and red mist is the mist to be
+out of.
+
+It is a black can -- the one boss in the book drawn in ink and slate, because that
+is the can in every P.E. bag -- with AXE across its front between two red bands,
+painted a pixel at a time the speaker's way (see `3dmethod.md`). It turns its
+nozzle to face you, so the word is the first thing you read, and the nozzle going
+red is the tell for everything it does. It never tips over or rolls: the speaker
+is the can that rolls, and a second one bowling down a lane would be the speaker's
+fight in a different tin.
+
+- **It walks at you and spritzes.** Every couple of seconds a puff goes out along
+  its throw -- harmless on the way -- and blooms where it lands, so the air round it
+  slowly fills. Now and then -- most of all in the first third -- it fans three at
+  you at once.
+- **The full body spray.** It plants, the fan it is about to cover dotted on the
+  floor with an arrow at the side it starts from, and holds the button down while it
+  turns across it. The jet is a red line out of the nozzle falling to the floor, and
+  what it lays is a curtain of mist that stays, spreads and comes on. The answer is
+  the metronome's sweep -- out of the fan, behind the can or past the end of the
+  stream -- with the cost the metronome's did not have: where it has been is still
+  there afterwards.
+- **The draught** (from the second third). Someone opens the changing room door.
+  The edge of the box it comes in at is dashed in blue and streaks start coming in
+  across the page; then the wind blows across the box and pushes every cloud on it,
+  the crowd -- and you, the one move in the book that moves the player -- while the
+  can puffs into it from upwind so a plume rolls down on you. You are pushed at
+  under half your pace, so walking across the wind, out of the plume, is a walk.
+- **Shake well** (the last third). It rattles, the ball inside clacking quicker and
+  quicker, with a circle following you on the floor -- and then locked, solid -- and
+  empties a great burst into it, thick from edge to edge. The circle is locked for
+  a second and a bit, a little more walking than there is from its middle to its
+  edge.
+- **The leak** (the last third). A dent pops and it spins on its own jet,
+  skittering about the box the way the jet is not pointing, a spiral of mist coming
+  off it. Its reach is drawn round it as a ring for as long as it spins: keep out.
+
+It says FRESH! as the cap comes off, EXTRA STRONG! at two thirds and SHAKE WELL!
+at one third. **Glue clogs the nozzle**: a glued can drops whatever it was about to
+spray and cannot spray -- but the pressure builds in it while it is held, and you
+can see it swell, and when it is let go it goes off all at once round itself. Every
+boss has one tool-shaped answer and this is the first one with a price on it: glue
+it and walk away before it lets go. Its last word is EMPTY, and the air clears.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was
