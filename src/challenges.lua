@@ -40,7 +40,7 @@
 -- the four collections), and it needs no special case anywhere: what makes a row
 -- long is how many numbers are in `want`.
 --
--- **Four sections, stepped by the library's footer arrows**, because this list is
+-- **Six sections, stepped by the library's footer arrows**, because this list is
 -- going to keep growing and a page is a page:
 --
 -- - **BESTIARY** -- one body count per row of `Enemy.types`. Per monster and not
@@ -50,6 +50,9 @@
 --   horde say ten different things.
 -- - **TERM** -- the boss count, the hours, and one row per rung of the ladder
 --   (src/course.lua) asking for the whole timetable at that class or harder.
+-- - **BOSSES** and **ENCORES** -- one row per boss in the book, each lesson's own
+--   and then its second, asking for it beaten once and named ??? until it has
+--   been met.
 -- - **COLLECTION** -- the catalogue read as four sets rather than as eighty-one
 --   lines: the tools, the weapons, the passives, and the drawings that are in
 --   your own hand rather than the book's.
@@ -58,9 +61,9 @@
 --   as forty-five rows would be four pages of homework, and ten rows of nine is
 --   the same fact said in the order you actually fill it.
 --
--- **Everything on all four is derived.** A new monster, a new lesson, a new rung
--- of the course ladder, a new tool, a new fusion and a new drawing board each
--- bring their own row and there is no list here to keep in step -- which is the
+-- **Everything on all six is derived.** A new monster, a new boss, a new
+-- lesson, a new rung of the course ladder, a new tool, a new fusion and a new
+-- drawing board each bring their own row and there is no list here to keep in step -- which is the
 -- rule the whole extending section of CLAUDE.md is written along, and it matters
 -- more here than anywhere: a homework list that fell out of step with the game
 -- would be the book asking for something that does not exist.
@@ -235,6 +238,46 @@ local function term()
     return rows
 end
 
+--- the bosses ---------------------------------------------------------------
+
+-- One row per boss in the book (`Subjects.bosses`), each asking for it to be put
+-- down once. One rung rather than a ladder, because what is being asked is not
+-- more of the same thing: TERM's BOSSES row already counts every fight, and these
+-- pages are the other half of that fact -- which of them, by name.
+--
+-- Two sections rather than one: each lesson's own boss, and its encore. Fourteen
+-- rows of three lines do not fit down a spread on the shortest page this game is
+-- handed, and seven do -- and the split is the one the game already makes, since
+-- an encore is only ever sent at a course that asks for two (src/course.lua), so
+-- the second page is the one a book never sat at a master's leaves empty.
+--
+-- And the name is not given away. A boss the book has not met is ??? here as it
+-- is on the library's boss shelf (src/library.lua): the encores in particular are
+-- only ever sent at a master's or harder, and a homework list that named them
+-- would be the book telling you who is waiting at the end of a page you have not
+-- sat. `hidden` is asked at the draw, through `Challenges.name`, so a row is
+-- named the moment the boss walks on (`Tally.meet`).
+local function bossRow(kind)
+    local def = Enemy.types[kind]
+    return {
+        name = phrase(def.title or def.name),
+        hidden = function() return not Tally.metOf(kind) end,
+        want = { 1 },
+        have = function() return Tally.beatOf(kind) end,
+        ask = function() return phrase("BEAT IT") end,
+    }
+end
+
+local function bosses(encores)
+    local rows = {}
+    for _, boss in ipairs(Subjects.bosses()) do
+        if boss.encore == encores then
+            rows[#rows + 1] = bossRow(boss.kind)
+        end
+    end
+    return rows
+end
+
 --- the catalogue --------------------------------------------------------------
 
 -- How many of a list of catalogue lines the book has *earned*. The collection's
@@ -342,6 +385,8 @@ function Challenges.sections()
         sections = {
             { name = "BESTIARY", rows = bestiary() },
             { name = "TERM", rows = term() },
+            { name = "BOSSES", rows = bosses(false) },
+            { name = "ENCORES", rows = bosses(true) },
             { name = "COLLECTION", rows = collection() },
             { name = "EVOLUTIONS", rows = evolutions() },
         }
@@ -401,6 +446,16 @@ end
 
 function Challenges.met(row)
     return Challenges.tier(row) == nil
+end
+
+-- What a row is called this frame: its name, or ??? while it is a boss the book
+-- has not met (`bosses`). A phrase either way, for `I18n.say` -- and ??? goes
+-- through it unchanged, since no dictionary has an entry for it.
+local UNKNOWN = phrase("???")
+
+function Challenges.name(row)
+    if row.hidden and row.hidden() then return UNKNOWN end
+    return row.name
 end
 
 -- What the row is asking for, or nothing at all once it is finished. A phrase

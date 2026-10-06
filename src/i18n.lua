@@ -338,6 +338,12 @@ local ES = {
     -- pass a class and you beat a boss, and English happens to use one word for
     -- both. Spanish does not have to.
     ["BEAT %d OF THEM"] = "DERROTA %d DE ELLOS",
+    ["ENCORES"] = "BISES",
+    ["BEAT IT"] = "DERROTALO",
+    ["NOT MET YET"] = "AUN SIN CONOCER",
+    ["NOT BEATEN YET"] = "AUN SIN DERROTAR",
+    ["TIMES BEATEN: %d"] = "DERROTADO: %d",
+    ["AT %s OR HARDER"] = "EN %s O MAS DIFICIL",
     ["PLAY %s"] = "JUEGA %s",
     ["OPEN EVERY ONE"] = "ABRELOS TODOS",
     ["DRAW EVERY ONE YOURSELF"] = "DIBUJALOS TODOS TU",

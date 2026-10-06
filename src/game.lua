@@ -2042,6 +2042,12 @@ function Game:killEnemy(index)
         -- one door every kill in the game comes through, so it is the one place
         -- that has to know an eye is worth something (`Game:runWorth`).
         self.eyes = self.eyes + 1
+        -- And which one it was, for the library's boss shelf and the homework's
+        -- boss pages (src/tally.lua). Here and not off `killsBy`, because this is
+        -- the boss going down *for good*: the atom's halves are each a kill of an
+        -- atom and only the last of them is the atom beaten. Not for a dev boss
+        -- test, which is not a run the book saw (Game:bankRun).
+        if not self.bossTest then Tally.down(e.kind) end
         self.particles:burst(e.x, e.y, 40, Palette.blue)
     end
 end

@@ -1586,6 +1586,39 @@ It says nothing about *why* two tools make nothing, and that is deliberate. The 
 honest answer is that nobody has drawn that one yet, and a book that explained
 itself there would be a book making promises about a page that does not exist.
 
+### The bosses
+
+The fourth section is not the catalogue at all. It is every boss the book can send
+— each lesson's own and its encore, fourteen today — read off the timetable rather
+than off the upgrades, so a lesson that gains a boss puts it here by having it.
+Nothing on it can be dealt, and what it is a record of is the other thing a run
+finishes with: who you met at the end of the page, and who you put down.
+
+It is read the way the rest of the library is: the names down the left page, and
+the one you pressed written out on the right — and what is written out is the
+boss itself, on a turntable, turned round once every six seconds so you can see the
+back of it. Not a picture of it. Every boss is already a thing that can be seen
+from any side — the eye, the die, the atom and the pig are painted off a frame that
+turns, and the whistle, the metronome, the stamp, the dictionary and the marble
+were traced into rings of views ahead of time — so the turntable is the fight's own
+body with the fight taken out of it. A second set of drawings kept for this page
+would be fourteen pictures that could quietly stop matching the boss you meet.
+
+**Three states, and the page says all three.** A boss nobody has met is `???`, drawn
+as its silhouette: the collection's rule, that a hole is worth filling when you
+know its shape, with the one thing worth hiding — who it is — hidden. That matters
+most for the encores, which only turn up at a master's or harder; the page says
+which lesson each one ends and which class sends it, and not what is waiting there.
+A boss you have met has its name back but stays a silhouette, because seeing it
+properly is what beating it buys. And a boss you have beaten turns in its own
+colours, with the number of times you have done it. The pip beside each name on
+the shelf is the homework's box, and fills red for the same reason it does there.
+
+The red pen is the one that does not fit, and it is left not fitting. It is longer
+than the page in the fight, so on the turntable it is stood on its nib and turned
+in its fingers — the clip and the print go round — and the top of it goes off the
+top of the box.
+
 ### The collection
 
 Nine lines of eighty-one are in the book on a fresh save.
@@ -1960,7 +1993,7 @@ then says the same *sentence* — go and kill a great many of these — instead 
 same number, and fifty thousand of the slowest thing in the game is not a demand
 anybody would ever have written on purpose.
 
-**Four sections, one to a spread** (see **Turning the page**), because this list is
+**Six sections, one to a spread** (see **Turning the page**), because this list is
 going to keep growing and a page is a page. On two leaves the ten rows are split
 down the crease, five and five — down the middle rather than filled to the foot of
 the left page and spilled, because five and five reads as a spread and nine and one
@@ -1980,10 +2013,18 @@ asking for the whole timetable beaten at that class or harder. `COLLECTION` is t
 catalogue as four sets rather than eighty-one lines — the tools, the weapons, the
 passives, and the drawings that are in your own handwriting rather than the book's,
 which is the only challenge here you can finish without playing. `EVOLUTIONS` is
-one row per tool, asking for every fusion built on it.
+one row per tool, asking for every fusion built on it. `BOSSES` and `ENCORES` are
+one row per boss, each lesson's own and then its second, asking for each to be
+beaten once — the other half of TERM's boss count, which says how many and not
+which. A boss nobody has met is `???` here as it is in the library, so the list
+does not name what is waiting at the end of a page you have not sat. They are two
+sections rather than one because fourteen rows do not fit down a spread and seven
+do, and the split is the one the game already makes: the encores are only sent at a
+master's or harder, so the second page is the one a book that has never sat one
+leaves empty.
 
 Every one of those is *derived*. A new monster brings its own row and prices its
-own three rungs; so does a new lesson, a new course, a new tool, a new fusion and a
+own three rungs; so does a new boss, a new lesson, a new course, a new tool, a new fusion and a
 new drawing board. That is not tidiness for its own sake — homework out of step
 with the game would be the book asking for something that does not exist.
 

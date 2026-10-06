@@ -19,6 +19,7 @@
 local Enemy = require("src.enemy")
 local Subjects = require("src.subjects")
 local Course = require("src.course")
+local Tally = require("src.tally")
 local util = require("src.util")
 
 local Spawner = {}
@@ -1439,6 +1440,10 @@ function Spawner:sendBoss(game)
     -- The lesson's own (src/subjects.lua), and the eye where a page has not
     -- named one.
     self:drop(game, self:ring(game) + 20, self:bossKind())
+    -- And the book has met it (src/tally.lua): from here on the library's boss
+    -- shelf and the homework's boss pages say its name rather than ???. Not on
+    -- a dev boss test, which is not a run the book saw (Game:bankRun).
+    if not game.bossTest then Tally.meet(self:bossKind()) end
 end
 
 -- The P.E. whistle's squad (`squad` in src/enemy.lua): a wall of one kind

@@ -930,6 +930,20 @@ different moments: a run walked out of is paid nothing and has still killed
 everything it killed. `Tally.stamp` is `Records.stamp`'s twin, and
 `Challenges.have` caches off the pair of them.
 
+**And the bosses one at a time, not banked.** `Tally.met[kind]` and
+`Tally.beat[kind]` are which bosses the book has met and how many times each has
+gone down, for the library's boss section and the homework's `BOSSES` and
+`ENCORES`. They are written the moment they happen rather than off the watermark:
+`Tally.meet` from `Spawner:sendBoss` (once, the first time), `Tally.down` from the
+`e == self.boss` branch of `Game:killEnemy` -- the boss going down *for good*, not
+`killsBy`, since the atom's halves are each a kill of an `atom` and only the last is
+the atom beaten. Each is a once-a-fight event with one door, so there is nothing to
+bank twice, and a boss met and then walked out on has still been met. A dev boss
+test (`Game.bossTest`) writes neither. Beaten implies met (`Tally.metOf`), and
+`Tally.load` credits a boss kind with a body count but no `beat` line -- a book
+kept before these existed -- with one beating. On disk they are `beat <kind> <n>`
+or `met <kind>` lines beside the rest.
+
 One row rather than two, and the seven pixels that buys are worth knowing about
 before anything else is added to `statRows`: every row of that block is
 `Font.height` plus `LINE_GAP`, and seven pixels is the kind of margin
@@ -2983,6 +2997,60 @@ never moves when the toggle is pressed.
 same greedy break; two copies of it would be two places for a character to be
 counted differently.
 
+#### The bosses in the library
+
+The fourth entry in `KINDS` is `boss`, and it is the one section that is not a
+shelf of lines: `build` leaves it an empty shelf (no upgrade has that `kind`) and
+`list(at)` answers `Subjects.bosses()` for it instead. That list is derived off
+`Subjects.list` -- each lesson's `boss`, then its `encore`, a kind two lessons share
+listed once -- and is the one roster both this page and the homework's read, so the
+two cannot disagree about who is in the book.
+
+- **The shelf** is a column rather than a grid (`drawBossShelf`): the homework's
+  5px pip and a name, `BOSS_ROW` (`Font.height + 3`) apart, the whole row the press
+  target (`plateRect` with the section passed in). Its own width, `lay.bossW`, cut
+  to the widest boss title or `???` in the current language, and its own `lay.bossX`
+  -- the boss titles are longer than any line's name, and the catalogue's columns
+  are not to be widened by a page they are not on. Fourteen rows at eight pixels fit
+  the verso of the shortest landscape page with room to spare; fourteen at the
+  catalogue's fourteen would not.
+- **The entry** (`drawBoss`) is the name at `NAME_SCALE` where it fits the block
+  and at 1:1 where it does not (some titles are wider than a leaf at twice the
+  size), the lesson's name, for an encore `AT %s OR HARDER` naming the lowest rung
+  of `Course.list` with `bosses >= 2`, the state line, and the turntable in what is
+  left, its floor three quarters of the way down the block. On one leaf it starts
+  under its own column (`lay.bossEntry`) rather than under the room the fullest
+  catalogue shelf reserves -- it is a different page and the turntable wants the
+  height.
+- **The state** is `Tally.metOf` and `Tally.beatOf` (see **The tally**). Not met:
+  `???` and the silhouette, `NOT MET YET` in graphite. Met: the name, still the
+  silhouette, `NOT BEATEN YET` in red. Beaten: the body in its own colours and
+  `TIMES BEATEN: %d` in slate. The pip fills red on beaten; the shelf name is
+  graphite until beaten and slate after, red where you are reading.
+- **The corner count** on this section is beaten out of all (`Library:tally`), and
+  `tallyWidth` includes the roster's length.
+
+**The turntable** is `src/turntable.lua`, one per boss kind made the first time it
+is looked at and kept, so stepping back to one does not start it from the front.
+Only the one being read is updated. It builds the fight's own body off the row the
+way `Enemy.new` does -- `pupil` the `Eyeball`, `dice` a `Dice`, `still`
+`StillLife.body()`, `atom`, `piggy`, `tesseract`, `speaker`, `redpen`,
+`deodorant`, and `turns` the ring of baked views (with the metronome's arm swung by
+a borrowed `Metronome` that holds only a clock) -- and turns it the body's own way,
+one turn every `PERIOD` (6s): the eye's `wy` spin, the die and the still life about
+the room's upright (the still life's pieces moved round its middle, the cube turned
+with them, the lamp left where it is), the pig's `yaw`, the speaker's and the
+deodorant's `spin`, the atom's and the tesseract's own `update`, a ring's view
+index, and the red pen's `roll` -- stood on its nib, clicked out, cut to the box by
+its own `raster` clip in place of the camera's (`RedPen:raster` takes the view; the
+turntable hands it the box). It stands on a floor line where `Enemy:draw` would put
+the shadow (`painted.ground`, `def.ground`, or the sprite's `h - oy`) with the
+row's own shadow under it, stamps its blank into the page first
+(`Overprint.beginSolid`) like every body in a fight, and draws inside a scissor of
+the block. The silhouette is the same mask the fight blanks and flashes with, in
+graphite and with no shadow -- plus the atom's orbits, dotted, which are not in its
+mask but are most of its shape.
+
 ### The collection
 
 `src/collection.lua` is which of the catalogue the book has opened, and it is the
@@ -3277,7 +3345,7 @@ ladder pointing at the same doors, and the first thing it would cost is the
 library's promise that a shelf is the whole of what there is to open. A challenge
 pays in the only currency a checklist has: the box goes red.
 
-**Four sections, one to a spread** (see **The book**). On two leaves the ten rows
+**Six sections, one to a spread** (see **The book**). On two leaves the ten rows
 are split down the crease, five and five -- down the middle rather than filled to
 the foot of the verso and spilled, because five and five reads as a spread and
 nine and one reads as a page that ran out -- and a finger drag turns to the next
@@ -3306,7 +3374,7 @@ is how many numbers are in `want`. `Challenges.tier` is the first unmet rung,
 rung's figure at its widest, which is what the column is cut to, so clearing a
 rung never moves the list.
 
-**Four sections, stepped by the canteen's footer arrows** (`Homework:arrowBox`,
+**Six sections, stepped by the canteen's footer arrows** (`Homework:arrowBox`,
 `arrowAt`, `step`, `drawArrow` -- the same recipe, left/right on the keyboard, the
 section name in red between two chevron boxes). The list is going to keep growing
 and a page is a page: ten rows a section fits the shortest window this game is
@@ -3326,6 +3394,14 @@ handed with seven to spare, forty in a column would not.
   than one four-rung ladder, and that is the one place the ladder shape is
   deliberately refused: a ladder asks for more of the same thing, and beating the
   book at a doctorate is not five hundred times beating it at high school.
+- **BOSSES** and **ENCORES** -- one row per entry of `Subjects.bosses()`, split on
+  its `encore` flag: each asks for that boss beaten once (`want = { 1 }`, `have`
+  reading `Tally.beatOf`). The row carries a `hidden` (not `Tally.metOf`), and
+  `Challenges.name` -- which is what `Homework:drawRow` prints -- answers `???` for
+  a hidden row, so a boss is named the moment it walks on and never before. The
+  columns are still measured off the real `name`, which is never narrower. Two
+  sections because fourteen three-line rows overrun a landscape spread and seven
+  do not; the split is the course ladder's own (encores only come at `bosses = 2`).
 - **COLLECTION** -- the catalogue as four sets rather than eighty-one lines:
   tools, weapons, passives (`Upgrades.list` by `kind`, fusions excluded) and
   `DRAWINGS`, which is `Design.drawn()` over `Design.boards()` and the only
@@ -3335,7 +3411,7 @@ handed with seven to spare, forty in a column would not.
   under the arrows already says EVOLUTIONS, which is also what keeps the name
   column narrow enough for a phone held upright.
 
-**Everything on all four is derived.** A new monster, lesson, course, tool,
+**Everything on all six is derived.** A new monster, boss, lesson, course, tool,
 fusion or drawing board brings its own row and there is no list to keep in step --
 which matters more here than anywhere, since homework out of step with the game
 would be the book asking for something that does not exist. Adding one that is
@@ -3345,7 +3421,7 @@ string. Every `name` is a phrase too, including the one-word ones, so `I18n.say`
 draws them all and the screen knows one way of writing a name.
 
 **Measured across every section, never across the one showing.** `columns()`
-walks all four for the widest name, the widest demand at *any* rung, the widest
+walks all six for the widest name, the widest demand at *any* rung, the widest
 meter and the longest ladder, so no column moves as the footer is pressed or as a
 row is finished. That is the library's rule and it matters here for the library's
 reason: this is a screen you read by running your eye down it. In English the
@@ -6561,7 +6637,11 @@ and are all the same 11x11 glyph.
   `art/dictionary.py`, or in stages carved away like `art/marble.py`), or -- for anything convex that
   has to tumble -- a face list in `Dice.solids` painted live, or for a few simple
   solids under a light that moves, pieces in a `Plaster` group (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
-  been re-measured, and fight it from the title's dev BOSS button.
+  been re-measured, and fight it from the title's dev BOSS button. It is on the
+  library's boss section and the homework's `BOSSES` / `ENCORES` by being named in
+  `Subjects.list` (`Subjects.bosses`), and on the library's turntable by being built
+  on a body `src/turntable.lua` already knows; a new *kind* of body is one more
+  branch in its `make`, beside the one in `Enemy.new`, saying how that body turns.
 - **Tool:** append a row to `Tools.list` with an icon in `Sprites.icons`, *and* a
   `toolLine` in `Upgrades.list` naming it — the line's first level is what
   unlocks it, so a tool without one can never be drafted and never reaches the

@@ -163,7 +163,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   real mark).
 - **Screens:** `intro` (the first launch's opening, seen through a blinking eye
   that opens on the title), `menu`, `settings`, `timetable`, `studio`, `library`, `canteen`,
-  `homework` (the challenge list, read off `challenges`), `chance` (the
+  `homework` (the challenge list, read off `challenges`), `turntable` (a boss's
+  fight body on its own, turned round for the library's boss section and drawn as
+  its silhouette until it is beaten), `chance` (the
   revive-by-ad offer), `fullgame` (the card the padlock on the title and the
   timetable opens, selling the full game), `double` (the x2 box on the end cards), `blank` (the page with
   nothing on it, which nothing instances today), `pause`, `levelup`, `win`,

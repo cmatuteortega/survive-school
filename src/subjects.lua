@@ -488,4 +488,33 @@ function Subjects.get(key)
     return Subjects.default
 end
 
+-- Every boss in the book, in the order the book sends them: each lesson's own,
+-- then its encore, lesson by lesson down the timetable. Read off the rows above
+-- rather than written out anywhere, so a lesson with a new boss or a new encore
+-- puts it on the library's boss shelf and the homework's boss page by having it
+-- (src/library.lua, src/challenges.lua). A kind two lessons share is listed once,
+-- under the first.
+--
+-- Each is `{ kind, subject, encore }`: the row in src/enemy.lua, the lesson it
+-- ends, and whether it is the lesson's second -- the one only the courses that
+-- ask for two ever send (`bosses` in src/course.lua).
+local roster
+
+function Subjects.bosses()
+    if roster then return roster end
+    roster = {}
+    local seen = {}
+    local function add(kind, sub, encore)
+        if kind and not seen[kind] then
+            seen[kind] = true
+            roster[#roster + 1] = { kind = kind, subject = sub, encore = encore }
+        end
+    end
+    for _, sub in ipairs(Subjects.list) do
+        add(sub.boss or "bosseye", sub, false)
+        add(sub.encore, sub, true)
+    end
+    return roster
+end
+
 return Subjects

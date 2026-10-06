@@ -19,7 +19,7 @@
 -- however long the ladder, because three rows saying BLOB with different numbers
 -- on them is a list you cannot run your eye down.
 --
--- **And four sections, one to a spread** (src/spread.lua), for the reason the
+-- **And six sections, one to a spread** (src/spread.lua), for the reason the
 -- canteen grew the same footer: this list is going to keep growing and a page is
 -- a page. Ten rows a section is comfortable on the shortest window this game is
 -- ever handed; forty in a column would not be. Where the window is wide enough
@@ -438,7 +438,8 @@ function Homework:drawRow(lay, row, bx, y)
     -- a thing you have finished is ink and a thing you have not is graphite.
     love.graphics.setColor(met and Palette.ink or Palette.graphite)
     local nameX = bx + lay.pipsW + BOX_GAP
-    Font.print(I18n.say(row.name), nameX, y)
+    -- Through `Challenges.name`, which is ??? for a boss the book has not met.
+    Font.print(I18n.say(Challenges.name(row)), nameX, y)
 
     -- And the rung still standing. Red while it stands, because red on every
     -- screen in this book is the book asking you for something; nothing at all

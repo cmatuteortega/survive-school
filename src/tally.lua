@@ -16,7 +16,9 @@
 -- there is no maximum anywhere that adds up to it. A book that only remembers its
 -- best page can only ever ask you to have a better one.
 --
--- **Three things are counted and they are the three a run finishes holding:**
+-- **Three things are counted and they are the three a run finishes holding** (and
+-- a fourth that is not banked at all -- which bosses the book has met and beaten,
+-- see `Tally.met`):
 --
 -- - `kills[kind]` -- one body count per row of `Enemy.types`, because a homework
 --   list that asked for fifty thousand of *anything* would be one challenge with
@@ -62,6 +64,22 @@ Tally.kills = {}
 Tally.bosses = 0
 Tally.time = 0
 
+-- And the bosses one at a time: which the book has *met* -- one has walked onto
+-- a page of it, whatever happened next -- and how many times each has been put
+-- down. The library's boss shelf and the homework's boss page are read off these
+-- two (src/library.lua, src/challenges.lua), and neither is a body count: the
+-- atom comes apart into halves that are each a kill of an `atom` (src/atomboss.lua)
+-- and neither of them is the atom beaten, so a beating is counted at the one door
+-- a boss going down for good comes through (Game:killEnemy) rather than read off
+-- `kills`. Keyed by the row in src/enemy.lua, like everything else here.
+--
+-- Written the moment they happen rather than banked off a watermark with the
+-- rest. Each is a once-a-fight event with one door, so there is nothing to bank
+-- twice -- and a boss you met and then walked out on through the pause card has
+-- still been met.
+Tally.met = {}
+Tally.beat = {}
+
 -- Bumped whenever any of the above changes, for `Records.stamp`'s reason exactly:
 -- the homework page asks this file the same question once per row per frame, and
 -- the answers are worth holding on to between the times nothing happened.
@@ -69,6 +87,35 @@ Tally.stamp = 0
 
 function Tally.killsOf(kind)
     return Tally.kills[kind] or 0
+end
+
+-- How many times a boss has gone down, and whether it has been met at all. A boss
+-- beaten has been met, whatever the file says: a book written before either was
+-- kept still knows what it beat.
+function Tally.beatOf(kind)
+    return Tally.beat[kind] or 0
+end
+
+function Tally.metOf(kind)
+    return Tally.met[kind] == true or Tally.beatOf(kind) > 0
+end
+
+-- A boss walking on (Spawner:sendBoss). Written only the first time, since the
+-- second meeting is not news.
+function Tally.meet(kind)
+    if Tally.metOf(kind) or not Enemy.types[kind] then return end
+    Tally.met[kind] = true
+    Tally.stamp = Tally.stamp + 1
+    Tally.save()
+end
+
+-- And going down for good (Game:killEnemy).
+function Tally.down(kind)
+    if not Enemy.types[kind] then return end
+    Tally.met[kind] = true
+    Tally.beat[kind] = Tally.beatOf(kind) + 1
+    Tally.stamp = Tally.stamp + 1
+    Tally.save()
 end
 
 function Tally.save()
@@ -84,6 +131,13 @@ function Tally.save()
         local n = Tally.kills[kind]
         if n and n > 0 then
             lines[#lines + 1] = ("kill %s %d"):format(kind, n)
+        end
+    end
+    for _, kind in ipairs(out) do
+        if Tally.beatOf(kind) > 0 then
+            lines[#lines + 1] = ("beat %s %d"):format(kind, Tally.beatOf(kind))
+        elseif Tally.met[kind] then
+            lines[#lines + 1] = ("met %s"):format(kind)
         end
     end
     lines[#lines + 1] = ("bosses %d"):format(Tally.bosses)
@@ -136,6 +190,8 @@ end
 -- actually done.
 function Tally.load()
     Tally.kills = {}
+    Tally.met = {}
+    Tally.beat = {}
     Tally.bosses = 0
     Tally.time = 0
     Tally.stamp = Tally.stamp + 1
@@ -145,13 +201,30 @@ function Tally.load()
 
     for line in text:gmatch("[^\r\n]+") do
         local kind, n = line:match("^kill%s+(%S+)%s+(%d+)$")
+        local beaten, times = line:match("^beat%s+(%S+)%s+(%d+)$")
+        local met = line:match("^met%s+(%S+)$")
         if kind and Enemy.types[kind] then
             Tally.kills[kind] = tonumber(n)
+        elseif beaten and Enemy.types[beaten] then
+            Tally.beat[beaten] = tonumber(times)
+            Tally.met[beaten] = true
+        elseif met and Enemy.types[met] then
+            Tally.met[met] = true
         else
             local bosses = line:match("^bosses%s+(%d+)$")
             local time = line:match("^time%s+([%d%.]+)$")
             if bosses then Tally.bosses = tonumber(bosses) end
             if time then Tally.time = tonumber(time) or 0 end
+        end
+    end
+
+    -- A book kept before the bosses were counted one at a time: a boss with a
+    -- body count against it was put down at least once, and that is all it can
+    -- be credited with.
+    for k, def in pairs(Enemy.types) do
+        if def.boss and Tally.beatOf(k) == 0 and Tally.killsOf(k) > 0 then
+            Tally.beat[k] = 1
+            Tally.met[k] = true
         end
     end
 end

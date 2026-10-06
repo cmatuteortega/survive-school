@@ -105,6 +105,11 @@ local Collection = require("src.collection")
 local Sfx = require("src.sfx")
 local Spread = require("src.spread")
 local I18n = require("src.i18n")
+local Subjects = require("src.subjects")
+local Course = require("src.course")
+local Enemy = require("src.enemy")
+local Tally = require("src.tally")
+local Turntable = require("src.turntable")
 
 local Library = {}
 
@@ -183,11 +188,82 @@ local LEVEL_COL = Font.width("0") + LEVEL_GAP
 -- a page saying the same nine things the passives page says with no last level on
 -- them. What is worth knowing about them is that they exist, and that is the
 -- draft's news to break.
+--
+-- And a fourth that is not the catalogue at all: the bosses, read off the
+-- timetable (`Subjects.bosses`) rather than off src/upgrades.lua. It is last for
+-- the reason it is the last page of a lesson -- see "the bosses", below.
 local KINDS = {
     { kind = "tool",    name = "TOOLS" },
     { kind = "weapon",  name = "WEAPONS" },
     { kind = "passive", name = "PASSIVES" },
+    { kind = "boss",    name = "BOSSES" },
 }
+local BOSS = "boss"
+
+--- the bosses -----------------------------------------------------------------
+
+-- The last section is the bosses, and it is the one section here that is not a
+-- list of lines: nothing on it can be dealt, and what it is a record of is who
+-- you have met at the end of a page and who you have put down. So it is read the
+-- way the rest of this screen is -- a shelf of names on the verso, the one you
+-- pressed written out on the recto -- and what is written out is the boss itself,
+-- on a turntable (src/turntable.lua): the body the fight draws, turned round once
+-- every few seconds so you can see the back of it.
+--
+-- **Three states, and the shelf and the entry say all three.**
+--
+-- - **Not met** -- no boss of that kind has walked onto a page of this book. Its
+--   name is ??? and it is drawn as its silhouette: the shape of the hole, the
+--   collection's own rule (a hole worth filling is one whose shape you know),
+--   with the one thing a lock should take away -- who it is -- taken away.
+-- - **Met** -- it has walked on, and whatever happened next, you know its name.
+--   Still a silhouette, because seeing it properly is what beating it buys.
+-- - **Beaten** -- the body in its own colours, turning, and how many times.
+--
+-- Read off src/tally.lua (`Tally.metOf`, `Tally.beatOf`), which is written the
+-- moment a boss walks on and the moment one goes down for good.
+--
+-- **The shelf is a column of names with a pip each**, the homework's pip, filled
+-- red once that boss is beaten, rather than the catalogue's grid of icons: there
+-- is no icon for a boss, and fourteen names in a column are fourteen rows of
+-- lettering where fourteen plates would be fourteen rows of icons. It is cut to
+-- the widest boss name in the book, so the column does not move as a name stops
+-- being ???, and laid out on its own grid rather than on the catalogue's -- the
+-- names are longer than any line's, and the catalogue's columns are not to be
+-- widened by a page they are not on.
+local BOSS_BOX = 5                        -- the pip: the homework's, at its size
+local BOSS_ROW = Font.height + 3          -- one name to the next, down the column
+local UNKNOWN = "???"
+
+-- What the entry says under the name. Held here for the reason every string on
+-- this screen is.
+local NOT_MET = "NOT MET YET"
+local NOT_BEATEN = "NOT BEATEN YET"
+local BEATEN = "TIMES BEATEN: %d"
+local ENCORE = "AT %s OR HARDER"
+
+-- One turntable per boss, made the first time it is looked at and kept: the
+-- bodies are worth keeping turned where they were, so stepping back to one does
+-- not start it from the front again.
+local tables = {}
+
+local function turntable(kind)
+    if not tables[kind] then tables[kind] = Turntable.new(kind) end
+    return tables[kind]
+end
+
+local function bossName(boss)
+    local def = Enemy.types[boss.kind]
+    return def.title or def.name
+end
+
+-- The lowest rung of the course ladder that sends a lesson's second boss, for
+-- the encores' line: the hint that says where to go and meet one.
+local function encoreCourse()
+    for _, course in ipairs(Course.list) do
+        if (course.bosses or 1) >= 2 then return course end
+    end
+end
 
 --- what is on the shelves ----------------------------------------------------
 
@@ -268,6 +344,9 @@ local function build()
     shelves = {}
     fusions = {}
     for i, section in ipairs(KINDS) do
+        -- The bosses' section comes out of this as an empty shelf, since no line
+        -- is a boss: what it shows is read off `Subjects.bosses` instead (`list`,
+        -- below), and every loop over `shelves` stays a loop over the catalogue.
         local list = {}
         for _, up in ipairs(Upgrades.list) do
             if up.kind == section.kind
@@ -293,6 +372,16 @@ local function build()
     -- reads them as a column and nothing indexes into them but a scan for a pair
     -- (`Library:pairing`) -- and every one of the forty-five is shut on a fresh
     -- book anyway, so there is no free block for an order to put on top.
+end
+
+-- What is on a section's shelf: the lines, or on the bosses' page the bosses.
+local function list(at)
+    if KINDS[at].kind == BOSS then return Subjects.bosses() end
+    return shelves[at]
+end
+
+function Library:bossPage(at)
+    return KINDS[at or self.book.at].kind == BOSS
 end
 
 -- A phrase from the collection, put into words. It moved into src/i18n.lua the day
@@ -330,6 +419,15 @@ end
 -- of something you are not looking at is furniture that has wandered off the page.
 function Library:tally()
     if self.evo then return tally(fusions) end
+    -- On the bosses' page, how many of them have gone down.
+    if self:bossPage() then
+        local have, all = 0, 0
+        for _, boss in ipairs(Subjects.bosses()) do
+            all = all + 1
+            if Tally.beatOf(boss.kind) > 0 then have = have + 1 end
+        end
+        return have, all
+    end
 
     local have, total = 0, 0
     for _, list in ipairs(shelves) do
@@ -344,7 +442,7 @@ end
 -- are more fusions than shelved lines today and there is no rule that says there
 -- always will be, so it is a max rather than the one that happens to be bigger.
 local function tallyWidth()
-    local widest = #fusions
+    local widest = math.max(#fusions, #Subjects.bosses())
     for _, list in ipairs(shelves) do widest = math.max(widest, #list) end
 
     local shelved = 0
@@ -399,6 +497,16 @@ local function nameWidth()
         for _, up in ipairs(list) do
             w = math.max(w, Font.width(I18n.t(up.name)))
         end
+    end
+    return w
+end
+
+-- And the widest boss name, or ??? if that is wider, so the boss column is cut to
+-- what it can ever say. Measured off the translation, like every width here.
+local function bossWidth()
+    local w = Font.width(UNKNOWN)
+    for _, boss in ipairs(Subjects.bosses()) do
+        w = math.max(w, Font.width(I18n.t(bossName(boss))))
     end
     return w
 end
@@ -477,7 +585,18 @@ end
 -- the column width is the widest name anywhere in it and the row count the fullest
 -- shelf -- so this depends on nothing but the number, which is what lets a shelf
 -- be drawn for a section that is not the one open.
-function Library:plateRect(lay, i)
+function Library:plateRect(lay, i, at)
+    -- The bosses' column: a pip and a name a row, and the whole row is the
+    -- target, so the rows touch and a press between two names lands on one.
+    if self:bossPage(at) then
+        return {
+            x = lay.bossX,
+            y = lay.shelf + (i - 1) * BOSS_ROW,
+            w = lay.bossW,
+            h = BOSS_ROW,
+        }
+    end
+
     local col = (i - 1) % lay.cols
     local row = math.floor((i - 1) / lay.cols)
     return {
@@ -603,6 +722,17 @@ function Library:layout(game)
     -- worth of rows, then a gap, then the entry.
     lay.entry = lay.two and y or y + lay.rows * (ICON + ROW_GAP) - ROW_GAP + BLOCK_GAP
 
+    -- The bosses' column, centred on the verso the way the shelf's block is, and
+    -- its entry: on a spread the recto, level with the shelf like every entry; on
+    -- one leaf straight under its own column rather than under the room the
+    -- fullest *catalogue* shelf keeps -- it is a different page, it is a shorter
+    -- column, and what goes under it is a boss that wants all the height it can
+    -- get.
+    lay.bossW = BOSS_BOX + ICON_GAP + bossWidth()
+    lay.bossX = versoX + EDGE + math.floor((availW - lay.bossW) / 2)
+    lay.bossEntry = lay.two and y
+        or y + #Subjects.bosses() * BOSS_ROW - (BOSS_ROW - Font.height) + BLOCK_GAP
+
     -- Where the entry has to stop. Read from the top there is room for the wordiest
     -- line in the book on every page the game is handed, so this is never reached;
     -- on one that is short enough that it is, the last level goes rather than being
@@ -614,8 +744,8 @@ function Library:layout(game)
     -- coming up under a turning leaf is not a name you can press yet, and the
     -- shelf being drawn for it asks `plateRect` directly.
     self.plates = {}
-    for i = 1, #shelves[self.book.at] do
-        self.plates[i] = self:plateRect(lay, i)
+    for i = 1, #list(self.book.at) do
+        self.plates[i] = self:plateRect(lay, i, self.book.at)
     end
 
     self.lay = lay
@@ -864,6 +994,12 @@ function Library:update(dt, game)
 
     if self.back then return "back" end
 
+    -- The boss being read turns; the rest stand where they were left.
+    if self:bossPage() then
+        local boss = Subjects.bosses()[self.index]
+        if boss then turntable(boss.kind):update(dt) end
+    end
+
     local down = Input.pointerDown
     if self.stale then
         self.stale = down
@@ -893,10 +1029,10 @@ function Library:keypressed(key)
     elseif key == "right" or key == "d" then
         self:step(1)
     elseif key == "up" or key == "w" then
-        local n = #shelves[self.book.at]
+        local n = #list(self.book.at)
         self:select((self.index - 2) % n + 1)
     elseif key == "down" or key == "s" then
-        local n = #shelves[self.book.at]
+        local n = #list(self.book.at)
         self:select(self.index % n + 1)
     elseif key == "e" then
         -- The one key on this screen that is a letter for a word rather than a
@@ -921,6 +1057,7 @@ end
 -- the page coming up under a turning leaf nothing is picked and nothing is being
 -- read, because the press that will do either has not happened yet.
 function Library:drawShelf(lay, at, here)
+    if self:bossPage(at) then return self:drawBossShelf(lay, at, here) end
     local list = shelves[at]
 
     for i, up in ipairs(list) do
@@ -1106,6 +1243,12 @@ end
 -- explained itself there would be a book making promises about a page that does
 -- not exist.
 function Library:drawEntry(lay, at, here)
+    if self:bossPage(at) then
+        local boss = Subjects.bosses()[here and self.index or 1]
+        if boss then self:drawBoss(lay, boss) end
+        return
+    end
+
     if here and self.evo then
         local up = self:pairing()
         if up then return self:drawLine(lay, up) end
@@ -1123,6 +1266,95 @@ function Library:drawEntry(lay, at, here)
 
     local up = shelves[at][here and self.index or 1]
     if up then self:drawLine(lay, up) end
+end
+
+-- The bosses' column: a pip and a name a row. The pip is the homework's
+-- (src/homework.lua), filled red once that boss is beaten -- the same mark for the
+-- same fact on the page that asks for it. The name is ??? until the boss has been
+-- met, in graphite until it has been beaten and slate once it has (the shelf's own
+-- pair of colours for open and shut), and red where you are reading, as on every
+-- shelf.
+function Library:drawBossShelf(lay, at, here)
+    for i, boss in ipairs(Subjects.bosses()) do
+        local plate = self:plateRect(lay, i, at)
+        local met = Tally.metOf(boss.kind)
+        local beaten = Tally.beatOf(boss.kind) > 0
+        local py = plate.y + math.floor((Font.height - BOSS_BOX) / 2)
+
+        love.graphics.setColor(met and Palette.slate or Palette.graphite)
+        love.graphics.rectangle("fill", plate.x, py, BOSS_BOX, BOSS_BOX)
+        love.graphics.setColor(beaten and Palette.red or Palette.paper)
+        love.graphics.rectangle("fill", plate.x + 1, py + 1, BOSS_BOX - 2, BOSS_BOX - 2)
+
+        love.graphics.setColor(here and i == self.index and Palette.red
+            or (beaten and Palette.slate or Palette.graphite))
+        Font.print(met and I18n.t(bossName(boss)) or UNKNOWN,
+            plate.x + BOSS_BOX + ICON_GAP, plate.y)
+    end
+end
+
+-- One boss, written out: its name, the lesson it ends, where it stands with you,
+-- and the boss itself on its turntable filling the rest of the block -- in its own
+-- colours once it has been beaten and as its silhouette until then.
+--
+-- The name is at the entry's twice size where it fits and at 1:1 where it does
+-- not: the longest of them in some languages is wider at twice the size than a
+-- leaf is, and a name cut off at the crease is worse than a smaller one.
+function Library:drawBoss(lay, boss)
+    local met = Tally.metOf(boss.kind)
+    local times = Tally.beatOf(boss.kind)
+    local beaten = times > 0
+    local x, w = lay.entryX, lay.entryW
+    local y = lay.bossEntry
+
+    local name = met and I18n.t(bossName(boss)) or UNKNOWN
+    local scale = Font.width(name) * NAME_SCALE <= w and NAME_SCALE or 1
+    Scribble.printBig(name, x + Font.width(name) * scale / 2,
+        y + math.floor((Font.height * NAME_SCALE - Font.height * scale) / 2),
+        scale, beaten and Palette.ink or Palette.graphite,
+        -- No shadow on a name not yet earned, for `drawLine`'s reason: the
+        -- shadow is graphite, and graphite on graphite is a smudge.
+        { shadow = beaten and Palette.graphite or nil,
+          wobble = true, t = self.t, seed = 5 })
+    y = y + Font.height * NAME_SCALE + LINE_GAP * 2
+
+    -- The lesson it ends, and for an encore the class it is first sent at: a
+    -- second boss is only ever met at a course that asks for two, and nothing
+    -- else in the book says so before you are standing in front of one.
+    local lines = { { text = I18n.t(boss.subject.name), color = Palette.slate } }
+    local course = boss.encore and encoreCourse()
+    if course then
+        lines[#lines + 1] = { text = I18n.t(ENCORE):format(I18n.t(course.name)),
+                              color = Palette.slate }
+    end
+    -- And where it stands with you: graphite for a stranger, red for one that is
+    -- still owed -- red is what this book writes a demand in -- and slate for the
+    -- count once it is a count.
+    if not met then
+        lines[#lines + 1] = { text = I18n.t(NOT_MET), color = Palette.graphite }
+    elseif not beaten then
+        lines[#lines + 1] = { text = I18n.t(NOT_BEATEN), color = Palette.red }
+    else
+        lines[#lines + 1] = { text = I18n.t(BEATEN):format(times), color = Palette.slate }
+    end
+    for _, line in ipairs(lines) do
+        love.graphics.setColor(line.color)
+        for _, part in ipairs(Font.wrap(line.text, w)) do
+            Font.print(part, x, y)
+            y = y + LINE
+        end
+    end
+
+    -- The turntable, in what is left: centred across the block, standing on a
+    -- floor three quarters of the way down it -- the bodies are anything from a
+    -- die to a block of marble, and most of the room a tall one needs is above
+    -- its feet -- and cut to the block, so the pen, longer than any page, goes
+    -- off the top of it rather than over the lines above.
+    local top, bottom = y + LINE_GAP, lay.entryBottom
+    if bottom - top < Font.height then return end
+    local floorY = top + math.floor((bottom - top) * 3 / 4)
+    turntable(boss.kind):draw(x + math.floor(w / 2), floorY,
+        { x, top, x + w, bottom }, beaten, Palette.graphite)
 end
 
 -- One footer arrow, in the corner button's own recipe: a slate box filled with
