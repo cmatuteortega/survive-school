@@ -7617,6 +7617,56 @@ bodies on the page, the still life's stand-in (`penpart`), that every weapon fin
 and hurts and that pass what they take to the pen; they never hurt you, because
 the barrel is in the air. The nib is the body that hurts to walk into.
 
+### And at a master's, ART ends on the marble
+
+The still life is what an art class draws. What it does next is carve -- and
+carving is the one way of making a thing that works by taking away. The statue is
+already in the block; the job is everything that is not it. So ART's second fight
+is about *subtraction*, and what drops onto the page ten minutes after the still
+life goes down is a block of marble straight out of the quarry.
+
+**You are the chisel.** The body is baked in five stages (`art/marble.py`): the
+block with the quarry's chisel marks on it, hewn (the top corners knocked off), the
+bust roughed out a size too big, modelled, and the finished bust, polished. Which
+one is standing on the page is read off its health, so every hit you land takes
+marble off it, and at each step a chunk comes away in a spray of grit and lies on
+the page. It is the one fight in the book where you can see how far you have got by
+looking at the boss rather than the bar, and where what you are fighting changes
+because of what you did to it. Each stage is the block with everything more than a
+margin outside the bust cut off -- so a half carved block is its flat faces with a
+lump knocked out of them where the head is going to be, which is what one looks
+like -- and stone still to come off is drawn rough while the finished bust is
+smooth. Its veins are red: the one thing on a white body that says it is theirs,
+and laid through the stone rather than painted on, so carving reveals more of the
+same veins.
+
+Until it has a head it stands square to the page. From the roughing out it turns to
+watch you, and the last third is the finished bust, alive -- IT LIVES!, with its eyes
+open in red, hopping higher and quicker. It is walked the way a heavy block is
+walked, lifted an inch and dropped with a thud, and flicks a chip at you every
+couple of seconds.
+
+Everything it does is a piece of it coming off, aimed:
+
+- **The chisel.** A wedge is marked from it to you and follows you, then locks and
+  blinks; then it is struck, and chips fly down the wedge in a fan too thick to walk
+  through. The answer is out of the wedge sideways, and the next strike re-aims, so
+  it is a step every strike: two, then three, then four.
+- **The slab.** A slab splits off the side facing you and falls flat towards you,
+  as long as the block is tall -- its footprint hatched first, following you, then
+  locked. Under it is a hit. It lies there with cracks spreading through it, and
+  from the second third it breaks into a ring of chips out of its middle, so the
+  slab you stepped beside is the next thing to step away from. Two in a row at the
+  last third.
+- **The rubble**, from the second third: lumps knocked off its top come down round
+  you, each marked as a ring on the page with its shadow filling it, the first on
+  you and the rest about you, one after another.
+
+What is off it goes on without it: a slab lying on the page cracks and breaks
+whatever the block is doing. Glue **sets** it -- anything it was still counting in
+is dropped and it stands -- and what is already off it is not the block any more,
+so it carries on. It arrives on SET IN STONE and goes down on MASTERPIECE.
+
 ### The eye is a ball
 
 The boss used to be a flat white disc with a pupil slid across it, and slid was

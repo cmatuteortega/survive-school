@@ -10,7 +10,9 @@ moving part on a baked body**), and the FINANCE stamp (`art/stamp.py`), the exam
 of a body baked in several poses so it can animate (see **Poses: a body that
 moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of them
 a part hinged off the body and one built about a different point (see **Poses with
-a hinge: the dictionary**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`,
+a hinge: the dictionary**), and ART's second boss, the marble (`art/marble.py`),
+poses that are not the body moving but the body carved away (see **Stages: a body
+carved away**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`,
 `src/plaster.lua` (the ART still life), `src/atom.lua` (SCIENCE's second boss,
 the atom), `src/piggy.lua` (FINANCE's second boss, the piggy bank) and
 `src/speaker.lua` (MUSIC's second boss, a bluetooth speaker; see **Painted live
@@ -418,6 +420,45 @@ lifted off the pages, a mouth) and `open` (on its back, both leaves flat).
 page with the floor under the pivot marked, which is where `foot` is checked. The
 brain (`src/dictionary.lua`) lines the open book's spine up with the paired ruling
 off that number.
+
+## Stages: a body carved away
+
+ART's second boss is a block of marble with a bust in it, and its pictures are the
+stamp's poses with a different question behind them: not how the body is bent, but
+how much of it is left. Five stages, eight headings each, one shared box -- the
+stamp's machinery entire -- and the brain (`src/marble.lua`) picks the stage off the
+boss's health, so the fight carves it.
+
+- **One model, cut by a margin.** `art/marble.py` models the finished bust and the
+  block it is in, and every stage is the same expression with a different number:
+  `max(block(p), bust(p) - margin)`. No margin is the block; a margin of nought is
+  the bust; between, the bust grown by its margin and cut square wherever it still
+  reaches the block's faces. That last part is what makes the in-betweens read as
+  carving rather than as a blob shrinking: the flat faces the block came with stay on
+  wherever the stone has not been touched yet. Growing an SDF by a margin is only
+  subtracting a number, so this costs nothing to model and keeps every step of the
+  march safe.
+- **Rough is a distance, not a material.** Whether a pixel is stone still to come
+  off is asked of the hit point: further than a unit out from the finished bust, it
+  gets chisel strokes a step darker; on it, it is polished. So every stage is rough
+  exactly where it is not finished yet, with nothing authored per stage.
+- **Texture in the model's space carves honestly.** The veins are a field of the
+  model point, so a deeper stage shows more of the same veins, never new ones, and
+  the strokes stay on the stone as it turns. What has to read is kept off the noise:
+  the finished face has no veins, so the eyes the brain opens there (a pixel of red
+  each, at `eyes`, projected and checked visible per view by the bake) are the only
+  red on it.
+- **Eight headings serve two kinds of thing.** A block looks the same at a quarter
+  turn; a head does not. One ring of headings per stage covers both, and the brain
+  keeps the half-made stages facing the page (`e.face`) and lets the finished ones
+  turn to watch you.
+- **Bake in parallel.** Forty pictures is ten seconds over four processes
+  (`multiprocessing`, `fork`), which is what made iterating on the bust's face
+  practical. `python3 art/marble.py --preview out.png` lays every stage and view on
+  the ART page with the floor marked under the pivot and the eyes in red.
+
+The game side is the stamp's: `turns = "marbleViews"`, `poses = "marblePoses"` and a
+`ground` on the row, the brain setting `e.pose` to a stage's name.
 
 ## Painted live on flat faces: the die
 

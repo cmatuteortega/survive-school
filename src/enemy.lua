@@ -20,6 +20,7 @@ local Speaker = require("src.speaker")
 local SpeakerBoss = require("src.speakerboss")
 local RedPen = require("src.redpen")
 local PenBoss = require("src.redpenboss")
+local Marble = require("src.marble")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -155,7 +156,8 @@ local BLARE_REACH = 34
 -- paired ruling -- src/dictionary.lua, the same socket again), `still` (the
 -- ART boss: three plaster solids painted a pixel at a time and lit by a lamp
 -- that moves, src/plaster.lua, with its brain in the same socket,
--- src/stilllife.lua) and
+-- src/stilllife.lua), `marble` (ART's encore: a block of marble carved into a
+-- bust by the hits it takes, each stage a ring of `poses` -- src/marble.lua) and
 -- `poses` (a `turns` body baked in more than one pose, each a ring of views,
 -- the brain saying which through `pose` -- art/stamp.py), `last` (the line the
 -- page says as it goes down), `wreck` (how it comes apart: the colours it
@@ -734,6 +736,69 @@ Enemy.types = {
                    grade = { from = 2, rear = { 1.15, 1.05, 0.95 }, tall = 100, wide = 62,
                              speed = { 300, 330, 360 }, hop = 0.14, width = 4, damage = 12,
                              wet = 1.4, dry = 4.0, circle = 3, rest = { 1.0, 0.9, 0.7 } },
+               } },
+    -- ART's encore (`encore` in src/subjects.lua): a block of marble with a
+    -- bust in it, dropped onto the page ten minutes after the still life goes
+    -- down at a master's and a doctorate, and the fight about *subtraction* --
+    -- every hit takes marble off, and the stage it is at is read off its health
+    -- (`stages`). The moves and why they are these moves are src/marble.lua; the
+    -- body is baked in five stages by art/marble.py.
+    --
+    -- The eye's numbers where the fight is the same fight -- 900 health, the
+    -- knock, the hold, 20 on contact -- priced a cycle on by the spawner like the
+    -- other encores. It never walks: every step is a heavy hop the brain draws.
+    -- The radius is the block round its chest, which is the bust's bulk too;
+    -- `ground` is the near edge of its foot on the page, where the shadow goes.
+    marble = { name = "MARBLE", sprite = "marble", hp = 900, speed = 0, radius = 15,
+               damage = 20, xp = 250, shadow = 30, ground = 20, boss = true,
+               turns = "marbleViews", poses = "marblePoses", knock = 0.06, hold = 0.3,
+               title = "THE MARBLE", call = "SET IN STONE",
+               last = "MASTERPIECE", wreck = { ink = { "graphite", "slate", "red" }, rings = 2 },
+               arrive = true,
+               marble = {
+                   -- Where each stage after the block begins, as a share of its
+                   -- health left: hewn, roughed out (the second third), modelled,
+                   -- and the finished bust (the last third, alive).
+                   stages = { 0.8, 0.66, 0.5, 0.33 },
+                   -- Seconds hopping between moves, plus up to 0.4 more, by phase
+                   -- (the eye's thirds).
+                   cool = { 2.2, 1.8, 1.3 },
+                   -- The hop: every `every` seconds, up to `reach` pixels at you
+                   -- in a hop `time` long and `high` off the page. 26 every 1.3s
+                   -- is the eye's pace near enough, and the bust alive is quicker.
+                   hop = { every = { 1.3, 1.1, 0.85 }, reach = 26, time = 0.36, high = { 4, 4, 8 } },
+                   -- A chip flicked at you every `every` seconds while it hops:
+                   -- the least of what it does.
+                   chip = { every = 2.6, speed = 64, damage = 9, hit = 3, life = 4 },
+                   -- What comes off it at each stage: `chunks` lumps on the page,
+                   -- lying for `lie` seconds.
+                   carve = { chunks = 6, lie = 6 },
+                   -- The chisel: a wedge `arc` wide and `length` long, following
+                   -- you for `tell` less `lock`, then locked; then `count` chips
+                   -- down it at about `speed`. `strikes` in a row, each counted in
+                   -- for `again`. Nine chips over 0.8 radians is a gap of about
+                   -- eleven pixels at a hundred out -- not a gap you fit in.
+                   chisel = { tell = { 1.1, 0.95, 0.85 }, again = { 0.9, 0.8, 0.7 }, lock = 0.45,
+                              strikes = { 2, 3, 4 }, arc = 0.8, length = 150,
+                              count = { 7, 8, 9 }, speed = 115, damage = 10, hit = 3, life = 3,
+                              rest = { 1.0, 0.9, 0.8 } },
+                   -- The slab: a footprint `width` by `length` from its foot,
+                   -- following you for `tell` less `lock`, then falling over
+                   -- `fall` -- `damage` under it. Lying for `lie`, red for the
+                   -- last `crack`, then broken: `burst` chips in a ring out of the
+                   -- middle. `count` in a row, the next counted in for `again`.
+                   slab = { tell = { 1.2, 1.05, 0.95 }, lock = 0.35, again = 0.8,
+                            length = 96, width = 24, fall = 0.3, damage = 16,
+                            lie = { 1.5, 1.3, 1.1 }, crack = 0.5, burst = { 0, 8, 10 },
+                            count = { 1, 1, 2 }, rest = { 1.0, 0.9, 0.8 },
+                            chips = { speed = 75, damage = 9, hit = 3, life = 3 } },
+                   -- The rubble, from phase `from`: `wind` to throw, then `count`
+                   -- lumps, the first on you and the rest `near` to `spread` out,
+                   -- landing from `aim` on, `gap` apart, each a ring `radius`
+                   -- across. 0.9s is fifty pixels of walking against a ring of 13.
+                   rubble = { from = 2, wind = 0.45, count = { 0, 5, 7 }, near = 18, spread = 60,
+                              aim = 0.9, gap = 0.22, radius = 13, high = 200, damage = 12,
+                              rest = { 0.9, 0.9, 0.7 } },
                } },
     -- The P.E. boss: the coach's whistle, and the one fight in the book that is
     -- a bullet hell. The eye is a fight about *ground* -- everything it does is
@@ -1466,6 +1531,8 @@ function Enemy.new(kind, x, y, scale)
         -- beat and rolls like a can.
         -- And the red pen's (src/redpenboss.lua), which writes its way about and
         -- falls over on you.
+        -- And the marble's (src/marble.lua), which hops like the stamp and is
+        -- carved by being hit.
         brain = def.attacks and EyeBoss.new(def)
             or def.metronome and Metronome.new(def)
             or def.stamp and Stamp.new(def)
@@ -1476,7 +1543,8 @@ function Enemy.new(kind, x, y, scale)
             or def.piggy and PiggyBoss.new(def)
             or def.tesseract and TesseractBoss.new(def)
             or def.speaker and SpeakerBoss.new(def)
-            or def.redpen and PenBoss.new(def) or nil,
+            or def.redpen and PenBoss.new(def)
+            or def.marble and Marble.new(def) or nil,
         drive = nil, ghost = false,
         -- A heading for a `turns` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how

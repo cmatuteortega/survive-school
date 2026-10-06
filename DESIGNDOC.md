@@ -611,9 +611,9 @@ row rather than left to the fallback (a row without one gets the eye) so that gi
 page a fight of its own is one word on its own row. The dev boss test (see **The collection**) is how to
 look at one. A row may also name an **encore**, the second boss the lesson ends on at
 a course that asks for two (`bosses` in **Courses**); SCIENCE's is `atom`,
-FINANCE's is `piggy`, MATHS's is `tesseract`, MUSIC's is `speaker` and GRAMMAR's
-is `redpen`, and the other two have none yet,
-so they end on their boss at every course.
+FINANCE's is `piggy`, MATHS's is `tesseract`, MUSIC's is `speaker`, GRAMMAR's
+is `redpen` and ART's is `marble`, and P.E. has none yet,
+so it ends on its boss at every course.
 
 The tool is a **line id in `src/upgrades.lua`**, not a row in `src/tools.lua`,
 because a tool line's first level is its unlock — issuing a tool is taking that
@@ -1447,6 +1447,38 @@ anyone; a hit on one lights the pen in a short blink at most every `BLINK_EVERY`
 hits on the crowd are never lethal (`mark`): a kill from inside its own turn would
 pull a body out of the horde mid-walk. On death (`dropParts`) its wet ink dries, the
 stand-ins are ghosted (and taken off in `sweep`), and it leaks a harmless pool.
+
+**The marble** (`marble`, ART's encore) is a fight about *subtraction*: the still
+life is what an art class draws, this is what it carves. Its body is baked, not
+painted: `art/marble.py` models a bust (a round socle, a chest cut under the
+shoulders, neck, head with nose, brow, jaw, ears and a cap of hair) and the block it
+is in, and bakes five **stages** -- `block`, `hewn`, `roughed`, `modelled`, `bust` --
+each `max(block, bust - margin)` for a shrinking margin, eight headings each, all in
+one box (`raytrace.share`). Stone still more than a unit outside the finished bust
+is drawn rough (chisel strokes a step darker, in model space), so only the last
+stage is polished; red veins are a field in model space, so carving reveals more of
+the same ones (and the finished face is kept clear of them). The row has `turns` and
+`poses` like the stamp, and the bake writes `foot` and `eyes` (where the finished
+bust's eyes are in each view).
+
+Its brain, `src/marble.lua`, reads the stage off its health (`stages`, the
+thresholds after the block: 0.8, 0.66, 0.5, 0.33 -- the second and last thirds start
+on a stage, `ROUGHED OUT!` and `IT LIVES!`) and sets `e.pose`; each step down throws
+grit and leaves lumps lying on the page (`carve`, cosmetic). It faces the page
+(`e.face`) until it has a head (stage 3), then turns to you; finished, its eyes are
+drawn open in red over the view it is showing (`drawAir`). It hops at you like the
+stamp (`hop`, higher once alive) and flicks a `chip` every `chip.every`. Its moves:
+
+| move | tell | what |
+| --- | --- | --- |
+| `chisel` | a dashed wedge `arc` wide and `length` long from it to you, following for `tell` less `lock`, then locked and blinking | struck: `count` chips down the wedge, ragged in speed; `strikes` in a row, each re-aimed for `again` |
+| `slab` | a hatched footprint `width` by `length` from its foot towards you, following, then locked | it falls in `fall`: `damage` under it; it lies for `lie`, cracks spreading (red for the last `crack`), then breaks -- grit, lumps, and from phase 2 `burst` chips in a ring out of its middle. `count` in a row |
+| `rubble` | phase `from`+: a puff off its top for `wind`, then a ring on the page where each lump will land, its shadow filling it | `count` lumps, the first on you and the rest `near` to `spread` round you, landing `gap` apart from `aim`, `damage` inside `radius` |
+
+What is off it -- slabs and rubble -- is kept in its own lists and goes on whatever
+the block does. Glue drops anything still being counted in (wedge, footprint, the
+rubble not yet thrown) and it stands; on death `sweep` clears the lot. It has
+`arrive`, and the call `SET IN STONE`; it goes down on `MASTERPIECE`.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
 body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
@@ -6470,12 +6502,12 @@ and are all the same 11x11 glyph.
   eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
   metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
   dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, the red pen's `redpen`, and any of the horde's (`shot`, `charge`) -- see
+  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, the red pen's `redpen`, the marble's `turns`/`poses`/`ground`/`marble`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
   `src/metronome.lua`, `src/stamp.lua`, `src/dictionary.lua`, `src/diceboss.lua`,
-  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua`, `src/tesseractboss.lua`, `src/speakerboss.lua` or `src/redpenboss.lua`, built in `Enemy.new`; one that comes
+  `src/stilllife.lua`, `src/atomboss.lua`, `src/piggyboss.lua`, `src/tesseractboss.lua`, `src/speakerboss.lua`, `src/redpenboss.lua` or `src/marble.lua`, built in `Enemy.new`; one that comes
   apart into several bosses answers `share` (the HUD's bar) and `heir` (who the bar
   goes to when the one it is on dies), as the atom's does. One too big to be hit at
   a point stands bodies of its own on the page for the rest of itself (`stand` on
@@ -6483,7 +6515,7 @@ and are all the same 11x11 glyph.
   them from its turn, and takes them off in `sweep` (`src/wreck.lua`), never in
   `dropParts`. A solid body is a script beside `art/whistle.py` over
   `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or
-  `art/dictionary.py`), or -- for anything convex that
+  `art/dictionary.py`, or in stages carved away like `art/marble.py`), or -- for anything convex that
   has to tumble -- a face list in `Dice.solids` painted live, or for a few simple
   solids under a light that moves, pieces in a `Plaster` group (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
   been re-measured, and fight it from the title's dev BOSS button.

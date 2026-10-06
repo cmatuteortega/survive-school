@@ -573,6 +573,12 @@ local ES = {
     ["SEE ME!"] = "¡VEN A VERME!",
     ["WRONG!"] = "¡MAL!",
     ["CLICK!"] = "¡CLIC!",
+    -- ART's encore (`marble` in src/enemy.lua): its name, the line it drops
+    -- in on, and the two turns of its carving.
+    ["THE MARBLE"] = "EL MARMOL",
+    ["SET IN STONE"] = "ESCRITO EN PIEDRA",
+    ["ROUGHED OUT!"] = "¡DESBASTADO!",
+    ["IT LIVES!"] = "¡ESTA VIVO!",
     -- What the page says as each boss goes down (`last` in src/enemy.lua).
     ["LIGHTS OUT"] = "SE APAGO",
     ["DECAYED"] = "DESINTEGRADO",
@@ -584,6 +590,7 @@ local ES = {
     ["THE END"] = "FIN",
     ["SNAKE EYES"] = "OJOS DE SERPIENTE",
     ["SIGNED"] = "FIRMADO",
+    ["MASTERPIECE"] = "OBRA MAESTRA",
     ["DISCONNECTED"] = "DESCONECTADO",
     ["OUT OF INK"] = "SIN TINTA",
     ["NOUN"] = "SUSTANTIVO",

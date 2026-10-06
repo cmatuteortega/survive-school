@@ -458,6 +458,11 @@ Subjects.list = {
         -- the book about *light* -- three plaster solids under a lamp that
         -- moves, and the shadows they throw across the page.
         boss = "stilllife",
+        -- And its encore (src/marble.lua): what an art class does after it has
+        -- drawn the plaster. The still life is about light; the marble is
+        -- about subtraction -- a block with a bust in it, carved by every hit
+        -- you land, throwing what comes off it at you.
+        encore = "marble",
         -- All five at the same weight and more often than anywhere else, which
         -- is the unruled page keeping its promise: there is no ruling here to say
         -- what shape a thing should be, so it is the one lesson where any of them
