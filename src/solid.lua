@@ -669,7 +669,9 @@ end
 -- frame whenever a pose or a heading is new would be a hitch every time, so it
 -- is painted a slice a frame (in a coroutine, `pause` handing the frame back
 -- once the slice is spent) while the last picture finished goes on being drawn.
--- A heading or a pose shown a frame or two late reads as nothing at all.
+-- A heading or a pose shown a frame or two late reads as nothing at all. A body
+-- with nothing else on its screen (the library's turntable) is given more
+-- (`slice` on the body).
 local SLICE = 0.0015
 local clock = (love and love.timer and love.timer.getTime) or os.clock
 -- Set only while a slice is being run, so a picture painted all at once (the
@@ -889,14 +891,15 @@ function Solid:snap()
     local model = self.model
     local turn = floor(self.yaw / TAU * HEADINGS + 0.5) % HEADINGS
     local q = {}
-    local key = { turn }
+    local key = {}
     for _, k in ipairs(model.params or {}) do
         local step = model.steps and model.steps[k] or 0.01
         local n = floor((self.p[k] or 0) / step + 0.5)
         q[k] = n * step
         key[#key + 1] = n
     end
-    return turn * TAU / HEADINGS, q, table.concat(key, ",")
+    local pose = table.concat(key, ",")
+    return turn * TAU / HEADINGS, q, turn .. ";" .. pose, turn, pose
 end
 
 -- Model to room: the pose, then the pivot taken off and the heading turned on.
@@ -931,41 +934,86 @@ end
 
 -- A picture painted, kept: a ring of KEEP slots, the oldest let go.
 local function keep(kept, key, c)
+    c.key = key
     if kept[key] then return end
     local old = kept.list[kept.at]
     if old then kept[old] = nil end
     kept.list[kept.at] = key
     kept.at = kept.at % KEEP + 1
     kept[key] = c
-    c.key = key
+end
+
+-- How many headings ahead of the one shown a turning body paints while it has
+-- nothing else to paint.
+local AHEAD = 4
+
+-- Up: a picture becomes the one shown. Counted, so a picture that finishes
+-- painting after something newer has gone up is kept but not shown -- shown, it
+-- would put the body back where it was a moment ago, a flick backwards.
+local function show(self, c)
+    self.cache = c
+    self.shown = (self.shown or 0) + 1
 end
 
 -- Once a frame (from `update`): the picture for this heading and pose, if the
--- model has it, or a slice more of painting it.
+-- model has it, or a slice more of painting it. With the one wanted already up,
+-- the slice goes on the headings the body is turning towards, so a body turning
+-- steadily -- the library's turntable, a boss coming round to you -- finds the
+-- next picture painted when it gets there rather than waiting for it.
 function Solid:refresh()
-    local yaw, q, key = self:snap()
-    if self.cache and key == self.cache.key then return end
-    local kept = self.model.kept
-    if kept[key] then
-        self.cache = kept[key]
-        return
+    local yaw, q, key, turn, pose = self:snap()
+    -- Which way it is turning, off the last heading it moved from.
+    if self.turn and turn ~= self.turn then
+        self.dir = ((turn - self.turn) % HEADINGS) < HEADINGS / 2 and 1 or -1
     end
+    self.turn = turn
+    local kept = self.model.kept
+    local want = not (self.cache and self.cache.key == key)
+    if want and kept[key] then
+        show(self, kept[key])
+        want = false
+    end
+
     local job = self.job
     if not job then
+        local k, y = key, yaw
+        if not want then
+            -- Nothing needed now: the first heading ahead not painted yet.
+            k = nil
+            if self.dir then
+                for n = 1, AHEAD do
+                    local t = (turn + n * self.dir) % HEADINGS
+                    if not kept[t .. ";" .. pose] then
+                        k, y = t .. ";" .. pose, t * TAU / HEADINGS
+                        break
+                    end
+                end
+            end
+            if not k then return end
+        end
         local model = self.model
-        job = { key = key, co = coroutine.create(function() return paint(model, yaw, q) end) }
+        job = { key = k, shown = self.shown,
+                co = coroutine.create(function() return paint(model, y, q) end) }
         self.job = job
     end
-    deadline = clock() + SLICE
+    deadline = clock() + (self.slice or Solid.slice or SLICE)
     local ok, c = coroutine.resume(job.co)
     deadline = HUGE
     if not ok then error(c) end
     if coroutine.status(job.co) == "dead" then
-        -- Shown even if the body has moved on since it was started: it is
-        -- nearer to now than what was up, and the next frame starts on now.
         keep(kept, job.key, c)
-        self.cache, self.job = c, nil
+        self.job = nil
+        -- Up if it is what is wanted now, or nearer to now than what is up;
+        -- kept and left alone if anything has gone up since it was started.
+        if job.key == key or (want and job.shown == self.shown) then show(self, c) end
     end
+end
+
+-- Whether the picture up is the one for where the body is now: what a turntable
+-- waits on before it turns any further.
+function Solid:ready()
+    local _, _, key = self:snap()
+    return self.cache ~= nil and self.cache.key == key
 end
 
 -- The picture to draw, as rows of runs relative to the origin: the last one
@@ -979,7 +1027,7 @@ function Solid:raster()
         c = paint(self.model, yaw, q)
         keep(kept, key, c)
     end
-    self.cache = c
+    show(self, c)
     return c
 end
 

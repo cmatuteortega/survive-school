@@ -189,7 +189,16 @@ much over two:
    coroutine, a millisecond and a half a frame, while the last finished picture goes
    on being drawn: a heading or a pose a frame or two late reads as nothing, and a
    new pose costing a hitch every time would read as a stutter. The first picture a
-   body ever shows is the one painted all at once.
+   body ever shows is the one painted all at once. Two rules keep the slices from
+   being seen. A picture that finishes after something newer has gone up is kept
+   but not shown -- shown, it would flick the body back to where it was a moment
+   ago, which on a phone too slow to keep up with a turn was the glitch the
+   library's turntable first had. And a slice with nothing needed now goes on the
+   next few headings in the direction the body is turning, so a steady turn finds
+   its next picture already painted. The turntable also gets a bigger slice (the
+   library has nothing else to do with a frame) and turns on only once the
+   picture for where it is has gone up: on a slow phone its first lap is a little
+   slower rather than in jumps, and every lap after it is painted already.
 
 ### Doing another character
 

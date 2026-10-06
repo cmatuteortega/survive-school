@@ -152,8 +152,14 @@ local function make(self, def)
         -- the stamp standing, the dictionary shut, the marble a block -- turned.
         local body = Solid.new(Solids[def.solid])
         self.painted = body
+        -- The library has nothing else to do with a frame, so the body may
+        -- spend more of one painting, and it turns on only once the picture for
+        -- where it has got to is up: the first time round on a slow phone it
+        -- turns a little slower rather than in jumps, and from then on every
+        -- heading is painted already.
+        body.slice = 0.004
         self.turn = function(_, dt)
-            body:spin(SPIN * dt)
+            if body:ready() then body:spin(SPIN * dt) end
             body:update(dt)
         end
         -- The metronome's pendulum is plotted over the body rather than traced,
