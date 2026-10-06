@@ -2693,6 +2693,13 @@ pays the difference on the spot and the win card's `END` collects it through
 `Game:cashRun`. Both flags are run state, reset by `Game:reset` and carried by
 the bookmark.
 
+Three labelled boxes across are wider than a phone held upright (208px against a
+180px page), so the end cards hand `Choice:layout` the width the page has left
+and the strip breaks into rows: RETRY and QUIT across, X2 centred under them.
+`Choice:stripWidth` / `stripHeight` take the same width, so the card is sized to
+the broken strip, and each box keeps its own `labelY`. Landscape is one row as
+before; the keys stay 1 2 3 in the same order.
+
 **The shop is one canteen section**, `SHOP`, appended to `SECTIONS` in
 `src/canteen.lua`: one product row, `RESTORE` and `AD PRIVACY`. The product row is
 `FULL_ROW` until `Store.full()` and `BOOK_ROW` after, swapped in by `stock()`

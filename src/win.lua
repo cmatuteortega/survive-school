@@ -32,6 +32,10 @@ local LABEL_SCALE = 2
 local BOX_TIME = 0.25  -- the card and the boxes drawing themselves on
 local CONFIRM = 0.32   -- the answered box flashing before the answer takes hold
 local CARD_PAD_X, CARD_PAD_Y = 8, 7
+-- Between the card and the edge of the page, and between the rows of boxes
+-- when there are too many to go across it (a phone held upright, the x2 box).
+local EDGE = 4
+local ROW_GAP = 6
 
 function Win.new()
     local self = setmetatable({}, Win)
@@ -124,7 +128,7 @@ end
 
 -- The score lines are measured live rather than at their widest, unlike the
 -- hints: the run is frozen while this card is up.
-function Win:contentWidth()
+function Win:contentWidth(maxW)
     local tally = self:tallyLine()
     return math.max(
         Font.width(I18n.t(self.head)),
@@ -136,7 +140,7 @@ function Win:contentWidth()
         Font.width(self:courseLine()),
         tally and Font.width(tally) or 0,
         Purse.width(self:coinLine()),
-        self.choice:stripWidth(),
+        self.choice:stripWidth(maxW),
         Font.width(I18n.t(ASK)), Font.width(I18n.t(LIFT)),
         Font.width(I18n.t(RELEASE)), Font.width(I18n.t(KEYS)),
         Font.width(I18n.t(Double.KEYS)), Double.width())
@@ -145,6 +149,8 @@ end
 function Win:layout(game)
     local ins = game.inset
     local hintH = Input.usingTouch and Font.height or Font.height * 2 + 2
+    -- As wide as the boxes may run before the ones that will not fit go under.
+    local maxW = game.vw - ins.l - ins.r - (CARD_PAD_X + EDGE) * 2
 
     local lay, y = {}, CARD_PAD_Y
     lay.head = y;  y = y + Font.height + 5
@@ -168,7 +174,7 @@ function Win:layout(game)
         y = y + Font.height + 2
     end
     y = y + 6
-    lay.boxes = y; y = y + Scribble.BOX_H + 9
+    lay.boxes = y; y = y + self.choice:stripHeight(maxW, ROW_GAP) + 9
     lay.hint = y;  y = y + hintH
     lay.cardH = y + CARD_PAD_Y
 
@@ -186,12 +192,10 @@ function Win:layout(game)
     lay.hint = lay.hint + top
 
     lay.cx = math.floor(ins.l + (game.vw - ins.l - ins.r) / 2)
-    lay.labelY = lay.boxes + math.floor((Scribble.BOX_H - Font.height * LABEL_SCALE) / 2)
-
-    lay.cardW = self:contentWidth() + CARD_PAD_X * 2
+    lay.cardW = self:contentWidth(maxW) + CARD_PAD_X * 2
     lay.cardX = math.floor(lay.cx - lay.cardW / 2)
 
-    self.choice:layout(lay.cx, lay.boxes)
+    self.choice:layout(lay.cx, lay.boxes, maxW, ROW_GAP)
 
     self.lay = lay
     return lay
@@ -329,7 +333,7 @@ function Win:draw(game)
             color = Palette.graphite
         end
 
-        Scribble.printBig(Scribble.label(box), box.labelCx, lay.labelY,
+        Scribble.printBig(Scribble.label(box), box.labelCx, box.labelY,
             LABEL_SCALE, color,
             { shadow = Palette.paper, wobble = true, t = self.t, seed = 30 + i * 5 })
         Scribble.drawBox(box, progress, color, 10 + i, 0)

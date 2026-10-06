@@ -382,13 +382,44 @@ function Scribble.label(box)
     return I18n.t(box.label)
 end
 
-function Choice:stripWidth()
-    local w = -Scribble.CARD_GAP
+local function pairWidth(self, box)
+    return Font.width(Scribble.label(box)) * self.labelScale
+        + Scribble.LABEL_GAP + box.w
+end
+
+-- The boxes broken into rows no wider than maxW, in order, a box to a row at
+-- the least. With no maxW it is the one strip. A card with a third box on it
+-- (the x2 on the end cards) is wider than a phone held upright, and the box
+-- that will not fit goes under the others rather than off the edge of the page.
+function Choice:rows(maxW)
+    local rows, row, w = {}, nil, 0
     for _, box in ipairs(self.boxes) do
-        w = w + Font.width(Scribble.label(box)) * self.labelScale
-              + Scribble.LABEL_GAP + box.w + Scribble.CARD_GAP
+        local bw = pairWidth(self, box)
+        if row and maxW and w + Scribble.CARD_GAP + bw > maxW then row = nil end
+        if row then
+            row[#row + 1] = box
+            w = w + Scribble.CARD_GAP + bw
+        else
+            row = { box }
+            rows[#rows + 1] = row
+            w = bw
+        end
+        row.w = w
     end
+    return rows
+end
+
+-- The widest row, which with no maxW is the whole strip.
+function Choice:stripWidth(maxW)
+    local w = 0
+    for _, row in ipairs(self:rows(maxW)) do w = math.max(w, row.w) end
     return w
+end
+
+-- How tall the strip stands once broken at maxW, `gap` between its rows.
+function Choice:stripHeight(maxW, gap)
+    local n = #self:rows(maxW)
+    return n * Scribble.BOX_H + (n - 1) * (gap or 0)
 end
 
 -- The window can change shape mid-question -- a phone rotating, or a desktop
@@ -402,16 +433,23 @@ local function moveBox(box, nx, ny)
     box.x, box.y = nx, ny
 end
 
--- Strung out left to right and centred on cx, with the box tops at y.
-function Choice:layout(cx, y)
-    local x = math.floor(cx - self:stripWidth() / 2)
+-- Strung out left to right and centred on cx, with the box tops at y; broken
+-- into rows, each centred on its own and `gap` under the last, when maxW is
+-- given and the strip will not fit in it. Each box keeps the y its label is
+-- lettered at, since on a broken strip that is no longer one line.
+function Choice:layout(cx, y, maxW, gap)
+    for r, row in ipairs(self:rows(maxW)) do
+        local x = math.floor(cx - row.w / 2)
+        local top = y + (r - 1) * (Scribble.BOX_H + (gap or 0))
 
-    for _, box in ipairs(self.boxes) do
-        box.labelW = Font.width(Scribble.label(box)) * self.labelScale
-        box.labelCx = x + box.labelW / 2
+        for _, box in ipairs(row) do
+            box.labelW = Font.width(Scribble.label(box)) * self.labelScale
+            box.labelCx = x + box.labelW / 2
+            box.labelY = top + math.floor((box.h - Font.height * self.labelScale) / 2)
 
-        moveBox(box, x + box.labelW + Scribble.LABEL_GAP, y)
-        x = box.x + box.w + Scribble.CARD_GAP
+            moveBox(box, x + box.labelW + Scribble.LABEL_GAP, top)
+            x = box.x + box.w + Scribble.CARD_GAP
+        end
     end
 end
 
