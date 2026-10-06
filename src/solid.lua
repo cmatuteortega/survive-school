@@ -22,8 +22,7 @@
 -- **The solids are the ones with a closed answer.** A ray against
 --
 --   box    a box, as three slabs
---   hull   a convex polyhedron, as a list of planes: a pyramid, a wedge, a box
---          with its edges taken off
+--   hull   a convex polyhedron, as a list of planes: a pyramid, a wedge
 --   cone   a solid of revolution whose radius changes linearly along its axis,
 --          with flat ends: a cylinder is a cone with one radius
 --   ball   a unit sphere, which an affine map makes any ellipsoid at any angle
@@ -31,8 +30,9 @@
 -- is an interval of the ray (in at one face, out at another), solved straight
 -- from a plane's sum or a quadratic. A *part* is one of those, optionally cut
 -- down to what is inside a second (`within`: the marble's bust inside its block)
--- and with a third taken away (`minus`: the whistle's window, the metronome's
--- panel) -- for convex solids both are a comparison of two intervals. A body
+-- or behind some planes (`clip`), and with others taken away (`minus`: the
+-- whistle's window, the metronome's panel) -- for convex solids each is a
+-- comparison of two intervals. A body
 -- is a list of parts, and a ray keeps the nearest.
 --
 -- **Everything that moves is a map.** Each solid sits in its part's space
@@ -47,21 +47,21 @@
 --
 -- **Drawn the way the bake drew.** One ray a pixel, at its middle, so nothing
 -- is ever averaged into a ninth colour; diffuse and a tight glint off the room's
--- lamp, a shadow ray back towards it so a knob throws its shadow on the block
--- under it; the colour picked by the model's own `shade` from a ramp of palette
+-- lamp (not the bake's shadows, which cost a quarter of every picture for little
+-- more than the stamp's knob on its label); the colour picked by the model's own `shade` from a ramp of palette
 -- keys, the red ramp when it says nothing; creases a step darker where two faces
 -- of one material meet at an angle; and ink round the outside and down any step
 -- in depth where one part stands in front of another. The picture is worked out
 -- into rows of runs, and the blank under it, the hit rim and the body itself all
 -- read the same rows.
 --
--- **Pictures are kept, and new ones painted a slice at a time.** A picture is a
--- few milliseconds of rays, which a phone running LuaJIT's interpreter would feel
--- every frame. So the heading is drawn to a ninety-sixth of a turn and the pose
--- to the model's steps, a picture is kept under that key (shared by every body of
--- a model, so the library's turntable and the fight paint each once), and one
--- not kept yet is painted in a coroutine a slice a frame while the last finished
--- picture goes on being drawn (`refresh`). 3dmethod.md has the numbers.
+-- **Pictures are kept, and painted in the frame they are needed.** The heading
+-- is drawn to a ninety-sixth of a turn and the pose to the model's steps, and a
+-- picture is kept under that key (shared by every body of a model, so the
+-- library's turntable and the fight paint each once). One not kept is painted
+-- there and then, the piggy bank's way, so what is drawn is always where the
+-- body is; the loops are written so that costs about what the pig's does
+-- (3dmethod.md has the numbers).
 
 local Palette = require("src.palette")
 
@@ -199,34 +199,6 @@ function Solid.box(cx, cy, cz, hx, hy, hz)
              round = sqrt(hx * hx + hy * hy + hz * hz) }
 end
 
--- A box with its edges taken off at forty five degrees, `bevel` in from where
--- they were: the bake's rounded boxes, as near as flat faces get. A box is
--- quick to ask and a bevelled one is eighteen planes, so only the big ones
--- whose corners are seen get it.
-function Solid.bevelled(cx, cy, cz, hx, hy, hz, bevel)
-    local planes = {
-        { 1, 0, 0, cx + hx }, { -1, 0, 0, -(cx - hx) },
-        { 0, 1, 0, cy + hy }, { 0, -1, 0, -(cy - hy) },
-        { 0, 0, 1, cz + hz }, { 0, 0, -1, -(cz - hz) },
-    }
-    local cut = bevel * (2 - sqrt(2))
-    local function edge(ax, ay, az, bx, by, bz, ha, hb)
-        -- n = a + b (two unit axes), through the box's middle shifted out.
-        local w = (ax + bx) * cx + (ay + by) * cy + (az + bz) * cz + ha + hb - cut
-        planes[#planes + 1] = { ax + bx, ay + by, az + bz, w }
-    end
-    for _, sa in ipairs({ 1, -1 }) do
-        for _, sb in ipairs({ 1, -1 }) do
-            edge(sa, 0, 0, 0, sb, 0, hx, hy)
-            edge(sa, 0, 0, 0, 0, sb, hx, hz)
-            edge(0, sa, 0, 0, 0, sb, hy, hz)
-        end
-    end
-    -- Solid.hull divides each plane by its normal's length, which is what turns
-    -- `w` above (said along a + b) into a distance along the unit normal.
-    return Solid.hull(planes, { cx - hx, cy - hy, cz - hz, cx + hx, cy + hy, cz + hz })
-end
-
 -- Which way a local y axis has to be turned to lie along each of the three.
 local AXES = {
     x = Affine.rotate("z", -math.pi / 2),
@@ -274,8 +246,9 @@ function Solid.lump(ax, ay, az, bx, by, bz, r)
 end
 
 -- A part: a solid, what it is made of (handed to the model's `shade`), and
--- optionally `within` (kept only inside this) and `minus` (a list of solids
--- taken out of it),
+-- optionally `within` (kept only inside this), `clip` (planes {nx, ny, nz, w}
+-- it is cut off at, kept where n . p <= w), `minus` (a list of solids taken out
+-- of it),
 -- `move` (where the part is moved to in the body) and any other fields the
 -- model's shade wants to read off it.
 function Solid.part(solid, mat, opts)
@@ -295,15 +268,15 @@ local T0, T1, AX, AY, AZ, BX, BY, BZ = 0, 0, 0, 0, 0, 0, 0, 0
 
 local function hull(s, ox, oy, oz, dx, dy, dz)
     local pl = s.planes
+    -- Every ray of a picture goes the same way, so how square each plane is to
+    -- it was worked out once (`prepare`).
+    local dens = s.dens
     local t0 = -HUGE
     local t1 = HUGE
     local ak, bk = 0, 0
     for k = 1, #pl, 4 do
-        local nx = pl[k]
-        local ny = pl[k + 1]
-        local nz = pl[k + 2]
-        local den = nx * dx + ny * dy + nz * dz
-        local num = pl[k + 3] - (nx * ox + ny * oy + nz * oz)
+        local den = dens[k]
+        local num = pl[k + 3] - (pl[k] * ox + pl[k + 1] * oy + pl[k + 2] * oz)
         if den < -1e-12 then
             local t = num / den
             if t > t0 then
@@ -526,8 +499,8 @@ end
 
 local SHAPES = { hull = hull, box = box, ball = ball, cone = cone }
 
--- Ready to be asked: its map from the room, and both of the directions it will
--- be asked along, in its own space.
+-- Ready to be asked: its map from the room, and the direction it will be asked
+-- along, in its own space.
 local function prepare(s, inv)
     s.inv = Affine.mul(Affine.inv(s.at), inv)
     s.shape = SHAPES[s.kind]
@@ -539,147 +512,41 @@ local function prepare(s, inv)
     s.dx = m[1] * DX + m[2] * DY + m[3] * DZ
     s.dy = m[5] * DX + m[6] * DY + m[7] * DZ
     s.dz = m[9] * DX + m[10] * DY + m[11] * DZ
-    s.lx = m[1] * LX + m[2] * LY + m[3] * LZ
-    s.ly = m[5] * LX + m[6] * LY + m[7] * LZ
-    s.lz = m[9] * LX + m[10] * LY + m[11] * LZ
-    s.memo = nil
+    local pl = s.planes
+    if pl then
+        local dens = {}
+        for k = 1, #pl, 4 do
+            dens[k] = pl[k] * s.dx + pl[k + 1] * s.dy + pl[k + 2] * s.dz
+        end
+        s.dens = dens
+    end
+    s.b0 = nil
 end
-
--- Which ray is being asked about, counted, so a solid shared by several parts
--- (`shared`: the marble's block, inside which every piece of the bust is kept)
--- is solved once a ray rather than once a part.
-local ray = 0
 
 -- A room ray against a solid: its origin taken into the solid's space by its
 -- `inv` (worked out per raster), along a direction worked out once a raster too
--- -- every ray from the camera goes the same way, and so does every ray back to
--- the lamp (`lamp`) -- and its normals brought back out into the room by the
--- transpose of the same map. Leaves t in and out and the room normals at both in
+-- -- every ray from the camera goes the same way -- and its normals brought back
+-- out into the room by the transpose of the same map. Leaves t in and out and the room normals at both in
 -- the eight values above.
-local function solve(s, ox, oy, oz, lamp)
-    if s.shared and s.memo == ray then
-        if not s.hit then return false end
-        T0 = s.m0
-        T1 = s.m1
-        AX = s.ma
-        AY = s.mb
-        AZ = s.mc
-        BX = s.md
-        BY = s.me
-        BZ = s.mf
-        return true
-    end
+local function solve(s, ox, oy, oz)
     local m = s.inv
     local lx = m[1] * ox + m[2] * oy + m[3] * oz + m[4]
     local ly = m[5] * ox + m[6] * oy + m[7] * oz + m[8]
     local lz = m[9] * ox + m[10] * oy + m[11] * oz + m[12]
-    local hit
-    if lamp then
-        hit = s.shape(s, lx, ly, lz, s.lx, s.ly, s.lz)
-    else
-        hit = s.shape(s, lx, ly, lz, s.dx, s.dy, s.dz)
-    end
-    if hit then
-        local ax = AX
-        local ay = AY
-        local az = AZ
-        AX = m[1] * ax + m[5] * ay + m[9] * az
-        AY = m[2] * ax + m[6] * ay + m[10] * az
-        AZ = m[3] * ax + m[7] * ay + m[11] * az
-        local bx = BX
-        local by = BY
-        local bz = BZ
-        BX = m[1] * bx + m[5] * by + m[9] * bz
-        BY = m[2] * bx + m[6] * by + m[10] * bz
-        BZ = m[3] * bx + m[7] * by + m[11] * bz
-    end
-    if s.shared then
-        s.memo = ray
-        s.hit = hit
-        s.m0 = T0
-        s.m1 = T1
-        s.ma = AX
-        s.mb = AY
-        s.mc = AZ
-        s.md = BX
-        s.me = BY
-        s.mf = BZ
-    end
-    return hit
-end
-
--- A room ray against a part, from `tmin` on: where it first goes into the part
--- -- the solid, cut down to `within`, with each of `minus` taken out. Leaves the
--- distance in T0 and the room normal there in AX, AY, AZ, and answers whether
--- it hit and whether that surface is the wall of a cut.
-local function enter(p, ox, oy, oz, lamp, tmin)
-    if not solve(p.solid, ox, oy, oz, lamp) then return false end
-    local t0 = T0
-    local t1 = T1
-    local nx = AX
-    local ny = AY
-    local nz = AZ
-    local w = p.within
-    local face = false
-    if w then
-        if not solve(w, ox, oy, oz, lamp) then return false end
-        if T0 > t0 then
-            t0 = T0
-            nx = AX
-            ny = AY
-            nz = AZ
-            face = true
-        end
-        if T1 < t1 then t1 = T1 end
-        if t0 >= t1 then return false end
-    end
-    if t1 <= tmin then return false end
-    if t0 < tmin then t0 = tmin end
-    -- Each cut the ray goes in at is stepped through to its far wall, and the
-    -- cuts asked again from there: two sockets side by side are two cuts.
-    local cut = false
-    local cuts = p.minus
-    if cuts then
-        local moved = true
-        while moved do
-            moved = false
-            for k = 1, #cuts do
-                if solve(cuts[k], ox, oy, oz, lamp) and T0 <= t0 and T1 > t0 then
-                    if T1 >= t1 then return false end
-                    face = false
-                    t0 = T1
-                    nx = -BX
-                    ny = -BY
-                    nz = -BZ
-                    cut = true
-                    moved = true
-                end
-            end
-        end
-    end
-    T0 = t0
-    AX = nx
-    AY = ny
-    AZ = nz
-    return true, cut, face
-end
-
--- How long a frame a body may spend painting a picture it has not kept, in
--- seconds. A picture is a few milliseconds of rays; one painted in a single
--- frame whenever a pose or a heading is new would be a hitch every time, so it
--- is painted a slice a frame (in a coroutine, `pause` handing the frame back
--- once the slice is spent) while the last picture finished goes on being drawn.
--- A heading or a pose shown a frame or two late reads as nothing at all. A body
--- with nothing else on its screen (the library's turntable) is given more
--- (`slice` on the body).
-local SLICE = 0.0015
-local clock = (love and love.timer and love.timer.getTime) or os.clock
--- Set only while a slice is being run, so a picture painted all at once (the
--- first a body shows) never tries to yield.
-local deadline = HUGE
-
-local function pause()
-    if clock() > deadline then coroutine.yield() end
+    if not s.shape(s, lx, ly, lz, s.dx, s.dy, s.dz) then return false end
+    local ax = AX
+    local ay = AY
+    local az = AZ
+    AX = m[1] * ax + m[5] * ay + m[9] * az
+    AY = m[2] * ax + m[6] * ay + m[10] * az
+    AZ = m[3] * ax + m[7] * ay + m[11] * az
+    local bx = BX
+    local by = BY
+    local bz = BZ
+    BX = m[1] * bx + m[5] * by + m[9] * bz
+    BY = m[2] * bx + m[6] * by + m[10] * bz
+    BZ = m[3] * bx + m[7] * by + m[11] * bz
+    return true
 end
 
 -- How much a map can stretch a length, at most (near enough: its longest
@@ -693,8 +560,8 @@ end
 -- rectangle of pixels its box's eight corners land in, the circle of pixels its
 -- bounding sphere does -- each is tighter than the other for some shape, so a
 -- pixel is asked only inside both -- and the nearest any of it can be along a
--- camera ray. With `sphere`, the sphere is kept for the rays back to the lamp.
-local function bound(p, s, m, sphere)
+-- camera ray.
+local function bound(p, s, m)
     local lo, hi = s.lo, s.hi
     local i0, i1, j0, j1, near = HUGE, -HUGE, HUGE, -HUGE, HUGE
     for c = 0, 7 do
@@ -715,7 +582,174 @@ local function bound(p, s, m, sphere)
     p.pj0, p.pj1 = max(floor(j0), floor(sj - rp)), min(floor(j1) + 1, floor(sj + rp) + 1)
     p.near = max(near, BACK - (cy * SP + cz * CP) - r) - 0.01
     p.si, p.sj, p.sr2 = si, sj, rp * rp
-    if sphere then p.rx, p.ry, p.rz, p.rad = cx, cy, cz, r end
+end
+
+-- A plain box's depths, the same way: along a row, where the ray goes into and
+-- comes out of each pair of the box's faces moves the same distance every
+-- pixel, so each is a start and a step, and the box is three maxes and three
+-- mins a pixel. Which face of each pair is the way in is fixed by which way the
+-- ray goes, and so is the normal there.
+local function boxDepths(p, s, pi0, pi1, pj0, pj1, i0, j0, width, zd, owner, nxs, nys, nzs,
+                         cuts, flat, local_)
+    local m = s.inv
+    local lo, hi = s.lo, s.hi
+    local d = { s.dx, s.dy, s.dz }
+    local st = { m[1] * UNIT, m[5] * UNIT, m[9] * UNIT }
+    local near = p.near
+    local si, sj, sr2 = p.si, p.sj, p.sr2
+    -- Per axis: the face gone in at and out at, and how their distances move.
+    local inA, outA, rate, flatA = {}, {}, {}, {}
+    for a = 1, 3 do
+        local da = d[a]
+        if da > 1e-12 or da < -1e-12 then
+            inA[a] = da > 0 and lo[a] or hi[a]
+            outA[a] = da > 0 and hi[a] or lo[a]
+            rate[a] = -st[a] / da
+            flatA[a] = false
+        else
+            flatA[a] = true
+        end
+    end
+    local nax, nay, naz = 0, 0, 0
+    local dx, dy, dz = d[1], d[2], d[3]
+    local fx, fy, fz = flatA[1], flatA[2], flatA[3]
+    local rx, ry, rz = rate[1] or 0, rate[2] or 0, rate[3] or 0
+    for j = pj0, pj1 do
+        local base = (j - j0) * width - i0 + 1
+        local cy = -j * UNIT
+        local oy = cy * CP + BACK * SP
+        local oz = -cy * SP + BACK * CP
+        local ox = pi0 * UNIT
+        local lx = m[1] * ox + m[2] * oy + m[3] * oz + m[4]
+        local ly = m[5] * ox + m[6] * oy + m[7] * oz + m[8]
+        local lz = m[9] * ox + m[10] * oy + m[11] * oz + m[12]
+        -- Where the row starts, in and out along each axis.
+        local ix = fx and -HUGE or (inA[1] - lx) / dx
+        local ux = fx and HUGE or (outA[1] - lx) / dx
+        local iy = fy and -HUGE or (inA[2] - ly) / dy
+        local uy = fy and HUGE or (outA[2] - ly) / dy
+        local iz = fz and -HUGE or (inA[3] - lz) / dz
+        local uz = fz and HUGE or (outA[3] - lz) / dz
+        local sx, sy, sz = st[1], st[2], st[3]
+        local ej = j - sj
+        ej = ej * ej
+        for i = pi0, pi1 do
+            local idx = base + i
+            local was = zd[idx]
+            local ei = i - si
+            local n = i - pi0
+            if near < was and ei * ei + ej <= sr2
+                -- An axis the ray runs along is a slab it is either in or not.
+                and (not fx or (lx + n * sx >= lo[1] and lx + n * sx <= hi[1]))
+                and (not fy or (ly + n * sy >= lo[2] and ly + n * sy <= hi[2]))
+                and (not fz or (lz + n * sz >= lo[3] and lz + n * sz <= hi[3])) then
+                local tx = ix + n * rx
+                local ty = iy + n * ry
+                local tz = iz + n * rz
+                local t0 = tx
+                local axis = 1
+                if ty > t0 then
+                    t0 = ty
+                    axis = 2
+                end
+                if tz > t0 then
+                    t0 = tz
+                    axis = 3
+                end
+                local t1 = ux + n * rx
+                local t = uy + n * ry
+                if t < t1 then t1 = t end
+                t = uz + n * rz
+                if t < t1 then t1 = t end
+                if t0 < t1 and t0 < was then
+                    zd[idx] = t0
+                    owner[idx] = p
+                    -- The face gone in at faces back along the ray.
+                    nxs[idx] = axis == 1 and (dx > 0 and -1 or 1) or 0
+                    nys[idx] = axis == 2 and (dy > 0 and -1 or 1) or 0
+                    nzs[idx] = axis == 3 and (dz > 0 and -1 or 1) or 0
+                    local_[idx] = s
+                    cuts[idx] = false
+                    flat[idx] = false
+                end
+            end
+        end
+    end
+end
+
+-- A plain hull's depths: the depths loop with the plane test written into it.
+-- Along a row the ray's origin moves the same step every pixel, so how far
+-- inside each plane it starts moves by the same amount every pixel too, and is
+-- carried along rather than worked out again -- for the book's pages and the
+-- metronome's pyramid, most of the cost of a picture was that sum.
+local function hullDepths(p, s, pi0, pi1, pj0, pj1, i0, j0, width, zd, owner, nxs, nys, nzs,
+                    cuts, flat, local_)
+    local m = s.inv
+    local pl, dens = s.planes, s.dens
+    local np = #pl
+    local near = p.near
+    local si, sj, sr2 = p.si, p.sj, p.sr2
+    local sx, sy, sz = m[1] * UNIT, m[5] * UNIT, m[9] * UNIT
+    local start, step = {}, {}
+    for k = 1, np, 4 do step[k] = -(pl[k] * sx + pl[k + 1] * sy + pl[k + 2] * sz) end
+    for j = pj0, pj1 do
+        local base = (j - j0) * width - i0 + 1
+        local cy = -j * UNIT
+        local oy = cy * CP + BACK * SP
+        local oz = -cy * SP + BACK * CP
+        local ox = pi0 * UNIT
+        local lx = m[1] * ox + m[2] * oy + m[3] * oz + m[4]
+        local ly = m[5] * ox + m[6] * oy + m[7] * oz + m[8]
+        local lz = m[9] * ox + m[10] * oy + m[11] * oz + m[12]
+        for k = 1, np, 4 do
+            start[k] = pl[k + 3] - (pl[k] * lx + pl[k + 1] * ly + pl[k + 2] * lz)
+        end
+        local ej = j - sj
+        ej = ej * ej
+        for i = pi0, pi1 do
+            local idx = base + i
+            local was = zd[idx]
+            local ei = i - si
+            if near < was and ei * ei + ej <= sr2 then
+                local n = i - pi0
+                local t0 = -HUGE
+                local t1 = HUGE
+                local ak = 0
+                local hit = true
+                for k = 1, np, 4 do
+                    local den = dens[k]
+                    local num = start[k] + n * step[k]
+                    if den < -1e-12 then
+                        local t = num / den
+                        if t > t0 then
+                            t0 = t
+                            ak = k
+                        end
+                    elseif den > 1e-12 then
+                        local t = num / den
+                        if t < t1 then t1 = t end
+                    elseif num < 0 then
+                        hit = false
+                        break
+                    end
+                    if t0 >= t1 then
+                        hit = false
+                        break
+                    end
+                end
+                if hit and ak > 0 and t0 < was then
+                    zd[idx] = t0
+                    owner[idx] = p
+                    nxs[idx] = pl[ak]
+                    nys[idx] = pl[ak + 1]
+                    nzs[idx] = pl[ak + 2]
+                    local_[idx] = s
+                    cuts[idx] = false
+                    flat[idx] = false
+                end
+            end
+        end
+    end
 end
 
 -- One part's depths, over the pixels its bound covers, into the picture's
@@ -726,7 +760,7 @@ end
 -- A pixel whose nearest is the face of a `within` itself (the marble's block)
 -- is marked with it in `flat`: nothing else kept inside the same thing can be
 -- nearer than its face, so they need not ask.
-local function depths(p, i0, i1, j0, j1, width, zd, owner, nxs, nys, nzs, cuts, flat)
+local function depths(p, i0, i1, j0, j1, width, zd, owner, nxs, nys, nzs, cuts, flat, local_)
     local w = p.within or false
     local near = p.near
     local si, sj, sr2 = p.si, p.sj, p.sr2
@@ -734,54 +768,238 @@ local function depths(p, i0, i1, j0, j1, width, zd, owner, nxs, nys, nzs, cuts, 
     local pj1 = min(j1, p.pj1)
     local pi0 = max(i0, p.pi0)
     local pi1 = min(i1, p.pi1)
+    local s = p.solid
+    if not w and not p.minus and not p.clip then
+        -- The common case, a solid with nothing cut from it: its shape asked
+        -- straight, with the ray's origin stepped along the row in the solid's
+        -- own space rather than taken into it afresh, and the normal left in
+        -- that space until the light pass, which turns only the winners'.
+        local m = s.inv
+        local shape = s.shape
+        local dx, dy, dz = s.dx, s.dy, s.dz
+        local sx, sy, sz = m[1] * UNIT, m[5] * UNIT, m[9] * UNIT
+        if s.kind == "hull" then
+            return hullDepths(p, s, pi0, pi1, pj0, pj1, i0, j0, width, zd, owner, nxs, nys, nzs,
+                cuts, flat, local_)
+        elseif s.kind == "box" then
+            return boxDepths(p, s, pi0, pi1, pj0, pj1, i0, j0, width, zd, owner, nxs, nys, nzs,
+                cuts, flat, local_)
+        end
+        for j = pj0, pj1 do
+            local base = (j - j0) * width - i0 + 1
+            local cy = -j * UNIT
+            local oy = cy * CP + BACK * SP
+            local oz = -cy * SP + BACK * CP
+            local ox = pi0 * UNIT
+            local lx = m[1] * ox + m[2] * oy + m[3] * oz + m[4]
+            local ly = m[5] * ox + m[6] * oy + m[7] * oz + m[8]
+            local lz = m[9] * ox + m[10] * oy + m[11] * oz + m[12]
+            local ej = j - sj
+            ej = ej * ej
+            for i = pi0, pi1 do
+                local idx = base + i
+                local was = zd[idx]
+                local ei = i - si
+                if near < was and ei * ei + ej <= sr2
+                    and shape(s, lx, ly, lz, dx, dy, dz) and T0 < was then
+                    zd[idx] = T0
+                    owner[idx] = p
+                    nxs[idx] = AX
+                    nys[idx] = AY
+                    nzs[idx] = AZ
+                    local_[idx] = s
+                    cuts[idx] = false
+                    flat[idx] = false
+                end
+                lx = lx + sx
+                ly = ly + sy
+                lz = lz + sz
+            end
+        end
+        return
+    end
+    -- Anything else: the solid asked with its origin stepped along the row as
+    -- above, then cut down to `within` (read off its buffer when it is shared),
+    -- then to its `clip` planes -- already turned into the room, so a plane is a
+    -- start and a step along the row like the box's faces -- and then any `minus`
+    -- the pixel is inside the rectangle of stepped through to its far wall.
+    local m = s.inv
+    local shape = s.shape
+    local dx, dy, dz = s.dx, s.dy, s.dz
+    local sx, sy, sz = m[1] * UNIT, m[5] * UNIT, m[9] * UNIT
+    local rc = p.rclip
+    local nrc = rc and #rc or 0
+    local cutsOf = p.minus
+    local ncut = cutsOf and #cutsOf or 0
+    local b0, b1, bxs, bys, bzs
+    if w and w.b0 then b0, b1, bxs, bys, bzs = w.b0, w.b1, w.bx, w.by, w.bz end
     for j = pj0, pj1 do
-        if (j - pj0) % 8 == 7 then pause() end
         local base = (j - j0) * width - i0 + 1
         local cy = -j * UNIT
         local oy = cy * CP + BACK * SP
         local oz = -cy * SP + BACK * CP
+        local ox0 = pi0 * UNIT
+        local lx = m[1] * ox0 + m[2] * oy + m[3] * oz + m[4]
+        local ly = m[5] * ox0 + m[6] * oy + m[7] * oz + m[8]
+        local lz = m[9] * ox0 + m[10] * oy + m[11] * oz + m[12]
         local ej = j - sj
         ej = ej * ej
         for i = pi0, pi1 do
             local idx = base + i
             local was = zd[idx]
             local ei = i - si
-            if near < was and ei * ei + ej <= sr2 and (not w or flat[idx] ~= w) then
-                ray = ray + 1
-                local hit, cut, face = enter(p, i * UNIT, oy, oz, false, -HUGE)
-                if hit and T0 < was then
-                    zd[idx] = T0
+            if near < was and ei * ei + ej <= sr2 and (not w or flat[idx] ~= w)
+                and shape(s, lx, ly, lz, dx, dy, dz) then
+                local t0 = T0
+                local t1 = T1
+                local nx = AX
+                local ny = AY
+                local nz = AZ
+                local src = s
+                local face = false
+                local cut = false
+                local hit = true
+                local ox = i * UNIT
+                if w then
+                    local u0, u1
+                    if b0 then
+                        u0 = b0[idx]
+                        u1 = u0 and b1[idx]
+                    elseif solve(w, ox, oy, oz) then
+                        u0 = T0
+                        u1 = T1
+                    end
+                    if not u0 then
+                        hit = false
+                    else
+                        if u0 > t0 then
+                            t0 = u0
+                            if b0 then
+                                nx = bxs[idx]
+                                ny = bys[idx]
+                                nz = bzs[idx]
+                                src = w
+                            else
+                                nx = AX
+                                ny = AY
+                                nz = AZ
+                                src = false
+                            end
+                            face = true
+                        end
+                        if u1 < t1 then t1 = u1 end
+                        if t0 >= t1 then hit = false end
+                    end
+                end
+                if hit and nrc > 0 then
+                    for k = 1, nrc, 5 do
+                        local den = rc[k + 4]
+                        local num = rc[k + 3] - (rc[k] * ox + rc[k + 1] * oy + rc[k + 2] * oz)
+                        if den < -1e-12 then
+                            local t = num / den
+                            if t > t0 then
+                                t0 = t
+                                nx = rc[k]
+                                ny = rc[k + 1]
+                                nz = rc[k + 2]
+                                src = false
+                                face = false
+                            end
+                        elseif den > 1e-12 then
+                            local t = num / den
+                            if t < t1 then t1 = t end
+                        elseif num < 0 then
+                            hit = false
+                            break
+                        end
+                        if t0 >= t1 then
+                            hit = false
+                            break
+                        end
+                    end
+                end
+                if hit and ncut > 0 then
+                    -- Each cut the ray goes in at is stepped through to its far
+                    -- wall, and the cuts asked again from there: two sockets side
+                    -- by side are two cuts.
+                    local moved = true
+                    while moved and hit do
+                        moved = false
+                        for k = 1, ncut do
+                            local c = cutsOf[k]
+                            if (not c.ri0 or (i >= c.ri0 and i <= c.ri1 and j >= c.rj0 and j <= c.rj1))
+                                and solve(c, ox, oy, oz) and T0 <= t0 and T1 > t0 then
+                                if T1 >= t1 then
+                                    hit = false
+                                    break
+                                end
+                                t0 = T1
+                                nx = -BX
+                                ny = -BY
+                                nz = -BZ
+                                src = false
+                                face = false
+                                cut = true
+                                moved = true
+                            end
+                        end
+                    end
+                end
+                if hit and t0 < was then
+                    zd[idx] = t0
                     owner[idx] = p
-                    nxs[idx] = AX
-                    nys[idx] = AY
-                    nzs[idx] = AZ
+                    nxs[idx] = nx
+                    nys[idx] = ny
+                    nzs[idx] = nz
+                    local_[idx] = src
                     cuts[idx] = cut
                     flat[idx] = face and w
                 end
             end
+            lx = lx + sx
+            ly = ly + sy
+            lz = lz + sz
         end
     end
 end
 
--- Whether anything other than `self` stands between a point and the lamp.
-local function shadowed(parts, self, sx, sy, sz)
-    ray = ray + 1
-    for k = 1, #parts do
-        local p = parts[k]
-        if p ~= self then
-            -- The sphere round the part first: most miss.
-            local wx = p.rx - sx
-            local wy = p.ry - sy
-            local wz = p.rz - sz
-            local along = wx * LX + wy * LY + wz * LZ
-            local rad = p.rad
-            if along > -rad and wx * wx + wy * wy + wz * wz - along * along <= rad * rad
-                and enter(p, sx, sy, sz, true, 0.2) and T0 < 40 then
-                return true
+-- A solid several parts are kept inside (`shared`: the marble's block), solved
+-- once for every pixel of the picture into buffers on it, which the parts read
+-- (`enter`) instead of solving it again each.
+local function spans(w, i0, i1, j0, j1, width)
+    local b0, b1, bx, by, bz = {}, {}, {}, {}, {}
+    local m = w.inv
+    local shape = w.shape
+    local dx, dy, dz = w.dx, w.dy, w.dz
+    local sx, sy, sz = m[1] * UNIT, m[5] * UNIT, m[9] * UNIT
+    for j = j0, j1 do
+        local base = (j - j0) * width - i0 + 1
+        local cy = -j * UNIT
+        local oy = cy * CP + BACK * SP
+        local oz = -cy * SP + BACK * CP
+        local ox = i0 * UNIT
+        local lx = m[1] * ox + m[2] * oy + m[3] * oz + m[4]
+        local ly = m[5] * ox + m[6] * oy + m[7] * oz + m[8]
+        local lz = m[9] * ox + m[10] * oy + m[11] * oz + m[12]
+        for i = i0, i1 do
+            local idx = base + i
+            if shape(w, lx, ly, lz, dx, dy, dz) then
+                b0[idx] = T0
+                b1[idx] = T1
+                -- The normal where it goes in, left in its own space: few of
+                -- these pixels end up on its face.
+                bx[idx] = AX
+                by[idx] = AY
+                bz[idx] = AZ
+            else
+                b0[idx] = false
             end
+            lx = lx + sx
+            ly = ly + sy
+            lz = lz + sz
         end
     end
-    return false
+    w.b0, w.b1, w.bx, w.by, w.bz = b0, b1, bx, by, bz
 end
 
 local paint
@@ -811,8 +1029,8 @@ function Solid.new(model)
         poseName = nil, p = {}, want = {},
         ground = model.ground,
         hidden = false,
-        -- The picture up, and the one being painted (`refresh`).
-        cache = nil, job = nil,
+        -- The picture up.
+        cache = nil,
     }, Solid)
     for k, v in pairs(model.rest or {}) do
         self.p[k] = v
@@ -874,7 +1092,6 @@ function Solid:update(dt)
             self.p[k] = cur
         end
     end
-    self:refresh()
 end
 
 function Solid:shadowScale()
@@ -935,7 +1152,6 @@ end
 -- A picture painted, kept: a ring of KEEP slots, the oldest let go.
 local function keep(kept, key, c)
     c.key = key
-    if kept[key] then return end
     local old = kept.list[kept.at]
     if old then kept[old] = nil end
     kept.list[kept.at] = key
@@ -943,91 +1159,20 @@ local function keep(kept, key, c)
     kept[key] = c
 end
 
--- How many headings ahead of the one shown a turning body paints while it has
--- nothing else to paint.
-local AHEAD = 4
-
--- Up: a picture becomes the one shown. Counted, so a picture that finishes
--- painting after something newer has gone up is kept but not shown -- shown, it
--- would put the body back where it was a moment ago, a flick backwards.
-local function show(self, c)
-    self.cache = c
-    self.shown = (self.shown or 0) + 1
-end
-
--- Once a frame (from `update`): the picture for this heading and pose, if the
--- model has it, or a slice more of painting it. With the one wanted already up,
--- the slice goes on the headings the body is turning towards, so a body turning
--- steadily -- the library's turntable, a boss coming round to you -- finds the
--- next picture painted when it gets there rather than waiting for it.
-function Solid:refresh()
-    local yaw, q, key, turn, pose = self:snap()
-    -- Which way it is turning, off the last heading it moved from.
-    if self.turn and turn ~= self.turn then
-        self.dir = ((turn - self.turn) % HEADINGS) < HEADINGS / 2 and 1 or -1
-    end
-    self.turn = turn
-    local kept = self.model.kept
-    local want = not (self.cache and self.cache.key == key)
-    if want and kept[key] then
-        show(self, kept[key])
-        want = false
-    end
-
-    local job = self.job
-    if not job then
-        local k, y = key, yaw
-        if not want then
-            -- Nothing needed now: the first heading ahead not painted yet.
-            k = nil
-            if self.dir then
-                for n = 1, AHEAD do
-                    local t = (turn + n * self.dir) % HEADINGS
-                    if not kept[t .. ";" .. pose] then
-                        k, y = t .. ";" .. pose, t * TAU / HEADINGS
-                        break
-                    end
-                end
-            end
-            if not k then return end
-        end
-        local model = self.model
-        job = { key = k, shown = self.shown,
-                co = coroutine.create(function() return paint(model, y, q) end) }
-        self.job = job
-    end
-    deadline = clock() + (self.slice or Solid.slice or SLICE)
-    local ok, c = coroutine.resume(job.co)
-    deadline = HUGE
-    if not ok then error(c) end
-    if coroutine.status(job.co) == "dead" then
-        keep(kept, job.key, c)
-        self.job = nil
-        -- Up if it is what is wanted now, or nearer to now than what is up;
-        -- kept and left alone if anything has gone up since it was started.
-        if job.key == key or (want and job.shown == self.shown) then show(self, c) end
-    end
-end
-
--- Whether the picture up is the one for where the body is now: what a turntable
--- waits on before it turns any further.
-function Solid:ready()
-    local _, _, key = self:snap()
-    return self.cache ~= nil and self.cache.key == key
-end
-
--- The picture to draw, as rows of runs relative to the origin: the last one
--- finished -- or, the first time it is asked, this one, painted now.
+-- The picture to draw, as rows of runs relative to the origin: the one for this
+-- heading and this pose, out of what the model has kept, or painted now -- in
+-- this frame, so what is drawn is always where the body is.
 function Solid:raster()
-    if self.cache then return self.cache end
     local yaw, q, key = self:snap()
+    local c = self.cache
+    if c and c.key == key then return c end
     local kept = self.model.kept
-    local c = kept[key]
+    c = kept[key]
     if not c then
         c = paint(self.model, yaw, q)
         keep(kept, key, c)
     end
-    show(self, c)
+    self.cache = c
     return c
 end
 
@@ -1045,8 +1190,37 @@ paint = function(model, yaw, q)
         p.inv = Affine.inv(fwd)
         prepare(p.solid, p.inv)
         if p.within then prepare(p.within, p.inv) end
-        for _, c in ipairs(p.minus or {}) do prepare(c, p.inv) end
-        bound(p, p.solid, Affine.mul(fwd, p.solid.at), true)
+        for _, c in ipairs(p.minus or {}) do
+            prepare(c, p.inv)
+            -- Asked only on the pixels it can be on, where it is bounded.
+            c.ri0 = nil
+            if c.hi[1] > c.lo[1] then
+                local r = {}
+                bound(r, c, Affine.mul(fwd, c.at))
+                c.ri0, c.ri1, c.rj0, c.rj1 = r.pi0, r.pi1, r.pj0, r.pj1
+            end
+        end
+        -- The planes it is cut off at, out of the part's space into the room:
+        -- n . p <= w there is (L^T n) . x <= w - n . t here, for the map
+        -- p = L x + t; and how square each is to the camera's rays.
+        p.rclip = nil
+        if p.clip then
+            local m = p.inv
+            local rc = {}
+            for _, c in ipairs(p.clip) do
+                local nx, ny, nz, w = c[1], c[2], c[3], c[4]
+                local rx = m[1] * nx + m[5] * ny + m[9] * nz
+                local ry = m[2] * nx + m[6] * ny + m[10] * nz
+                local rz = m[3] * nx + m[7] * ny + m[11] * nz
+                rc[#rc + 1] = rx
+                rc[#rc + 1] = ry
+                rc[#rc + 1] = rz
+                rc[#rc + 1] = w - (nx * m[4] + ny * m[8] + nz * m[12])
+                rc[#rc + 1] = rx * DX + ry * DY + rz * DZ
+            end
+            p.rclip = rc
+        end
+        bound(p, p.solid, Affine.mul(fwd, p.solid.at))
         if p.within and p.within.hi[1] > p.within.lo[1] then
             -- Kept inside something smaller than itself (the marble's grown bust
             -- in its block): only the pixels both cover.
@@ -1066,39 +1240,35 @@ paint = function(model, yaw, q)
     local order = {}
     for k, p in ipairs(parts) do order[k] = p end
     table.sort(order, function(a, b) return a.near < b.near end)
-    -- What can throw a shadow: the parts the model says can (`casts`), or
-    -- every part when it says none can't.
-    local casters = {}
-    for _, p in ipairs(parts) do
-        if p.casts or (p.casts == nil and not model.casters) then casters[#casters + 1] = p end
-    end
     if i0 > i1 then return { rows = {}, frame = frame, yaw = yaw } end
     local width = i1 - i0 + 1
 
     local shade = model.shade
-    local shadows = model.shadows ~= false
     local np = #parts
     -- Per pixel: colour key, depth, normal and material, in flat arrays.
     local ck, zd, nxs, nys, nzs, cuts, owner = {}, {}, {}, {}, {}, {}, {}
     -- Filled in order first, so they are arrays and not hashes.
-    local flat = {}
+    local flat, local_ = {}, {}
     for idx = 1, width * (j1 - j0 + 1) do
         zd[idx] = HUGE
         owner[idx] = false
         ck[idx] = false
         flat[idx] = false
+        local_[idx] = false
+    end
+    for _, p in ipairs(parts) do
+        local w = p.within
+        if w and w.shared and not w.b0 then spans(w, i0, i1, j0, j1, width) end
     end
 
     -- First the depths, part by part over the pixels its bound covers, keeping
     -- the nearest; then the light on whatever is nearest at each pixel.
     for k = 1, np do
-        depths(order[k], i0, i1, j0, j1, width, zd, owner, nxs, nys, nzs, cuts, flat)
-        pause()
+        depths(order[k], i0, i1, j0, j1, width, zd, owner, nxs, nys, nzs, cuts, flat, local_)
     end
     -- Then the light on whatever is nearest at each pixel, and its colour.
     local params = q
     for j = j0, j1 do
-        if (j - j0) % 8 == 7 then pause() end
         local base = (j - j0) * width - i0 + 1
         local cy = -j * UNIT
         local oy = cy * CP + BACK * SP
@@ -1111,6 +1281,16 @@ paint = function(model, yaw, q)
                 local bx = nxs[idx]
                 local by = nys[idx]
                 local bz = nzs[idx]
+                local ls = local_[idx]
+                if ls then
+                    -- Still in its solid's own space: out into the room by the
+                    -- transpose of its map.
+                    local m = ls.inv
+                    local ax, ay, az = bx, by, bz
+                    bx = m[1] * ax + m[5] * ay + m[9] * az
+                    by = m[2] * ax + m[6] * ay + m[10] * az
+                    bz = m[3] * ax + m[7] * ay + m[11] * az
+                end
                 local n = sqrt(bx * bx + by * by + bz * bz)
                 bx = bx / n
                 by = by / n
@@ -1119,14 +1299,10 @@ paint = function(model, yaw, q)
                 local py = oy + bestT * DY
                 local pz = oz + bestT * DZ
                 local diff = max(0, bx * LX + by * LY + bz * LZ)
-                -- Back towards the lamp from just off the surface: anything in
-                -- the way is a shadow. Not the part that was hit -- they are
-                -- convex, near enough, and cannot shade themselves.
-                if shadows and diff > 0
-                    and shadowed(casters, best, px + bx * 0.3, py + by * 0.3, pz + bz * 0.3) then
-                    diff = diff * 0.35
-                end
-                local spec = max(0, bx * HX + by * HY + bz * HZ) ^ 40
+                -- The glint is the 40th power of how square the surface is to
+                -- the half-way vector, which is nothing worth having below 0.9.
+                local spec = bx * HX + by * HY + bz * HZ
+                spec = spec > 0.9 and spec ^ 40 or 0
                 local m = best.inv
                 local qx = m[1] * px + m[2] * py + m[3] * pz + m[4]
                 local qy = m[5] * px + m[6] * py + m[7] * pz + m[8]
@@ -1151,46 +1327,21 @@ paint = function(model, yaw, q)
         end
     end
 
-    -- Creases, a step darker, so the planes read as planes: the bake's rule, a
-    -- neighbour of the same material whose normal has turned far enough.
+    -- Then the lines, in one pass that writes the runs. Creases, a step darker,
+    -- so the planes read as planes: the bake's rule, a neighbour of the same
+    -- material whose normal has turned far enough. Ink round the outside, and
+    -- down the far side of any step in depth where one part stands in front of
+    -- another (`edge`, in model units, if the model wants it). Each row's runs
+    -- are packed three numbers a run -- from, to, colour -- in one flat list, to
+    -- keep the kept pictures small.
     local edge = model.edge
-    local out = {}
-    for j = j0, j1 do
-        if (j - j0) % 16 == 15 then pause() end
-        local base = (j - j0) * width - i0 + 1
-        for i = i0, i1 do
-            local idx = base + i
-            local k = ck[idx]
-            if k and k ~= "o" then
-                local m = owner[idx].mat
-                for step = 1, 2 do
-                    local o = step == 1 and idx + 1 or idx + width
-                    local inside = step == 1 and i < i1 or j < j1
-                    if inside and ck[o] and owner[o].mat == m
-                        and nxs[idx] * nxs[o] + nys[idx] * nys[o] + nzs[idx] * nzs[o] < CREASE then
-                        if k == "k" or k == "r" then k = "s"
-                        elseif (k == "w" or k == "g") and m ~= "body" then k = "s" end
-                        break
-                    end
-                end
-            end
-            out[idx] = k
-        end
-    end
-
-    -- Ink round the outside, and down the far side of any step in depth where
-    -- one part stands in front of another (`edge`, in model units, if the model
-    -- wants it).
-    -- Each row's runs are packed three numbers a run -- from, to, colour -- in
-    -- one flat list, to keep the kept pictures small.
     local rows = {}
     for j = j0, j1 do
-        if (j - j0) % 16 == 15 then pause() end
         local base = (j - j0) * width - i0 + 1
         local runs, cur, from = {}, nil, nil
         for i = i0, i1 + 1 do
             local idx = base + i
-            local k = i <= i1 and out[idx]
+            local k = i <= i1 and ck[idx]
             local colour
             if k then
                 local z = zd[idx]
@@ -1199,17 +1350,31 @@ paint = function(model, yaw, q)
                 local r = i < i1 and zd[idx + 1] or HUGE
                 local u = j > j0 and zd[idx - width] or HUGE
                 local d = j < j1 and zd[idx + width] or HUGE
+                local me = owner[idx]
                 if l == HUGE or r == HUGE or u == HUGE or d == HUGE then
                     k = "o"
-                elseif edge then
+                elseif edge and ((z - l > edge and owner[idx - 1] ~= me)
+                    or (z - r > edge and owner[idx + 1] ~= me)
+                    or (z - u > edge and owner[idx - width] ~= me)
+                    or (z - d > edge and owner[idx + width] ~= me)) then
                     -- Only against another part: one surface seen at a grazing
                     -- angle steps in depth from pixel to pixel too, and is not
                     -- an edge.
-                    local me = owner[idx]
-                    if (z - l > edge and owner[idx - 1] ~= me) or (z - r > edge and owner[idx + 1] ~= me)
-                        or (z - u > edge and owner[idx - width] ~= me)
-                        or (z - d > edge and owner[idx + width] ~= me) then
-                        k = "o"
+                    k = "o"
+                elseif k ~= "o" then
+                    local m = me.mat
+                    local nx, ny, nz = nxs[idx], nys[idx], nzs[idx]
+                    local o = idx + 1
+                    local creased = owner[o] and owner[o].mat == m
+                        and nx * nxs[o] + ny * nys[o] + nz * nzs[o] < CREASE
+                    if not creased then
+                        o = idx + width
+                        creased = owner[o] and owner[o].mat == m
+                            and nx * nxs[o] + ny * nys[o] + nz * nzs[o] < CREASE
+                    end
+                    if creased then
+                        if k == "k" or k == "r" then k = "s"
+                        elseif (k == "w" or k == "g") and m ~= "body" then k = "s" end
                     end
                 end
                 colour = key[k]

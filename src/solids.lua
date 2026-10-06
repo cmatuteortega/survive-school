@@ -43,8 +43,8 @@ local Affine = Solid.Affine
 
 local sqrt, sin, cos, floor, abs = math.sqrt, math.sin, math.cos, math.floor, math.abs
 local max = math.max
-local box, bevelled, hull, cone, cyl, ell, lump, part =
-    Solid.box, Solid.bevelled, Solid.hull, Solid.cone, Solid.cyl, Solid.ell, Solid.lump, Solid.part
+local box, hull, cone, cyl, ell, lump, part =
+    Solid.box, Solid.hull, Solid.cone, Solid.cyl, Solid.ell, Solid.lump, Solid.part
 
 local Solids = {}
 
@@ -133,11 +133,11 @@ do
         { 0, PK, 1, 6.2 + PK * PY0 }, { 0, PK, -1, 6.2 + PK * PY0 },
         { 0, 1, 0, PY1 }, { 0, -1, 0, -PY0 },
         { 1, -KX, 0, -DX0 - KX * BASE + 0.7 },
-    })
+    }, { -DX0 - 1, PY0, -6.2, -DX1 + 1, PY1, 6.2 })
     local parts = {
         part(pyramid, "body", { minus = { panel } }),
-        part(bevelled(0, 1.6, 0, DX0 + 1.6, 1.6, DZ0 + 1.6, 0.8), "body"),
-        part(bevelled(0, TOP + 1.4, 0, DX1 + 0.9, 1.4, DZ1 + 0.9, 0.8), "body"),
+        part(box(0, 1.6, 0, DX0 + 1.6, 1.6, DZ0 + 1.6), "body"),
+        part(box(0, TOP + 1.4, 0, DX1 + 0.9, 1.4, DZ1 + 0.9), "body"),
         -- The winding key: a stub out of the side and a butterfly on its end.
         part(cyl("z", 0, KY, zs + 2.0, 2.2, 1.3), "metal"),
         part(box(0, KY, zs + 4.6, 0.7, 3.0, 0.6), "metal"),
@@ -203,8 +203,8 @@ do
 
     local parts = {
         part(box(0, PAD_H / 2, 0, PAD_X, PAD_H / 2, PAD_Z), "rubber"),
-        part(bevelled(0, (BLOCK_Y0 + BLOCK_Y1) / 2, 0, PAD_X + GROW, (BLOCK_Y1 - BLOCK_Y0) / 2,
-            PAD_Z + GROW, 1.5), "body"),
+        part(box(0, (BLOCK_Y0 + BLOCK_Y1) / 2, 0, PAD_X + GROW, (BLOCK_Y1 - BLOCK_Y0) / 2,
+            PAD_Z + GROW), "body"),
         part(cyl("y", 0, BLOCK_Y1 + 0.8, 0, 1.4, 5.0), "metal"),
         -- Waisted, the way a turned handle is: two cones meeting half way up.
         part(cone("y", 0, NECK_MID, 0, NECK_Y0 - NECK_MID, 0, 3.4, 2.4), "body"),
@@ -318,7 +318,7 @@ do
         return {
             part(box(0, BOARD / 2, 0, W, BOARD / 2, Z), "cover"),
             part(cyl("z", SX, T / 2, 0, Z - 0.1, SPINE_R), "cover",
-                { within = hull({ { -1, 0, 0, -(SX - 0.2) } }) }),
+                { clip = { { -1, 0, 0, -(SX - 0.2) } } }),
             part(box(-INSET / 2, T / 2, 0, W - INSET / 2 - 1.2, (T - 2 * BOARD) / 2, Z - INSET), "pages"),
             part(box(0, T - BOARD / 2, 0, W, BOARD / 2, Z), "cover", { move = board, top = true }),
         }
@@ -456,12 +456,10 @@ do
         return b
     end
 
-    -- A plane a piece is cut off at (n . p <= w kept), grown by `m`: as the
-    -- other side of it taken away, which is the same thing and lets the block
-    -- stay shared.
-    local function beyond(p, m)
+    -- A plane a piece is cut off at (n . p <= w kept), grown by `m`.
+    local function grown(p, m)
         local n = sqrt(p[1] ^ 2 + p[2] ^ 2 + p[3] ^ 2)
-        return hull({ { -p[1], -p[2], -p[3], -(p[4] + m * n) } })
+        return { p[1], p[2], p[3], p[4] + m * n }
     end
 
     -- Every solid of the bust, grown by `m`. The small ones are only there while
@@ -476,11 +474,13 @@ do
         local function add(upto, solid, mat, opts)
             if m >= upto then return end
             opts = opts or {}
-            local cuts = {}
-            for _, p in ipairs(opts.cut or {}) do cuts[#cuts + 1] = beyond(p, m) end
-            for _, c in ipairs(opts.sockets or {}) do cuts[#cuts + 1] = c end
+            local clip
+            for _, p in ipairs(opts.cut or {}) do
+                clip = clip or {}
+                clip[#clip + 1] = grown(p, m)
+            end
             list[#list + 1] = part(solid, m > 0 and "rough" or mat,
-                { within = inside, minus = #cuts > 0 and cuts or nil, casts = opts.casts })
+                { within = inside, clip = clip, minus = opts.sockets })
         end
         local ALL = math.huge
         -- The socle: a base, a waist and a cap.
@@ -490,7 +490,7 @@ do
         add(ALL, cyl("y", 0, 7.5, 0, 1.3 + m, 7.2 + m), "marble")
         -- The chest, cut off flat under the shoulders.
         add(ALL, ell(0.6, 15.0, 0, 6.2 + m, 6.8 + m, 11.6 + m), "marble",
-            { cut = { { 0, -1, 0, -9.2 } }, casts = true })
+            { cut = { { 0, -1, 0, -9.2 } } })
         -- The head: skull, jaw, neck, nose, brow and ears, and the sockets of the
         -- eyes taken out of the skull (only while there is a face to take them
         -- out of).
@@ -501,17 +501,17 @@ do
                 sockets[#sockets + 1] = ell(-7.8, 31.3, zz, 1.7 - m, 1.3 - m, 1.5 - m)
             end
         end
-        add(ALL, ell(0.0, 31.4, 0, 7.6 + m, 7.8 + m, 6.9 + m), "marble", { sockets = sockets, casts = true })
-        add(ALL, ell(-3.2, 27.0, 0, 4.6 + m, 3.4 + m, 5.0 + m), "marble", { casts = true })
+        add(ALL, ell(0.0, 31.4, 0, 7.6 + m, 7.8 + m, 6.9 + m), "marble", { sockets = sockets })
+        add(ALL, ell(-3.2, 27.0, 0, 4.6 + m, 3.4 + m, 5.0 + m), "marble")
         add(ALL, lump(0.8, 18.0, 0, -0.2, 26.0, 0, 3.4 + m), "marble")
-        add(5.5, lump(-7.2, 31.6, 0, -9.4, 28.6, 0, 1.2 + m), "marble", { casts = true })
-        add(5.5, lump(-6.7, 33.2, -3.4, -6.7, 33.2, 3.4, 1.2 + m), "marble", { sockets = sockets, casts = true })
+        add(5.5, lump(-7.2, 31.6, 0, -9.4, 28.6, 0, 1.2 + m), "marble")
+        add(5.5, lump(-6.7, 33.2, -3.4, -6.7, 33.2, 3.4, 1.2 + m), "marble", { sockets = sockets })
         for _, zz in ipairs({ -6.7, 6.7 }) do
             add(5.5, ell(1.0, 30.2, zz, 1.7 + m, 2.6 + m, 1.2 + m), "marble")
         end
         -- The hair: a cap, off the face and above the ears, swept back.
         add(ALL, ell(1.0, 32.6, 0, 8.2 + m, 8.0 + m, 7.6 + m), "hair",
-            { cut = { { -1, 0.45, 0, 19.85 }, { 0, -1, 0, -28.6 }, { 0.3, -1, 0, -28.6 } }, casts = true })
+            { cut = { { -1, 0.45, 0, 19.85 }, { 0, -1, 0, -28.6 }, { 0.3, -1, 0, -28.6 } } })
         return list
     end
 
@@ -543,9 +543,6 @@ do
         -- Forty pictures from block to bust: one every fifteen health or so.
         params = { "carve" },
         steps = { carve = 0.1 },
-        -- The head throws its shadow down onto the chest, and the nose and the
-        -- brow onto the face; the rest throw nothing anyone would see.
-        casters = true,
         edge = 3,
         margin = margin,
         -- Where the finished bust's eyes are, from the origin: the middle of each
@@ -562,6 +559,9 @@ do
         end,
         build = function(p)
             local m = margin(p.carve)
+            -- Kept on the numbers for `shade`, which would otherwise work it out
+            -- again for every pixel.
+            p.margin = m
             if m >= MARGINS[1] - 0.01 then
                 return { part(box(unpack(BLOCK)), "rough") }
             end
@@ -572,7 +572,7 @@ do
         shade = function(x, y, z, p, diff, spec, nx, ny, nz, cut, n)
             local lit = (spec > 0.6 or diff > 0.55) and 3 or diff > 0.2 and 2
                 or (ny < -0.55 and diff > 0.02) and 2 or 1
-            local m = margin(n.carve)
+            local m = n.margin or margin(n.carve)
             if p.mat == "hair" then
                 -- Locks: bands round the head, every other one a step down.
                 if sin(1.3 * z + 0.6 * y + 0.9 * sin(0.8 * x + 0.5 * y)) > 0.2 then lit = max(1, lit - 1) end

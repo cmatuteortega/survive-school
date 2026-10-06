@@ -1212,8 +1212,8 @@ one place and nothing else in the game knows it exists:
   hull, a cone (a cylinder being a cone of one radius) or an ellipsoid, each
   optionally kept `within` another and with `minus` solids taken out of it, and
   moved in the body by a map -- and every pixel's ray is solved against them in
-  closed form, lit from a lamp fixed in the room (with a ray back to it for
-  shadows), coloured by the model's `shade` or the red ramp, creased where one
+  closed form, lit from a lamp fixed in the room, coloured by the model's `shade`
+  or the red ramp, creased where one
   material's faces meet at an angle and inked round the outside and where one part
   stands in front of another. The camera is the one these five were once baked in:
   34° above the page, 0.92 model units a pixel, the pivot at the origin.
@@ -1221,9 +1221,9 @@ one place and nothing else in the game knows it exists:
   hands it `e.pose`; the model eases the numbers that pose is made of. Pictures
   are kept by heading (a ninety-sixth of a turn) and those numbers (to the model's
   `steps`), a hundred and sixty to a model and shared with the library's
-  turntable, and one not kept yet is painted a slice a frame in a coroutine while
-  the last finished one is drawn -- under a millisecond a frame on average with no
-  JIT. `foot` on a model is the pixels from the origin down to the floor under the
+  turntable, and one not kept is painted in the frame it is needed, as the piggy
+  bank's is -- about a millisecond with no JIT for most of them, the marble two to
+  three while it is barely started. `foot` on a model is the pixels from the origin down to the floor under the
   pivot, which the brains stand things on the page by. `Sprites.enemies` keeps a
   plain block under each name that nothing draws.
 - **`attacks`** — `Enemy.new` hands the row an `EyeBoss` (`src/eyeboss.lua`), its

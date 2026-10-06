@@ -93,9 +93,8 @@ each in its own space:
 Each answers an *interval* of the ray -- in at one face, out at another -- with the
 normal at both ends. An ellipsoid is a ball put through an affine map (`Solid.ell`),
 so it can lie at any angle; a capsule is approximated by an ellipsoid along it
-(`Solid.lump`); a rounded box is a box with its edges bevelled off at 45°
-(`Solid.bevelled`), which is what a rounding a pixel wide was ever going to look
-like.
+(`Solid.lump`); the bake's rounded boxes are plain boxes, the crease along an edge
+doing what a rounding a pixel wide did.
 
 A **part** is one solid and what it is made of (`mat`, handed to the model's
 `shade`), and optionally:
@@ -107,8 +106,11 @@ A **part** is one solid and what it is made of (`mat`, handed to the model's
   panel, the marble's eye sockets. A ray that goes in somewhere inside a cut is
   stepped through to the cut's far wall, which is a surface whose normal is the cut's
   own turned round; `shade` is told it is a cut, which is how the window is painted
-  ink. A half-space taken away is a plane cut off, which is how the hair is cut off
-  the face without spending a second `within`.
+  ink.
+- `clip`: planes the part is cut off at -- the marble's chest flat under the
+  shoulders, its hair off the face and above the ears, the dictionary's spine cut to
+  half a cylinder. Cheaper than a solid: a plane is turned into the room once a
+  picture and is then a sum along the row.
 - `move`: an affine map moving the part in the body -- the dictionary's front
   board, hinged at the spine.
 
@@ -127,10 +129,11 @@ however it leans and the dictionary's board is painted the same lifted or shut.
 
 ### Light, ramps and lines
 
-- **Diffuse** is the normal dotted with the lamp, a third of that if a ray back
-  towards the lamp hits another part first (a shadow -- the stamp's knob on its
-  label, the head on the marble's chest), and **specular** the half-vector to the
-  camera to the 40th power, for the glint.
+- **Diffuse** is the normal dotted with the lamp, and **specular** the half-vector
+  to the camera to the 40th power, for the glint. The bake also cast shadows -- a
+  second ray back towards the lamp from every lit pixel -- and the first live version
+  kept them; they cost a quarter of every picture and showed as little more than the
+  stamp's knob on its label, so they went.
 - **The ramp.** The model's `shade` answers a palette key for the material and the
   point, or nothing for the red ramp every one of them is mostly made of:
 
@@ -163,42 +166,51 @@ however it leans and the dictionary's board is painted the same lifted or shut.
 ### What it costs, and how it is kept cheap
 
 LÖVE on a phone may well be running the interpreter rather than the JIT, so the
-number that matters is the interpreted one. A picture is a few thousand rays,
-two to six milliseconds on a desktop interpreter -- several times the piggy bank's.
-Four things bring it down to under a millisecond a frame on average, with no frame
-much over two:
+number that matters is the interpreted one, and the yardstick is the piggy bank,
+which repaints every frame it changes and costs about a millisecond a picture on a
+desktop interpreter. The first live version cost two to six times that. What
+brought it down to the pig's, near enough -- a millisecond for the stamp and the
+whistle, one and a half to two for the metronome and the dictionary -- is:
 
 1. **Ask only what can be hit.** Each solid's box is put through its maps onto the
    screen each picture, and a pixel asks a part only inside both the rectangle its
    corners land in and the circle its bounding sphere does (each is tighter than
    the other for some shape). Parts are asked nearest first, part by part over their
    own pixels, and a part whose nearest point is further than what a pixel already
-   holds is not asked at all. A pixel already on the face of a shared `within` (the
-   marble's block) is not asked again by anything else inside the same block.
-2. **Write it for the interpreter and the JIT both.** No assignment of several
-   values at once anywhere in the hot loop, and results left in upvalues rather than
+   holds is not asked at all. A cut is asked only inside its own rectangle.
+2. **Carry the ray along the row.** Every ray of a picture goes the same way, and
+   from one pixel to the next its origin moves the same step, in every solid's own
+   space. So the origin is stepped rather than transformed, a box's way in and way
+   out of each pair of faces is a start and a step (three maxes and three mins a
+   pixel), a hull's distance inside each plane likewise, and the planes a part is
+   cut off at (`clip`) are turned into the room once a picture. A normal is turned
+   out of its solid's space only for the part that wins the pixel.
+3. **Solve what is shared once.** The marble's block, which every piece of its bust
+   is kept inside, is solved once a pixel into buffers the pieces read, and a pixel
+   already on the block's face is not asked again by anything inside it.
+4. **Write it for the interpreter and the JIT both.** No assignment of several
+   values at once in the hot loops, and results left in upvalues rather than
    returned eight at a time -- LuaJIT gives up compiling a trace over either (the red
-   pen's lesson). The per-part depth loop is a small function of its own because a
-   loop is compiled by what is live in it.
-3. **Keep the pictures.** The heading is drawn to a ninety-sixth of a turn and every
+   pen's lesson).
+5. **Keep the pictures.** The heading is drawn to a ninety-sixth of a turn and every
    number the picture depends on to its model's `steps`, and a picture is kept under
-   that key, a hundred and sixty to a model and shared by every body of it. A boss
-   circling you is mostly drawn from pictures it has already painted; the marble's
-   carving, which moves on every hit, is drawn in forty steps from block to bust.
-4. **Paint the rest in slices.** A picture that has not been kept is painted in a
-   coroutine, a millisecond and a half a frame, while the last finished picture goes
-   on being drawn: a heading or a pose a frame or two late reads as nothing, and a
-   new pose costing a hitch every time would read as a stutter. The first picture a
-   body ever shows is the one painted all at once. Two rules keep the slices from
-   being seen. A picture that finishes after something newer has gone up is kept
-   but not shown -- shown, it would flick the body back to where it was a moment
-   ago, which on a phone too slow to keep up with a turn was the glitch the
-   library's turntable first had. And a slice with nothing needed now goes on the
-   next few headings in the direction the body is turning, so a steady turn finds
-   its next picture already painted. The turntable also gets a bigger slice (the
-   library has nothing else to do with a frame) and turns on only once the
-   picture for where it is has gone up: on a slow phone its first lap is a little
-   slower rather than in jumps, and every lap after it is painted already.
+   that key, a hundred and sixty to a model and shared by every body of it. Reuse is
+   exact -- a kept picture is the picture -- so a boss circling you, or turning on
+   the library's turntable, mostly costs nothing, and the marble's carving is drawn
+   in forty steps from block to bust.
+
+A picture that is not kept is painted in the frame it is needed, all at once, as the
+pig's is. An earlier version painted new pictures a slice a frame in a coroutine and
+went on drawing the last one finished; on a phone too slow to keep up with the
+turntable that showed as headings jumping and, once, a picture finishing late and
+flicking the body backwards. A frame now and then a little long is a price every
+other live body already pays; a body shown somewhere it is not was a new kind of
+bug, and painting in the frame makes it impossible.
+
+The marble is the one still dearer than the pig -- two to three milliseconds while
+it is barely started, one and a half finished -- and the fight pays for it rarely:
+until it is roughed out it stands square to the page, so it is painted again only
+when a hit carves it another step.
 
 ### Doing another character
 
@@ -685,6 +697,6 @@ per drop, which is fine for the few dozen a boss throws.
   too.
 - **Not at all:** anything the player draws: the hero, the sword, the star and
   the rest of the drawn designs. Those are the player's own pixels.
-- **Budget:** a few thousand rays a picture, kept by heading and pose and painted a
-  slice a frame when new (**What it costs**, above). One boss on the page at a time
-  is what that is sized for; a crowd of them would not be.
+- **Budget:** a few thousand rays a picture, about a millisecond, kept by heading
+  and pose (**What it costs**, above). One boss on the page at a time is what that
+  is sized for; a crowd of them would not be.

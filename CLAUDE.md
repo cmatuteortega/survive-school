@@ -26,7 +26,7 @@ cylinders and ellipsoids and ray-traced live by one shared tracer
 heading, the stamp rocking, diving and squashing, the dictionary's board
 swinging and its leaves clapping shut, the marble carved a little on every hit,
 the metronome's pendulum plotted on top through the body's own projection, and
-every picture kept by heading and pose and painted a slice a frame when new
+every picture kept by heading and pose and painted in the frame it is needed
 (they were baked into rings of ASCII views once, and `3dmethod.md` says why they
 are not now) -- the eye, painted a pixel at a time
 every frame off a turning sphere (`src/eyeball.lua`), the MATHS die, painted
