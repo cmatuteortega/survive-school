@@ -1,7 +1,8 @@
 -- DEV ONLY: this module does not ship. An override rather than an edit, which
 -- is why it is safe to leave in while the game is made -- it writes nothing.
--- `Collection.has`, `Collection.lessonOpen` and `Characters.owns` ask
--- `Dev.opened` before they ask the register, so stepping back to EARNED
+-- `Collection.has`, `Collection.lessonOpen`, `Characters.owns` and the library's
+-- boss page (`bossMet`, `bossBeaten` in src/library.lua) ask `Dev.opened` before
+-- they ask the register, so stepping back to EARNED
 -- restores exactly what the book remembers. Three states because ALL (a
 -- finished book, for balancing a late run) and NONE (the first afternoon, on a
 -- save full of records) are not opposites. The purse and the perks bought out
@@ -18,7 +19,8 @@
 --
 -- TAKING IT OUT AT LAUNCH is three calls, two guards and a file: the last row
 -- of `ROWS` in src/settings.lua, the `Dev.opened` calls in `Collection.has`,
--- `Collection.lessonOpen` and `Characters.owns`, the `unlocks` and `dev` lines
+-- `Collection.lessonOpen`, `Characters.owns` and src/library.lua's `bossMet` and
+-- `bossBeaten`, the `unlocks` and `dev` lines
 -- src/options.lua writes, the `Dev.showing` guards in src/pause.lua and
 -- src/game.lua's `keypressed`, the `Dev.showing()` that picks the stand-ins in
 -- src/store.lua and src/ads.lua, the `Dev.GIFT` paid in `Settings:tapHead`,
@@ -71,7 +73,7 @@ end
 -- opens in it.
 Dev.boss = false
 
--- The one question the three readers ask. On EARNED it hands the register's own
+-- The one question its readers ask. On EARNED it hands the register's own
 -- answer straight back.
 function Dev.opened(earned)
     if Dev.unlocks == "all" then return true end

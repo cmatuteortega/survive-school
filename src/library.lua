@@ -110,6 +110,7 @@ local Course = require("src.course")
 local Enemy = require("src.enemy")
 local Tally = require("src.tally")
 local Turntable = require("src.turntable")
+local Dev = require("src.dev")
 
 local Library = {}
 
@@ -220,7 +221,8 @@ local BOSS = "boss"
 --   Still a silhouette, because seeing it properly is what beating it buys.
 -- - **Beaten** -- the body in its own colours, turning, and how many times.
 --
--- Read off src/tally.lua (`Tally.metOf`, `Tally.beatOf`), which is written the
+-- Read off src/tally.lua (`Tally.metOf`, `Tally.beatOf`), through `Dev.opened`
+-- (`bossMet`, `bossBeaten`), and the tally is written the
 -- moment a boss walks on and the moment one goes down for good.
 --
 -- **The shelf is a column of names with a pip each**, the homework's pip, filled
@@ -250,6 +252,20 @@ local tables = {}
 local function turntable(kind)
     if not tables[kind] then tables[kind] = Turntable.new(kind) end
     return tables[kind]
+end
+
+-- Whether the book has met a boss, and whether it has beaten one -- asked
+-- through `Dev.opened` like every other door on this screen (`Collection.has`),
+-- so the settings page's UNLOCKS row shows every boss turning on ALL and none of
+-- them on NONE, and EARNED is exactly what src/tally.lua remembers. Only this
+-- screen asks it this way: the homework is what you have done, and no dev row
+-- does homework for you.
+local function bossMet(kind)
+    return Dev.opened(Tally.metOf(kind))
+end
+
+local function bossBeaten(kind)
+    return Dev.opened(Tally.beatOf(kind) > 0)
 end
 
 local function bossName(boss)
@@ -424,7 +440,7 @@ function Library:tally()
         local have, all = 0, 0
         for _, boss in ipairs(Subjects.bosses()) do
             all = all + 1
-            if Tally.beatOf(boss.kind) > 0 then have = have + 1 end
+            if bossBeaten(boss.kind) then have = have + 1 end
         end
         return have, all
     end
@@ -1277,8 +1293,8 @@ end
 function Library:drawBossShelf(lay, at, here)
     for i, boss in ipairs(Subjects.bosses()) do
         local plate = self:plateRect(lay, i, at)
-        local met = Tally.metOf(boss.kind)
-        local beaten = Tally.beatOf(boss.kind) > 0
+        local met = bossMet(boss.kind)
+        local beaten = bossBeaten(boss.kind)
         local py = plate.y + math.floor((Font.height - BOSS_BOX) / 2)
 
         love.graphics.setColor(met and Palette.slate or Palette.graphite)
@@ -1301,9 +1317,9 @@ end
 -- not: the longest of them in some languages is wider at twice the size than a
 -- leaf is, and a name cut off at the crease is worse than a smaller one.
 function Library:drawBoss(lay, boss)
-    local met = Tally.metOf(boss.kind)
+    local met = bossMet(boss.kind)
     local times = Tally.beatOf(boss.kind)
-    local beaten = times > 0
+    local beaten = bossBeaten(boss.kind)
     local x, w = lay.entryX, lay.entryW
     local y = lay.bossEntry
 

@@ -3022,7 +3022,11 @@ two cannot disagree about who is in the book.
   under its own column (`lay.bossEntry`) rather than under the room the fullest
   catalogue shelf reserves -- it is a different page and the turntable wants the
   height.
-- **The state** is `Tally.metOf` and `Tally.beatOf` (see **The tally**). Not met:
+- **The state** is `Tally.metOf` and `Tally.beatOf` (see **The tally**), asked
+  through `Dev.opened` (`bossMet` / `bossBeaten`) like every other door in the
+  library, so the dev UNLOCKS row shows every boss beaten on ALL and none met on
+  NONE; the count on the state line is still the tally's own. The homework's boss
+  rows do not ask it -- they are what you have done. Not met:
   `???` and the silhouette, `NOT MET YET` in graphite. Met: the name, still the
   silhouette, `NOT BEATEN YET` in red. Beaten: the body in its own colours and
   `TIMES BEATEN: %d` in slate. The pip fills red on beaten; the shelf name is
@@ -3274,11 +3278,12 @@ that draws it: there are two of those now (the library's holes and the timetable
 shut pages), and the rule is a rule about translation.
 
 **`src/dev.lua` is a switch in front of all of it, and it does not ship.** The
-settings page's last row steps `Dev.unlocks` between EARNED, ALL and NONE, and three
+settings page's last row steps `Dev.unlocks` between EARNED, ALL and NONE, and four
 readers ask `Dev.opened` before they answer: `Collection.has`,
-`Collection.lessonOpen` and `Characters.owns`. That is the whole feature, and it is
-three lines rather than thirty because each of those is the *one door* its question
-is asked through.
+`Collection.lessonOpen`, `Characters.owns`, and the library's boss page (`bossMet`
+and `bossBeaten` in `src/library.lua`, so ALL shows every boss turning in its own
+colours). That is the whole feature, and it is a handful of lines rather than
+thirty because each of those is the *one door* its question is asked through.
 
 It is an **override rather than an edit**: nothing it does writes a record, buys a
 hero or fills a purse, so a book stepped to ALL and back is exactly the book it was.
@@ -3297,7 +3302,7 @@ are deliberately out of the unlocks row's reach, and it is a real deposit: the
 coins stay when the controls go away.
 
 Taking it out at launch is the row at the bottom of `ROWS` in `src/settings.lua`,
-the three `Dev.opened` calls, the `Dev.GIFT` line in `Settings:tapHead`, the
+the `Dev.opened` calls, the `Dev.GIFT` line in `Settings:tapHead`, the
 `unlocks` line in `src/options.lua`, and the file.
 
 **The boss test is the other thing it holds.** While `Dev.showing()`, the title
