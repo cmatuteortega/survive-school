@@ -163,7 +163,8 @@ local BLARE_REACH = 34
 -- that moves, src/plaster.lua, with its brain in the same socket,
 -- src/stilllife.lua), `marble` (ART's encore: a block of marble carved into a
 -- bust by the hits it takes -- src/marble.lua), `last` (the line the
--- page says as it goes down), `wreck` (how it comes apart: the colours it
+-- page says as it goes down), `shut` (the line the win card heads with when it
+-- is the boss that opens it -- src/win.lua), `wreck` (how it comes apart: the colours it
 -- bursts into, how many rings roll out of the burst, and the sound --
 -- src/wreck.lua; the eye comes apart its own way, EyeBoss.fall) and `arrive`
 -- (dropped onto the page rather than walked in, for a boss with no entrance of
@@ -336,7 +337,7 @@ Enemy.types = {
     -- the 1260 above is still the fight, and the second eye is 40% past it.
     bosseye = { name = "BOSS EYE", sprite = "bosseye", hp = 900, speed = 26, radius = 20, damage = 20,
               xp = 250, shadow = 34, boss = true, pupil = true, knock = 0.06, hold = 0.3,
-              title = "THE EYE", call = "THE EYE IS OPEN",
+              title = "THE EYE", call = "THE EYE IS OPEN", shut = "THE EYE IS SHUT",
               last = "LIGHTS OUT",
               shot = { range = 190, every = 2.6, speed = 46, damage = 12, hit = 4,
                        spread = 5, arc = 1.05, drop = "red" },
@@ -456,7 +457,7 @@ Enemy.types = {
     -- missed.
     atom = { name = "ATOM", sprite = "atom", hp = 900, speed = 22, radius = 12, damage = 20,
              xp = 250, shadow = 24, boss = true, knock = 0.06, hold = 0.3,
-             title = "THE ATOM", call = "THE ATOM IS UNSTABLE",
+             title = "THE ATOM", call = "THE ATOM IS UNSTABLE", shut = "THE ATOM IS SPLIT",
              last = "DECAYED", wreck = { ink = { "blue", "sky", "ink" }, rings = 3 },
              atom = {
                  -- The whole: a nucleus 27 across with three orbits round it,
@@ -508,7 +509,7 @@ Enemy.types = {
     -- its body: every move but the recall is it running at you.
     piggy = { name = "PIGGY BANK", sprite = "piggy", hp = 900, speed = 30, radius = 14,
               damage = 20, xp = 250, shadow = 30, boss = true, knock = 0.06, hold = 0.3,
-              title = "THE PIGGY BANK", call = "THE PIGGY BANK IS FULL",
+              title = "THE PIGGY BANK", call = "THE PIGGY BANK IS FULL", shut = "THE PIGGY BANK IS BROKEN",
               last = "BROKE", wreck = { ink = { "blush", "red", "ink" }, rings = 1 },
               piggy = {
                   -- The second phase, as a share of its health left.
@@ -559,7 +560,7 @@ Enemy.types = {
     -- the outer cube's corners.
     tesseract = { name = "TESSERACT", sprite = "tesseract", hp = 900, speed = 20, radius = 15,
                   damage = 20, xp = 250, shadow = 28, boss = true, knock = 0.06, hold = 0.3,
-                  title = "THE TESSERACT", call = "THE FOURTH DIMENSION",
+                  title = "THE TESSERACT", call = "THE FOURTH DIMENSION", shut = "THE TESSERACT IS FLAT",
                   last = "Q.E.D.", wreck = { ink = { "ink", "blue", "red" }, rings = 4 },
                   tesseract = {
                       -- Seconds of drifting between moves, plus up to 0.6 more:
@@ -617,7 +618,7 @@ Enemy.types = {
     -- middle of its side.
     speaker = { name = "SPEAKER", sprite = "speaker", hp = 900, speed = 24, radius = 13,
                 damage = 20, xp = 250, shadow = 24, boss = true, knock = 0.06, hold = 0.3,
-                title = "THE SPEAKER", call = "NOW PLAYING",
+                title = "THE SPEAKER", call = "NOW PLAYING", shut = "THE SPEAKER IS UNPLUGGED",
                 last = "DISCONNECTED", wreck = { ink = { "blue", "sky", "ink" }, rings = 4 },
                 arrive = true,
                 speaker = {
@@ -684,7 +685,7 @@ Enemy.types = {
     -- own on the row: its lamp throws one as long as it is (src/redpenboss.lua).
     redpen = { name = "RED PEN", sprite = "redpen", hp = 900, speed = 0, radius = 13,
                damage = 20, xp = 250, shadow = 0, boss = true, knock = 0.06, hold = 0.3,
-               title = "THE RED PEN", call = "PENS DOWN!",
+               title = "THE RED PEN", call = "PENS DOWN!", shut = "THE RED PEN IS PUT AWAY",
                last = "OUT OF INK", wreck = { ink = { "red", "blush", "ink" }, rings = 3 },
                arrive = true,
                redpen = {
@@ -754,7 +755,7 @@ Enemy.types = {
     -- does; the hit circle is the can's own width.
     deodorant = { name = "DEODORANT", sprite = "deodorant", hp = 900, speed = 24, radius = 11,
                   damage = 20, xp = 250, shadow = 20, boss = true, knock = 0.06, hold = 0.3,
-                  title = "THE DEODORANT", call = "FRESH!",
+                  title = "THE DEODORANT", call = "FRESH!", shut = "THE AIR IS CLEAR",
                   last = "EMPTY", wreck = { ink = { "red", "blush", "ink" }, rings = 3 },
                   arrive = true,
                   deodorant = {
@@ -825,7 +826,7 @@ Enemy.types = {
     marble = { name = "MARBLE", sprite = "marble", hp = 900, speed = 0, radius = 15,
                damage = 20, xp = 250, shadow = 30, ground = 20, boss = true,
                solid = "marble", knock = 0.06, hold = 0.3,
-               title = "THE MARBLE", call = "SET IN STONE",
+               title = "THE MARBLE", call = "SET IN STONE", shut = "THE MARBLE IS DUST",
                last = "MASTERPIECE", wreck = { ink = { "graphite", "slate", "red" }, rings = 2 },
                arrive = true,
                marble = {
@@ -900,7 +901,7 @@ Enemy.types = {
     -- never free even between the calls below.
     whistle = { name = "WHISTLE", sprite = "whistle", hp = 900, speed = 22, radius = 13, damage = 20,
                 xp = 250, shadow = 26, boss = true, solid = "whistle", knock = 0.06, hold = 0.3,
-                title = "THE WHISTLE", call = "THE WHISTLE BLOWS",
+                title = "THE WHISTLE", call = "THE WHISTLE BLOWS", shut = "THE WHISTLE IS QUIET",
                 last = "FULL TIME", wreck = { ink = { "red", "ink", "slate" }, rings = 3, sound = "whistle" },
                 arrive = true,
                 shot = { range = 200, every = 1.9, speed = 58, damage = 9, hit = 3,
@@ -974,7 +975,7 @@ Enemy.types = {
     metronome = { name = "METRONOME", sprite = "metronome", hp = 900, speed = 50, radius = 12,
                   damage = 20, xp = 250, shadow = 30, boss = true, solid = "metronome",
                   knock = 0.06, hold = 0.3,
-                  title = "THE METRONOME", call = "THE METRONOME TICKS",
+                  title = "THE METRONOME", call = "THE METRONOME TICKS", shut = "THE METRONOME HAS STOPPED",
                   last = "OUT OF TIME", wreck = { ink = { "ink", "slate", "red" }, rings = 4, sound = "tick" },
                   arrive = true,
                   metronome = {
@@ -1045,7 +1046,7 @@ Enemy.types = {
     stamp = { name = "STAMP", sprite = "stamp", hp = 900, speed = 26, radius = 13,
               damage = 20, xp = 250, shadow = 40, ground = 12, boss = true, solid = "stamp",
               knock = 0.06, hold = 0.3,
-              title = "THE STAMP", call = "THE STAMP COMES DOWN",
+              title = "THE STAMP", call = "THE STAMP COMES DOWN", shut = "THE STAMP IS VOID",
               last = "CANCELLED", wreck = { ink = { "red", "blush", "ink" }, rings = 1 },
               arrive = true,
               stamp = {
@@ -1107,7 +1108,7 @@ Enemy.types = {
     dictionary = { name = "DICTIONARY", sprite = "dictionary", hp = 900, speed = 0, radius = 14,
                    damage = 20, xp = 250, shadow = 40, ground = 16, boss = true,
                    solid = "dictionary", knock = 0.06, hold = 0.3,
-                   title = "THE DICTIONARY", call = "THE DICTIONARY OPENS",
+                   title = "THE DICTIONARY", call = "THE DICTIONARY OPENS", shut = "THE DICTIONARY IS CLOSED",
                    last = "THE END", wreck = { ink = { "ink", "slate", "graphite" }, rings = 2 },
                    arrive = true,
                    dictionary = {
@@ -1173,7 +1174,7 @@ Enemy.types = {
     -- under the eye's 26 -- and all of it down a line you can step off.
     die = { name = "DIE", sprite = "die", hp = 900, speed = 0, radius = 14, damage = 20,
             xp = 250, shadow = 28, boss = true, knock = 0.06, hold = 0.3,
-            title = "THE DIE", call = "THE DIE IS CAST",
+            title = "THE DIE", call = "THE DIE IS CAST", shut = "THE DIE IS STILL",
             last = "SNAKE EYES", wreck = { ink = { "ink", "red", "slate" }, rings = 2 },
             dice = {
                 -- What it is, by phase (the eye's thirds).
@@ -1245,7 +1246,7 @@ Enemy.types = {
     -- still; when you get far from it, the table is lifted and put down nearer.
     stilllife = { name = "STILL LIFE", sprite = "stilllife", hp = 900, speed = 0, radius = 16,
                   damage = 20, xp = 250, shadow = 30, boss = true, knock = 0.06, hold = 0.3,
-                  title = "THE STILL LIFE", call = "DRAW WHAT YOU SEE",
+                  title = "THE STILL LIFE", call = "DRAW WHAT YOU SEE", shut = "THE STILL LIFE IS FINISHED",
                   last = "SIGNED", wreck = { ink = { "graphite", "slate", "sky" }, rings = 2 },
                   arrive = true,
                   still = {

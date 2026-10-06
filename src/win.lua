@@ -18,6 +18,8 @@ local util = require("src.util")
 local Win = {}
 Win.__index = Win
 
+-- The line over YOU WIN is the boss's own (`shut` on its row in src/enemy.lua),
+-- handed in by `open`; this is what it says for a boss whose row has none.
 local HEAD, TITLE = "THE EYE IS SHUT", "YOU WIN"
 
 -- Hoisted so the card is as wide as the widest thing it can ever hold rather
@@ -39,7 +41,7 @@ end
 
 -- The score is copied in rather than read off the run each frame: ENDLESS lets
 -- the run go again underneath, and this reports the moment the eye went down.
-function Win:open(time, kills, cycle, coins, course, offer)
+function Win:open(time, kills, cycle, coins, course, offer, head)
     self.t = 0
     self.phase = "asking"  -- asking -> confirm
     self.chosen = nil
@@ -50,6 +52,8 @@ function Win:open(time, kills, cycle, coins, course, offer)
     -- Kept as numbers and put into words at the draw: a string built at `open`
     -- would be built in whatever language `open` happened to run in.
     self.time, self.kills, self.cycle = time, kills, cycle
+    -- Which boss went down, as the English key: the eye is not the only one.
+    self.head = head or HEAD
     -- The class it was sat as (src/course.lua), as a name rather than a row.
     -- `Over:courseLine` has why it is on both cards and printed at high school.
     self.course = course or "HIGH SCHOOL"
@@ -123,7 +127,7 @@ end
 function Win:contentWidth()
     local tally = self:tallyLine()
     return math.max(
-        Font.width(I18n.t(HEAD)),
+        Font.width(I18n.t(self.head)),
         Font.width(I18n.t(TITLE)) * LABEL_SCALE,
         -- At the widest grade in the ladder, so the two cards a mark can appear
         -- on come out the same width.
@@ -285,7 +289,7 @@ function Win:draw(game)
         progress, Palette.slate, 7, 0)
 
     love.graphics.setColor(Palette.slate)
-    Font.printCentered(I18n.t(HEAD), lay.cx, lay.head)
+    Font.printCentered(I18n.t(self.head), lay.cx, lay.head)
 
     -- The only blue lettering in the game: red has been hitting you for ten
     -- minutes and ink asks every other question, so the one line that has never

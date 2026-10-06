@@ -1403,7 +1403,7 @@ function Game:openWin()
     -- the end of a run, `END` is (Game:cashRun), and ENDLESS is a bet that the
     -- number on the card will be bigger by the time it is collected.
     self.win:open(self.time, self.kills, self.spawner:round(), self:runWorth(true),
-        (self.course or Course.default).name, self:doubleOffer(true))
+        (self.course or Course.default).name, self:doubleOffer(true), self.downed)
 end
 
 -- ENDLESS. Another ten minutes and another eye at the end of them, with the
@@ -2065,6 +2065,9 @@ function Game:killEnemy(index)
         end
         self.shots = {}
         if e.def.last then self:say(e.def.last) end
+        -- And the line the win card will head with, if this was the boss that
+        -- opens it (`shut` on its row; Game:openWin).
+        self.downed = e.def.shut
         -- Counted here for the same reason the win is noticed here: this is the
         -- one door every kill in the game comes through, so it is the one place
         -- that has to know an eye is worth something (`Game:runWorth`).

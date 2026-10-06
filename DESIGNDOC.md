@@ -1295,7 +1295,9 @@ it is made of rather than a branch anywhere. `title` is its name under the HUD's
 (`Hud`'s `drawBoss`, the eye if left out) and `call` the line the page says as it
 walks on (`Game:spawnEnemy`). `last` is the line it says as it goes down
 (`Game:killEnemy`, said the instant it is killed so it is up for the whole of the
-coming apart). `arrive` drops a boss with no entrance of its own onto the page
+coming apart), and `shut` the line the win card heads with when it is the boss
+that opens it (`Game:openWin` hands it to `Win:open`; the eye's "THE EYE IS SHUT"
+if left out). `arrive` drops a boss with no entrance of its own onto the page
 (`Game:dropIn`): put down a hundred pixels from you between you and where the
 spawner sent it, `ghost` and skipped by `Game:updateEnemies` (brain, walk,
 contact, fire) for `ARRIVE_TIME` while `hop` lifts it off its shadow and a ring
@@ -6661,7 +6663,7 @@ and are all the same 11x11 glyph.
   sense scaled up; if it is "what happens when
   it dies", that is `Game:killEnemy` and nothing else.
 - **Boss:** a sprite in `Sprites.enemies` and a row in `Enemy.types` with `boss =
-  true`, a `title`, a `call` and a `last` (all through `I18n.t`, so a line each in
+  true`, a `title`, a `call`, a `last` and a `shut` (all through `I18n.t`, so a line each in
   the `ES` table and the four `src/lang/` files), a `wreck` row for how it comes
   apart and `arrive = true` unless its brain has an entrance of its own, named by a lesson's `boss` -- or its
   `encore`, the second boss a lesson ends on at a course whose `bosses` is 2 --

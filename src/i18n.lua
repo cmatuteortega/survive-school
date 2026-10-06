@@ -736,6 +736,20 @@ local ES = {
     --- the win card ---------------------------------------------------------
 
     ["THE EYE IS SHUT"] = "EL OJO ESTA CERRADO",
+    -- What the win card heads with for each boss (`shut` in src/enemy.lua).
+    ["THE WHISTLE IS QUIET"] = "EL SILBATO CALLA",
+    ["THE METRONOME HAS STOPPED"] = "EL METRONOMO SE PARA",
+    ["THE STAMP IS VOID"] = "EL SELLO ESTA ANULADO",
+    ["THE DICTIONARY IS CLOSED"] = "EL DICCIONARIO ESTA CERRADO",
+    ["THE DIE IS STILL"] = "EL DADO SE QUEDA QUIETO",
+    ["THE STILL LIFE IS FINISHED"] = "EL BODEGON ESTA TERMINADO",
+    ["THE ATOM IS SPLIT"] = "EL ATOMO ESTA PARTIDO",
+    ["THE PIGGY BANK IS BROKEN"] = "LA HUCHA ESTA ROTA",
+    ["THE TESSERACT IS FLAT"] = "EL TESERACTO ESTA PLANO",
+    ["THE SPEAKER IS UNPLUGGED"] = "EL ALTAVOZ ESTA DESENCHUFADO",
+    ["THE RED PEN IS PUT AWAY"] = "EL BOLI ROJO SE GUARDA",
+    ["THE AIR IS CLEAR"] = "EL AIRE ESTA LIMPIO",
+    ["THE MARBLE IS DUST"] = "EL MARMOL ES POLVO",
     ["YOU WIN"] = "HAS GANADO",
     ["EYE %d DOWN"] = "OJO %d CAIDO",
     ["END"] = "FIN",

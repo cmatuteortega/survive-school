@@ -3031,8 +3031,8 @@ weapon is meant to show you what you just bought.
 
 ## When the run ends
 
-Two things end a run and they end it on the same card. Killing the eye puts up
-`THE EYE IS SHUT` / `YOU WIN` with `END` and `ENDLESS` under it; being killed
+Two things end a run and they end it on the same card. Killing the boss puts up
+the boss's own line (`THE EYE IS SHUT`, `THE DIE IS STILL`...) over `YOU WIN`, with `END` and `ENDLESS` under it; being killed
 puts up `CLASS DISMISSED` / `GAME OVER` with `RETRY` and `QUIT`. Same paper card
 lying on the frozen page, same two boxes, same arm-then-lift, same `1` / `2` on
 the keyboard — because a run that has just been killed is looking at a page in
