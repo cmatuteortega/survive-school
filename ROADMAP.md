@@ -2,8 +2,9 @@
 
 What stands between the game as it is and a polished commercial mobile release
 — the Vampire Survivors / Brotato tier rather than a literal AAA budget. The
-systems depth (seven lessons, four courses, twelve weapons, forty-five fusions,
-the book's library, canteen, homework, collection and tally) is already there;
+systems depth (seven lessons with a boss and an encore each, four courses,
+twelve weapons, forty-five fusions, the book's library, canteen, homework,
+collection and tally) is already there;
 what is listed here is breadth, feel, onboarding and the platform around it.
 
 Tick a box when the item ships, and update `README.md` / `DESIGNDOC.md` as the
@@ -12,21 +13,23 @@ for it.
 
 ## 1. Art
 
-- [ ] **Character sprites** — finished art for SHOOTMAN, SWORDSMAN, STARMAN,
-      SKATEMAN (`src/characters.lua`, `src/sprites.lua`), and any heroes added
-      later.
-- [ ] **Secondary animation** — idle bobs, squash and stretch on hits, a death
+- [x] **Character sprites** — finished art for SHOOTMAN, SWORDSMAN, STARMAN,
+      SKATEMAN (`src/characters.lua`, `src/sprites.lua`).
+- [x] **Secondary animation** — idle bobs, squash and stretch on hits, a death
       animation per enemy type, and wind-up frames before boss attacks.
-- [ ] **Per-lesson pages** — every lesson currently plays on the same page
-      (`src/background.lua`); give each subject its own look.
+- [x] **Per-lesson pages** — each subject plays on its own page, baked from
+      `art/<subject>/` (`lua art/bake.lua`) and tiled by `src/background.lua`.
 
 ## 2. Bosses and enemies
 
-- [ ] **Boss variations** — today there is one boss (`bosseye`,
-      `src/enemy.lua`); a distinct boss per lesson or per cycle, each with its
-      own pattern and its own telegraphs.
-- [ ] **Larger enemy roster** — 8 types now (skull, wad, blot, drop, bulb, grin,
-      red eye, boss eye). Add ranged attackers, chargers, splitters, shielded
+- [x] **Boss variations** — a distinct boss per lesson and a second one, its
+      encore, sent by the courses with `bosses = 2` (`src/subjects.lua`): the
+      eye and the atom, the whistle and the deodorant, the dictionary and the
+      red pen, the stamp and the piggy bank, the metronome and the speaker, the
+      die and the tesseract, the still life and the marble. Each has its own
+      patterns and telegraphs (`BOSSES.md`, `3dmethod.md`).
+- [ ] **Larger enemy roster** — 10 types now (blob, bat, skull, wad, blot,
+      drop, bulb, grin, eye, red eye). Add ranged attackers, chargers, splitters, shielded
       and support enemies, each one asking for a new reaction the way the wad,
       blot, bulb and grin each do (README **What walks on**).
 - [ ] **Stage hazards / gimmicks** — obstacles, layouts or a rule unique to each
@@ -80,8 +83,18 @@ for it.
 - [ ] **Achievements** — Google Play Games / Game Center; the tally and homework
       list (`src/tally.lua`, `src/challenges.lua`) map straight onto them.
 - [ ] **Leaderboards** — per lesson and per course.
-- [ ] **Run resume on app kill** — confirm a run survives the OS backgrounding
-      and killing the app, not only the pause flow (`src/bookmark.lua`).
+- [ ] **Run resume on app kill** — a run does *not* survive the OS killing the
+      app today: `love.visible(false)` pauses the run (`Game:putDown`) but only
+      `love.quit` leaves a bookmark (`main.lua`, `Game:closing`), and Android
+      never calls `love.quit` on a backgrounded app it kills. Write the bookmark
+      on going out of sight too (`src/bookmark.lua`).
+- [ ] **Save versioning** — the save files (`records.txt`, `tally.txt`,
+      `course.txt`, the design files) carry no format version; stamp one and
+      migrate old saves on load before the first update ships changes to them.
+- [ ] **Gamepad / keyboard play** — `src/input.lua` is touch and mouse only;
+      worth it for desktop and Chromebook, optional for a mobile-only release.
+- [ ] **Device coverage** — check the fit (`main.lua`, safe insets) on real
+      notched phones, foldables and tablets, in both orientations.
 - [ ] **Crash reporting** and **analytics** (opt-in).
 
 ## 7. Retention and business model
@@ -138,16 +151,28 @@ checked against Play: that needs the app and its products in Play Console.
       testing track, create and activate the two products (`full_game` at
       3,99 EUR, `everything` at 1,99 EUR), and add license testers.
 
-### Retention
+### Store listing and compliance
 
-- [ ] **Daily / weekly challenges** — seeded runs everyone plays the same; the
-      game is already deterministic (DESIGNDOC **Determinism and allocation**).
+- [ ] **Privacy policy** — hosted at a public URL and linked from the listing;
+      required by Play once AdMob and billing are in.
+- [ ] **Data safety form** — what AdMob, UMP and love-iap collect and share.
+- [ ] **Content rating** (IARC questionnaire) and **target audience** — with
+      ads in the game, an audience that includes children brings in the
+      Families policy.
+- [ ] **Store listing** — icon, feature graphic, screenshots and short / full
+      descriptions, in EN, ES, DE, FR, IT and PT-BR.
 
 ## 8. Production quality
 
 - [ ] **Automated checks** — beyond `luac -p`: a headless simulated run per
       course to catch broken fusions, crashes and difficulty spikes.
+- [ ] **Balance pass** — the fourteen bosses and four courses tuned against
+      each other by hand, now that every lesson sends two bosses at the courses
+      that ask for them.
 - [ ] **Low-end device profiling** — late-game hordes and projectile-heavy
       builds on a cheap Android phone.
 - [ ] **Docs cleanup** — README **Not built yet** still opens with "No audio.",
       which the **Sound** section contradicts.
+- [ ] **Soft launch** — a closed testing track in Play Console with outside
+      players, and a round of fixes from their feedback before the public
+      release.
