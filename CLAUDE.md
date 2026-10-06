@@ -103,7 +103,7 @@ answer instead.
 `bookmark.txt`, `records.txt`, `tally.txt`, `course.txt`, `iap.txt` (what the
 shop has sold -- `full_game`, `everything` -- kept by love-iap), and one `.txt` per drawn design (`hero-*.txt`,
 `sword.txt`, `star.txt`, `rocket.txt`, `sun.txt`, `cools.txt`, `skate.txt`,
-`bomb.txt`, `lightning.txt`, `bird.txt`, `shot.txt`) — one line per row of the
+`bomb.txt`, `lightning.txt`, `bird.txt`, `shot.txt`, `boomerang.txt`) — one line per row of the
 design. Delete one to be handed the starting drawing again.
 
 ## Non-negotiable rendering rules
@@ -240,7 +240,7 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   send it -- ten minutes after the first goes down -- and only it opens the win
   card.
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
-  `sun`, `cools`, `bomb`, `skate`, `spiral`, `storm`, `beam`, `scissors`,
+  `sun`, `cools`, `bomb`, `skate`, `spiral`, `coffee`, `boomerang`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.
 - **World bookkeeping:** `stroke`, `mark`, `walls`, `bullet`, `gem`, `pickup`,
   `puddle` and `spike` (the eye's wet and the P.E. whistle's jacks), `damage`, `sfx` (+ `src/sfx/`, `src/music/`), `haptics` (the one buzz: being

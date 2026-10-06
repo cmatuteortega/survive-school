@@ -34,7 +34,7 @@ lives in `~/Library/Application Support/LOVE/notebook-survivors/` —
 `hero-shootman.txt`, `hero-swordsman.txt`, `hero-starman.txt` and
 `hero-skateman.txt` (one hero per character, built off `Characters.list`),
 `sword.txt`, `shot.txt`, `star.txt`, `bird.txt`, `rocket.txt`, `sun.txt`,
-`cools.txt`, `bomb.txt`, `skate.txt` and `lightning.txt`, one line per row of the design (delete one to get the drawing you are
+`cools.txt`, `bomb.txt`, `skate.txt`, `lightning.txt` and `boomerang.txt`, one line per row of the design (delete one to get the drawing you are
 handed to draw over back). A hero board with no file of its own yet falls back
 down a list (`legacy` in `src/design.lua`): the file the character was kept under
 before it was renamed (`was` on the row), and then the old single `hero.txt`, so
@@ -3029,7 +3029,7 @@ lesson tools' demand is the longest string on this screen and a phone in portrai
 one column wide. And they are assembled at the *draw* — `I18n.t(key):format(arg)`,
 never the other way round, and a lesson's name in the slot is itself translated.
 
-The count (`9/36` on a fresh save) hangs in the top right at 1:1, level with the corner button —
+The count (`10/38` on a fresh save) hangs in the top right at 1:1, level with the corner button —
 the canteen's purse readout in the canteen's corner and for the canteen's reason —
 so the heading's clearance guard now steps below *both* corners rather than one. It
 is measured off four figures rather than the two showing and goes red when there is
@@ -3142,12 +3142,12 @@ through it.
 
 **It is five ladders, and they lock five different things.**
 
-The **written** one is seventeen quests of **one line each**, in `Collection.gates`,
+The **written** one is eighteen quests of **one line each**, in `Collection.gates`,
 easiest first. It used to be ten of two — a weapon and a passive together, so that
 every unlock changed two of the library's shelves at once — and the two halves were
 never separable afterwards: a player who wanted the pen was told to survive two
 minutes and handed a bomb as well, and neither half could be re-aimed, re-priced or
-retired without moving the other. Seventeen rows with one `line` apiece say the same
+retired without moving the other. Eighteen rows with one `line` apiece say the same
 thing at the same rate and each is a row that can be moved on its own, which is what
 the homework page reads out and what makes it readable at all — a checklist where
 one tick means one thing.
@@ -3157,10 +3157,10 @@ one tick means one thing.
 every name by, so the ladder's order and the shelves' order are the same fact
 written once. Moving a quest up the list moves it up the shelf as well, and the two
 screens cannot disagree about which of two locked lines comes first. It is why the
-seventeen are kept in the order they are *expected to fall* rather than grouped by
+eighteen are kept in the order they are *expected to fall* rather than grouped by
 which column they ask about.
 
-The four things a quest's `need` may name pull in different directions on purpose:
+The five things a quest's `need` may name pull in different directions on purpose:
 
 | `need` | asks | quests |
 | --- | --- | --- |
@@ -3168,6 +3168,7 @@ The four things a quest's `need` may name pull in different directions on purpos
 | `kills` | the biggest body count on one page — fight, and quietly *where* | 300, 1000, 2500, 4000 |
 | `sat` | pages played far enough in that the boss walked on | 1, 2, 4, 6, 7 |
 | `beat` | pages whose boss went down | 1, 3, 7 |
+| `encore` | second bosses put down, any page's — only the courses with two bosses send one; read off `Tally.beat` rather than the register | 1 |
 
 The ladder alternates between them; three time quests in a row would be one quest
 with three prices on it. Two numbers there are load-bearing.
@@ -3179,12 +3180,14 @@ a reward. Before the axes were re-cut, walking the term at minimum cost — six 
 nothing over 7:00, no boss ever reached — cleared **eight of the ten milestones** and
 read 67 of 81 lines open. It now clears five of seventeen and reads 15.
 
-And only **three of the seventeen ask about a boss**, which is a ceiling rather than
+And only **four of the eighteen ask about a boss**, which is a ceiling rather than
 a shortage of ideas. The eye is provisional: one fight standing in for seven, six of
 which nobody has drawn. A ladder leaning on it is a ladder that cannot be tuned
 until they all exist, so `sat` — the half of the same question that does not care
-what walks on at minute ten — carries five quests to `beat`'s three. All seven pages
-sat and none beaten still reads 29/36 and 36/45, which is the property that keeps
+what walks on at minute ten — carries five quests to `beat`'s three, and the one
+`encore` quest opens a single line nothing else could (the boomerang), the book's
+reward for going back to a page at a harder class. All seven pages
+sat and none beaten still reads 30/38 and 36/45, which is the property that keeps
 the game tunable while six bosses are missing. When they are real, the obvious move
 is to put the *lesson tools* behind beating their own lesson rather than sitting it;
 today that would hang forty-three of the eighty-one lines off fights that do not
@@ -6346,23 +6349,21 @@ a flock half again as wide, so fourteen of them are a cloud you are standing
 inside. Every other weapon covers ground by reaching further; this one covers it
 by filling in what it already reached.
 
-`spiral.lua` is the twelfth and the only one that **does no damage at all**. What
+`spiral.lua` is the twelfth and the only one that **does no damage of its own**. What
 it sells is where the fight is, which is the one thing none of the other eleven
 can arrange -- a bomb at your feet, a beam down your line and a bolt out of a
 cloud are all answers to where the crowd already is. Three things about it are
 load-bearing:
 
-- **The pull is a decision and the push is a force**, and both are handed to the
-  enemy rather than read off the page, for the skate's reason: the weapons are
-  stepped after the crowd has moved. A spiral *lures* (`Enemy:lure`), so what it
-  catches goes on walking, jostling and hurting whoever is standing where it is
-  going. The last level's spiral -- the one round the player, for the rest of the
-  run -- *shoves* (`Enemy:knockback`) and could not lure: something told to walk
-  away would never come back, and a run nothing could reach is a run with no
-  difficulty. A shove decays, so what that level buys is a treadmill. The boss
-  needs no clause of its own at either end: `knock` on its row already says what a
-  shove is worth against it and `hold` already says what being held is worth, and
-  a lure is a hold -- both arrive here for nothing.
+- **The pull is a decision**, handed to the enemy rather than read off the page,
+  for the skate's reason: the weapons are stepped after the crowd has moved. A
+  spiral *lures* (`Enemy:lure`), so what it catches goes on walking, jostling and
+  hurting whoever is standing where it is going. The boss needs no clause of its
+  own: `hold` on its row already says what being held is worth, and a lure is a
+  hold. The last level hands a `frail` over with the lure -- 1.5 -- which
+  `Enemy:hurt` spends on every hit from anything else while `lureT` runs: the hole
+  goes soft, and still nothing here hits. It used to be a spiral round the player
+  that shoved; the coffee ring owns that ground now.
 - **It has no board**, and it is the second weapon with none (`beam.lua` is the
   other). A spiral is arithmetic -- so many arms, so many turns, wound either way,
   spinning -- and a design is a fixed grid of pixels used exactly as drawn. Being
@@ -6376,19 +6377,45 @@ load-bearing:
   `pi x turns x radius x arms` is the same order of work as the laser beam, which
   is the only other thing here drawing in the hundreds of pixels a frame.
 
-Ten of the twelve are drawn by the player rather than authored (see below), the
-beam and the spirals being the exceptions -- both are lines the levels size, and
-there is nothing in a line a drawing could be -- though the sun's board is only its *face* (the disc,
+`coffee.lua` is the thirteenth and the only one that **pays you for standing
+still**: a ring under the player that grows at `grow` a second while
+`player.moving` is false and dries back at `shrink` while it is true, never below
+`least`, burning on a `tick` through `eachWithin` and handing a `chill` over at
+its fourth level exactly as the skate's trail does. The finale (`spill`) is asked
+on the edge from standing to walking: walk off a ring at 95% of `most` or more and
+a splash goes out to 1.6 times it over a quarter of a second, hitting each thing
+once and shoving it through `knockback` (scaled by `stats.knock`), and the ring
+drops back to `least`. No board, no `draw`: it is ground (`drawGround`), a rim two
+pixels deep, slate while spreading and graphite while drying. Nothing on it is a
+gap or a persistence, so neither the metronome nor the laminate reaches it -- its
+`tick` is damage per second and belongs to the damage lines.
+
+`boomerang.lua` is the fourteenth and the only one that **comes home**. Thrown
+at `Game:nearestEnemy` within 1.5 x `range`, it brakes at a constant rate to stop
+exactly `range` out (v^2 = 2ad), empties its hit list, and steers straight at
+the player every frame, accelerating back up to `speed` -- so the way home is
+drawn by the player's feet and cuts a second pass. The clock (`every`, so the
+metronome reaches it) only runs with nothing in the air, which makes the catch the
+half the player plays; `catch` at the finale rethrows on the spot. A boomerang not
+home in six seconds is let go of anyway. It is the one line gated on `encore`
+(`Collection.gates`): beating any lesson's second boss, read off `Tally.beat` and
+`encore` on `Subjects.bosses()`.
+
+Eleven of the fourteen are drawn by the player rather than authored (see below), the
+beam, the spirals and the coffee ring being the exceptions -- all three are shapes the
+levels size, and there is nothing in a line or a radius a drawing could be -- though the sun's board is only its *face* (the disc,
 rim and rays are sized by the levels), the bomb's drawing is the one shown in
 a colour nobody drew it in and the skate's is the one that goes *under* another
 drawing rather than being all of something, and the storm's is only its *bolt*
 — the cloud that carries it in is authored, since the bolt is what the weapon
-does and the cloud is only what brings it. Two of the ten are usually drawn
+does and the cloud is only what brings it. Two of the eleven are usually drawn
 before the run rather than during one, since the character hands them over: the
 sword and the pellet SHOT sends. The rocket and the sword are the drawn things in
 the game with a heading, so they are the ones kept at more than one: `pixelart.turn`
 builds a ring of eight and a rocket is fired down one of them, so the heading and
-the drawing are one choice with no rounding step in between. Nothing turns at draw time — see the rendering
+the drawing are one choice with no rounding step in between. The boomerang is kept
+at eight too, and has no heading: it steps round the ring as it flies, so the ring
+is its spin. Nothing turns at draw time — see the rendering
 rules, and note that this is exactly why the beam, which has no sprite, is free
 of the eight.
 
@@ -7066,8 +7093,8 @@ and are all the same 11x11 glyph.
   anything else belongs in `Upgrades.list`, where a level is a function of what it
   changes.
 - **Something the book has to be earned to reach:** add a row to
-  `Collection.gates` (`src/collection.lua`) -- a `need` naming one of the four
-  columns (`time`, `kills`, `sat`, `beat`) and the single `line` it opens -- and
+  `Collection.gates` (`src/collection.lua`) -- a `need` naming one of the five
+  columns (`time`, `kills`, `sat`, `beat`, `encore`) and the single `line` it opens -- and
   bump nothing else. The draft's pool and the library's shelf ask the same one
   question (`Collection.has`), the count in the library's corner is measured off the
   shelves, and the words a locked entry prints come off the `need` through
@@ -7084,8 +7111,8 @@ and are all the same 11x11 glyph.
   same id asserts at load, as does an id the catalogue does not have. **Price it
   above the term's ceiling** if it is a `time` row: seven minutes or less is a
   reward that arrives while the player is opening pages, and one that cannot be
-  missed is not a reward. **Keep the boss count low** -- three of seventeen ask
-  `beat`, because six of the seven bosses do not exist yet and `sat` asks the same
+  missed is not a reward. **Keep the boss count low** -- four of eighteen ask
+  about a boss (three `beat`, one `encore` -- the boomerang), because six of the seven bosses do not exist yet and `sat` asks the same
   question without them. Never put a **character's weapon** behind a quest -- a
   bought hero's line already has a gate of its own, derived from `Characters.list`,
   and the base hero's may not have one at all, since it is what a fresh book's first

@@ -46,6 +46,8 @@ local Skate = require("src.skate")
 local Storm = require("src.storm")
 local Flock = require("src.flock")
 local Spiral = require("src.spiral")
+local Coffee = require("src.coffee")
+local Boomerang = require("src.boomerang")
 
 local Loadout = {}
 Loadout.__index = Loadout
@@ -71,12 +73,19 @@ local WEAPONS = {
     { stat = "beam", module = Beam },
     { stat = "bomb", module = Bomb },
     { stat = "skate", module = Skate },
+    -- Under the spiral rather than over it: the stain is the ground you are
+    -- standing on and a spiral wound onto it is drawn on top, the way a line
+    -- laid over a filled patch reads.
+    { stat = "coffee", module = Coffee },
     -- Nothing of the spiral is drawn up with the weapons at all -- it is ink on
     -- the page and goes down in the ground pass -- so where it sits in this list
     -- only decides what it is drawn *over* down there: the bomb's burning crater
     -- and the skate's wax, which is the right way round. A line laid over a
     -- filled patch reads; a filled patch laid over a line eats it.
     { stat = "spiral", module = Spiral },
+    -- A thing in the air, so drawn over the crowd -- and before the storm,
+    -- whose cloud is the one thing on the page that ought to cover it.
+    { stat = "boomerang", module = Boomerang },
     -- Last, which is where the highest thing on the page belongs: a cloud is
     -- filled in paper and covers what it floats over, so it goes down after
     -- everything it is meant to be above.

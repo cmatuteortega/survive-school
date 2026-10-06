@@ -14,21 +14,21 @@
 -- else the run is carrying. A run with a sun, a crater or a swarm and a spiral is
 -- a run that chooses where the killing happens.
 --
--- **The pull is a decision and the push is a force**, and the two halves of the
--- line are built out of the two things the game already has for moving a monster.
--- A spiral *lures*: an enemy inside it is handed somewhere else to walk to
--- (Enemy:lure), which is the skate's chill handed over the same way -- the crowd
--- has already moved by the time the weapons are stepped, so what a weapon does to
--- it lands next frame. Being lured is a thing it decides to do, so it keeps
--- walking, keeps bumping into its neighbours and keeps hurting you if you are
--- standing where it is going. The push is a *shove* (Enemy:knockback) and could
--- not be a lure: an enemy told to walk away from you would never reach you again,
--- and a weapon that made a run untouchable would be the end of the run. A shove
--- decays, so what the last level actually buys is a treadmill -- a blob loses most
--- of its ground and a bat loses some of it, and the boss barely notices, since
--- `knock` on its row already says what a shove is worth against it and this asks
--- through the same door as everything else that pushes.
+-- **The pull is a decision**, and it is built out of the thing the game already
+-- has for moving a monster without shoving it. A spiral *lures*: an enemy inside
+-- it is handed somewhere else to walk to (Enemy:lure), which is the skate's chill
+-- handed over the same way -- the crowd has already moved by the time the weapons
+-- are stepped, so what a weapon does to it lands next frame. Being lured is a
+-- thing it decides to do, so it keeps walking, keeps bumping into its neighbours
+-- and keeps hurting you if you are standing where it is going.
 --
+-- **And the last level makes the hole soft.** Still no damage of its own: what it
+-- hands over with the lure is a multiplier (`frail` on the block) that
+-- Enemy:hurt spends on every hit from anything else while the hold lasts. It used
+-- to be a spiral round your own feet that shoved -- the coffee stain
+-- (src/coffee.lua) owns the ground under you now, and the spiral's finale went
+-- back to the one thing this weapon is about: where the killing happens.
+
 -- **It has no board, and it is only the second weapon with none** (the laser
 -- beam is the other). A spiral is procedurally drawn -- a random number of arms,
 -- a random number of turns, a random handedness, spinning -- and a drawing is a
@@ -70,11 +70,6 @@ local FADE = 0.45
 -- what the fourth level sells.
 local PULL_TICK = 0.15
 
--- The push is its own clock and a shorter one, since a shove decays: it is a
--- steady outward pressure made of little ones, and at anything slower than this
--- the crowd would step in and out in time with it.
-local PUSH_TICK = 0.1
-
 -- How fast one turns on the page, in radians a second. Slow enough to read as a
 -- drawn line rather than a wheel: what a spiral is doing is winding, and the spin
 -- is the only thing that says the page is pulling rather than that somebody drew
@@ -98,32 +93,11 @@ function Spiral.new()
         def = nil,
         cool = 0,   -- 0, so taking the level winds one on at once
         live = {},
-        -- The last level's own spiral, the one round the player. Built once and
-        -- then kept: it has no life and never leaves.
-        push = nil,
-        pushT = 0,
     }, Spiral)
 end
 
 function Spiral:configure(def)
     self.def = def
-
-    if def.push and not self.push then
-        -- Fixed where a loose spiral is rolled: two arms, two turns, always
-        -- wound the same way. Not because the handedness says anything -- the
-        -- loose ones are random and one of them will match it half the time --
-        -- but because this is the one spiral you see for the rest of the run, and
-        -- a thing you are looking at that often should be the same thing every
-        -- time. What says it is yours rather than one that happened to land on
-        -- you is that it is under your feet and never leaves.
-        self.push = {
-            spin = love.math.random() * TWO_PI,
-            dir = -1,
-            arms = 2,
-            turns = 2,
-            seed = love.math.random(4096),
-        }
-    end
 end
 
 --- winding on ----------------------------------------------------------------
@@ -157,6 +131,7 @@ function Spiral:launch(game)
         life = def.life,
         radius = r,
         hold = def.hold,
+        frail = def.frail,
         spin = love.math.random() * TWO_PI,
         dir = love.math.random(2) == 1 and 1 or -1,
         -- What makes each one its own drawing. One arm is a curl and two is a
@@ -170,8 +145,7 @@ function Spiral:launch(game)
         -- arms, which at the top of the line is nine hundred of them for one
         -- spiral. The laser beam is the only other thing in the game that draws
         -- in that order (see pixelart.band, which exists to keep it there), and
-        -- two spirals plus the one round your feet is as much of it as this
-        -- weapon should ever ask for.
+        -- two spirals is as much of it as this weapon should ever ask for.
         arms = love.math.random(2),
         turns = 1.4 + love.math.random(),
         -- Which pixels drop out on the way out. Kept rather than rolled at the
@@ -196,29 +170,11 @@ end
 -- boss inside a spiral leans into it between beats and never parks in it; at the
 -- top of the line it follows for half a second at a time. Which is the shape
 -- every other kind of control in this game takes against it, and it arrives here
--- for nothing.
+-- for nothing. So does the finale's `frail`, which rides on the same hold: a boss
+-- is soft for exactly as long as it is held, which is not long.
 function Spiral:pull(s, game)
     game:eachWithin(s.x, s.y, s.radius, function(e)
-        e:lure(s.x, s.y, s.hold * (e.def.hold or 1))
-    end)
-end
-
--- And the last level's, which is the same circle with the sign flipped: away
--- from you rather than towards the middle. A shove rather than a telling, for the
--- reason at the top of this file.
---
--- Anything standing exactly on you gets nothing, since there is no direction to
--- push it in -- and it is about to be touching you anyway, which is a problem a
--- spiral was never going to solve.
-function Spiral:shove(game)
-    local def = self.def.push
-    local player = game.player
-
-    game:eachWithin(player.x, player.y, def.radius, function(e)
-        local nx, ny = util.normalize(e.x - player.x, e.y - player.y)
-        if nx ~= 0 or ny ~= 0 then
-            e:knockback(nx, ny, def.force * game.loadout.stats.knock)
-        end
+        e:lure(s.x, s.y, s.hold * (e.def.hold or 1), s.frail)
     end)
 end
 
@@ -250,21 +206,6 @@ function Spiral:update(dt, game, grid)
     if self.cool <= 0 then
         self.cool = def.every
         self:launch(game)
-    end
-
-    if self.push then
-        self.push.spin = (self.push.spin + self.push.dir * SPIN * dt) % TWO_PI
-        -- Where it is and how wide, kept here rather than reached for at the
-        -- draw: it is round the player this frame, and the draw is only ever
-        -- allowed to read.
-        self.push.x, self.push.y = game.player.x, game.player.y
-        self.push.radius = def.push.radius
-
-        self.pushT = self.pushT - dt
-        if self.pushT <= 0 then
-            self.pushT = PUSH_TICK
-            self:shove(game)
-        end
     end
 end
 
@@ -307,7 +248,6 @@ end
 -- Down on the page with the marks and the boss's blots rather than up with the
 -- weapons, and this is the one weapon that is *only* down here: it is a line
 -- drawn on the paper, and the crowd being drawn into it has to be drawn over it.
--- The push spiral is under the player's own feet for the same reason.
 --
 -- Blue, because it is yours -- the half of the palette that runs from the pen you
 -- draw walls with to the bomb's fuse. It goes pale before it goes, which is the
@@ -325,16 +265,6 @@ function Spiral:drawGround(game)
         end
 
         plot(s, math.min(1, s.age / GROW), fade)
-    end
-
-    -- Guarded on having been placed as well as on existing, and that is not belt
-    -- and braces: the level is taken while the run is *held*, and the draft's
-    -- cards are laid over a page still being drawn behind them -- so the first
-    -- thing that happens to this spiral is being drawn, a frame before anything
-    -- has told it where the player is.
-    if self.push and self.push.x then
-        love.graphics.setColor(Palette.blue)
-        plot(self.push, 1, 1)
     end
 end
 

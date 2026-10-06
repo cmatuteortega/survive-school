@@ -1,6 +1,6 @@
 -- What of the book has been opened, and what it asks for.
 --
--- The catalogue is a hundred and fifty levels down thirty-six lines and the draft
+-- The catalogue is a hundred and sixty levels down thirty-eight lines and the draft
 -- lays three cards, so for most of this project the whole of it was reachable on
 -- the first run and none of it was ever *arrived at*. The library (src/library.lua)
 -- was written to answer half of that -- the catalogue read out loud on a page you
@@ -22,7 +22,7 @@
 -- together, so that every unlock changed two of the library's shelves at once --
 -- and the two were never separable afterwards: a player who wanted the pen was
 -- told to survive two minutes and handed a bomb as well, and neither half of that
--- could be moved, priced or retired without moving the other. Seventeen quests
+-- could be moved, priced or retired without moving the other. Eighteen quests
 -- with one line apiece say the same thing at the same rate and each of them is a
 -- row that can be re-aimed on its own, which is what makes the shelf readable at
 -- all: one hole, one price, one thing behind it.
@@ -38,6 +38,11 @@
 --   on. Asks you to go round the book rather than to get better at one page of it.
 -- - `beat` -- how many lessons have had their boss put down. Asks you to win, and
 --   to win in more than one place.
+-- - `encore` -- how many lessons have had their *second* boss put down, the one
+--   only the courses with two bosses send (src/course.lua). Asks you to win at a
+--   harder class than the book opens on. Read off the tally's beaten bosses
+--   (src/tally.lua) rather than the register, which keeps no column for it -- and
+--   a beating, like a maximum, can never be taken away again.
 --
 -- The ladder alternates between them on purpose. Three time quests in a row would
 -- be one quest with three prices, and a run would learn to chase one number and
@@ -50,12 +55,14 @@
 -- not be missed. Being round the book is what the term is for now, and what is
 -- asked here instead is how *far into* the pages you got.
 --
--- **And only three of the seventeen ask about a boss**, which is a deliberate
+-- **And only four of the eighteen ask about a boss**, which is a deliberate
 -- ceiling rather than a shortage of ideas. The eye is provisional -- one fight
 -- standing in for seven, six of which nobody has drawn -- so a ladder leaning on
 -- it is a ladder that cannot be tuned until they all exist. `sat` is the half of
 -- the same question that does not care what walks on at minute ten, and it carries
--- five quests to `beat`'s three for exactly that reason. When the seven bosses are
+-- five quests to `beat`'s three for exactly that reason. The fourth is the one
+-- `encore` quest, and it opens the one line nothing else could: the boomerang,
+-- which is the book's reward for going back to a page at a harder class. When the seven bosses are
 -- real the obvious move is to put the *lesson tools* behind beating their own
 -- lesson rather than sitting it; today that would be forty-three lines of the
 -- eighty-one hanging off six fights that do not exist.
@@ -175,10 +182,11 @@ local Characters = require("src.characters")
 local Spawner = require("src.spawner")
 local Dev = require("src.dev")
 local Store = require("src.store")
+local Tally = require("src.tally")
 
 local Collection = {}
 
--- The seventeen quests, easiest first. `need` is one column of the register and
+-- The eighteen quests, easiest first. `need` is one column of the register and
 -- one number to clear; `line` is the single thing it opens.
 --
 -- The order is the order they are expected to fall rather than a grouping by
@@ -211,6 +219,7 @@ Collection.gates = {
     { need = { sat = 7 },      line = "laminate" },
     { need = { beat = 1 },     line = "scissors" },
     { need = { beat = 3 },     line = "bandaid" },
+    { need = { encore = 1 },   line = "boomerang" },
     { need = { beat = 7 },     line = "storm" },
 }
 
@@ -348,6 +357,17 @@ end
 -- anything.
 local best, bestStamp
 
+-- How many second bosses the book has put down, any of them. Off the tally's
+-- beaten bosses and `encore` on the roster (Subjects.bosses), so a new lesson's
+-- second boss counts the day it is written into the timetable.
+local function encores()
+    local n = 0
+    for _, boss in ipairs(Subjects.bosses()) do
+        if boss.encore and Tally.beatOf(boss.kind) > 0 then n = n + 1 end
+    end
+    return n
+end
+
 local function register()
     if bestStamp ~= Records.stamp then
         best, bestStamp = Records.best(), Records.stamp
@@ -397,6 +417,10 @@ function Collection.met(gate, door)
             if not (door or Collection.has)(id) then return false end
         end
         return true
+    end
+
+    if need.encore then
+        return encores() >= need.encore
     end
 
     local best = register()
@@ -585,12 +609,15 @@ function Collection.why(id)
     elseif need.beat then
         return shut, pages("BEAT A LESSON", "BEAT %d LESSONS",
             "BEAT EVERY LESSON", need.beat)
+    elseif need.encore then
+        return shut, need.encore <= 1 and phrase("BEAT A SECOND BOSS")
+            or phrase("BEAT %d SECOND BOSSES", need.encore)
     end
 
     return shut
 end
 
--- And how far along one of the seventeen is, for the shelf that reads them out
+-- And how far along one of the eighteen is, for the shelf that reads them out
 -- (src/library.lua): where the register stands against what the quest wants, and
 -- how to write it -- `"clock"` for a stretch of time and `"count"` for everything
 -- else. Nothing for a quest already done, and nothing for the three derived
@@ -608,6 +635,7 @@ function Collection.progress(gate)
     if need.kills then return best.kills, need.kills, "count" end
     if need.sat then return best.sat, need.sat, "count" end
     if need.beat then return best.beat, need.beat, "count" end
+    if need.encore then return encores(), need.encore, "count" end
 end
 
 local function meterText(have, want, how)

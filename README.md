@@ -1631,18 +1631,18 @@ top of the box.
 
 ### The collection
 
-Nine lines of eighty-one are in the book on a fresh save.
+Ten lines of eighty-three are in the book on a fresh save.
 
 Everything else is held back, and the library is the screen that says which and what
 it costs. A line the book has not opened is drawn as the hole it is — its icon as a
 silhouette, its name in graphite — and where its levels would have been read there
 are two lines instead: why there is nothing to read, in graphite, and what to go and
-do about it, in red. The count — `9/36` on a fresh save — hangs in the top right
+do about it, in red. The count — `10/38` on a fresh save — hangs in the top right
 corner at 1:1, level with the back arrow, the canteen's purse readout in the
 canteen's corner and for the canteen's reason: how much of the book there is is a
 fact about the book rather than part of the page, so it does not move as you step a
 shelf, and it goes red the day there is nothing left to find. It counts what the
-screen is showing — the thirty-six on the shelves, or the forty-five fusions behind
+screen is showing — the thirty-eight on the shelves, or the forty-five fusions behind
 the toggle — because the two fill at completely different rates, and added together
 they were a number that said nothing about either.
 
@@ -1658,7 +1658,7 @@ what each level does.
 
 #### What a fresh book is handed
 
-Four weapons, five passives, and the tool the lesson puts in your hand.
+Five weapons, five passives, and the tool the lesson puts in your hand.
 
 | free from the first frame | |
 | --- | --- |
@@ -1666,20 +1666,25 @@ Four weapons, five passives, and the tool the lesson puts in your hand.
 | **BOMB** | drops at your feet and blows up what is still there |
 | **ROCKET** | two, in directions nobody picked |
 | **COOL S** | a line through where you stand |
+| **COFFEE** | a ring under you that spreads while you stand still |
 | **SHARPENER** | +20% damage from what you draw |
 | **GRAPHITE** | +20% damage from what fights for you |
 | **INKWELL** | +30 ink |
 | **FRESH PAGE** | +20 health |
 | **MAGNET** | XP from further off |
 
-Four weapons is a third of twelve and five passives is a third of fourteen, which is
-the floor. What makes it the *right* nine is the two things underneath it.
+Five weapons is a third of fourteen, rounded up, and five passives is a third of
+fourteen, which is the floor. What makes it the *right* ten is the two things
+underneath it.
 
-**Four different shapes, so taking all four is itself the lesson.** Swing at what is
+**Five different shapes, so taking all five is itself the lesson.** Swing at what is
 close, drop where you are, fire outward at nobody, cut a line through where you
-stand — a first run that ends up holding every weapon in the book has still been
-taught four different ways to answer a crowd. And all four carry a drawing board, so
-the studio — the strangest thing this game does — opens on run one instead of at
+stand, and stand still and let them come — a first run that ends up holding every
+weapon in the book has still been taught five different ways to answer a crowd. The
+coffee ring is the fifth because it is the one that answers the question the other
+four leave open: what you are for while your hands are busy drawing, which on a
+first run is most of the time. And four of the five carry a drawing board, so the
+studio — the strangest thing this game does — opens on run one instead of at
 minute two. The COOL S is in there for a reason beyond its shape: it is the single
 most recognisable thing anyone has ever drawn in a school notebook, and a game that
 saves it for a 100% most players never see is a game that has hidden its own face.
@@ -1688,13 +1693,13 @@ saves it for a 100% most players never see is a game that has hidden its own fac
 sharpener, the ally side the graphite, the ink economy the inkwell, and staying
 alive gets the page — with the magnet over the whole loop.
 
-Two numbers keep the set honest. It is **45 levels** against the 28 to 35 a
-ten-minute run reaches, so a first run can absorb most of it and max none of it. And
+Two numbers keep the set honest. It is **50 levels** against the 28 to 35 a
+ten-minute run reaches, so a first run can absorb much of it and max none of it. And
 the passive strip caps at five, which the free set fills exactly — so the first real
 *decision* in the game, the first time you have to leave something on the table,
 happens on the first run, the moment the paper plane lands at three minutes.
 
-#### Seventeen quests, one line each
+#### Eighteen quests, one line each
 
 Everything else is keyed to something the book already remembers, and it comes in
 five parts. The first is the ladder of quests, and it is what the library's shelves
@@ -1718,6 +1723,7 @@ are written in the order of.
 | Sit every lesson to the end | the laminate |
 | Beat a lesson | the scissors |
 | Beat 3 lessons | the bandaid |
+| Beat a second boss | the boomerang |
 | Beat every lesson | the storm |
 
 Five things about that table are decisions rather than arrangement.
@@ -1747,14 +1753,17 @@ ever reached, cleared **eight of the ten milestones** and read sixty-seven of
 eighty-one lines open. The same six runs now clear five of seventeen and read
 fifteen. A reward you cannot miss is not a reward.
 
-**Only three of them ask about a boss, and that is a ceiling.** The eye is
+**Only four of them ask about a boss, and that is a ceiling.** The eye is
 provisional — one fight standing in for the three of seven nobody has drawn yet —
 so a ladder leaning on it is a ladder nobody can balance. *Sitting* a lesson is the
 half of the same question that does not care what walks on at minute ten, and it
 carries five quests to beating's three. Sit all seven and beat none and you are
-still holding twenty-nine of the thirty-six shelved lines and thirty-six of the
+still holding thirty of the thirty-eight shelved lines and thirty-six of the
 forty-five fusions, which is what keeps the game tunable while three bosses are
-missing.
+missing. The fourth boss quest is the one that asks for a *second* boss — any
+lesson's encore, which only the courses with two bosses send — and it opens the
+boomerang, the one line in the book that is a reward for going back to a page at a
+harder class.
 
 **The first two land inside the first run.** A collection has to be seen filling
 before it is worth filling, so ninety seconds and three hundred kills are things a
@@ -2706,17 +2715,17 @@ two screens away to find out.
 The hero is not the only thing you draw. Almost every passive weapon sends you
 back to the board the first time you take it: the same board with a star on it, a
 bird, a
-rocket, a face, a cool S, a bomb, a skate or a lightning bolt, and the pixels you
-leave there are
+rocket, a face, a cool S, a bomb, a skate, a lightning bolt or a boomerang, and the
+pixels you leave there are
 what goes
 round you, wheels about near you, launches off you, comes up in the corner, floats
 away across the page,
-sits at your feet counting down, goes under those feet or comes down out of a
-cloud for
+sits at your feet counting down, goes under those feet, comes down out of a
+cloud or spins out and back for
 the rest of the run — and for every run after it, since they are kept in
 `star.txt`, `bird.txt`, `rocket.txt`, `sun.txt`, `cools.txt`, `bomb.txt`,
-`skate.txt` and
-`lightning.txt` the
+`skate.txt`, `lightning.txt` and
+`boomerang.txt` the
 way the heroes
 are kept in `hero-shootman.txt` and the rest of the roster's files. RESET puts the default
 back, exactly as it does for the stick man.
@@ -3685,7 +3694,7 @@ is not a decision. Four are a hand.
 
 The weapon cap is the tool cap's rule word for word now, and for the same reason:
 **a weapon line's first level is the weapon turning up**, so the sky is drafted
-rather than issued too. A run does not begin with twelve weapons or with none — it
+rather than issued too. A run does not begin with fourteen weapons or with none — it
 begins with whichever one its character carries (`weapon` in
 `src/characters.lua`), taken as the run is built, and the other four slots are
 empty until the draft fills them. Which is why the number went from four to five
@@ -3693,7 +3702,7 @@ when `SHOT` and `SWORD` became lines: a run drafts as many weapons as it always
 did, and the one it came in with is now counted honestly instead of riding along
 outside the rules.
 
-All three caps bite. Twelve lines for five slots means every run gives seven
+All three caps bite. Fourteen lines for five slots means every run gives nine
 weapons up and the choice is which — and the cap stays a step under the catalogue on
 purpose, because a cap level with it is a rule nobody ever meets. The passive cap
 bites hardest by count (fourteen lines competing for five slots) and the tool cap
@@ -3736,7 +3745,9 @@ reached past the last real pick is still a level, and is still asked about.
 | **SKATE** | passive weapon | a skate you draw yourself, drawn under your feet in place of your shadow, leaving a light blue trail behind you that cuts whatever is following you down it — then a trail that takes their footing, then one that cuts far deeper, then a fresh end that carries *you* faster, then every gem lying on it coming to you |
 | **STORM** | passive weapon | a cloud rolling in from off the page in a direction nobody picked, following somebody chosen at random out of the crowd, filling up over them and putting the lightning bolt you drew yourself through the paper — then a wider circle taken with it, then a second cloud, then a cloud that stays and strikes three times instead of leaving, then a bolt that everything it fails to kill hands on to whoever is standing near it, and on again for as long as the crowd carries it |
 | **M BIRDS** | passive weapon | one m-shaped bird you draw yourself wheeling round you and nicking one point off whatever it brushes past — then a flock of five, then a bite three times as deep, then three more with a couple of them peeling off to fetch the gems you walked away from, then a swarm you are standing inside instead of a loose shell following you about |
-| **SPIRALS** | passive weapon | a spiral winding itself onto the page somewhere near you and drawing everything nearby into the middle of it — then two at once and twice as often, then a wider reach, then a longer stay and a hold nothing walks out of, then one round your own feet for the rest of the run that pushes instead of pulling |
+| **SPIRALS** | passive weapon | a spiral winding itself onto the page somewhere near you and drawing everything nearby into the middle of it — then two at once and twice as often, then a wider reach, then a longer stay and a hold nothing walks out of, then everything it is holding taking half again as much damage from whatever else the run carries |
+| **COFFEE** | passive weapon | a coffee ring under your feet, spreading while you stand still and drying back in while you walk but never below a drip, burning what stands in it — then deeper, then spreading faster and half again as far, then sticky enough to slow what stands in it, then the mug tipping over when you walk off a full ring: a splash out past it that hits and shoves everything it reaches, and the ring starting again from a drip |
+| **BOOMERANG** | passive weapon | a boomerang you draw yourself, thrown at the nearest thing, stopping at the end of its throw and flying back to wherever you are now, cutting everything it passes both ways, the next throw waiting for the catch — then further and deeper, then two at once, then twice as hard on the way home, then going straight back out the moment it is caught |
 | **PENCIL** | tool | the tool you start the run holding, and the one slot of four you never chose — then a deeper scratch, a broader point pressed harder, lines that get cheaper the longer they run, and a closed loop cutting everything inside |
 | **PEN** | tool | the pen itself, then a broader nib laying a thicker wall, a line that stings whatever leans on it, a line that takes the crowd with it when it goes, and a last line that stays until you draw another |
 | **STAPLER** | tool | the stapler itself, then a deeper drive, one staple in five going straight through, every staple torn back out of the page two seconds later for a second bite, and a held finger running a seam of them instead of a tap placing one |
@@ -3798,7 +3809,7 @@ eight rockets going out every second and a bit, each through four things and
 bursting in a circle where it stops.
 
 No run gets all of that any more, and that is the point of the slots above: five
-of the twelve weapons and four of the ten drafted tools — one of each decided for
+of the fourteen weapons and four of the ten drafted tools — one of each decided for
 you, by
 the character and by the lesson — and five of the fourteen passive lines. The numbers above are what
 each line is worth to the run that spends a slot on it.
@@ -3844,19 +3855,20 @@ and the next, this one sells the thing. Between them they cover every length of
 time on a weapon block and they never reach the same field, so a run holding both
 cards can tell what each of them bought.
 
-Five of the twelve weapons have something for it, and what those five have in
+Five of the fourteen weapons have something for it, and what those five have in
 common is that all of them put something on the paper and leave it there:
 
 | | | |
 | --- | --- | --- |
-| **SPIRAL** | 5s on the page → 10.8, and its grip on what it caught 1.5s → 3.2 | the least arguable of the five: this weapon does no damage at all, so a hold is the entire thing there is to lengthen |
+| **SPIRAL** | 5s on the page → 10.8, and its grip on what it caught 1.5s → 3.2 | the least arguable of the five: this weapon does no damage of its own, so a hold is the entire thing there is to lengthen — and at the top of its line the hold is also how long what it caught takes half again as much from everything else |
 | **SKATE** | a stamp of trail 3s → 6.5 | where the line is worth the most of anything it touches, since the trail is the only thing in the game whose *size* is a length of time — and on a run that also took the paper plane that is most of a page of line behind you instead of half of one |
 | **BOMB** | the crater smoulders 4s → 8.6 | ground you took away, so what the seconds buy is how long that stretch of page is somewhere the crowd cannot walk |
 | **SUN** | 7s at full height → 15.1 | `stay` only. Rising and setting are transitions, so stretching those would slow the animation down instead of leaving the disc there for longer |
 | **LASER BEAM** | the light is across the page 0.9s → 1.9 | worth nothing at all until that line's second level turns the flash into a beam, and then worth as much as anything here |
 
-The other seven *happen* and are over — a rocket goes up, a bolt comes down, a
-swing takes the arc it takes — so there is nothing on them to sell. What the line
+The other nine *happen* and are over — a rocket goes up, a bolt comes down, a
+swing takes the arc it takes, a boomerang comes home — or are simply always there,
+like the coffee ring under you, so there is nothing on them to sell. What the line
 deliberately does not reach is a journey or a wait: a rocket's `life` is time of
 flight, so stretching it would be **range** — which with the aiming gone is most
 of what an unaimed volley is worth, and is exactly why this is the entry here it
@@ -4473,22 +4485,33 @@ most next to the others and the least on its own — a run with a sun, a crater 
 swarm *and* a spiral is a run that chooses where the killing happens, and a run
 with only this has drawn a very good hole in the page.
 
-**The pull is a decision and the push is a force.** A spiral hands whatever is
-standing in it somewhere else to walk to, which is a thing the enemy then does: it
-keeps walking, keeps jostling its neighbours and keeps hurting you if you are
-standing where it is going. The last level's spiral — the one round your own feet
-for the rest of the run — could not work the same way, because something told to
-walk away from you would never come back and a weapon that made a run
-untouchable would be the end of the run. So that one *shoves*, and a shove decays:
-what it buys is a treadmill. A blob loses most of its ground, a bat loses some of
-it, and the boss walks in as though none of it were happening, since `knock` on
-its row already says what a shove is worth against it and this asks through the
-same door as everything else that pushes. It is held as lightly as it is shoved,
-and for the same reason: `hold` on that row is what being stuck is worth against
-it — written for the gluestick — and being lured is being held, so at the opening
-of the line the boss leans into a spiral between beats and never parks in one.
+**The pull is a decision.** A spiral hands whatever is standing in it somewhere
+else to walk to, which is a thing the enemy then does: it keeps walking, keeps
+jostling its neighbours and keeps hurting you if you are standing where it is
+going. It is held as lightly as the gluestick holds it, and for the same reason:
+`hold` on a boss's row is what being stuck is worth against it, and being lured is
+being held, so at the opening of the line the boss leans into a spiral between
+beats and never parks in one.
 
-**It is the second weapon with no board**, and the beam is the other. A spiral is
+**And the last level makes the hole soft.** Everything a spiral is holding takes
+half again as much from every hit, from anything else the run carries, for as long
+as the hold lasts — which the level before it has just stretched to a second and a
+half. It is still not damage of its own: a run with only spirals is still a run
+that has drawn a very good hole in the page. What it is is the line's argument said
+out loud — the spiral decides where the killing happens, and its finale makes that
+the best place on the page to do it. Half again rather than double because it
+multiplies *everything* at once: a sun, a crater and a swarm landing on the same
+held crowd is three weapons sharpened by one card. It rides on the same door as the
+gluestick's deeper cuts (`Enemy:hurt`), carried on the enemy with the lure, so no
+weapon has to know it exists.
+
+It used to be a spiral round your own feet that shoved instead of pulled. That
+went when the coffee ring came in: the ring owns the ground under you now and is
+the better answer to what is standing on you, and two rings round the hero was one
+more than the page could read.
+
+**It is the second weapon with no board**, and the beam is the other (the coffee
+ring has since joined them). A spiral is
 arithmetic — one arm or two, a turn and a half to two and a half of them, wound
 either way, spinning — and a drawing is a fixed grid of pixels used exactly as
 drawn. There is nothing in a winding for a board to hold. It is plotted with
@@ -4498,6 +4521,66 @@ in the ground pass, under the crowd: it is ink on the paper rather than an objec
 standing on it, and the things being drawn into it have to be legible on top of
 it. It goes pale and then dotted as it dies, which is the ramp every fade in this
 game is made of and never alpha.
+
+The coffee ring is the thirteenth, and the only weapon that **pays you for
+standing still**. The beam fires down the line you walk, the skate's trail is the
+line you walked and the bomb is a hole in the ground you are leaving — every weapon
+that cares where your feet are wants them going somewhere. This is the other end of
+the same question: a ring under you that spreads while you stay put and dries back
+in while you walk, so what it asks is whether you will plant yourself in front of
+the crowd and let it come. Which is what a run does with most of its time anyway,
+since drawing is done standing still — it is the weapon working hardest while your
+hands are busy with the pencil, and it is in the book from the first run for that
+reason.
+
+**It is never off, only small.** It never dries below a drip ten pixels across,
+which is the hero's own half-width: a ring that still takes whatever is leaning on
+you. Out at twelve pixels a second while you stand and back in at twenty while you
+walk, two rates rather than one because they are two promises — how long a stand
+takes to pay, and how long a walk costs you — and the line only ever sells the
+first. It burns at the sun's opening rate, a shade lower, since what it sells over
+the sun is being under you all the time. Its fourth level is the skate's second
+read from the other end: what stands in it sticks, through the same `chill` the
+trail hands over.
+
+**The finale turns its one rule round.** Walk off a ring that has spread all the
+way and the mug tips over: a splash goes out past the ring, half again as far,
+hitting everything it reaches once for ten and shoving it back, and the ring
+starts again from a drip. Stand to build it, move to spend it — the decision the
+whole weapon is about, made twice a fight instead of never. The shove goes through
+`knockback` like everything else that pushes, so a boss gives the splash the little
+ground its `knock` gives anything.
+
+It has no board — a ring is a radius, which is arithmetic — and it goes down in the
+ground pass, under the crowd, because it is a stain on the paper. The stain is a
+rim two pixels deep, the outer one the darker, which is what a coffee ring is: slate
+while you stand and it spreads, graphite while you walk and it dries.
+
+The boomerang is the fourteenth, and the only weapon that **comes home**. It goes
+out at the nearest thing, slowing at a constant rate to stop exactly at the end of
+its throw, and then flies back to **where you are now** — steering straight at you
+every frame and picking up speed to the throw's own, so it always arrives, and
+cutting everything it passes both ways, a fresh pass each way. The way home is drawn
+by your feet: what you put between yourself and the far end is what the second pass
+goes through.
+
+**The catch is the half you play.** The clock for the next throw only runs with
+nothing in the air, so it starts from the catch: walk to meet it and you throw
+sooner. It is the only weapon whose rate of fire is something you do with your feet,
+and the line is written down that — further and deeper, two at once, the way home
+twice as hard, and then no wait at all: caught, it goes straight back out, and the
+rate is the flight, which your feet already shorten. It is the cool S read through
+the shot — aimed like the shot, cutting like the S — and it pays for both in reach:
+eighty pixels at the opening, a shade under the shot's, so it is not a better shot
+but a shorter one that comes back.
+
+**It is earned, and it is the only line that is earned this way:** beating a second
+boss, any lesson's encore, which only the courses with two bosses send. Drawn on a
+board of its own, nine by nine, and spun rather than pointed: it steps round the
+eight headings every turned drawing is kept at, so the spin is made of nothing but
+the rendering rules and no sprite is ever drawn at an angle. The default is a
+chunky chevron for exactly that reason — the four diagonal headings are resampled,
+and a thin drawing flickers thin every other step of the spin.
 
 **Bandaid** is the sellotape's other half, and the two are worth carrying together
 rather than being the same level twice: the tape mends you for being alive and
@@ -9612,6 +9695,10 @@ src/
   flock.lua           the m birds: a passive weapon that holds no formation
   spiral.lua          the spirals: the one passive weapon that hurts nothing,
                       and moves the crowd instead
+  coffee.lua          the coffee ring: an aura under you that spreads while you
+                      stand still, and the mug tipping over when you walk off it
+  boomerang.lua       the boomerang: thrown at the nearest thing, home to where
+                      you are now, the next throw waiting for the catch
   puddle.lua          a blot of ground: the boss's wet trail, a bomb's burn
   enemy.lua           enemy types table, chase, knockback
   solid.lua           a boss built of boxes, cones and ellipsoids, ray-traced a
@@ -9930,8 +10017,8 @@ src/
   marks, the umlauts, Ã and Õ, Ç); it has no acute, grave or circumflex accents and
   cannot have any, since a capital in it fills all five of its rows.
 - **Something the book has to be earned to reach:** add a row to
-  `Collection.gates` in `src/collection.lua` — a `need` naming one of the four
-  columns (`time`, `kills`, `sat`, `beat`) and the single `line` it opens. Nothing
+  `Collection.gates` in `src/collection.lua` — a `need` naming one of the five
+  columns (`time`, `kills`, `sat`, `beat`, `encore`) and the single `line` it opens. Nothing
   else: the draft's pool asks the same one question the library's shelf does
   (`Collection.has`), the count in the corner is measured off the shelves, and the
   words a locked entry prints come off the `need` through `Collection.why`, with
@@ -9943,8 +10030,8 @@ src/
   reason is that a quest you cannot re-price without moving something else is a
   quest nobody will ever re-price. **Price a `time` row above the term's ceiling**:
   seven minutes or less arrives while the player is opening pages, and a reward you
-  cannot miss is not a reward. **Keep the boss count low** — three of seventeen ask
-  `beat`, because three of the seven bosses do not exist yet and `sat` asks the same
+  cannot miss is not a reward. **Keep the boss count low** — four of eighteen ask
+  about a boss (three `beat`, one `encore`), because three of the seven bosses do not exist yet and `sat` asks the same
   question without them. Never put a **character's weapon** behind a quest — a
   bought hero's line has a lock of its own already, read off the roster, and the
   base hero's may have none at all, since his weapon is what a fresh book's first

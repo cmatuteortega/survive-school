@@ -1648,6 +1648,10 @@ function Enemy.new(kind, x, y, scale)
         -- has to be a thing this decides to do: it keeps walking, keeps jostling
         -- its neighbours and keeps hurting whoever is standing where it is going.
         lureX = 0, lureY = 0, lureT = 0,
+        -- And what a hit is multiplied by while that lure lasts -- the spiral's
+        -- last level -- or nil for a lure that softens nothing. Read only while
+        -- `lureT` is running, so it never has to be cleared.
+        lureFrail = nil,
         -- Slowed down by standing on the trail a skate left (src/skate.lua).
         -- Carried for a moment rather than read off the page, because the
         -- weapons are stepped after the crowd has moved -- so what is here is
@@ -2004,6 +2008,8 @@ function Enemy:hurt(amount)
     end
     -- And a brain that has left it open (the die's fumble, src/diceboss.lua).
     if self.brain and self.brain.soften then amount = amount * self.brain:soften() end
+    -- And a spiral holding it, at the top of that line (src/spiral.lua).
+    if self.lureT > 0 and self.lureFrail then amount = amount * self.lureFrail end
     self.hp = self.hp - amount
     self.flash = HIT_FLASH
     -- The third piece of the same feedback as the two lines either side of it:
@@ -2055,8 +2061,11 @@ end
 -- Given somewhere else to walk to for a while (src/spiral.lua). Set rather than
 -- added to: a thing standing in two spirals is being pulled into whichever spoke
 -- to it last, which is the only answer that does not need a rule of its own.
-function Enemy:lure(x, y, hold)
+-- `frail` is the spiral's last level, carried for as long as the hold and spent
+-- in Enemy:hurt -- set with the rest, so the spiral that spoke last decides it.
+function Enemy:lure(x, y, hold, frail)
     self.lureX, self.lureY, self.lureT = x, y, hold
+    self.lureFrail = frail
 end
 
 -- Sent flying hard enough to matter -- the rubber's last level. A launch gets

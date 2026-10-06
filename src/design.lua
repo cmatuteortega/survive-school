@@ -382,6 +382,19 @@ Design.by = {
         title = "M BIRD",
         hint = "SCRIBBLE OK! TO KEEP IT",
     }),
+    -- What BOOMERANG throws (src/boomerang.lua). `turns`, though it has no
+    -- heading to point -- it is spun by stepping round the eight headings the
+    -- ring keeps, so the ring is the animation. Which is also why it is drawn
+    -- chunky: the four diagonals are resampled (pixelart.turn), and a drawing
+    -- that survives them is a spin that does not flicker thin every other step.
+    boomerang = newDesign({
+        sprite = "boomerang",
+        source = Sprites.BOOMERANG,
+        file = "boomerang.txt",
+        title = "BOOMERANG",
+        hint = "SCRIBBLE OK! TO KEEP IT",
+        turns = true,
+    }),
 }
 
 --- the heroes ------------------------------------------------------------------

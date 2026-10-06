@@ -134,6 +134,8 @@ function Upgrades.baseStats()
         storm = nil,        -- see src/storm.lua
         birds = nil,        -- see src/flock.lua
         spiral = nil,       -- see src/spiral.lua
+        coffee = nil,       -- see src/coffee.lua
+        boomerang = nil,    -- see src/boomerang.lua
     }
 end
 
@@ -1461,10 +1463,9 @@ Upgrades.list = {
         -- decided where the killing happens; a run carrying only this has drawn a
         -- very good hole in the page.
         --
-        -- The pull is a lure and the last level's push is a shove, and the
-        -- difference is load-bearing -- see the top of src/spiral.lua. Nothing in
-        -- the line makes anything hit harder, because there is nothing here that
-        -- hits.
+        -- The pull is a lure, and the last level makes what it is luring soft:
+        -- see the top of src/spiral.lua. Nothing in the line hits anything --
+        -- what the finale sells is everything *else* hitting harder in there.
         id = "spiral",
         name = "SPIRALS",
         icon = "spiral",
@@ -1487,7 +1488,9 @@ Upgrades.list = {
                         -- stopped telling it to. Short enough at the opening that
                         -- walking out of the pull is walking out of it.
                         hold = 0.4,
-                        push = nil,      -- the finale, below
+                        -- What a hit on anything it is holding is multiplied by:
+                        -- nothing until the finale, below.
+                        frail = nil,
                     }
                 end,
             },
@@ -1514,20 +1517,151 @@ Upgrades.list = {
                   s.spiral.life = 5
                   s.spiral.hold = 1.5
               end },
-            -- And the other sign. One spiral round your own feet for the rest of
-            -- the run, pushing rather than pulling, which is the only thing in
-            -- this game that answers the question of what is standing on you.
+            -- And the one level in the line that touches a number. A spiral still
+            -- does no damage of its own: what it sells at the top is that
+            -- everything it is holding is *softer* -- half again as much off it
+            -- for every hit from anything else the run carries, for as long as
+            -- the hold lasts. Which is the line's whole argument said out loud:
+            -- the spiral chooses where the killing happens, and this level makes
+            -- that the best place on the page to do it.
             --
-            -- A shove and never a lure: something told to walk away from you
-            -- would never come back, and a run nothing could reach is a run
-            -- without a difficulty. What this buys is a treadmill -- knockback
-            -- decays, so a blob loses most of its ground, a bat loses some of it,
-            -- and the boss (whose `knock` is 0.06) walks in as if none of it were
-            -- happening.
-            { text = "ONE WINDS ROUND YOU AND PUSHES INSTEAD OF PULLING",
+            -- It used to be a spiral round your own feet that shoved instead of
+            -- pulled. That went when the coffee stain came in, which owns the
+            -- ground under you and is the better answer to what is standing on
+            -- you; two rings round the hero was one too many to read. Half again
+            -- rather than double because it multiplies *everything* -- a sun, a
+            -- crater and a swarm all at once -- and it rides on the hold, so the
+            -- previous level's three seconds of grip are what it is paid out over.
+            { text = "WHAT THEY CATCH TAKES HALF AGAIN AS MUCH DAMAGE",
               apply = function(s)
-                  s.spiral.push = { radius = 34, force = 30 }
+                  s.spiral.frail = 1.5
               end },
+        },
+    },
+    {
+        -- The thirteenth weapon, and the only one that pays you for standing
+        -- still. The beam fires down the line you walk, the skate's trail is the
+        -- line you walked and the bomb is a hole in the ground you are leaving --
+        -- and this is a coffee ring under your feet that spreads while you stay
+        -- put and dries back in while you go. See src/coffee.lua.
+        --
+        -- It never dries away altogether: `least` is a ring just wide enough to
+        -- take what is touching you, so the weapon is never off, only small, and
+        -- the first level is already worth something to a run that walks.
+        id = "coffee",
+        name = "COFFEE",
+        icon = "coffee",
+        kind = "weapon",
+        -- No `design`: a ring is a radius, and there is nothing in a radius for a
+        -- board to hold. The third line without one, after the beam and the
+        -- spirals.
+        levels = {
+            {
+                text = "A COFFEE RING SPREADS UNDER YOU WHILE YOU STAND STILL",
+                apply = function(s)
+                    s.coffee = {
+                        -- The ring's smallest and largest. Ten is the hero's
+                        -- own half-width and a skull's, so a drip still catches
+                        -- what is leaning on you; thirty-four is a little under
+                        -- the sun's first disc, which is the one other weapon
+                        -- that burns a round of ground.
+                        least = 10,
+                        most = 34,
+                        -- Pixels a second out while you stand and back in while
+                        -- you walk. Two seconds of standing fills the first
+                        -- ring, and a second and a bit of walking dries it.
+                        grow = 12,
+                        shrink = 20,
+                        -- The sun's burn at the sun's opening rate, a shade
+                        -- lower: what this sells over the sun is that it is
+                        -- under you all the time, and the sun is not.
+                        damage = 2,
+                        tick = 0.5,
+                        slow = 1,        -- what standing in it does to their legs
+                        spill = nil,     -- the finale, below
+                    }
+                end,
+            },
+            { text = "THE RING BURNS DEEPER INTO WHAT STANDS IN IT",
+              apply = function(s) s.coffee.damage = 4 end },
+            -- The level that makes it an aura you plan round rather than one you
+            -- notice: half again as wide, and full in the same two and a bit
+            -- seconds rather than three.
+            { text = "IT SPREADS FASTER AND FURTHER",
+              apply = function(s)
+                  s.coffee.most = 52
+                  s.coffee.grow = 20
+              end },
+            -- Sticky, the skate's second level and on the same terms -- handed
+            -- over through the same `chill` and carried for the same moment.
+            { text = "WHAT STANDS IN IT STICKS AND SLOWS DOWN",
+              apply = function(s) s.coffee.slow = 0.55 end },
+            -- And the mug going over. Walk off a full ring and it splashes out a
+            -- wave that hits everything it reaches once and shoves it back, and
+            -- the ring starts again from a drip -- stand to build it, move to
+            -- spend it. Ten is the bolt's and the pushpin's number, kept under a
+            -- skull's twelve: a splash clears the small things off you and leaves
+            -- the rest for the ring you are about to build again.
+            { text = "WALK OFF A FULL RING AND THE MUG TIPS OVER",
+              apply = function(s)
+                  s.coffee.spill = { damage = 10, force = 40 }
+              end },
+        },
+    },
+    {
+        -- The fourteenth weapon, and the only one that comes home. It goes out
+        -- at the nearest thing, stops at the end of its throw and flies back to
+        -- where you are *now*, cutting everything on the way both times -- and
+        -- the next throw waits for the catch, so walking to meet it is how a run
+        -- throws more often. See src/boomerang.lua.
+        --
+        -- Earned rather than dealt from the first run: it is behind beating a
+        -- lesson's second boss (`encore` in src/collection.lua), and it is the
+        -- only line in the book that is.
+        id = "boomerang",
+        name = "BOOMERANG",
+        icon = "boomerang",
+        kind = "weapon",
+        design = "boomerang",
+        levels = {
+            {
+                text = "A BOOMERANG GOES OUT AT THE NEAREST THING AND COMES BACK",
+                apply = function(s)
+                    s.boomerang = {
+                        -- Seconds from a catch to the next throw: the clock
+                        -- does not run while one is in the air.
+                        every = 1.6,
+                        count = 1,
+                        -- Six a pass and two passes a throw, against the shot's
+                        -- single pellet: what it is paid for is the trip, which
+                        -- is two seconds long and a third of a page wide.
+                        damage = 6,
+                        -- How far out it stops, and how fast it leaves. A
+                        -- shade under the shot's reach, so the boomerang is not
+                        -- a better shot -- it is a shorter one that comes back.
+                        range = 80,
+                        speed = 150,
+                        back = 1,        -- what the way home hits for, as a share
+                        catch = false,   -- the finale, below
+                    }
+                end,
+            },
+            { text = "IT FLIES FURTHER AND CUTS DEEPER",
+              apply = function(s)
+                  s.boomerang.range = 105
+                  s.boomerang.damage = 9
+              end },
+            { text = "TWO GO OUT AT ONCE",
+              apply = function(s) s.boomerang.count = 2 end },
+            -- The way back twice as hard, which is the level that makes the catch
+            -- a thing you aim: home is wherever you are, so the second pass goes
+            -- through whatever you put between yourself and the far end.
+            { text = "IT HITS TWICE AS HARD ON THE WAY BACK",
+              apply = function(s) s.boomerang.back = 2 end },
+            -- And no wait at all: caught, it goes straight back out. The line's
+            -- rate of fire is then its flight, which your feet already shorten.
+            { text = "CATCH IT AND IT GOES STRAIGHT BACK OUT",
+              apply = function(s) s.boomerang.catch = true end },
         },
     },
     {

@@ -423,9 +423,29 @@ Sprites.SUNFACE = {
     "...............",
 }
 
+-- The boomerang (src/boomerang.lua): a chevron, nine by nine, drawn point-right
+-- like everything with a heading -- though a boomerang is spun rather than
+-- pointed, so the point is only where the spin starts. Ink round a blue middle,
+-- which is the rocket's and the bomb's arrangement for the same reason: it is
+-- yours, and a thing of yours in the air has to be told from the crowd it is
+-- going through. Kept chunky on purpose -- it is shown at all eight headings,
+-- and a single-pixel line does not come through the four diagonal ones whole.
+Sprites.BOOMERANG = {
+    ".ooo.....",
+    ".obbo....",
+    "..obbo...",
+    "...obbo..",
+    "....obbo.",
+    "...obbo..",
+    "..obbo...",
+    ".obbo....",
+    ".ooo.....",
+}
+
 -- The eight headings of every drawn sprite that has them, by the key it is
--- filed under here. Two have them -- the rocket, which points where it is flying,
--- and the sword, which points where it is being swung; a hero, a star and a face
+-- filed under here. Three have them -- the rocket, which points where it is
+-- flying, the sword, which points where it is being swung, and the boomerang,
+-- which steps round all eight as it spins; a hero, a star and a face
 -- are drawn one way up and stay that way. The rocket's art is nose-right and is
 -- read straight off this ring; the sword's is point-up and is read two eighths
 -- round it (src/sword.lua), which is the only offset of its kind in the game. The laser beam points where it is going too and
@@ -593,6 +613,7 @@ function Sprites.load()
     Sprites.setDrawn("skate", Sprites.SKATE)
     Sprites.setDrawn("lightning", Sprites.LIGHTNING)
     Sprites.setDrawn("bird", Sprites.BIRD)
+    Sprites.setDrawn("boomerang", Sprites.BOOMERANG, true)
 
     -- The five solid bosses -- the P.E. whistle, the MUSIC metronome, the
     -- FINANCE stamp, the GRAMMAR dictionary and ART's marble -- are not drawn
@@ -3167,6 +3188,40 @@ function Sprites.load()
             "o.ooooooo.o",
             "o.........o",
             "ooooooooooo",
+        }),
+        -- The mug with the ring it leaves, which is the weapon icon that has to
+        -- show both halves the way the skate's does: a mug on its own is a drink
+        -- and a ring on its own is a circle, and what the card sells is the one
+        -- leaving the other under you. The steam is the one blue pixel pair --
+        -- it is yours, and it is hot.
+        coffee = pixelart.newSprite({
+            "...b.b.....",
+            "....b.b....",
+            "..ooooo....",
+            "..o...ooo..",
+            "..o...o.o..",
+            "..o...ooo..",
+            "..ooooo....",
+            "...........",
+            ".ssssssss..",
+            "s........s.",
+            ".ssssssss..",
+        }),
+        -- The boomerang at the far end of its arc, with the dotted way back to
+        -- you: the dots are what make it a boomerang rather than a bent stick,
+        -- since what the card sells is that it comes home.
+        boomerang = pixelart.newSprite({
+            "......ooo..",
+            ".....obbo..",
+            "....obbo...",
+            "...obbo....",
+            "..obbo.....",
+            "..obbbbbbo.",
+            "...oooooooo",
+            "...........",
+            "o.o.o.o....",
+            "...........",
+            "...........",
         }),
         -- A horseshoe magnet, poles down and painted the two colours every
         -- magnet in every cartoon is painted.
