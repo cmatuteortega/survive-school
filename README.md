@@ -33,8 +33,8 @@ Requires [LÖVE 11.x](https://love2d.org).
 | Close either of those | the arrow in the top-left corner, or `Backspace` | tap the arrow in the top-left corner |
 | Back to the title | the arrow in the top-left corner, or `Backspace` | tap the arrow in the top-left corner |
 | Read a library entry | click its name | tap its name |
-| Turn to another library shelf | drag the page sideways, or the `<` `>` at the foot of it, or `←` / `→` | drag the page sideways, or tap the `<` `>` |
-| Turn a page on the homework or the canteen | drag the page sideways, or the `<` `>` at the foot of it, or `←` / `→` | drag the page sideways, or tap the `<` `>` |
+| Turn to another library shelf | drag the page sideways, or `←` / `→` | drag the page sideways |
+| Turn a page on the homework or the canteen | drag the page sideways, or `←` / `→` | drag the page sideways |
 | Walk the library shelf | `↑` / `↓` | tap another name |
 | Close the library | the arrow in the top-left corner, or `Backspace` | tap the arrow in the top-left corner |
 | Draw your character | hold left mouse on the board | drag on the board |
@@ -60,7 +60,7 @@ Requires [LÖVE 11.x](https://love2d.org).
 | Skip the draft for coins | the `▶▶` in the bottom corner, or `S` — only if you bought one | tap the `▶▶` in the bottom corner |
 | Throw a line out of the run | the red cross in the bottom corner (or `E`), then scribble a card's box | tap the red cross, then scribble a card's box |
 | Get back up after dying | nothing — a retake spends itself, if you bought one | nothing |
-| Buy any of the four | scribble the box on its row in the canteen, or `1` / `2` / `3` / `4` | scribble the box on its row |
+| Buy any of the four | click the box on its row in the canteen, or `1` / `2` / `3` / `4` | tap the box on its row |
 | Answer the game over card | scribble in a box, or `1` / `2` | scribble in a box |
 
 `F11` or `alt+enter` toggles fullscreen, `Esc` quits.
@@ -438,7 +438,7 @@ track playing at zero instead of stopping it, because a stopped stream comes bac
 at the top of the file and turning the music down and up again would restart it
 rather than turn it back on.
 
-The stepped rows are the library's footer arrows doing the library's job: two
+The stepped rows are the studio's roster arrows doing the studio's job: two
 arrows either side of the name of the thing they step. On the language row what is
 written between them is the language's own name for itself — `ENGLISH`,
 `DEUTSCH`, `ESPAÑOL`, `FRANÇAIS`, `ITALIANO`, `PORTUGUES` — because somebody
@@ -1301,7 +1301,7 @@ are in and `<` the course `>` in the column the figures are in, right-aligned li
 every number above it and sitting directly above the drawing of the character. The
 word is in ink because in that block ink is what a value is written in and slate is
 what a label is — the five rows above it say so — and the two chevrons are bare
-three-pixel glyphs rather than the boxes the library's footer arrows sit in, which
+three-pixel glyphs rather than the boxes the studio's roster arrows sit in, which
 is what makes the whole control 57 pixels and lets it fit inside the value column
 the clock row had already reserved. What you press is still a square the size of the
 back arrow's box: the target is a corner of the sheet and the drawing is a glyph,
@@ -1412,10 +1412,12 @@ have to take to get to it. `1` on a tool line is always the unlock — the level
 hands you the tool and spends one of four permanent slots — so the whole of what
 that slot buys is on one screen before you spend it.
 
-**The footer** is `<` `TOOLS` `>` at the foot of the page: the arrows either side of
-the name of the thing they step, which is the studio's character selector doing the
-same job in the same box. Tools, then what fights for you, then the numbers about
-you — the order the catalogue itself is written in. On a keyboard the left and right
+**The heading** is the name of the shelf open — `TOOLS`, `WEAPONS`, `PASSIVES`,
+`BOSSES` — and a finger dragged across the page turns to the next. Tools, then what
+fights for you, then the numbers about you — the order the catalogue itself is
+written in. There used to be `<` `>` arrows at the foot of the page either side of
+the shelf's name; once the page could be dragged they were a second way of doing
+the one thing, and the name went up to be the title. On a keyboard the left and right
 arrows step the shelf and up and down walk it, `E` throws the toggle, `RETURN` picks
 the name you are on while it is up, and `BACKSPACE` is the corner button.
 
@@ -1449,7 +1451,7 @@ levels long, carrying the two wordiest
 strings in the game — and on a squarish window that reserve was the difference
 between the last level of a line being on the page and being cut off it. Read from
 the top, none of it applies. Column width is still the widest name in the whole
-book and the footer arrows are still struck off the widest shelf name, so nothing
+book and the heading is still guarded off the widest shelf name, so nothing
 across the page moves as you step through it either.
 
 **The shelf is given the room the fullest shelf needs, not the room the one showing
@@ -1475,9 +1477,8 @@ closed it.
 
 ### Turning the page
 
-The library, the homework page and the canteen all step a short list of sections
-with `<` name `>` at the foot of the page, and for a long time that step was a
-*cut*: one shelf on one frame and another on the next. Which is the right furniture
+The library, the homework page and the canteen all step a short list of sections,
+and for a long time that step was a *cut*, `<` name `>` at the foot of the page: one shelf on one frame and another on the next. Which is the right furniture
 for a list and the wrong furniture for a book, and all three of these are books —
 they are read off the back of the same notebook the run is played on, they are
 stepped in a fixed order, and the one gesture a phone has for "the next of these" is
@@ -1488,8 +1489,12 @@ the page with your finger.** Drag sideways and the leaf lifts off the fold, bend
 carries across and lays itself down on the other side — with the section you were
 reading printed on the front of it and the one you are going to on the back, which
 is what a leaf of a book actually is. Let go past halfway and it finishes the turn;
-let go short of it and it falls back where it came from. The arrows still work, and
-so do `←` and `→`; they now play the same turn rather than cutting.
+let go short of it and it falls back where it came from. `←` and `→` play the same
+turn. The `<` `>` arrows went once the drag was there — two ways of doing one thing
+on a phone, and a footer that cost every page its bottom row — and the section's
+name went up to the top of the page to be its heading, in place of `LIBRARY`,
+`HOMEWORK` or `CANTEEN`: which back page you are on is the tab you pressed, and
+which part of it you are reading is the thing worth the title.
 
 **The whole of it is one arc.** The sheet stands at an angle, bows a little over its
 length, and every column of it is drawn one whole pixel wide at a whole pixel
@@ -2055,10 +2060,18 @@ move the readout, and the readout does not move for a purse that has reached a
 hundred, because the room it keeps is measured off four figures rather than off the
 number showing.
 
+The same coin and figure are read in two more places, both small. On the timetable
+the purse hangs over the `CANTEEN` tab — the tab is where it is spent, so it is read
+on the way there rather than only once you are through it. And in a run, under the
+ink bar and hung off the same right edge, is what *this run* is worth so far: the
+figure the end card will pay (`Game:runWorth`, the one place the sum lives), not the
+purse — a total that included last week would be a number nothing on the page
+changes.
+
 ### The counter
 
-Four sections, one to a spread (see **Turning the page**) — `<` the section `>` at
-the foot of it, or a finger dragged across the page — and each of them rows of an
+Four sections, one to a spread (see **Turning the page**) — the section's name is
+the heading, and a finger dragged across the page turns it — and each of them rows of an
 icon, a name, what it does, how many of it you own out of how many there are, what
 the next one costs, and a box.
 
@@ -2130,33 +2143,31 @@ does, what you own, what it costs and a box to answer, and the only one of those
 narrow page can do without is the sentence. That is the difference between the
 counter fitting a phone held upright and the prices hanging off the edge of it.
 
-**Buying is the one thing in the margins of this book that is answered rather than
-pressed.** Everywhere else back here a press is a press: a tab is pressed, a name
-in the library is pressed, a volume is dragged, on the rule that choosing what to
-look at is not a question and a quantity you can always move again is not an
-answer. A purchase is neither of those. It is a thing you cannot take back, and a
-box you scribble in is how this game asks about one — so each row ends in a box,
-the border warms slate → blue → red as it fills, the coins come out when the pen
-lifts, and a scribble that carries on out of the box changes its mind. Afterwards
-the box is *wiped* rather than left full, which is what the drawing board's `RESET`
-already does and for the same reason: a counter you can only buy one thing at is a
-counter you have to leave and come back to.
+**Buying is a tap on the box, the way `GO!` is on the timetable.** Each row ends in
+a box, and a tap draws the scribble into it for you: the border warms slate → blue →
+red as it fills and the coins come out when it is full. It used to want the box
+scribbled in by hand, and on a page that turns under a sideways drag that was the
+one gesture back here that could mean either thing — a scribble across a box was as
+likely to turn the leaf as to buy. So a box that can be bought is furniture now: a
+finger that lands on it presses it, whichever way it slides off, and the book will
+not take the page from it. Afterwards the box is *wiped* rather than left full,
+which is what the drawing board's `RESET` already does and for the same reason: a
+counter you can only buy one thing at is a counter you have to leave and come back
+to.
 
 A hero is bought the same way and for good: his row then reads `1/1` and `MAX`, the
 studio's arrows have somewhere new to step, and the run that opens as him opens
-holding his weapon. Turning the page with a box part-scribbled leaves the scribble
-exactly where it was — turning a page is not changing your mind — though whatever was
-*armed* is disarmed the moment the leaf starts moving, since nothing is bought until
-the pen lifts and the pen is about to lift on another page. The moment the leaf
-starts moving, and not the moment it lands: a page that has begun to turn is a page
-you have stopped answering.
+holding his weapon. Turning the page while a box is still filling wipes it — nothing
+is bought until the box is full, and the box is about to be on a page you are no
+longer looking at. The moment the leaf starts moving, and not the moment it lands: a
+page that has begun to turn is a page you have stopped answering.
 
 A row with nothing left to sell, or nothing in the purse to buy it with, has no box
-drawn at all — the price beside it goes grey, or turns into `MAX`, and ink that
-lands where the box would have been is just ink on the page. The one line under the
+drawn at all — the price beside it goes grey, or turns into `MAX`, and a finger that
+lands where the box would have been is on the page like anywhere else. The one line under the
 counter says which of those the section showing is in — there is something to buy, you
 cannot afford any of it, there is none of it left — rather than printing an
-instruction whatever is true. A page telling you to scribble a box when there is no
+instruction whatever is true. A page telling you to tap a box when there is no
 box on it is a page arguing with itself.
 
 #### Everything back

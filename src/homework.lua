@@ -20,7 +20,7 @@
 -- on them is a list you cannot run your eye down.
 --
 -- **And six sections, one to a spread** (src/spread.lua), for the reason the
--- canteen grew the same footer: this list is going to keep growing and a page is
+-- canteen has its own: this list is going to keep growing and a page is
 -- a page. Ten rows a section is comfortable on the shortest window this game is
 -- ever handed; forty in a column would not be. Where the window is wide enough
 -- to hold two leaves the ten are split down the crease, five and five, and a
@@ -37,13 +37,13 @@
 -- matters here for the library's reason: this is a screen you read by running
 -- your eye down it.
 --
--- **What does not turn is not on the page.** The heading, the count in the corner
--- and the footer are drawn out past the overprint pass with the arrows and the
--- corner button, and the rows are drawn inside it. That split was cosmetic while
--- a section changed in one frame; with a leaf moving across the page it is what
--- decides what moves with it, and the answer is the list -- the title of the
--- screen, how much of it there is and the way through it are the book rather than
--- the leaf.
+-- **What does not turn is not on the page.** The heading -- the name of the
+-- section, which is the title of the page -- and the count in the corner are
+-- drawn out past the overprint pass with the corner button, and the rows are
+-- drawn inside it. That split was cosmetic while a section changed in one frame;
+-- with a leaf moving across the page it is what decides what moves with it, and
+-- the answer is the list -- the title and how much of it there is are the book
+-- rather than the leaf. There is no footer: the page is turned by dragging it.
 
 local Palette = require("src.palette")
 local Font = require("src.font")
@@ -52,7 +52,6 @@ local Overprint = require("src.overprint")
 local Input = require("src.input")
 local Scribble = require("src.scribble")
 local Hud = require("src.hud")
-local Sprites = require("src.sprites")
 local Challenges = require("src.challenges")
 local Spread = require("src.spread")
 local I18n = require("src.i18n")
@@ -60,13 +59,13 @@ local I18n = require("src.i18n")
 local Homework = {}
 Homework.__index = Homework
 
-local HEAD = "HOMEWORK"
 local HEAD_SCALE = 2
 
 local EDGE = 4             -- off the edge of the page
 local HEAD_TOP = 10        -- ... and the heading off the top of it, the library's
                            -- own clearance
-local HEAD_GAP = 6         -- the heading to the first row
+local HEAD_GAP = 12        -- the heading to the first row: room for the section's
+                           -- name to read as the title over the list
 
 local BOX = 5              -- one pip, cut to the height of the lettering beside
                            -- it, so a row is one line tall
@@ -80,12 +79,6 @@ local ROW_GAP = 5          -- one row to the next, and it has to beat LINE_GAP b
                            -- lines now, so the space between two rows is the only
                            -- thing saying where one of them stops
 local LINE_GAP = 2         -- ... and one line of a row to the next
-
-local ARROW = 11           -- the library's footer arrow, which is the corner
-                           -- button's box
-local ARROW_GAP = 6        -- ... and its clearance off the section name between
-                           -- them
-local FOOT_GAP = 6         -- the lowest row the page can show down to the arrows
 
 local LINE = Font.height + LINE_GAP
 
@@ -141,7 +134,7 @@ end
 
 -- Each column is cut to the widest thing that can *ever* land in it, across every
 -- section and not just the one showing, so nothing moves as a row is finished or
--- as the footer is pressed -- hence `Challenges.meterRoom` (the last rung of the
+-- as the page is turned -- hence `Challenges.meterRoom` (the last rung of the
 -- ladder) rather than the live meter, and every rung's demand rather than the one
 -- outstanding. Measured off I18n.say, i.e. the translation, never the English key.
 local function columns()
@@ -173,8 +166,9 @@ local function tallyWidth()
     return Font.width(("%d/%d"):format(most, most))
 end
 
--- And the widest section name, so the two footer arrows never move as one is
--- pressed. The canteen's own measurement, on the canteen's own footer.
+-- And the widest section name, which is the heading: the guard that steps it
+-- under the two corners is struck off this, so turning the page never moves the
+-- list under it. The canteen's own measurement, for the canteen's reason.
 local function sectionWidth()
     local w = 0
     for _, section in ipairs(sections()) do
@@ -254,7 +248,7 @@ function Homework:layout(game)
     -- and steps under the pair of them where there is not, which is the library's
     -- guard and has to clear both: the button is in one corner and the count is
     -- lettering in the other.
-    local headW = Font.width(I18n.t(HEAD)) * HEAD_SCALE
+    local headW = sectionWidth() * HEAD_SCALE
     local buttonRight = bx + Hud.CORNER_SIZE
     local underBoth = math.max(Hud.cornerBottom(game),
         lay.tally + Font.height) + EDGE
@@ -267,13 +261,8 @@ function Homework:layout(game)
     lay.list = math.max(underBoth,
         lay.head + Font.height * HEAD_SCALE + HEAD_GAP)
 
-    -- The footer off the bottom edge, pinned to it rather than centred with the
-    -- list: it is the library's footer doing the library's job -- which section of
-    -- the same page am I reading -- so it sits where the library's sits, and the
-    -- list stops a clear gap above it.
-    lay.arrowY = game.vh - ins.b - EDGE - ARROW
-    lay.sectionW = sectionWidth()
-    lay.bottom = lay.arrowY - FOOT_GAP
+    -- And where the list has to stop: the foot of the page, off the safe edge.
+    lay.bottom = game.vh - ins.b - EDGE
 
     self.lay = lay
     return lay
@@ -286,48 +275,21 @@ function Homework:backAt(x, y)
     return x >= bx and x <= bx + bw and y >= by and y <= by + bh
 end
 
--- One of the two footer arrows, as a box: the canteen's recipe, both struck off
--- the middle of the page with the widest section name between them.
-function Homework:arrowBox(dir)
-    local lay = self.lay
-    local half = (lay.sectionW + (ARROW + ARROW_GAP) * 2) / 2
-    local x = dir < 0 and lay.cx - half or lay.cx + half - ARROW
-    return math.floor(x), lay.arrowY
-end
-
--- Which arrow, if either, a point lands on. Padded the way every small target in
--- the game is padded, and by more on a phone.
-function Homework:arrowAt(x, y)
-    if not self.lay then return nil end
-
-    local padX, padY = 4, 2
-    if Input.usingTouch then padX, padY = 8, 6 end
-
-    for dir = -1, 1, 2 do
-        local ax, ay = self:arrowBox(dir)
-        if x >= ax - padX and x <= ax + ARROW + padX
-            and y >= ay - padY and y <= ay + ARROW + padY then
-            return dir
-        end
-    end
-    return nil
-end
-
--- An arrow, or a key: the same turn a finger makes, run at its own pace. The
--- book owns which section is open, so there is nothing here to move.
+-- A key: the same turn a finger makes, run at its own pace. The book owns which
+-- section is open, so there is nothing here to move.
 function Homework:step(dir)
     self.book:turn(dir)
 end
 
--- Furniture: the corner button and the two footer arrows. It is one question
+-- Furniture: the corner button, and nothing else. It is one question
 -- rather than two because both of the things that ask it want the same answer --
 -- the pen must not draw here, and the book must not take the page here.
 function Homework:furniture(x, y)
-    return self:backAt(x, y) or self:arrowAt(x, y) ~= nil
+    return self:backAt(x, y)
 end
 
--- The corner button and the two footer arrows swallow whatever crosses them
--- rather than being drawn on: a press on one was taken as a press rather than as
+-- The corner button swallows whatever crosses it rather than being drawn on: a
+-- press on it was taken as a press rather than as
 -- the start of a line. Answers whether the stamp became ink, which is what the
 -- pen's swish is fired off (src/scribble.lua) -- a swallowed stamp was never a
 -- line, so it must not sound like one.
@@ -347,11 +309,7 @@ function Homework:press(x, y)
 
     if self:backAt(x, y) then
         self.back = true
-        return
     end
-
-    local dir = self:arrowAt(x, y)
-    if dir then self:step(dir) end
 end
 
 -- Returns "back" the moment the corner button is pressed, and nothing at all
@@ -391,8 +349,7 @@ function Homework:keypressed(key)
         return
     end
 
-    -- And left and right step the section, the way the arrows they stand for do:
-    -- the library's own keys, on the library's own footer.
+    -- And left and right turn the page, the library's own keys.
     if key == "left" or key == "a" then
         self:step(-1)
     elseif key == "right" or key == "d" then
@@ -478,22 +435,6 @@ function Homework:drawRow(lay, row, bx, y)
     end
 end
 
--- One footer arrow, in the corner button's own recipe: a slate box filled with
--- paper and the chevron in the middle of it. The same glyph both ways round --
--- three columns wide, so its origin is the middle one and the flip is an exact
--- mirror rather than a resample.
-function Homework:drawArrow(dir)
-    local x, y = self:arrowBox(dir)
-
-    love.graphics.setColor(Palette.slate)
-    love.graphics.rectangle("fill", x, y, ARROW, ARROW)
-    love.graphics.setColor(Palette.paper)
-    love.graphics.rectangle("fill", x + 1, y + 1, ARROW - 2, ARROW - 2)
-
-    love.graphics.setColor(1, 1, 1)
-    Sprites.icons.chevron:draw(x + ARROW / 2, y + ARROW / 2, dir > 0)
-end
-
 -- One spread: the section laid across both leaves, with nothing on it that does
 -- not turn with it. Called into a canvas rather than onto the screen while a leaf
 -- is moving (src/spread.lua), which is why it is a whole overprint pass of its
@@ -520,8 +461,8 @@ function Homework:drawPage(game, section)
     -- the foot of the page is not drawn rather than being drawn half. Every
     -- section fits the shortest page this game is handed with room over; the guard
     -- is for a window squashed past anything a phone or a desktop hands us, where
-    -- a list that drew through the footer would be the one thing on screen that
-    -- ignored it.
+    -- a list that drew off the foot of the page would be the one thing on screen
+    -- that ignored it.
     local half = self:half(rows)
     for i, row in ipairs(rows) do
         local leaf = i <= half and 1 or 2
@@ -544,14 +485,16 @@ function Homework:draw(game)
     self.book:draw(game, function(section) self:drawPage(game, section) end)
 
     -- And then everything that is the book rather than the leaf, out past the
-    -- pass: the way back, the heading, how much of this section is done and the
-    -- footer that steps it. None of it moves when a page does, which is the whole
-    -- reason it is drawn here and not up there -- and it is the same reason the
-    -- arrows were already out here, the library's: a box filled in paper still
-    -- has every inked pixel of its border paired with the page underneath, so a
-    -- border landing on a rule comes out a step darker and the box reads as a
-    -- transparency rather than as a thing lying on the page.
-    Scribble.printBig(I18n.t(HEAD), lay.cx, lay.head, HEAD_SCALE, Palette.red,
+    -- pass: the way back, the heading and how much of this section is done. None
+    -- of it moves when a page does, which is the whole reason it is drawn here and
+    -- not up there.
+    --
+    -- The heading is the section the book is *open* at throughout a turn, so it
+    -- changes on the frame the leaf lands rather than while it is in the air -- a
+    -- title that renamed itself halfway through the gesture would be naming
+    -- neither page.
+    Scribble.printBig(I18n.t(sections()[self.book.at].name), lay.cx, lay.head,
+        HEAD_SCALE, Palette.red,
         { shadow = Palette.blush, wobble = true, t = self.t, seed = 3 })
 
     -- How many rungs of this section have fallen, out of how many it has. Rungs
@@ -571,17 +514,6 @@ function Homework:draw(game)
     Scribble.printBig(count, lay.tallyRight - Font.width(count) / 2, lay.tally, 1,
         done >= all and Palette.red or Palette.slate, { seed = 62 })
 
-    -- The section, between the two arrows that step it, and red because it is the
-    -- one thing in the footer that changes. It names the section the book is
-    -- *open* at throughout a turn, so it changes on the frame the leaf lands
-    -- rather than while it is in the air -- a label that renamed itself halfway
-    -- through the gesture would be naming neither page.
-    Scribble.printBig(I18n.t(sections()[self.book.at].name), lay.cx,
-        lay.arrowY + math.floor((ARROW - Font.height) / 2), 1, Palette.red,
-        { seed = 60 })
-
-    self:drawArrow(-1)
-    self:drawArrow(1)
     Hud.drawCorner(game, "back", false)
 end
 

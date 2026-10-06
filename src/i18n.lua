@@ -355,10 +355,10 @@ local ES = {
     -- it any more -- the counter has three rows on it now -- and it is kept because
     -- the next page that opens onto nothing will want it.
     ["NOTHING TO BUY YET"] = "AUN NO HAY NADA QUE COMPRAR",
-    ["SCRIBBLE A BOX TO BUY"] = "GARABATEA UNA CASILLA PARA COMPRAR",
-    ["SCRIBBLE A BOX OR PRESS 1 2 3 4"] = "GARABATEA O PULSA 1 2 3 4",
-    ["SCRIBBLE A BOX OR PRESS 1 2 3"] = "GARABATEA O PULSA 1 2 3",
-    ["SCRIBBLE A BOX OR PRESS 1"] = "GARABATEA O PULSA 1",
+    ["TAP A BOX TO BUY"] = "TOCA UNA CASILLA PARA COMPRAR",
+    ["CLICK A BOX OR PRESS 1 2 3 4"] = "PULSA UNA CASILLA O 1 2 3 4",
+    ["CLICK A BOX OR PRESS 1 2 3"] = "PULSA UNA CASILLA O 1 2 3",
+    ["CLICK A BOX OR PRESS 1"] = "PULSA UNA CASILLA O 1",
     ["NOTHING LEFT TO BUY"] = "NO QUEDA NADA QUE COMPRAR",
     ["COME BACK WITH MORE COINS"] = "VUELVE CON MAS MONEDAS",
     ["EVERY LEVEL IS ONE USE A RUN"] = "CADA NIVEL ES UN USO POR PARTIDA",
@@ -386,7 +386,7 @@ local ES = {
     ["REFUND ALL"] = "DEVOLVER TODO",
     ["EVERY PERK HERO AND COURSE"] = "VENTAJAS HEROES Y CURSOS",
     ["YOU GET EVERY COIN BACK"] = "RECUPERAS TODAS LAS MONEDAS",
-    ["SCRIBBLE A BOX TO REFUND"] = "GARABATEA UNA CASILLA PARA DEVOLVER",
+    ["TAP A BOX TO REFUND"] = "TOCA UNA CASILLA PARA DEVOLVER",
     ["NOTHING TO REFUND"] = "NO HAY NADA QUE DEVOLVER",
     -- The shop (src/store.lua, src/canteen.lua, src/fullgame.lua): the full game,
     -- then the whole book, for money and never for coins. TIENDA rather than

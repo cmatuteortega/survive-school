@@ -11,6 +11,7 @@ local Tools = require("src.tools")
 local Upgrades = require("src.upgrades")
 local Input = require("src.input")
 local pixelart = require("src.pixelart")
+local Purse = require("src.purse")
 
 local Hud = {}
 
@@ -133,6 +134,7 @@ end
 local BAR_MAX_W, BAR_MIN_W = 60, 24
 local BAR_TEXT_GAP = 4        -- bar to the number beside it
 local BAR_CLOCK_GAP = 4       -- a bar's number to the clock in the middle
+local PURSE_GAP = 3           -- the ink bar down to the run's coins under it
 
 -- Both the clock and the two numbers are struck off the widest they ever get
 -- rather than off what they happen to say, which is the rule the canteen keeps
@@ -984,6 +986,17 @@ function Hud.draw(game)
         game.ink < Tools.MIN_INK and Palette.blush or Palette.slate, true)
     love.graphics.setColor(Palette.ink)
     Font.printRight(("%d"):format(game.ink * 100), inkX - BAR_TEXT_GAP, rowText)
+
+    -- What this run is worth so far, under the ink and hung off the same right
+    -- edge: the coin and the figure the end cards will pay, asked of the one place
+    -- the sum lives (`Game:runWorth`) so the two can never disagree. This run's
+    -- coins and not the purse's -- the purse is the canteen's, and a total that
+    -- included last week would be a number nothing on this page changes.
+    -- Right-aligned by centring it on the middle of the room it takes, so it grows
+    -- leftwards off the edge it hangs on.
+    local worth = ("%d"):format(game:runWorth(game.state == "won"))
+    Purse.draw(worth, right - Purse.width(worth) / 2, top + BAR_H + PURSE_GAP,
+        Palette.ink)
 
     -- Run timer, top centre, with the boss's health under it while there is a
     -- boss.

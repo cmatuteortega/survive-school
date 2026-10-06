@@ -134,6 +134,7 @@ local Records = require("src.records")
 local Mark = require("src.mark")
 local Collection = require("src.collection")
 local Store = require("src.store")
+local Purse = require("src.purse")
 local Sfx = require("src.sfx")
 local I18n = require("src.i18n")
 local util = require("src.util")
@@ -216,6 +217,7 @@ local ICON = 11        -- the tool's icon, and every icon in the game is 11x11
 local NAME_GAP = 4     -- the lesson to the icon of its tool
 local GUTTER = 8       -- the panel to the tabs
 local TAB_GAP = 2      -- one tab to the next
+local PURSE_GAP = 3    -- the purse over the canteen's tab down to the tab
 local EDGE = 4         -- and off the edge of the page
 local HEAD_GAP = 6     -- one thing in the panel to the next
 local LINE_GAP = 2     -- one line of lettering to the next
@@ -1099,6 +1101,19 @@ function Timetable:layout(game)
     lay.sideRight = sideX + sideW
     lay.sideTop = self.sides[#self.sides].y
 
+    -- What is in the purse, hung over the canteen's tab: the tab is where it is
+    -- spent, so the figure is read on the way to it rather than only once you are
+    -- through it. Centred on the part of the tab that is on the page, and counted
+    -- into `sideTop` -- it is margin like the tabs under it, and what keeps clear
+    -- of the margin has to keep clear of it too.
+    for _, side in ipairs(self.sides) do
+        if side.answer == "canteen" then
+            lay.purseCx = math.floor((ins.l + side.x + side.w) / 2)
+            lay.purseY = side.y - PURSE_GAP - Purse.height()
+            lay.sideTop = math.min(lay.sideTop, lay.purseY)
+        end
+    end
+
     -- The panel, and the title is the one thing in it that gets smaller rather
     -- than being dropped: it is the question, so it cannot go, and it is the only
     -- thing here with a size to spend.
@@ -1228,7 +1243,7 @@ end
 -- One end of the selector, as a box: a square the size of the corner button's,
 -- centred on a glyph three pixels wide. What is being pressed is a corner of the
 -- page rather than the chevron drawn in it, which is the same argument the
--- library's own footer arrows are boxes on.
+-- studio's roster arrows are boxes on.
 function Timetable:arrowBox(dir)
     local lay = self.lay
     if not lay or not lay.courseX then return nil end
@@ -1778,8 +1793,8 @@ end
 -- The sixth row of the block: `<` the class you are sitting it as `>`, in the
 -- column the figures are in and right-aligned like all of them.
 --
--- **The two chevrons are drawn bare rather than in boxes**, unlike the library's
--- footer arrows. The glyph is three columns wide, so the whole control is
+-- **The two chevrons are drawn bare rather than in boxes**, unlike the studio's
+-- roster arrows. The glyph is three columns wide, so the whole control is
 -- fifty-seven pixels and fits inside the value column the clock row had already
 -- reserved -- two 11px boxes and their clearances would have been forty-four
 -- pixels before the word and would have made the block wider than the heading
@@ -1887,6 +1902,9 @@ function Timetable:draw(game)
     Hud.drawCorner(game, "back", false)
     for i, side in ipairs(self.sides) do
         self:drawSide(i, side)
+    end
+    if lay.purseY then
+        Purse.draw(("%d"):format(Purse.total), lay.purseCx, lay.purseY, Palette.ink)
     end
     if lay.shopX then
         Hud.drawButton(lay.shopX, lay.shopY, Hud.CORNER_SIZE, "lock", false)

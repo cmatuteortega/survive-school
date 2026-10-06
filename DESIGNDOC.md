@@ -405,8 +405,16 @@ the heading's clearance is the library's guard doubled (it steps below *both*
 corners) and the room the readout keeps is struck off four digits rather than off
 the figure showing.
 
-**The counter has four sections**, stepped with the library's own footer (`<` the
-section `>`, pinned to the foot of the page): `PERKS` is `Perks.list`, `HEROES` is
+The same `Purse.draw` pair is read in two more places. The timetable hangs
+`Purse.total` over its `CANTEEN` tab (`lay.purseCx`/`lay.purseY`, counted into
+`lay.sideTop` so everything that clears the margin clears it too), and `Hud.draw`
+puts what *this run* is worth so far under the ink bar, right-aligned on the ink
+bar's edge -- `Game:runWorth`, the sum the end card pays, never the purse.
+
+**The counter has four sections** (five with `SHOP`), turned by dragging the page
+(`src/spread.lua`) or `←`/`→`, and the section's name is the heading -- struck off
+the widest section name so the guard that steps it under the corners never moves
+as a page turns: `PERKS` is `Perks.list`, `HEROES` is
 every row of `Characters.list` with a `price` on it, `COURSES` is the one row of
 `src/course.lua`, and `REFUND` sells nothing at all. Separate sections because the
 one line under the counter saying what a level *is* -- a use a run spends, a hero
@@ -425,18 +433,22 @@ The body is the settings page's shape rather than the library's -- one fixed blo
 row count in both languages and in every purse: nothing on the counter changes
 height, which is the one thing the library never has. Every column is measured
 across *every* section for the same reason the library measures across all three
-shelves -- nothing may move as the footer is stepped either. It degrades one way and only one, the blurbs going first, so
+shelves -- nothing may move as the page is turned either. It degrades one way and only one, the blurbs going first, so
 a phone held upright keeps the whole transaction and loses the sentence about it.
 
-**Buying is the one thing in the margins of this book that is answered rather than
-pressed**, and it is the one exception to the rule the tabs, the library and the
-settings page are all drawn along. A press is for choosing what to look at and for
-setting a quantity; a purchase is neither -- it cannot be taken back, and a
-`Scribble` box is how this game asks about one. So each row ends in a box, it warms
-slate → blue → red, the coins come out when the pen lifts, and the box is *wiped*
-afterwards (`Choice:clear`, the studio's RESET) so the next level can be bought in
-it. A row with nothing left to sell, or nothing in the purse to buy it with, has no
-box drawn at all, is not hit-tested, and ink that lands there is ink on the page.
+**Buying is a tap on the box**, the timetable's `GO!` way: `Canteen:press` finds
+the box (`Canteen:boxAt`, padded, only for a row that `canBuy` or the box still
+flashing) and `Choice:autoFill`s it, and `Choice:update` hands the box back when it
+is full, which is when `Canteen:buy` spends. Each row ends in a box, it warms slate →
+blue → red, and the box is *wiped* afterwards (`Choice:clear`, the studio's RESET)
+so the next level can be bought in it. A buyable box is **furniture**
+(`Canteen:furniture`): the book does not grab a finger that lands on it and the pen
+swallows ink over it, which is the whole reason it is a tap -- a hand scribble
+across a box on a page that turns under a sideways drag turned the page as often as
+it bought. `Canteen:leaving` (on `Book.onTurn`) wipes a box whose scribble is still
+being drawn. A row with nothing left to sell, or nothing in the purse to buy it
+with, has no box drawn at all, is not hit-tested, and a finger that lands there is
+on the page.
 The one line under the counter says which of those three states it is in rather
 than printing an instruction whatever is true.
 
@@ -1079,7 +1091,7 @@ in the column the figures are in, right-aligned like all of them, directly above
 the drawing of the character. The chevrons are `Sprites.icons.chevron` drawn
 through `drawMask` (the art is palette-locked, so there is no colour to set on the
 sprite — `Hud.drawIcon` has the same problem and answers it the same way) and drawn
-**bare** rather than in the library footer's 11px boxes: the glyph is three columns
+**bare** rather than in the studio roster's 11px boxes: the glyph is three columns
 wide, so the whole control is 57 pixels and fits inside the value column the clock
 row had already reserved. Each arrow's *target* is still a box the size of the
 corner button's; the word between them is deliberately not pressable, because a
@@ -2703,8 +2715,8 @@ library, the canteen and the homework page each hold one `Spread.new()`; nothing
 else in the game does.
 
 **A section is a spread, not a page.** All three screens step a fixed list of
-sections (`KINDS`, `SECTIONS`, `Challenges.sections`) with `<` name `>` in the
-footer, and that stepping used to be a cut -- one thing on one frame and another
+sections (`KINDS`, `SECTIONS`, `Challenges.sections`), once with `<` name `>` in
+a footer, and that stepping used to be a cut -- one thing on one frame and another
 on the next. It is a page turn now, and each section is laid across two facing
 leaves: the library's index on the verso and the entry it opens on the recto, the
 canteen's goods on the verso and what they do on the recto, the homework page's
@@ -2777,8 +2789,9 @@ why a moment of every turn shows one page of one section beside one page of the
 next.
 
 **What does not turn is not on the page.** Each screen's `drawPage` is one whole
-overprint pass holding only what belongs to the leaf; the heading, the corner
-count, the footer, the arrows and the corner button are drawn after `Book:draw`
+overprint pass holding only what belongs to the leaf; the heading (the section's
+name -- none of the three letters its own title any more), the corner count, the
+library's hint and toggle and the corner button are drawn after `Book:draw`
 returns and stay put. That split already existed for a rendering reason (see
 **Draw layering**: a box filled in `Palette.paper` has to go out past the pass or
 it reads as a transparency), and the page turn is what made it load-bearing.
@@ -2791,18 +2804,19 @@ edge decides which way. Anywhere else it is undecided for at most `SLIP` pixels 
 travel or `HOLD` seconds: sideways and it is a turn, anything else and it is a
 line. While it is undecided the pen lays nothing, which is what the gesture costs.
 The bias is towards the line, deliberately: a page turn is fast and a drawn line
-usually is not, and where the two are confusable there are still two arrows and
-two page edges. `Book:eating()` is what a screen's `mark` and `press` ask.
+usually is not, and where the two are confusable there are still two page edges
+(and `←`/`→` on a keyboard). The `<` `>` footer arrows are gone: the drag is the
+one way a finger turns these pages. `Book:eating()` is what a screen's `mark` and `press` ask.
 
 `Book:track` is called once a frame **ahead of the pen**, so the frame a stroke
 becomes a turn is a frame the pen lays nothing. Let go past halfway, or fast
 enough to be a flick, and the turn finishes itself; short of both it runs `p` back
 to 0 and the sheet is drawn coming home. `Book:at` -- the section every screen
 reads -- only moves when the leaf **lands**, so nothing a screen measures moves
-under it while the page is moving, and the footer names neither page halfway
+under it while the page is moving, and the heading names neither page halfway
 through. A screen with something live on the page it is leaving hangs it off
-`Book.onTurn`, which fires as the leaf lifts: the canteen disarms a half-scribbled
-box there, the library drops its picks and its `EVOLUTIONS` mode.
+`Book.onTurn`, which fires as the leaf lifts: the canteen wipes a box still being
+filled there, the library drops its picks and its `EVOLUTIONS` mode.
 
 ### The library
 
@@ -2843,12 +2857,12 @@ Four blocks, and the split between them is what holds the page still:
   is the shape of all of them. `Library:drawLine` writes out whichever line it is
   handed and `Library:drawEntry` decides which that is, because there are two ways
   to arrive: a name on the shelf, or a pair of picks.
-- **The footer** is `<` the section `>` plus one hint line, pinned to the foot of
-  the page rather than centred with the rest. The arrows are the studio's roster
-  recipe and the studio's job (`Library:arrowBox`/`arrowAt`/`step`): two boxes
-  either side of the name of the thing they step.
+- **The heading** is the name of the section open (`KINDS[book.at].name`), and the
+  footer is one hint line over the toggle's row (`lay.footY`), pinned to the foot of
+  the page rather than centred with the rest. Sections are turned by dragging the
+  page or `←`/`→` (`Library:step`); there are no footer arrows.
 - **The toggle** is the word `EVOLUTIONS` at `lay.evoX`/`lay.evoY`, in the footer's
-  bottom-left corner and level with the arrows. Page lettering rather than a box,
+  bottom-left corner. Page lettering rather than a box,
   pressed the way a name on the shelf is, and drawn only where `Library:evolvable`
   says the section showing has something that fuses. See **Evolutions in the
   library** below.
@@ -2856,16 +2870,16 @@ Four blocks, and the split between them is what holds the page still:
 Three layout rules, and the last two are the ones that will bite if they are
 changed:
 
-- Column width is the widest name in the **whole book** and the footer arrows are
-  struck off the widest section name, so nothing across the page moves as an arrow
-  is pressed. The shelf is reserved at the **fullest section's** row count
+- Column width is the widest name in the **whole book** and the heading's guard is
+  struck off the widest section name, so nothing across the page moves as a page
+  is turned. The shelf is reserved at the **fullest section's** row count
   (`lay.rows`) for the same reason down the page: the three sections are three
   lengths, and a shelf measured to itself would start the entry — icon, name at
   `NAME_SCALE`, every level — somewhere different on each one.
 - **The page is read from the top down, not centred.** Everything on it is a list
   whose length the catalogue decides, so there is no block to centre that is the
   same height twice, and a page that recentred itself would move the heading and
-  every name on the shelf each time an arrow was pressed. It also buys back the room
+  every name on the shelf each time a page was turned. It also buys back the room
   a centred page was spending: centring against the fullest section reserved the
   worst of two shelves that pull opposite ways — the passives are the fullest list
   with the shortest entries, the weapons the emptiest with the tallest — and on a
@@ -3400,9 +3414,9 @@ is how many numbers are in `want`. `Challenges.tier` is the first unmet rung,
 rung's figure at its widest, which is what the column is cut to, so clearing a
 rung never moves the list.
 
-**Six sections, stepped by the canteen's footer arrows** (`Homework:arrowBox`,
-`arrowAt`, `step`, `drawArrow` -- the same recipe, left/right on the keyboard, the
-section name in red between two chevron boxes). The list is going to keep growing
+**Six sections, one to a spread**, turned by dragging the page or left/right on the
+keyboard (`Homework:step`), with the section's name as the page's heading in place
+of `HOMEWORK`. The list is going to keep growing
 and a page is a page: ten rows a section fits the shortest window this game is
 handed with seven to spare, forty in a column would not.
 
@@ -3448,7 +3462,7 @@ draws them all and the screen knows one way of writing a name.
 
 **Measured across every section, never across the one showing.** `columns()`
 walks all six for the widest name, the widest demand at *any* rung, the widest
-meter and the longest ladder, so no column moves as the footer is pressed or as a
+meter and the longest ladder, so no column moves as the page is turned or as a
 row is finished. That is the library's rule and it matters here for the library's
 reason: this is a screen you read by running your eye down it. In English the
 widest row comes to 233 of the 312 pixels a 320-wide page offers; in Spanish 245.

@@ -29,8 +29,9 @@
 -- third decides what he walks into -- and the note under the counter says which of
 -- those you are looking at, which is the whole reason they are not one list: a
 -- page printing EVERY LEVEL IS ONE USE A RUN over a row selling the starman would
--- be the counter lying about its own goods. They are stepped with the library's own footer (`<` the
--- section `>`), and the rows themselves know nothing about it: a row is a name, a
+-- be the counter lying about its own goods. They are turned like the library's
+-- own (src/spread.lua), a finger dragging the leaf, and the section's name is the
+-- heading of the page; the rows themselves know nothing about it: a row is a name, a
 -- price and a box, plus a `shop` to ask the five questions a price needs answering,
 -- and src/perks.lua and src/characters.lua answer those five the same way -- so one
 -- function draws a reroll and a hero.
@@ -78,16 +79,16 @@
 -- purse that has reached a hundred: the room it keeps is struck off four figures
 -- rather than off the number showing.
 --
--- **Buying is the one thing on this page that is answered rather than pressed.**
--- Everywhere else in the margins of this book -- the tabs, the library's names, the
--- settings page's bars -- a press is a press, on the rule that choosing what to
--- look at is not a question and a quantity is not an answer. A purchase is neither
--- of those. It is a thing you cannot take back, and a box you scribble in is how
--- this game asks about one (src/scribble.lua) -- so each row has a box at the end
--- of it, it warms slate to blue to red as it fills, it commits when the pen comes
--- off, and the coins come out then and not before. A row with nothing left to sell,
--- or nothing in the purse to buy it with, has no box drawn at all and ink that
--- lands where one would be is ink on the page.
+-- **Buying is answered with a tap, the timetable's `GO!` way.** Each row has a box
+-- at the end of it, and a tap on the box draws the scribble into it for you
+-- (`Choice:autoFill`): it warms slate to blue to red as it fills and the coins come
+-- out when it is full. It used to want the box scribbled in by hand, and on a page
+-- that turns under a sideways drag that was the one gesture here that could do
+-- either -- a scribble across a box was as likely to turn the leaf as to buy. So a
+-- box that can be bought is furniture now: the book will not take the page from a
+-- finger that lands on it, and ink that crosses it is swallowed rather than counted.
+-- A row with nothing left to sell, or nothing in the purse to buy it with, has no
+-- box drawn at all and a finger that lands where one would be is on the page.
 --
 -- The box is *wiped* after a purchase rather than spent (`Choice:clear`), which is
 -- the studio's RESET doing the same job: a counter you can only buy one thing at
@@ -118,21 +119,18 @@ local I18n = require("src.i18n")
 local Canteen = {}
 Canteen.__index = Canteen
 
-local HEAD = "CANTEEN"
 local HEAD_SCALE = 2
 local EDGE = 4
 local HEAD_TOP = 10    -- the heading off the top of the page, the library's own
                        -- clearance
-local HEAD_GAP = 9     -- ... and the settings page's gap down to the first row
+local HEAD_GAP = 15    -- ... and the gap down to the first row, wider than the
+                       -- settings page's: the heading is the section's name and
+                       -- wants air under it to read as a title
 
 local ROW_GAP = 5      -- one row of the counter to the next
 local LINE_GAP = 2     -- ... and the two lines inside one row, where it has two
 local COL_GAP = 5      -- one column of a row to the next
 local HINT_GAP = 8     -- the last row down to the two lines under it
-local FOOT_GAP = 6     -- ... and the lowest of those down to the arrows
-local ARROW = 11       -- the library's footer arrow, which is the corner button's
-                       -- box
-local ARROW_GAP = 6    -- ... and its clearance off the section name between them
 
 -- The room the readout keeps in its corner, in figures rather than in pixels: a
 -- purse this deep is a million kills, and reserving for it is what stops the
@@ -168,12 +166,12 @@ local SECTIONS = {
     {
         name = "PERKS",
         note = "EVERY LEVEL IS ONE USE A RUN",
-        keys = "SCRIBBLE A BOX OR PRESS 1 2 3 4",
+        keys = "CLICK A BOX OR PRESS 1 2 3 4",
     },
     {
         name = "HEROES",
         note = "A HERO IS YOURS FOR GOOD",
-        keys = "SCRIBBLE A BOX OR PRESS 1 2 3",
+        keys = "CLICK A BOX OR PRESS 1 2 3",
     },
     -- The course ladder (src/course.lua), and the last thing on the counter that
     -- is actually sold. It is here rather than first because the sections run in
@@ -188,7 +186,7 @@ local SECTIONS = {
     {
         name = "COURSES",
         note = "EVERY LEVEL IS A HARDER BOOK",
-        keys = "SCRIBBLE A BOX OR PRESS 1",
+        keys = "CLICK A BOX OR PRESS 1",
     },
     -- And the way back off the other three (src/refund.lua), which is a section
     -- rather than a row at the bottom of one because it is about all three of them
@@ -201,8 +199,8 @@ local SECTIONS = {
     {
         name = "REFUND",
         note = "YOU GET EVERY COIN BACK",
-        keys = "SCRIBBLE A BOX OR PRESS 1",
-        touch = "SCRIBBLE A BOX TO REFUND",
+        keys = "CLICK A BOX OR PRESS 1",
+        touch = "TAP A BOX TO REFUND",
         shut = "NOTHING TO REFUND",
     },
 }
@@ -218,7 +216,7 @@ SECTIONS[#SECTIONS + 1] = {
         if Store.full() then return "HOMEWORK STILL HAS TO BE EARNED" end
         return "SCIENCE IS ALWAYS FREE"
     end,
-    keys = "SCRIBBLE A BOX OR PRESS 1 2 3",
+    keys = "CLICK A BOX OR PRESS 1 2 3",
     store = true,
 }
 local SHOP = #SECTIONS
@@ -434,7 +432,7 @@ end
 --
 -- Every section at once, never the one showing: this is the library's rule about
 -- its three shelves and it holds here for the same reason twice over. Nothing may
--- move as a row is bought, and nothing may move as the footer is stepped either --
+-- move as a row is bought, and nothing may move as the page is turned either --
 -- the heading, the block and the boxes are in the same place on every section, so
 -- what changes when you turn to the other one is the words in them.
 local function eachRow(fn)
@@ -498,8 +496,9 @@ local function mostRows()
     return n
 end
 
--- And the widest section name, so the two footer arrows never move as one is
--- pressed.
+-- And the widest section name, which is the heading: the guard that steps it
+-- under the two corners is struck off this rather than off the name showing, so
+-- turning the page never moves the counter under it.
 local function sectionWidth()
     local w = 0
     for _, section in ipairs(SECTIONS) do
@@ -519,8 +518,8 @@ end
 -- reason: the counter is as many rows as src/perks.lua has, in both languages and
 -- in every purse, so there is something here whose height is the same twice. The
 -- library reads from the top because the catalogue decides how long its lists are
--- and a page that recentred itself would move every name on the shelf each time an
--- arrow was pressed; nothing on this counter can change height at all.
+-- and a page that recentred itself would move every name on the shelf each time a
+-- page was turned; nothing on this counter can change height at all.
 --
 -- The block degrades one way, and only one: the blurbs go first. A row is an icon,
 -- a name, what it does, how many you own, what the next one costs and a box to
@@ -550,7 +549,7 @@ function Canteen:layout(game)
     lay.purseRight = game.vw - ins.r - Hud.CORNER_MARGIN
     lay.purse = by + math.floor((Hud.CORNER_SIZE - Purse.height()) / 2)
 
-    local headW = Font.width(I18n.t(HEAD)) * HEAD_SCALE
+    local headW = sectionWidth() * HEAD_SCALE
     local purseLeft = lay.purseRight - Purse.width(WIDEST)
     local underBoth = math.max(Hud.cornerBottom(game),
         lay.purse + Purse.height()) + EDGE
@@ -648,19 +647,14 @@ function Canteen:layout(game)
     -- worth. The draft's own pair, and reserved whether or not they will fit.
     local blockH = rowsH + HINT_GAP + Font.height * 2 + 2
 
-    -- The footer off the bottom edge, pinned to it rather than centred with the
-    -- counter: it is the library's footer doing the library's job -- which section
-    -- of the same page am I reading -- so it sits where the library's sits.
-    lay.arrowY = game.vh - ins.b - EDGE - ARROW
-    lay.sectionW = sectionWidth()
-
-    -- Centred in what is left below the heading and above the footer, and never
-    -- above the heading: the title, the two things in the top corners and the
-    -- arrows are the things on this page that cannot move.
+    -- Centred in what is left below the heading and above the foot of the page,
+    -- and never above the heading: the title and the two things in the top
+    -- corners are the things on this page that cannot move.
     local from = math.max(underBoth,
         lay.head + Font.height * HEAD_SCALE + HEAD_GAP)
+    local bottom = game.vh - ins.b - EDGE
     lay.rowTop = math.max(from,
-        math.floor(from + (lay.arrowY - FOOT_GAP - from - blockH) / 2))
+        math.floor(from + (bottom - from - blockH) / 2))
     lay.hint = lay.rowTop + rowsH + HINT_GAP
 
     -- Where each row of the section showing stands, kept here rather than on the
@@ -695,40 +689,15 @@ end
 
 --- update --------------------------------------------------------------------
 
--- One of the two footer arrows, as a box: the library's own recipe, both struck off
--- the middle of the page with the widest section name between them.
-function Canteen:arrowBox(dir)
-    local lay = self.lay
-    local half = (lay.sectionW + (ARROW + ARROW_GAP) * 2) / 2
-    local x = dir < 0 and lay.cx - half or lay.cx + half - ARROW
-    return math.floor(x), lay.arrowY
-end
-
--- Which arrow, if either, a point lands on. Padded the way every small target in
--- the game is padded, and by more on a phone.
-function Canteen:arrowAt(x, y)
-    if not self.lay then return nil end
-
-    local padX, padY = 4, 2
-    if Input.usingTouch then padX, padY = 8, 6 end
-
-    for dir = -1, 1, 2 do
-        local ax, ay = self:arrowBox(dir)
-        if x >= ax - padX and x <= ax + ARROW + padX
-            and y >= ay - padY and y <= ay + ARROW + padY then
-            return dir
-        end
-    end
-    return nil
-end
-
--- The other section. Turning a page rather than changing your mind, so a box left
--- part-scribbled is still part-scribbled when you come back to it -- but whatever
--- was *armed* is disarmed on the way out, since nothing is bought until the pen
--- lifts and the pen is about to lift somewhere else. Leaving it armed would be a
--- purchase waiting for the frame you turned back.
+-- The other section. Turning a page rather than changing your mind, so a box
+-- whose scribble was still being drawn in is wiped on the way out: nothing is
+-- bought until the box is full, and the box is about to be on a page you are no
+-- longer looking at. Carrying it would be a purchase waiting for the frame you
+-- turned back.
 function Canteen:leaving()
-    self.choice.armed = nil
+    for _, box in ipairs(self.choice.boxes) do
+        if box.auto and box.auto < 1 then self.choice:clear(box) end
+    end
 
     -- And the flash is landed on the way out rather than carried: it belongs to a
     -- purchase on a page you are no longer looking at, and the box under it has to
@@ -741,9 +710,9 @@ function Canteen:leaving()
     end
 end
 
--- An arrow, or a key: the same turn a finger makes, run at its own pace. `leaving`
--- is hung off the book rather than called here, so a page turned by hand puts the
--- counter down exactly as a page turned by an arrow does.
+-- A key: the same turn a finger makes, run at its own pace. `leaving` is hung off
+-- the book rather than called here, so a page turned by hand puts the counter
+-- down exactly as a page turned by a key does.
 function Canteen:step(dir)
     self.book:turn(dir)
 end
@@ -753,22 +722,38 @@ function Canteen:backAt(x, y)
     return x >= bx and x <= bx + bw and y >= by and y <= by + bh
 end
 
--- The corner button and the two footer arrows swallow whatever crosses them rather
--- than being drawn on: a press on one was taken as a press rather than as the start
--- of a line.
--- Answers whether the stamp became ink, which is what the pen's swish is fired
--- off (src/scribble.lua): a swallowed stamp was never a line, so it must not
--- sound like one.
+-- The box a point lands on, if it is one that can be answered: drawn, and for a
+-- row with something to sell. Padded the way every small target in the game is
+-- padded, and by more on a phone, since it is pressed rather than drawn in.
 --
--- A box for a row that cannot be bought is deliberately *not* swallowed. It is not
--- drawn either, so what is there is bare page, and ink laid across bare page is a
--- line -- swallowing it would be the page refusing to be drawn on over a rectangle
--- of nothing.
--- Furniture: the corner button and the two footer arrows. One question rather
--- than two, because both of the things that ask it want the same answer -- the pen
--- must not draw here, and the book must not take the page here.
+-- A box for a row that cannot be bought is deliberately *not* found. It is not
+-- drawn either, so what is there is bare page, and a finger laid on bare page is
+-- a line or a turn -- claiming it would be the page refusing to be used over a
+-- rectangle of nothing. The one still flashing what it just bought *is* found: it
+-- is drawn, and a second tap on it must not reach the page under it.
+function Canteen:boxAt(x, y)
+    if not self.lay then return nil end
+
+    local pad = Input.usingTouch and 4 or 1
+    for i, box in ipairs(self.choice.boxes) do
+        local row = self:rows()[i]
+        if box.x and row
+            and (box == self.bought or row.shop.canBuy(row.key))
+            and x >= box.x - pad and x <= box.x + box.w + pad
+            and y >= box.y - pad and y <= box.y + box.h + pad then
+            return box
+        end
+    end
+    return nil
+end
+
+-- Furniture: the corner button and every box that can be answered. One question
+-- rather than two, because both of the things that ask it want the same answer --
+-- the pen must not draw here, and the book must not take the page here. Which is
+-- the whole of what keeps a purchase from turning the page: a finger that lands on
+-- a box is pressing it, whichever way it slides off.
 function Canteen:furniture(x, y)
-    return self:backAt(x, y) or self:arrowAt(x, y) ~= nil
+    return self:backAt(x, y) or self:boxAt(x, y) ~= nil
 end
 
 function Canteen:mark(x, y)
@@ -777,19 +762,13 @@ function Canteen:mark(x, y)
     -- for the extra reason that a scribble does something here: a drag across the
     -- counter that filled a box on its way out would buy a thing you were leaving.
     if self.book:eating() then return false end
+
+    -- And furniture swallows what crosses it rather than being drawn on: a press
+    -- there was taken as a press rather than as the start of a line. Answers
+    -- whether the stamp became ink, which is what the pen's swish is fired off
+    -- (src/scribble.lua): a swallowed stamp was never a line, so it must not
+    -- sound like one.
     if self:furniture(x, y) then return false end
-
-    local box = self.choice:boxAt(x, y)
-    -- A box still flashing what it just bought is furniture and swallows what
-    -- crosses it: it is drawn, so ink over it would be ink on a box, and it is
-    -- about to be wiped anyway -- the alternative is a scribble that carries on
-    -- through the flash and buys the next level nobody asked for.
-    if box and box == self.bought then return false end
-
-    local row = box and self:rowAt(box)
-    if row and row.shop.canBuy(row.key) and self.choice:mark(x, y) then
-        return true
-    end
 
     self.marks:add(x, y)
     return true
@@ -803,8 +782,11 @@ function Canteen:press(x, y)
         return
     end
 
-    local dir = self:arrowAt(x, y)
-    if dir then self:step(dir) end
+    -- A tap on a box draws the scribble into it, the way a tap on `GO!` does on
+    -- the timetable; the box buys when it is full (`Canteen:update`). Not while one
+    -- is still flashing, which is a purchase that has already landed.
+    local box = self:boxAt(x, y)
+    if box and box ~= self.bought then self.choice:autoFill(box) end
 end
 
 -- Bought, by whichever catalogue the row came off (`shop.buy`, through
@@ -858,21 +840,14 @@ function Canteen:update(dt, game)
     self.book:track(dt, down, Input.pointerX, Input.pointerY,
         self:furniture(Input.pointerX, Input.pointerY))
 
-    -- The keyboard's scribble, run on. It answers outright -- there is no pen to
-    -- lift -- exactly as it does in the draft.
+    -- The scribble a tap or a key started, run on. It answers outright -- there is
+    -- no pen to lift -- exactly as it does in the draft.
     local filled = self.choice:update(dt)
     if filled then self:buy(filled) end
 
     self.pen:track(dt, down, Input.pointerX, Input.pointerY,
         function(mx, my) return self:mark(mx, my) end,
         function(px, py) self:press(px, py) end)
-
-    -- Armed, not answered: nothing is bought until the pen comes off the page, so
-    -- a scribble that carries on out of a box changes its mind.
-    if self.choice.armed and not down then
-        self:buy(self.choice.armed)
-        self.choice.armed = nil
-    end
 
     if self.back then return "back" end
 end
@@ -885,8 +860,7 @@ function Canteen:keypressed(key)
         return
     end
 
-    -- Left and right step the section, the way the arrows they stand for do: the
-    -- library's own keys, on the library's own footer.
+    -- Left and right turn the page, the library's own keys.
     if key == "left" or key == "a" then
         self:step(-1)
         return
@@ -999,22 +973,6 @@ function Canteen:drawRow(i, row)
     self:drawPrice(row, at)
 end
 
--- One footer arrow, in the corner button's own recipe: a slate box filled with
--- paper and the chevron in the middle of it. The same glyph both ways round -- three
--- columns wide, so its origin is the middle one and the flip is an exact mirror
--- rather than a resample.
-function Canteen:drawArrow(dir)
-    local x, y = self:arrowBox(dir)
-
-    love.graphics.setColor(Palette.slate)
-    love.graphics.rectangle("fill", x, y, ARROW, ARROW)
-    love.graphics.setColor(Palette.paper)
-    love.graphics.rectangle("fill", x + 1, y + 1, ARROW - 2, ARROW - 2)
-
-    love.graphics.setColor(1, 1, 1)
-    Sprites.icons.chevron:draw(x + ARROW / 2, y + ARROW / 2, dir > 0)
-end
-
 -- One spread: the section laid across both leaves, with nothing on it that does
 -- not turn with it. Called into a canvas rather than onto the screen while a leaf
 -- is moving (src/spread.lua), which is why it is a whole overprint pass of its own
@@ -1089,9 +1047,14 @@ function Canteen:draw(game)
     self.book:draw(game, function(at) self:drawPage(game, at) end)
 
     -- And then everything that is the book rather than the leaf: the heading, what
-    -- is in the purse, the way back and the footer that turns the page. None of it
-    -- moves when a page does, which is the whole reason it is drawn out here.
-    Scribble.printBig(I18n.t(HEAD), lay.cx, lay.head, HEAD_SCALE, Palette.red,
+    -- is in the purse and the way back. None of it moves when a page does, which is
+    -- the whole reason it is drawn out here.
+    --
+    -- The heading is the section the book is *open* at, so it changes on the frame
+    -- the leaf lands rather than while it is in the air -- a title that renamed
+    -- itself halfway through the gesture would be naming neither page.
+    Scribble.printBig(I18n.t(SECTIONS[self.book.at].name), lay.cx, lay.head,
+        HEAD_SCALE, Palette.red,
         { shadow = Palette.blush, wobble = true, t = self.t, seed = 3 })
 
     -- Right-aligned by centring the pair on the middle of the room it takes, since
@@ -1101,17 +1064,6 @@ function Canteen:draw(game)
     Purse.draw(total, lay.purseRight - Purse.width(total) / 2, lay.purse,
         Palette.ink)
 
-    -- The section, between the two arrows that step it, and red because it is the
-    -- one thing in the footer that changes. It names the section the book is *open*
-    -- at throughout a turn, so it changes on the frame the leaf lands rather than
-    -- while it is in the air -- a label that renamed itself halfway through the
-    -- gesture would be naming neither page.
-    Scribble.printBig(I18n.t(SECTIONS[self.book.at].name), lay.cx,
-        lay.arrowY + math.floor((ARROW - Font.height) / 2), 1, Palette.red,
-        { seed = 60 })
-
-    self:drawArrow(-1)
-    self:drawArrow(1)
     Hud.drawCorner(game, "back", false)
 end
 
@@ -1152,7 +1104,7 @@ function Canteen:hint(at)
 
     if not anyLeft then return "NOTHING LEFT TO BUY" end
     if not anyBuyable then return "COME BACK WITH MORE COINS" end
-    if Input.usingTouch then return section.touch or "SCRIBBLE A BOX TO BUY" end
+    if Input.usingTouch then return section.touch or "TAP A BOX TO BUY" end
     -- The keys written out rather than counted, the draft's own line and the
     -- timetable's: English is the key (src/i18n.lua), so a line built out of the
     -- number of rows would be a line with no translation. Which is why it is on the

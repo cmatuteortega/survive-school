@@ -11,8 +11,8 @@
 --
 -- **Nothing here is answered, so nothing here is scribbled.** Every box in the
 -- game (src/scribble.lua) is a thing you cannot take back, and there is nothing
--- on this page you could take back: you press a name to read it, you press an
--- arrow to turn to another section, and you press the corner to close it. That is
+-- on this page you could take back: you press a name to read it, you drag the
+-- page to turn to another section, and you press the corner to close it. That is
 -- the same rule the timetable's tabs are drawn along -- choosing what to *look*
 -- at is not a question -- applied to a screen where looking is all there is. Ink
 -- that lands anywhere else is still just ink and still fades off the page, since
@@ -45,12 +45,13 @@
 -- and the entry under it, which is where they both were before there was a fold
 -- at all.
 --
--- **The footer** is `<` the section `>`, at the foot of the page, the studio's
--- roster arrows doing the studio's job (src/studio.lua): two arrows either side
--- of the name of the thing they step. Tools, then what fights for you, then the
--- numbers about you -- which is the order the catalogue itself is written in and
--- the order a run reads them in. A section is a spread, so the arrows turn a
--- leaf, and so does a finger dragged across the page.
+-- **The heading** is the name of the section open, and a section is a spread,
+-- so a finger dragged across the page turns to the next one. Tools, then what
+-- fights for you, then the numbers about you -- which is the order the catalogue
+-- itself is written in and the order a run reads them in. There were `<` `>`
+-- arrows at the foot of the page once, either side of the section's name; the
+-- drag made them a second way of doing the one thing, and the name went up to be
+-- the title.
 --
 -- **The toggle** is the word EVOLUTIONS in the bottom left corner, and it is the
 -- one thing on this page that changes what the page *is* rather than which part
@@ -98,7 +99,6 @@ local Overprint = require("src.overprint")
 local Input = require("src.input")
 local Scribble = require("src.scribble")
 local Hud = require("src.hud")
-local Sprites = require("src.sprites")
 local Tools = require("src.tools")
 local Upgrades = require("src.upgrades")
 local Collection = require("src.collection")
@@ -145,7 +145,6 @@ Library.book = Spread.new()
 -- and, until the fusions were gated at all (src/collection.lua), a number that
 -- read fifty-one of eighty-one to a fresh book whose draft could reach nine.
 
-local HEAD = "LIBRARY"
 local HEAD_SCALE = 2
 local NAME_SCALE = 2       -- the entry being read, at the heading's own size
 
@@ -159,13 +158,13 @@ local ICON = 11            -- every icon in the game is 11x11
 local ICON_GAP = 3         -- an icon to the name beside it
 local PLATE_GAP = 8        -- one name on the shelf to the next across
 local ROW_GAP = 3          -- ... and down
-local HEAD_GAP = 6         -- the heading to the shelf
+local HEAD_GAP = 12        -- the heading to the shelf: room for the section's
+                           -- name to read as the title over it
 local BLOCK_GAP = 6        -- one block of the page to the next
 local LINE_GAP = 2         -- one line of lettering to the next
 local LEVEL_GAP = 4        -- a level's number to what it does
-local HINT_GAP = 6         -- the hint to the arrows under it
-local ARROW = 11           -- the same box the corner button and the studio use
-local ARROW_GAP = 6        -- ... and its clearance off the name between them
+local HINT_GAP = 6         -- the hint to the toggle's row under it
+local FOOT = 11            -- the toggle's row, the corner button's box deep
 
 -- The toggle, and the two things the block under the shelf says when it is up and
 -- there is nothing to write out. Held here rather than inline for the reason every
@@ -506,7 +505,7 @@ end
 
 -- The widest name in the whole catalogue, not in the section showing: the shelf
 -- is one grid of one column width, and a grid that resized itself around each
--- section would move every name on the page each time an arrow was pressed.
+-- section would move every name on the page each time a page was turned.
 local function nameWidth()
     local w = 0
     for _, list in ipairs(shelves) do
@@ -527,8 +526,9 @@ local function bossWidth()
     return w
 end
 
--- And the widest section name, so the two arrows in the footer never move as the
--- word between them changes.
+-- And the widest section name, which is the heading: the guard that steps it
+-- under the two corners is struck off this, so turning the page never moves the
+-- shelf under it.
 local function sectionWidth()
     local w = 0
     for _, section in ipairs(KINDS) do
@@ -588,7 +588,7 @@ end
 -- decides -- ten tools, seven weapons, twelve passives, each with as many levels
 -- as it has -- so there is no block to centre that is the same height twice, and a
 -- page that recentred itself would move the heading and every name on the shelf
--- each time an arrow was pressed. Read from the top and none of that can happen:
+-- each time a page was turned. Read from the top and none of that can happen:
 -- the heading and the top of the shelf are in the same place on all three shelves,
 -- whatever is on them.
 --
@@ -662,24 +662,15 @@ function Library:layout(game)
     local headH = Font.height * HEAD_SCALE
     lay.nameH = math.max(ICON, Font.height * NAME_SCALE)
 
-    -- The footer, off the bottom edge: the hint, and the arrows under it.
-    lay.arrowY = game.vh - ins.b - EDGE - ARROW
-    lay.hintY = lay.arrowY - HINT_GAP - Font.height
-    lay.sectionW = sectionWidth()
+    -- The footer, off the bottom edge: the hint, and the toggle's row under it.
+    lay.footY = game.vh - ins.b - EDGE - FOOT
+    lay.hintY = lay.footY - HINT_GAP - Font.height
 
-    -- The toggle, in the corner the page ends in and level with the arrows. It is
-    -- left-aligned on the page's own left edge rather than struck off the middle
-    -- like everything else in the footer, because it is the one thing down there
-    -- that is not part of the pair of arrows: what it belongs to is the corner.
-    --
-    -- Nothing is reserved for it and nothing needs to be. Its widest translation
-    -- is eleven letters -- forty-three pixels -- and the left arrow is struck off
-    -- the middle of the page with the widest section name beside it, which on the
-    -- narrowest page this game is handed (a phone held upright, 180 across) still
-    -- leaves a few pixels between the two. On anything wider it is most of the
-    -- page.
+    -- The toggle, in the corner the page ends in. It is left-aligned on the
+    -- page's own left edge rather than struck off the middle, because what it
+    -- belongs to is the corner.
     lay.evoX = left
-    lay.evoY = lay.arrowY + math.floor((ARROW - Font.height) / 2)
+    lay.evoY = lay.footY + math.floor((FOOT - Font.height) / 2)
 
     -- The heading sits in the very top row of the page and *shares* it with the
     -- corner button, rather than starting below it the way the timetable's panel
@@ -701,7 +692,7 @@ function Library:layout(game)
     lay.tallyRight = game.vw - ins.r - Hud.CORNER_MARGIN
     lay.tally = by + math.floor((Hud.CORNER_SIZE - Font.height) / 2)
 
-    local headW = Font.width(I18n.t(HEAD)) * HEAD_SCALE
+    local headW = sectionWidth() * HEAD_SCALE
     local buttonRight = bx + Hud.CORNER_SIZE
     local underBoth = math.max(Hud.cornerBottom(game),
         lay.tally + Font.height) + EDGE
@@ -724,7 +715,7 @@ function Library:layout(game)
     -- on all three sections. The catalogue decides how many tools, weapons and
     -- passives there are and they are not the same number, so a shelf measured to
     -- itself moves the entry -- its icon, its name at twice the size and every
-    -- level under it -- up and down the page each time an arrow is pressed. This is
+    -- level under it -- up and down the page each time a page is turned. This is
     -- the same rule the columns are already cut to the widest name in the book for,
     -- applied down the page instead of across it, and it costs the emptiest shelf a
     -- row or two of blank page: cheap, next to a heading you have to find again.
@@ -768,23 +759,13 @@ function Library:layout(game)
     return lay
 end
 
--- One of the two footer arrows, as a box. `dir` is -1 for the left and 1 for the
--- right, both struck off the middle of the page with the widest section name
--- between them.
-function Library:arrowBox(dir)
-    local lay = self.lay
-    local half = (lay.sectionW + (ARROW + ARROW_GAP) * 2) / 2
-    local x = dir < 0 and lay.cx - half or lay.cx + half - ARROW
-    return math.floor(x), lay.arrowY
-end
-
--- And the toggle, as a box: the word itself, in the row the arrows are in. The
--- word is five pixels deep and the row is eleven, and the taller box is the one
--- that is wanted -- what is being pressed is the corner of the page, not the
--- lettering in it.
+-- The toggle, as a box: the word itself, in the footer's row. The word is five
+-- pixels deep and the row is eleven, and the taller box is the one that is
+-- wanted -- what is being pressed is the corner of the page, not the lettering
+-- in it.
 function Library:evoBox()
     local lay = self.lay
-    return lay.evoX, lay.arrowY, Font.width(I18n.t(EVO)), ARROW
+    return lay.evoX, lay.footY, Font.width(I18n.t(EVO)), FOOT
 end
 
 --- update --------------------------------------------------------------------
@@ -880,9 +861,9 @@ function Library:leaving()
     self.picks = {}
 end
 
--- An arrow, or a key: the same turn a finger makes, run at its own pace. `leaving`
--- is hung off the book rather than called here, so a page turned by hand puts the
--- shelf down exactly as a page turned by an arrow does.
+-- A key: the same turn a finger makes, run at its own pace. `leaving` is hung off
+-- the book rather than called here, so a page turned by hand puts the shelf down
+-- exactly as a page turned by a key does.
 function Library:step(dir)
     self.book:turn(dir)
 end
@@ -898,26 +879,8 @@ function Library:backAt(x, y)
     return x >= bx and x <= bx + bw and y >= by and y <= by + bh
 end
 
--- Which arrow, if either, a point lands on. Padded the way every small target in
--- the game is padded, and by more on a phone.
-function Library:arrowAt(x, y)
-    if not self.lay then return nil end
-
-    local padX, padY = 4, 2
-    if Input.usingTouch then padX, padY = 8, 6 end
-
-    for dir = -1, 1, 2 do
-        local ax, ay = self:arrowBox(dir)
-        if x >= ax - padX and x <= ax + ARROW + padX
-            and y >= ay - padY and y <= ay + ARROW + padY then
-            return dir
-        end
-    end
-    return nil
-end
-
--- The toggle, padded the same way and by the same two numbers: it is a small
--- target in a corner and a thumb is a thumb. Nothing at all on a shelf with no
+-- The toggle, padded the way every small target in the game is padded, and by
+-- more on a phone: it is a small target in a corner and a thumb is a thumb. Nothing at all on a shelf with no
 -- evolutions, so a press in that corner is a press on the page.
 function Library:evoAt(x, y)
     if not self.lay or not self:evolvable() then return false end
@@ -939,20 +902,19 @@ function Library:plateAt(x, y)
     end
 end
 
--- Ink that misses everything is ink on the page and fades off it. A name, an
--- arrow and the corner button all swallow whatever crosses them rather than being
+-- Ink that misses everything is ink on the page and fades off it. A name, the
+-- toggle and the corner button all swallow whatever crosses them rather than being
 -- drawn on: a press on any of them was taken as a press rather than as the start
 -- of a line, and the timetable's tabs already work this way.
 -- Answers whether the stamp became ink, for the pen's swish (src/scribble.lua):
--- a name, an arrow and the corner button all swallow what crosses them, and a
+-- a name, the toggle and the corner button all swallow what crosses them, and a
 -- pointer dragged across the shelf is laying no line to sound.
 -- Furniture: every rectangle on this screen that is pressed rather than drawn on.
 -- One question rather than four, because both of the things that ask it want the
 -- same answer -- the pen must not draw here, and the book must not take the page
 -- here.
 function Library:furniture(x, y)
-    return self:plateAt(x, y) ~= nil or self:arrowAt(x, y) ~= nil
-        or self:backAt(x, y) or self:evoAt(x, y)
+    return self:plateAt(x, y) ~= nil or self:backAt(x, y) or self:evoAt(x, y)
 end
 
 function Library:mark(x, y)
@@ -978,12 +940,6 @@ function Library:press(x, y)
 
     if self:evoAt(x, y) then
         self:toggleEvo()
-        return
-    end
-
-    local dir = self:arrowAt(x, y)
-    if dir then
-        self:step(dir)
         return
     end
 
@@ -1034,7 +990,7 @@ function Library:update(dt, game)
     if self.back then return "back" end
 end
 
--- Left and right step the section, the way the arrows they stand for do; up and
+-- Left and right turn the page; up and
 -- down walk the shelf, which on a keyboard is how you read a list. Backspace is
 -- the corner button, exactly as it is on the timetable.
 function Library:keypressed(key)
@@ -1373,22 +1329,6 @@ function Library:drawBoss(lay, boss)
         { x, top, x + w, bottom }, beaten, Palette.graphite)
 end
 
--- One footer arrow, in the corner button's own recipe: a slate box filled with
--- paper and the chevron in the middle of it. The same glyph both ways round --
--- three columns wide, so its origin is the middle one and the flip is an exact
--- mirror rather than a resample.
-function Library:drawArrow(dir)
-    local x, y = self:arrowBox(dir)
-
-    love.graphics.setColor(Palette.slate)
-    love.graphics.rectangle("fill", x, y, ARROW, ARROW)
-    love.graphics.setColor(Palette.paper)
-    love.graphics.rectangle("fill", x + 1, y + 1, ARROW - 2, ARROW - 2)
-
-    love.graphics.setColor(1, 1, 1)
-    Sprites.icons.chevron:draw(x + ARROW / 2, y + ARROW / 2, dir > 0)
-end
-
 function Library:hint()
     if self.evo then
         if Input.usingTouch then return "TAP TWO TOOLS TO PAIR THEM" end
@@ -1434,14 +1374,16 @@ function Library:draw(game)
     self.book:draw(game, function(at) self:drawPage(game, at) end)
 
     -- And then everything that is the book rather than the leaf: the heading, how
-    -- much of the catalogue there is, the footer that turns the page, the toggle
-    -- and the line saying what to press. None of it moves when a page does, which
-    -- is the whole reason it is drawn out here -- and it is the same reason the
-    -- arrows were already out here, the timetable's: a box filled in paper still
-    -- has every inked pixel of its border paired with the page underneath, so a
-    -- border landing on a rule comes out a step darker and the box reads as a
-    -- transparency rather than as a thing lying on the page.
-    Scribble.printBig(I18n.t(HEAD), lay.cx, lay.head, HEAD_SCALE, Palette.red,
+    -- much of the catalogue there is, the toggle and the line saying what to
+    -- press. None of it moves when a page does, which is the whole reason it is
+    -- drawn out here.
+    --
+    -- The heading is the section the book is *open* at throughout a turn, so it
+    -- changes on the frame the leaf lands rather than while it is in the air -- a
+    -- title that renamed itself halfway through the gesture would be naming
+    -- neither page.
+    Scribble.printBig(I18n.t(KINDS[self.book.at].name), lay.cx, lay.head,
+        HEAD_SCALE, Palette.red,
         { shadow = Palette.blush, wobble = true, t = self.t, seed = 3 })
 
     -- How much of the book there is. Right-aligned by centring it on the middle of
@@ -1453,15 +1395,6 @@ function Library:draw(game)
     local count = ("%d/%d"):format(have, total)
     Scribble.printBig(count, lay.tallyRight - Font.width(count) / 2, lay.tally, 1,
         have >= total and Palette.red or Palette.slate, { seed = 62 })
-
-    -- The section, between the two arrows that step it, and red because it is the
-    -- one thing in the footer that changes. It names the section the book is *open*
-    -- at throughout a turn, so it changes on the frame the leaf lands rather than
-    -- while it is in the air -- a label that renamed itself halfway through the
-    -- gesture would be naming neither page.
-    Scribble.printBig(I18n.t(KINDS[self.book.at].name), lay.cx,
-        lay.arrowY + math.floor((ARROW - Font.height) / 2),
-        1, Palette.red, { seed = 60 })
 
     -- The toggle, in the corner, in the footer's own lettering. Red when it is up
     -- for the reason a name on the shelf is red when it is the one being read --
@@ -1482,8 +1415,6 @@ function Library:draw(game)
         Scribble.printBig(hint, lay.cx, lay.hintY, 1, Palette.graphite, { seed = 61 })
     end
 
-    self:drawArrow(-1)
-    self:drawArrow(1)
     Hud.drawCorner(game, "back", false)
 end
 

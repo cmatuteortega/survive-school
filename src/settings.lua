@@ -35,7 +35,7 @@
 -- the bar and what it says are one object -- while the labels, the heading and
 -- the hint are lettering and stay on the page.
 --
--- The two stepped rows are the library's footer arrows doing the library's job:
+-- The two stepped rows are the studio's roster arrows doing the studio's job:
 -- two boxes either side of the name of the thing they step. A language's own name
 -- for itself is what is written between them (src/i18n.lua), because someone
 -- looking for Spanish is looking for the word ESPANOL; the drawings row steps
@@ -103,8 +103,8 @@ local KNOB_OVER = 1        -- how far it stands proud of the track, top and bott
 local TAPS = 3
 local TAP_WINDOW = 1.2
 
-local ARROW = 11           -- the same box the corner button, the studio's roster
-                           -- and the library's footer all use
+local ARROW = 11           -- the same box the corner button and the studio's
+                           -- roster use
 local ARROW_GAP = 5        -- ... and its clearance off the name between them
 
 -- The drawings row's two words. What is being set is whether the game opens a

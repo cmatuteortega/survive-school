@@ -40,8 +40,8 @@
 -- the four collections), and it needs no special case anywhere: what makes a row
 -- long is how many numbers are in `want`.
 --
--- **Six sections, stepped by the library's footer arrows**, because this list is
--- going to keep growing and a page is a page:
+-- **Six sections, one to a spread the page is dragged across**, because this list
+-- is going to keep growing and a page is a page:
 --
 -- - **BESTIARY** -- one body count per row of `Enemy.types`. Per monster and not
 --   one number over all of them, because a single ALL KILLS challenge is one

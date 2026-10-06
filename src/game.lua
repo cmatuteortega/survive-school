@@ -207,7 +207,7 @@ function Game:load(vw, vh)
 
         -- And the two pages off the timetable's other margin -- the canteen and
         -- the homework page -- which sort their own presses out on the pen's press
-        -- edge as well: a footer arrow, the corner button, or the start of a line.
+        -- edge as well: a canteen box, the corner button, or the start of a line.
         if self.pages[self.state] then return false end
 
         -- And the settings page, for the same reason again: a bar, an arrow, the
