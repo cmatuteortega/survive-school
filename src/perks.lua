@@ -79,6 +79,7 @@
 -- anything out of yet, which is the safe way for it to be wrong.
 
 local Purse = require("src.purse")
+local Save = require("src.save")
 
 local Perks = {}
 
@@ -191,7 +192,7 @@ function Perks.save()
             out[#out + 1] = ("%s %d"):format(row.key, level)
         end
     end
-    love.filesystem.write(FILE, table.concat(out, "\n"))
+    Save.write(FILE, table.concat(out, "\n"))
 end
 
 -- No file at all is a book nothing has been bought out of yet. A line naming a
@@ -202,7 +203,7 @@ end
 function Perks.load()
     Perks.owned = {}
 
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     if not text then return end
 
     for line in text:gmatch("[^\r\n]+") do

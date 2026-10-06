@@ -80,6 +80,7 @@
 
 local Subjects = require("src.subjects")
 local Course = require("src.course")
+local Save = require("src.save")
 
 local Records = {}
 
@@ -149,7 +150,7 @@ function Records.save()
                 rec.won or "-")
         end
     end
-    love.filesystem.write(FILE, table.concat(out, "\n"))
+    Save.write(FILE, table.concat(out, "\n"))
 end
 
 -- The best of the book rather than of a page: the longest run anywhere, the
@@ -258,7 +259,7 @@ function Records.load()
     Records.by = {}
     Records.stamp = Records.stamp + 1
 
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     if not text then return end
 
     for line in text:gmatch("[^\r\n]+") do

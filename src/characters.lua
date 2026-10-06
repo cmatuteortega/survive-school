@@ -71,6 +71,7 @@
 local Purse = require("src.purse")
 local Upgrades = require("src.upgrades")
 local Dev = require("src.dev")
+local Save = require("src.save")
 
 local Characters = {}
 
@@ -325,7 +326,7 @@ function Characters.pick(key)
     if not Characters.owns(char.key) then char = Characters.base end
 
     Characters.current = char
-    love.filesystem.write(FILE, char.key)
+    Save.write(FILE, char.key)
     return Characters.current
 end
 
@@ -370,7 +371,7 @@ function Characters.saveRoster()
             out[#out + 1] = ("%s %d %.1f"):format(char.key, bought, time or 0)
         end
     end
-    love.filesystem.write(ROSTER, table.concat(out, "\n"))
+    Save.write(ROSTER, table.concat(out, "\n"))
 end
 
 -- The roster first and the pick second, because a pick is clamped to what the
@@ -381,7 +382,7 @@ function Characters.load()
     Characters.bought = {}
     Characters.times = {}
 
-    local roster = love.filesystem.read(ROSTER)
+    local roster = Save.read(ROSTER)
     if roster then
         for line in roster:gmatch("[^\r\n]+") do
             local key, bought, time = line:match("^(%S+)%s+(%d+)%s*([%d%.]*)$")
@@ -392,7 +393,7 @@ function Characters.load()
         end
     end
 
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     local key = text and text:match("^%s*(%S+)")
     local char = key and Characters.get(key) or Characters.default
     Characters.current = Characters.owns(char.key) and char or Characters.base

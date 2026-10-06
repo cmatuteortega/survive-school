@@ -171,6 +171,7 @@
 -- not enrolled in anything, which is the safe way for it to be wrong.
 
 local Purse = require("src.purse")
+local Save = require("src.save")
 
 local Course = {}
 
@@ -368,7 +369,7 @@ end
 --- the file ------------------------------------------------------------------
 
 function Course.save()
-    love.filesystem.write(FILE, table.concat({
+    Save.write(FILE, table.concat({
         ("open %d"):format(Course.open),
         ("at %s"):format(Course.current.key),
     }, "\n"))
@@ -381,7 +382,7 @@ function Course.load()
     Course.open = 0
     Course.current = Course.default
 
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     if not text then return end
 
     for line in text:gmatch("[^\r\n]+") do

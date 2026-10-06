@@ -26,6 +26,7 @@ local Orient = require("src.orient")
 local Haptics = require("src.haptics")
 local Dev = require("src.dev")
 local Intro = require("src.intro")
+local Save = require("src.save")
 
 local Options = {}
 
@@ -70,13 +71,13 @@ function Options.save()
         -- A player who never has it has a 0 here and nothing to see.
         ("dev %d"):format(flag(Dev.shown)),
     }
-    love.filesystem.write(FILE, table.concat(out, "\n"))
+    Save.write(FILE, table.concat(out, "\n"))
 end
 
 -- No file is a first run, not an error: every value keeps its default and
 -- nothing is saved until something is changed.
 function Options.load()
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     if not text then return end
 
     for line in text:gmatch("[^\r\n]+") do

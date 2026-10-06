@@ -79,6 +79,7 @@
 local Font = require("src.font")
 local Scribble = require("src.scribble")
 local Sprites = require("src.sprites")
+local Save = require("src.save")
 
 local Purse = {}
 
@@ -141,7 +142,7 @@ function Purse.forRun(run)
 end
 
 function Purse.save()
-    love.filesystem.write(FILE, ("coins %d"):format(math.floor(Purse.total)))
+    Save.write(FILE, ("coins %d"):format(math.floor(Purse.total)))
 end
 
 -- No file at all is a first run rather than an error, and so is a line that has
@@ -150,7 +151,7 @@ end
 function Purse.load()
     Purse.total = 0
 
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     if not text then return end
 
     local coins = tonumber(text:match("^coins%s+(%d+)"))

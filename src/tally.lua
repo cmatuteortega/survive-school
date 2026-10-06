@@ -50,6 +50,7 @@
 -- read costs that one counter and nothing else.
 
 local Enemy = require("src.enemy")
+local Save = require("src.save")
 
 local Tally = {}
 
@@ -143,7 +144,7 @@ function Tally.save()
     lines[#lines + 1] = ("bosses %d"):format(Tally.bosses)
     lines[#lines + 1] = ("time %.1f"):format(Tally.time)
 
-    love.filesystem.write(FILE, table.concat(lines, "\n"))
+    Save.write(FILE, table.concat(lines, "\n"))
 end
 
 -- Everything a run did since the last time it said so, as one table, and written
@@ -196,7 +197,7 @@ function Tally.load()
     Tally.time = 0
     Tally.stamp = Tally.stamp + 1
 
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     if not text then return end
 
     for line in text:gmatch("[^\r\n]+") do

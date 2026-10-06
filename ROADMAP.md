@@ -88,9 +88,11 @@ for it.
       calls `love.quit` on a backgrounded app it kills and blocks the game
       before the background event can be read. A kill or crash costs at most
       five seconds. Not yet checked on a real phone.
-- [ ] **Save versioning** — the save files (`records.txt`, `tally.txt`,
-      `course.txt`, the design files) carry no format version; stamp one and
-      migrate old saves on load before the first update ships changes to them.
+- [x] **Save versioning** — every save file goes through `src/save.lua`: a
+      `save N` stamp, `Save.migrate` steps run on load from the file's version
+      up (an unstamped file from an earlier APK is version 0 and read as is),
+      and a copy written first so a kill mid-save never leaves a file cut off.
+      A downgrade (an older APK over a newer one) reads stamped files wrong.
 - [ ] **Gamepad / keyboard play** — `src/input.lua` is touch and mouse only;
       worth it for desktop and Chromebook, optional for a mobile-only release.
 - [ ] **Device coverage** — check the fit (`main.lua`, safe insets) on real

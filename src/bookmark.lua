@@ -17,6 +17,7 @@ local Course = require("src.course")
 local Characters = require("src.characters")
 local Upgrades = require("src.upgrades")
 local Perks = require("src.perks")
+local Save = require("src.save")
 
 local Bookmark = {}
 
@@ -96,7 +97,7 @@ function Bookmark.save(game)
         out[#out + 1] = ("line %s %d"):format(id, loadout:levelOf(id))
     end
 
-    love.filesystem.write(FILE, table.concat(out, "\n"))
+    Save.write(FILE, table.concat(out, "\n"))
 end
 
 -- Called only from the three places a run ENDS rather than pauses: dying, END
@@ -104,13 +105,13 @@ end
 -- program -- closing the book is not throwing the bookmark away.
 function Bookmark.clear()
     Bookmark.run = nil
-    love.filesystem.remove(FILE)
+    Save.remove(FILE)
 end
 
 function Bookmark.load()
     Bookmark.run = nil
 
-    local text = love.filesystem.read(FILE)
+    local text = Save.read(FILE)
     if not text then return end
 
     -- Kept apart so a hand-edited file cannot land a `line` where a value goes.

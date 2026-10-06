@@ -23,6 +23,7 @@
 local Palette = require("src.palette")
 local Sprites = require("src.sprites")
 local Characters = require("src.characters")
+local Save = require("src.save")
 
 local Design = {}
 Design.__index = Design
@@ -191,7 +192,7 @@ local function parse(design, text)
 end
 
 function Design:save()
-    return love.filesystem.write(self.file, table.concat(self:rows(), "\n"))
+    return Save.write(self.file, table.concat(self:rows(), "\n"))
 end
 
 -- `legacy` is a file -- or a list of them, newest first -- this design used to be
@@ -203,17 +204,17 @@ end
 -- None of them is ever written, so the first `OK!` on the board quietly retires
 -- the lot.
 local function readLegacy(legacy)
-    if type(legacy) == "string" then return love.filesystem.read(legacy) end
+    if type(legacy) == "string" then return Save.read(legacy) end
 
     for _, file in ipairs(legacy) do
-        local text = love.filesystem.read(file)
+        local text = Save.read(file)
         if text then return text end
     end
 end
 
 function Design:load()
     local rows
-    local text = love.filesystem.read(self.file)
+    local text = Save.read(self.file)
     if not text and self.legacy then text = readLegacy(self.legacy) end
     if text then rows = parse(self, text) end
 

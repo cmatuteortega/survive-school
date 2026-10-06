@@ -242,7 +242,8 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
 - **Weapons and tools:** `shot`, `sword`, `star`/`orbital`, `flock`, `rocket`,
   `sun`, `cools`, `bomb`, `skate`, `spiral`, `coffee`, `boomerang`, `storm`, `beam`, `scissors`,
   `ruler`, `compass`, `pin`, `staple`, `puddle`, `arena`.
-- **World bookkeeping:** `stroke`, `mark`, `walls`, `bullet`, `gem`, `pickup`,
+- **World bookkeeping:** `save` (the one door every save file goes through: a
+  version stamp, `Save.migrate` on load, and no half-written file), `stroke`, `mark`, `walls`, `bullet`, `gem`, `pickup`,
   `puddle` and `spike` (the eye's wet and the P.E. whistle's jacks), `damage`, `sfx` (+ `src/sfx/`, `src/music/`), `haptics` (the one buzz: being
   hit, behind the settings page's `VIBRATION` row).
 

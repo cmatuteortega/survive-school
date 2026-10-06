@@ -54,7 +54,17 @@ corner, how much of a hit the page says out loud, whether a new drawing is
 asked for and whether the opening has been seen (see **Settings and language**), and `bookmark.txt` is
 where the last run got to (see **Game states**). That last one is the only file
 here about a *run*, and it is deliberately not a save: twenty-odd numbers, no
-page. The music the second of those turns is one streamed,
+page. Every one of them is written and read through
+`src/save.lua` (iap.txt aside, which is love-iap's): the first line is `save N`,
+the version of the game that wrote it, and the last is `end`. `Save.read` hands
+the owning module the lines between, run through `Save.migrate[file]` from the
+file's version up to `Save.VERSION` -- an unstamped file is version 0, which is
+what every file was before the stamp, so an APK update never costs a save. A step
+is owed only when a line *changes meaning* (a value rescaled, a key renamed); a
+line added or dropped needs none, since every reader already skips what it does
+not know. And no file is left half-written by Android killing the app mid-save:
+it goes to `<file>.new` whole first, then over itself, and a file without its
+`end` is read from the copy instead. The music the second of those turns is one streamed,
 looping file, `src/music/ost.mp3`, started once in `Game:load` and never stopped:
 it is what the book sounds like while it is open rather than a run's, a screen's or
 a lesson's, so the settings bar is the only thing that touches it again.
@@ -6665,6 +6675,12 @@ and are all the same 11x11 glyph.
 
 ## Extending
 
+- **Save file, or a change to one:** write and read it through `Save.write` /
+  `Save.read` (`src/save.lua`), never `love.filesystem` directly. A change that
+  makes an old line mean something new bumps `Save.VERSION` and adds a row under
+  `Save.migrate[file]` for that version turning the old body into the new; a
+  line added or removed owes nothing, as long as its reader skips what it does
+  not know and keeps a default for what is missing.
 - **Scene in the opening:** a row in `Intro.scenes` (`src/intro.lua`). It can be
   a `board`, `clock`, `notebook` or `dark` scene, and its English goes into
   `src/i18n.lua` and the four `src/lang/` files. Every scene is timed by

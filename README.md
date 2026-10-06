@@ -9736,6 +9736,9 @@ src/
   course.lua          course.txt: how hard the book is -- the four rungs of the
                       difficulty ladder, how far up it has been bought, and
                       which one the next run is sat at
+  save.lua            the save directory's one door: every file stamped with
+                      the version that wrote it, migrated on load, and never
+                      left half-written by a kill mid-save
   records.lua         the longest run and the biggest body count on each page,
                       and the hardest class each has been beaten at
   tally.lua           tally.txt: the same register the other way round -- what
