@@ -673,7 +673,7 @@ speaker's method made smaller in one way and larger in another.
    kept only above the join -- and the button is a smaller cylinder through the
    shoulder. Each pixel asks all three and keeps the nearest front hit, which is
    the pig's rule for its nine ellipsoids with three solids instead.
-3. **Print laid flat across the face, not round it.** AXE is three letters of a
+3. **Print laid flat across the face, not round it.** AX3 is three letters of a
    3x5 face on a can 16 across, and laid out by distance *round* the can its outside
    columns turned away and smeared. Laid out by distance *across* the can (the side
    coordinate rather than the angle), facing you it sits a letter column to a pixel,

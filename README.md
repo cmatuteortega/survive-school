@@ -7639,7 +7639,7 @@ puddle does. Red is theirs, as it is everywhere, and red mist is the mist to be
 out of.
 
 It is a black can -- the one boss in the book drawn in ink and slate, because that
-is the can in every P.E. bag -- with AXE across its front between two red bands,
+is the can in every P.E. bag -- with AX3 across its front between two red bands,
 painted a pixel at a time the speaker's way (see `3dmethod.md`). It turns its
 nozzle to face you, so the word is the first thing you read, and the nozzle going
 red is the tell for everything it does. It never tips over or rolls: the speaker

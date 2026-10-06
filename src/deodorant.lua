@@ -18,7 +18,8 @@
 --  - **It is black.** The one boss in the book drawn in ink, slate and graphite
 --    -- metal, lit, with a glint off its shoulder -- because that is what the can
 --    in every P.E. bag looks like. What it does is red, as every boss's is.
---  - **The label.** AXE across its front, in paper, between two red bands. It
+--  - **The label.** AX3 across its front, in paper, between two red bands -- the
+--    can everyone knows, near enough to read as it and not its trademark. It
 --    faces you because the nozzle does, so the word is the first thing you read.
 --  - **The nozzle**, a dot on the front of the button, which goes red while it is
 --    about to spray: the tell for everything it does is where the spray comes out.
@@ -48,7 +49,7 @@ local CE, SE = cos(ELEV), sin(ELEV)
 -- pixel. 16 across and 28 tall -- a body spray is a tall thin can, and anything
 -- squatter read as a bin -- then the shoulder DOME high on top of that, and the
 -- button BUTTON_R across from BUTTON_LO to BUTTON_HI. 8 is the narrowest the can
--- can be for AXE to sit on its front without the outside letters turning away
+-- can be for AX3 to sit on its front without the outside letters turning away
 -- round the side.
 local RAD, FOOT, NECK, DOME = 8, -17, 11, 4
 local BUTTON_R, BUTTON_LO, BUTTON_HI = 3.2, 12, 18
@@ -75,14 +76,14 @@ local GLINT = 0.975
 -- Past this much depth between two neighbouring pixels it is an edge.
 local EDGE = 2.5
 
--- The label, in (across the can's face, up the can) units: AXE, a 3x5 face, one
+-- The label, in (across the can's face, up the can) units: AX3, a 3x5 face, one
 -- unit a column and ROW_H a row so the letters survive the elevation squashing them.
 -- Read off the front, so column 1 is the left of the word as you face it.
 local LABEL = {
     ".x..x.x.xxx",
-    "x.x.x.x.x..",
-    "xxx..x..xx.",
-    "x.x.x.x.x..",
+    "x.x.x.x...x",
+    "xxx..x...xx",
+    "x.x.x.x...x",
     "x.x.x.x.xxx",
 }
 local LABEL_TOP, ROW_H = 3, 1.3
@@ -269,7 +270,7 @@ function Deodorant:raster()
                     colour = shade(light, checker, CAN)
                     -- The rolled rim round its foot.
                     if u < FOOT + 1.4 then colour = light > 0.2 and graphite or slate end
-                    -- The label on its front: two red bands and AXE between.
+                    -- The label on its front: two red bands and AX3 between.
                     -- Laid out across the can as seen straight on rather than
                     -- round it, so facing you the word sits a letter column to
                     -- a pixel, and it squeezes off round the side as it turns.

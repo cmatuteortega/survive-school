@@ -1452,7 +1452,7 @@ stand-ins are ghosted (and taken off in `sweep`), and it leaks a harmless pool.
 the whistle is what is in the air, this is the air. Its body is
 `src/deodorant.lua`, a can of body spray ray-traced the speaker's way -- a cylinder,
 half an ellipsoid for its shoulder and a smaller cylinder for the button -- in
-black metal with AXE across a black panel between two red bands, laid out across
+black metal with AX3 across a black panel between two red bands, laid out across
 the can's face rather than round it so facing you it sits a letter column to a
 pixel. It never tips over, so its frame is a heading, `yaw`, the way the nozzle
 points. The brain writes `swell` (a glued can's pressure, widening it), `shake`,

@@ -39,7 +39,7 @@ tips over and rolls (`src/speaker.lua`), and the GRAMMAR red pen, a click pen
 longer than the screen ray-traced the speaker's way along its own length, seen
 obliquely so the page stays one to one (`src/redpen.lua`), and the P.E.
 deodorant, a can of body spray ray-traced the speaker's way out of three stacked
-solids with AXE across its front (`src/deodorant.lua`).
+solids with AX3 across its front (`src/deodorant.lua`).
 
 Read the relevant section of both before changing behaviour, and update them
 when behaviour changes. A number that encodes a design decision (the pushpin's
@@ -214,7 +214,7 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   pen falling flat across the box, the shake and its blots, the F written over you,
   and the stand-ins that let the barrel be hit), `deodorant` (P.E.'s second
   boss's body: a black can of body spray painted a pixel at a time -- can,
-  shoulder and button, AXE on a panel between red bands, a nozzle that goes red
+  shoulder and button, AX3 on a panel between red bands, a nozzle that goes red
   -- turned to point at you and swelling when glued), `deodorantboss` (its brain:
   the cloud -- a grid of how thick the air is that spreads, thins, is parted by
   you, cleared by kills and carried by the draught, slowing you thin and hurting
