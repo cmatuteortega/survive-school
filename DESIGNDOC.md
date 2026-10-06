@@ -327,10 +327,19 @@ keeping**: true from `Game:reset`, false in the three places a run *ends* — dy
 `END` on the win card, and the scaffolding reset in `Game:load` that nobody
 played. Walking out through the pause card is deliberately not one of them. It
 also decides whether closing the program leaves a bookmark (`Game:closing`, called
-from `love.quit`), which **writes and never clears**: the file is cleared by those
+from `love.quit`, and from `love.focus` / `love.visible` going out), which **writes
+and never clears**: the file is cleared by those
 same three endings plus `GO!` starting the next run, so closing the book without
 having played cannot throw away the bookmark that was there when it was opened.
 `Menu:enter` reads the answer once and is told nothing about which kind it is.
+
+None of those hear about the endings a phone actually has. Android blocks the
+game's thread before the event saying it went into the background is read, and
+reclaims a backgrounded app without another word; a crash is no better. So
+`Game:keepBookmark` writes the bookmark every `BOOKMARK_EVERY` (five) seconds of
+play, called first thing in the playing branch so a death later in the same frame
+clears the file after it rather than the other way round. A kill costs at most
+those five seconds, on fresh paper either way.
 
 One thing a bookmark may not keep is the boss phase, and that is a fix rather than
 an omission: `Spawner:updateBoss` only leaves the phase when the eye dies, so a

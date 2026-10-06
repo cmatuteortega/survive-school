@@ -77,6 +77,7 @@ local SEPARATION = 0.35 -- how hard overlapping enemies shove each other apart
 local SPENT_PAD = 20      -- how far off screen a spent mark is still drawn
 local DRAFT_SIZE = 3      -- upgrades offered per level
 local NOTICE_TIME = 1.8   -- how long the run says what you just took
+local BOOKMARK_EVERY = 5  -- seconds of play between bookmarks (Game:keepBookmark)
 local LOB_HEIGHT = 18      -- how high a lobbed jack goes over the page
 local TEAR_LAND = 4        -- a thrown tear this low or lower is splashing down
 local SHOT_FLOAT = 6       -- how far over its shadow a fired pellet flies
@@ -611,8 +612,9 @@ function Game:doubleRun(card, won)
     end)
 end
 
--- The program is closing (love.quit in main.lua), which is the last chance to
--- leave a bookmark for the next launch (src/bookmark.lua).
+-- The program is closing (love.quit in main.lua), or may be about to be without
+-- being told (love.focus / love.visible), which is the last chance to leave a
+-- bookmark for the next launch (src/bookmark.lua).
 --
 -- It writes and it never clears, and that asymmetry is the whole of it: closing
 -- the book without having played must not throw away the bookmark that was
@@ -622,10 +624,34 @@ end
 --
 -- It is not the only write. Walking out through the pause card writes too, even
 -- though the run is still in memory and CONTINUE would hand that back instead: a
--- deliberate exit is the moment worth spending a file write on, and being killed
--- from outside -- a force quit, a crash -- never reaches here at all.
+-- deliberate exit is the moment worth spending a file write on. Being killed
+-- from outside -- a force quit, a crash, Android reclaiming a backgrounded app
+-- -- never reaches here at all, which is what Game:keepBookmark is for.
 function Game:closing()
     if self.resumable then Bookmark.save(self) end
+end
+
+-- The bookmark written every few seconds of play, for the endings Game:closing
+-- never hears about. Android does not run the program while it is in the
+-- background (SDL blocks the game's thread before the event that says so is
+-- even read), so nothing can be written on the way out, and when the system
+-- later reclaims the memory the process is simply gone; a crash is the same.
+-- So the run is written down while it is still being played, and the most a
+-- kill can cost is the last few seconds -- which come back on fresh paper
+-- anyway, so they are seconds of clock and not a fight lost.
+--
+-- Only while playing, and called before anything in the frame can end the run:
+-- dying clears the file (Game:openDeath), and a write after that would put back
+-- a run that is over. The cards that hold a run (the draft, the pause card)
+-- write nothing, because the run they hold is the one last written. The file is
+-- forty-odd short lines, so every five seconds costs nothing worth weighing.
+function Game:keepBookmark(dt)
+    if not self.resumable or self.bossTest then return end
+    self.bookmarkT = self.bookmarkT + dt
+    if self.bookmarkT >= BOOKMARK_EVERY then
+        self.bookmarkT = 0
+        Bookmark.save(self)
+    end
 end
 
 function Game:reset()
@@ -797,6 +823,7 @@ function Game:reset()
     -- since a drafted one never fills it.
     self.carryScroll = 0
     self.notice, self.noticeT = nil, 0
+    self.bookmarkT = 0
     self.ink = self.loadout.stats.inkMax
     self.inkDelay = 0
     self.drawBlocked = false
@@ -4890,6 +4917,7 @@ function Game:update(dt)
 
     if self.state == "playing" then
         self.time = self.time + dt
+        self:keepBookmark(dt)
 
         self.player:update(dt, self)
         self:updateCoach(dt)

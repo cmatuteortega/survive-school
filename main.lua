@@ -104,20 +104,32 @@ end
 
 function love.focus(focused)
     -- Backgrounding swallows touchreleased: the stick jams on, the pen draws on.
-    if not focused then Input.releaseAll() end
+    -- And it may be the last frame this process runs: on Android the focus is
+    -- lost a moment before the app is paused, and the system can kill a paused
+    -- app without another word, so the bookmark is written here as well as on
+    -- the way out (Game:closing) and every few seconds of play
+    -- (Game:keepBookmark). Whether this arrives before the pause is a race; it
+    -- is a cheap write to win when it does.
+    if not focused then
+        Input.releaseAll()
+        Game:closing()
+    end
 end
 
 -- Out of sight, so silent (src/sfx.lua) and put down -- in that order, or the
 -- pause card's sound is started at the last moment and replays as a stutter on
 -- the way back in. Deliberately not love.focus: a run you can see you should be
 -- able to hear. Android blocks the program while backgrounded, so this lands on
--- the way in and the music is stopped down in the engine.
+-- the way in and the music is stopped down in the engine -- and why the
+-- bookmark is not left to it (Game:keepBookmark). On a desktop it does land
+-- going out, so a minimised window leaves one too.
 function love.visible(visible)
     if visible then
         Sfx.resume()
     else
         Sfx.silence()
         Game:putDown()
+        Game:closing()
     end
 end
 
@@ -158,7 +170,7 @@ end
 
 -- Esc, the close button and the title screen's NO all land here: the last
 -- chance to leave a bookmark (src/bookmark.lua). A force quit or crash misses
--- it -- a bookmark is what a deliberate exit leaves behind.
+-- it, and gets the one Game:keepBookmark wrote a few seconds before instead.
 function love.quit()
     Game:closing()
 end

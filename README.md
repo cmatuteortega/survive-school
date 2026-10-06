@@ -338,11 +338,16 @@ is left once the program has gone.
 Three things worth knowing about when it is written. It is written when you close
 the program — `Esc`, the window's close button, or `NO` on the title screen — and
 also the moment you quit from the pause card, since that is the point you have said
-you are done for now. It is **deleted** by the three things that end a run: dying,
+you are done for now, and whenever the window loses focus or is hidden. And it is
+written every five seconds of play, because the endings that matter most on a phone
+are never announced: Android stops running the game the moment it goes into the
+background, so nothing can be written on the way out, and when the system later
+wants the memory back the game is simply gone. A crash is the same. It is **deleted** by the three things that end a run: dying,
 `END`, and `GO!` starting the next one. And it is never deleted on the way out, so
 closing the book without having played leaves the bookmark that was sitting there
-when you opened it. What it does not survive is being killed from outside — a force
-quit or a crash never reaches the code that writes it.
+when you opened it. Being killed from outside — a force quit, a crash, the phone
+reclaiming the app — costs at most the last five seconds of clock, and those come
+back on fresh paper anyway.
 
 One case is handled rather than kept: a run bookmarked **during a boss fight** comes
 back in the horde phase with the clock still past the ten minutes, so the eye walks

@@ -83,11 +83,11 @@ for it.
 - [ ] **Achievements** — Google Play Games / Game Center; the tally and homework
       list (`src/tally.lua`, `src/challenges.lua`) map straight onto them.
 - [ ] **Leaderboards** — per lesson and per course.
-- [ ] **Run resume on app kill** — a run does *not* survive the OS killing the
-      app today: `love.visible(false)` pauses the run (`Game:putDown`) but only
-      `love.quit` leaves a bookmark (`main.lua`, `Game:closing`), and Android
-      never calls `love.quit` on a backgrounded app it kills. Write the bookmark
-      on going out of sight too (`src/bookmark.lua`).
+- [x] **Run resume on app kill** — the bookmark is written every five seconds
+      of play (`Game:keepBookmark`) and on losing focus, since Android never
+      calls `love.quit` on a backgrounded app it kills and blocks the game
+      before the background event can be read. A kill or crash costs at most
+      five seconds. Not yet checked on a real phone.
 - [ ] **Save versioning** — the save files (`records.txt`, `tally.txt`,
       `course.txt`, the design files) carry no format version; stamp one and
       migrate old saves on load before the first update ships changes to them.
