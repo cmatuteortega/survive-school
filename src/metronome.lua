@@ -46,13 +46,15 @@
 -- middle of is dropped -- which is the one tool-shaped answer this fight has,
 -- and the one that makes the most sense for it.
 --
--- The body is baked views like the whistle's (art/metronome.py); the arm is not,
--- because it swings, so it is plotted here over the body every frame in the
--- projection the views were baked in, read off `Sprites.METRONOME.arm` and
--- `.cam` so the two cannot disagree about where the arm hangs.
+-- The body is ray-traced live like the whistle's (src/solid.lua, its model in
+-- src/solids.lua); the arm is not one of its solids, because a rod a pixel wide
+-- is a line and not a thing a ray can be relied on to hit, so it is plotted here
+-- over the body every frame through the body's own projection
+-- (`Solid:project`), off the model's `arm`, so the two cannot disagree about
+-- where the arm hangs.
 
 local Palette = require("src.palette")
-local Sprites = require("src.sprites")
+local Solids = require("src.solids")
 local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
@@ -296,9 +298,6 @@ end
 -- it and stays turned, so the arm you see is the beam you get.
 function Metronome:sweepStart(game, e)
     local a = math.atan2(game.player.y - e.y, game.player.x - e.x)
-    -- Snapped to the view it will be drawn at, so the beam leaves the arm.
-    local n = #Sprites.metronomeViews
-    a = math.floor(a / TAU * n + 0.5) / n * TAU
     e.face = a
     self.sweep = { a = a, hot = false }
 end
@@ -463,44 +462,36 @@ end
 --- drawing --------------------------------------------------------------------
 
 -- A point on the arm, `along` model units up it from its pivot with the arm
--- swung `swing` off upright, for the body drawn at view `view`: in pixels from
--- the body's origin, plus how near the viewer it is. The same sums
--- art/metronome.py's preview does, off the numbers it baked.
-function Metronome.armPoint(view, swing, along)
-    local M = Sprites.METRONOME
-    local arm, cam = M.arm, M.cam
-    local h = (view - 1) * TAU / #Sprites.metronomeViews
+-- swung `swing` off upright, on `body` (the metronome's src/solid.lua body): in
+-- pixels from the body's origin. Through the body's own projection, at the
+-- heading its picture was painted at, so the arm never slides across the panel
+-- between one picture and the next.
+function Metronome.armPoint(body, swing, along)
+    local arm = Solids.metronome.arm
     local dx, dy, dz = arm.lean, math.cos(swing), math.sin(swing)
     local l = math.sqrt(dx * dx + dy * dy + dz * dz)
-    local mx = arm.x + dx / l * along
-    local my = arm.y + dy / l * along
-    local mz = arm.z + dz / l * along
-    local a = h + math.pi
-    local c, s = math.cos(a), math.sin(a)
-    local x, z = mx * c - mz * s, mx * s + mz * c
-    local cy = my * math.cos(cam.pitch) - z * math.sin(cam.pitch)
-    return x / cam.unit + cam.bias, -cy / cam.unit + cam.bias
+    local x, y = body:project(arm.x + dx / l * along, arm.y + dy / l * along, arm.z + dz / l * along)
+    return x, y
 end
 
--- Whether the arm is on the near side of the body at this view, which is whether
--- the panel it hangs in front of is turned towards you at all.
-function Metronome.armInFront(view)
-    local h = (view - 1) * TAU / #Sprites.metronomeViews
-    return math.sin(h) > -0.2
+-- Whether the arm is on the near side of the body, which is whether the panel it
+-- hangs in front of is turned towards you at all.
+function Metronome.armInFront(body)
+    return math.sin(body:heading()) > -0.2
 end
 
--- The pendulum: a rod of ink and a weight on it, at body `x, y` (where the
--- sprite is drawn). `colour` draws all of it flat in one colour, for the blank
--- under it and the hit flash; otherwise the weight blinks red through a
--- count-in, which is the tell that something is coming on the next downbeat.
+-- The pendulum: a rod of ink and a weight on it, at body `x, y` (where the body
+-- is drawn). `colour` draws all of it flat in one colour, for the blank under it
+-- and the hit flash; otherwise the weight blinks red through a count-in, which
+-- is the tell that something is coming on the next downbeat.
 function Metronome:drawArm(e, x, y, colour)
-    local view = e.view or 1
-    local M = Sprites.METRONOME
+    local body = e.solid
+    local arm = Solids.metronome.arm
     local swing = self:swing()
     local bx, by = math.floor(x), math.floor(y)
-    local x0, y0 = Metronome.armPoint(view, swing, 0)
-    local x1, y1 = Metronome.armPoint(view, swing, M.arm.len)
-    local wx, wy = Metronome.armPoint(view, swing, M.arm.len * M.arm.bob)
+    local x0, y0 = Metronome.armPoint(body, swing, 0)
+    local x1, y1 = Metronome.armPoint(body, swing, arm.len)
+    local wx, wy = Metronome.armPoint(body, swing, arm.len * arm.bob)
     love.graphics.setColor(colour or Palette.ink)
     pixelart.line(bx + x0, by + y0, bx + x1, by + y1)
     local cx, cy = bx + math.floor(wx) - 2, by + math.floor(wy) - 1

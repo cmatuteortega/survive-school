@@ -4,7 +4,8 @@
 -- The eye is a fight about the ground, the whistle about the air and the
 -- metronome about time. This one is about the page itself: the ledger is a grid
 -- of cells forty across and twelve down, the stamp's pad is exactly one of them
--- (art/stamp.py), and everything it does it does by coming down on one. A cell
+-- (its model in src/solids.lua), and everything it does it does by coming down
+-- on one. A cell
 -- it means to hit is outlined on the page before it arrives, so the question
 -- every move asks is the same -- which cell are you in, and is it about to be
 -- stamped -- and the answer is always to be in a different one.
@@ -18,7 +19,8 @@
 --
 -- **It moves the way a stamp is used.** It rocks back on its heel before it
 -- goes, pitches forward as it comes down and flattens when it hits, which are
--- the four poses its body is baked in (`Sprites.stampPoses`); the brain says
+-- the four poses of its body (`poses` on its row in src/solids.lua, eased
+-- between, so the rock is a rock and the squash springs back); the brain says
 -- which one, through `e.pose`, and how high off the page, through `e.hop`. The
 -- rock back is the tell for everything it does, short for a hop and long for
 -- the moves below, so a stamp leaning away from you is a stamp about to land.
@@ -55,7 +57,7 @@
 -- stamp is stuck for a second after every slam, which is the second to aim in.
 
 local Palette = require("src.palette")
-local Sprites = require("src.sprites")
+local Solids = require("src.solids")
 local Camera = require("src.camera")
 local Font = require("src.font")
 local I18n = require("src.i18n")
@@ -113,10 +115,10 @@ local function onCell(x, y, c, r, pad)
 end
 
 -- Where the stamp's own origin goes to put its pad on a cell: the pad is
--- `foot` pixels below the origin (art/stamp.py).
+-- `foot` pixels below the origin (src/solids.lua).
 local function seat(c, r)
     local x, y = cellMid(c, r)
-    return x, y - Sprites.STAMP.foot
+    return x, y - Solids.stamp.foot
 end
 
 --- the brain ------------------------------------------------------------------
@@ -300,7 +302,7 @@ function Stamp:idle(dt, game, e)
             if game.arena then x, y = game.arena:clamp(x, y, e.radius + 2) end
             self:leap(e, x, y, def.hop.time, def.hop.high, function(s, g, en)
                 s.thud = def.hop.squash
-                g.particles:burst(en.x, en.y + Sprites.STAMP.foot, 3, Palette.slate)
+                g.particles:burst(en.x, en.y + Solids.stamp.foot, 3, Palette.slate)
             end)
         elseif self.thud and self.thud > 0 then
             self.thud = self.thud - dt
@@ -323,7 +325,7 @@ end
 function Stamp:blot(game, e, a)
     local b = self.def.blot
     game.shots[#game.shots + 1] = {
-        x = e.x, y = e.y + Sprites.STAMP.foot, dx = math.cos(a), dy = math.sin(a),
+        x = e.x, y = e.y + Solids.stamp.foot, dx = math.cos(a), dy = math.sin(a),
         speed = b.speed, damage = scaled(e, b.damage), life = b.life,
         radius = b.hit * e.reach, grow = e.grow,
     }

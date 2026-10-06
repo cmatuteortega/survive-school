@@ -20,13 +20,15 @@ neither is optional reading before a behavioural change:
 
 A third, `3dmethod.md`, covers the bosses drawn as solid objects and how to do
 the same for another character: the P.E. whistle, the MUSIC metronome, the
-FINANCE stamp, the GRAMMAR dictionary and the ART marble, modelled and ray-traced into baked ASCII
-views ahead of time (`art/whistle.py`, `art/metronome.py`, `art/stamp.py`,
-`art/dictionary.py`, `art/marble.py`, over the shared tracer
-`art/raytrace.py` -- the metronome's pendulum plotted live on top, the stamp baked
-in four poses so it can rock, dive and squash, the dictionary in three so it can
-bite and lie open, the marble in five stages carved away so every hit carves
-it), the eye, painted a pixel at a time
+FINANCE stamp, the GRAMMAR dictionary and the ART marble, built of boxes, cones,
+cylinders and ellipsoids and ray-traced live by one shared tracer
+(`src/solid.lua`, their models rows in `src/solids.lua`) -- turned to any
+heading, the stamp rocking, diving and squashing, the dictionary's board
+swinging and its leaves clapping shut, the marble carved a little on every hit,
+the metronome's pendulum plotted on top through the body's own projection, and
+every picture kept by heading and pose and painted a slice a frame when new
+(they were baked into rings of ASCII views once, and `3dmethod.md` says why they
+are not now) -- the eye, painted a pixel at a time
 every frame off a turning sphere (`src/eyeball.lua`), the MATHS die, painted
 the same way off flat faces (`src/dice.lua`), and the ART still life, a cube, a
 sphere and a cone painted the same way and lit by a lamp that moves
@@ -175,7 +177,11 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   and a leaf you turn with your finger), `bookmark`, `records`, `tally`,
   `options`, `i18n` (English is the key and the Spanish sits in it; German,
   French, Italian and Portuguese are one file each in `src/lang/`).
-- **Run content:** `player`, `enemy`, `spawner`, `subjects`, `course` (how hard
+- **Run content:** `player`, `enemy`, `spawner`, `subjects`, `solid` (the tracer
+  the whistle, the metronome, the stamp, the dictionary and the marble are painted
+  by: a ray against boxes, hulls, cones and ellipsoids in closed form, a pixel at a
+  time, pictures kept by heading and pose), `solids` (their five models, a row
+  each), `course` (how hard
   the book is: the four rungs of the difficulty ladder and what each multiplies),
   `characters`, `tools`, `upgrades`, `loadout`, `perks`, `purse`, `refund`,
   `store` (what is sold for money, over `iap`, love-iap's vendored file), `ads`
@@ -202,9 +208,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   hurt), `piggyboss` (its brain: the charge with bait coins in its lane, the
   recall of the coins left lying, and the shatter into rings of coins -- coins
   that land are `coin` pickups and pay into the purse), `marble` (ART's second
-  boss's brain: a block baked in five stages from block to bust, picked off its
-  health so every hit carves it, and the chisel's wedge of chips, the slab that
-  falls and breaks, and the rubble thrown round you), `tesseract` (MATHS's
+  boss's brain: a bust carved out of its block a little on every hit, off its
+  health, and the chisel's wedge of chips, the slab that falls and breaks, and
+  the rubble thrown round you), `tesseract` (MATHS's
   second boss's body: a hypercube turned in four dimensions, projected and drawn
   as lines), `tesseractboss` (its brain: the inside-out squares, the corners
   thrown, the numbered net of cubes going off in sequence, and the fold out of

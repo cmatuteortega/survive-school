@@ -1,476 +1,365 @@
 # The 3D method
 
-How the P.E. whistle boss was made to look solid, how that compares with the
-eye boss's painted sphere, and how to do either for another character. The working example is `art/whistle.py`, which writes the
-`BAKE:whistle` block in `src/sprites.lua`; the game side is `turns` on its row in
-`src/enemy.lua`. The tracer itself -- everything that is not the model -- is
-`art/raytrace.py`, shared with the MUSIC metronome (`art/metronome.py`), which is
-also the example of a baked body with a part drawn live on top of it (see **A
-moving part on a baked body**), and the FINANCE stamp (`art/stamp.py`), the example
-of a body baked in several poses so it can animate (see **Poses: a body that
-moves**), and the GRAMMAR dictionary (`art/dictionary.py`), poses again, one of them
-a part hinged off the body and one built about a different point (see **Poses with
-a hinge: the dictionary**), and ART's second boss, the marble (`art/marble.py`),
-poses that are not the body moving but the body carved away (see **Stages: a body
-carved away**). The painted bodies are `src/eyeball.lua`, `src/dice.lua`,
-`src/plaster.lua` (the ART still life), `src/atom.lua` (SCIENCE's second boss,
-the atom), `src/piggy.lua` (FINANCE's second boss, the piggy bank) and
-`src/speaker.lua` (MUSIC's second boss, a bluetooth speaker; see **Painted live
-with flat ends: the speaker**), `src/redpen.lua` (GRAMMAR's second boss, a pen
-longer than the screen; see **Painted live along its own length: the red pen**) and
-`src/deodorant.lua` (P.E.'s second boss, a can of body spray; see **Painted live
-out of stacked solids: the deodorant**). The
-MATHS tesseract (`src/tesseract.lua`) is neither: a solid in four dimensions,
-projected every frame and drawn as lines (see **Projected live as lines: the
-tesseract**).
+How the bosses that are drawn as solid objects are made to look solid, and how to
+do the same for another character.
 
-The short version: **model the thing in 3D in a script, ray-trace it at sprite
-size straight into palette letters, do that once per heading, and bake the
-results into `src/sprites.lua` as ordinary ASCII sprites.** The game never knows
-anything was 3D. It draws pixel art like it always has, picking one of a ring of
-pictures.
+There are two ways here, and both paint the body fresh, a pixel at a time, for
+whatever way it is facing and whatever it is doing:
 
-## Two ways to be solid
+- **Built of simple solids** (`src/solid.lua`): the P.E. whistle, the MUSIC
+  metronome, the FINANCE stamp, the GRAMMAR dictionary and ART's marble. Each is a
+  row in `src/solids.lua` -- a list of boxes, cones, cylinders and ellipsoids, and
+  the colours to paint them -- and one shared tracer turns that into a picture.
+  See **Built of simple solids**.
+- **Painted live by a painter of its own**: the eye (`src/eyeball.lua`), the
+  MATHS die (`src/dice.lua`), the ART still life (`src/plaster.lua`), SCIENCE's
+  atom (`src/atom.lua`), FINANCE's piggy bank (`src/piggy.lua`), MUSIC's speaker
+  (`src/speaker.lua`), GRAMMAR's red pen (`src/redpen.lua`) and P.E.'s deodorant
+  (`src/deodorant.lua`), each with a method of its own for the one thing it does
+  that nothing else does. The MATHS tesseract (`src/tesseract.lua`) is neither: a
+  solid in four dimensions, projected every frame and drawn as lines (see
+  **Projected live as lines: the tesseract**).
 
-The game has eleven bosses drawn as solid objects, made in two different ways (and
-a twelfth, the tesseract, that is projected as lines rather than either) --
-the metronome is the whistle's way with one part done the eye's, the stamp and
-the dictionary are the whistle's way with more than one picture per heading, the MATHS die is
-the eye's way on flat faces (see **Painted live on flat faces: the die**), and the
-ART still life is the eye's way on three solids at once, lit by a lamp that moves
-(see **Painted live under a moving light: the still life**), and the atom is the
-eye's way on a lumpy sphere with rings round it (see **Painted live with rings round
-it: the atom**), and the piggy bank is the eye's way on nine ellipsoids seen from
-above, turned to a heading (see **Painted live from above, facing a way: the piggy
-bank**), and the red pen is the eye's way on a solid of revolution too long for a
-box (see **Painted live along its own length: the red pen**).
-Pick the one that fits the character before starting.
-
-| | **Baked views** (the whistle) | **Painted live** (the eye) |
-| --- | --- | --- |
-| where | `art/whistle.py` → `BAKE:whistle` in `src/sprites.lua` | `src/eyeball.lua`, every frame |
-| what it can show | any shape you can model: boxes, tubes, rings, cut-outs | shapes with a formula you can solve per pixel: a sphere, an ellipsoid |
-| turning | one of N headings (16), stepped through | any angle at all, in 3D, including up and down |
-| changing over time | no: each view is a fixed picture | yes: blinks, squash and stretch, veins creeping in with damage, a roll that turns the surface |
-| cost | nothing at runtime; ASCII in `sprites.lua` | a few thousand pixel tests a frame for one body |
-| looks like the other sprites | yes: it *is* a sprite | close: same palette and ink rim, but drawn as runs |
-
-The eye's way works like this. For every pixel inside the outline it works out
-the point on the sphere under it, turns that point into the ball's own frame,
-and asks what is painted there: iris, pupil, vein or white. The light is fixed
-on the screen and the ball turns underneath it. That's why an iris looking off
-to the side goes thin and oval, and why the veins come round with a roll. Read
-the header of `src/eyeball.lua` for the full account.
-
-**Use baked views** when the shape is complicated (anything you'd build from
-several parts) and its look doesn't change during a fight. Turning to face the
-player is the only movement it needs.
-
-**Paint live** when the body is one simple round shape and its surface has to
-move: an eye that rolls, blinks or swells, or a ball whose markings turn with it.
-
-**Don't redo the eye with baked views.** It was already given the live
-treatment (merged from main after this method was written), and baking would be
-a step back: 16 fixed headings can't roll, blink, squash or go bloodshot. The
-live method is also the reference for how its lighting is chosen. Both methods
-use a light from the top left and in front, fixed in the room or on the screen,
-so the two bosses look lit by the same window.
+**The first five used to be baked.** They were modelled as signed distance fields in
+Python (`art/raytrace.py` and a script each), ray-marched ahead of time into rings
+of ASCII views -- sixteen headings, and a ring per pose for the ones that move -- and
+written into `src/sprites.lua`. That bought any shape a distance field could
+describe, and cost a turn in sixteenths, a pose as a held picture with nothing
+between it and the next, and seven thousand lines of `sprites.lua`. They were moved
+onto the piggy bank's method once there were enough live bodies to show it was
+affordable; the same models, the same sizes in the same units, the same colours,
+rebuilt out of solids a ray has a closed answer for. **Built of simple solids** is
+how; the sections after it on the metronome, the stamp, the dictionary and the
+marble are what each of them does with being live.
 
 ## Why it fits the rendering rules
 
-The four rules in `CLAUDE.md` look like they rule this out. They don't, because
-everything 3D happens before the game runs:
+The four rules in `CLAUDE.md` look like they rule this out. They don't:
 
 - **Eight colours, no alpha.** Each pixel is traced once, at its centre, and its
-  shade is *chosen* from a ramp of palette letters rather than blended. There is
+  shade is *chosen* from a ramp of palette colours rather than blended. There is
   no anti-aliasing, so no ninth colour can appear.
-- **Whole pixels, never at an angle.** Nothing is rotated at draw time. Every
-  heading is its own baked picture, the same way `pixelart.turn` bakes the
-  rocket's eight. These are just rendered rather than turned, because turning a
-  drawing of a solid thing gives you a drawing of it lying on its side.
-- **Art is ASCII.** The output *is* rows of palette letters. They go through
-  `pixelart.newSprite` like every other sprite, and off-palette art still asserts
-  at load.
-- **The canvas** is untouched. These are sprites like any other.
+- **Whole pixels, never at an angle.** Nothing is rotated at draw time. A body is
+  painted fresh for the heading it faces, the way `pixelart.turn` bakes the
+  rocket's eight up front -- it is just rendered rather than turned, because a
+  turned drawing of a solid thing is a drawing of it lying on its side -- and it
+  comes out as rows of whole-pixel runs.
+- **Art is ASCII.** The solids are numbers, not art; what they come out as is
+  palette keys (`w`, `k`, `r`, `s` and the rest), the same letters a sprite is
+  written in, put through `Palette.key`.
+- **The canvas** is untouched.
 
-## The pipeline
+## Built of simple solids
 
-### 1. Model it with signed distance functions
+`src/solid.lua` is the tracer and `src/solids.lua` the five models. The game asks a
+body for nothing a painted body does not already answer: `draw(x, y)`,
+`drawMask(x, y, pad)`, `shadowScale` and an optional `ground` (`Enemy:draw`). A row
+says `solid = "whistle"` and `Enemy.new` makes the body; `Enemy:update` turns it
+towards you and hands it whatever pose the brain has put it in.
 
-Each part is a small function giving the distance from a point to that shape's
-surface: negative inside, positive outside. The whistle is three of them:
+### The camera
 
-| part | shape | function |
-| --- | --- | --- |
-| barrel | cylinder, rims rounded | `sd_barrel` |
-| mouthpiece | rounded box, thicker towards the barrel | `sd_tube` |
-| lanyard ring | torus | `sd_ring` |
+The bake's camera, to the digit, so the five came out of the move the size and the
+colour they always were:
 
-You combine them with `min` (union), `max(a, -b)` (cut b out of a, which is how
-the window slot is made) and `max` (intersection). Rounded edges are free: take
-the radius off the box and subtract it back from the distance. Rounded edges
-matter here, because they're what produce the strip of highlight along an edge,
-and that strip is most of what reads as "solid" at this size.
-
-Work in made-up units at roughly one unit per pixel. The whistle's barrel has a
-radius of 11.5 and is drawn at 0.92 units per pixel.
-
-Give each part a **material name** (`'body'`, `'ring'`) by having the scene
-return the distance and the name of whichever part is nearest. The material
-decides which colour ramp it gets.
-
-### 2. Stand it in a room and turn it
-
-There are three spaces, and keeping them apart is what makes turning work:
-
-- **Model space** is whatever was convenient to build in. The whistle's
-  mouthpiece points along −x.
 - **Room space** is the page: x right, y up off the paper, z towards the viewer
-  (down the screen). A heading `h` turns the model about its **pivot** so that
-  its front points along `(cos h, sin h)` on the page. That's the same angle
-  `math.atan2(dy, dx)` gives in the game, so the game picks a view with no
-  conversion.
-- **Camera space** is the room tilted by `PITCH` (34° for the whistle), so you
-  look down at the page at an angle and see a top as well as a side. The camera
-  is orthographic, so there's no vanishing point and everything stays the size
-  it is.
+  (down the screen). A heading `h` turns the model about its **pivot** so that its
+  front (model −x) points along `(cos h, sin h)` on the page -- the angle
+  `math.atan2(dy, dx)` gives in the game, so a body faces you with no conversion.
+- **The camera** is the room tilted by `PITCH` (34°), so you look down at the page
+  at an angle and see a top as well as a side; orthographic, so nothing changes size
+  with distance. One pixel is `UNIT` (0.92) model units.
+- **The pivot is the point that stays still while it turns**, and the pixel the
+  body is drawn at: the bulk of the thing, where the hit circle is and what the
+  shadow sits under. Floor along the page is foreshortened by the sine of the tilt
+  and height by its cosine, which is what `foot` on each model (the pixels from the
+  origin down to the floor under the pivot) is worked out from, and what the brains
+  stand things on the page by.
+- **The light lives in the room**, up, left and towards you, not on the model, so
+  whichever way a body points it is lit from the top left.
 
-**The light lives in room space**, not on the model. That's why the whistle is
-lit from the top left whichever way it points. Put the light on the model and
-the shading would spin round with it.
+### The solids
 
-**The pivot is the point that stays still while it turns.** For the whistle
-that's the barrel's middle, because the barrel is the body: it's where the hit
-circle is and what the shadow sits under. Pick the bulk of the thing, not the
-middle of its bounding box.
+Every ray a body is asked is solved in closed form against a short list of shapes,
+each in its own space:
 
-### 3. Trace one ray per pixel
-
-For each pixel, march a ray from the camera: step forward by the scene's
-distance, which is always a safe step, until the distance is tiny (a hit) or the
-ray has gone too far (empty, `.`). Then:
-
-- **Normal** is the gradient of the scene's distance at the hit point (finite
-  differences, six samples).
-- **Diffuse light** is `dot(normal, LIGHT)`, multiplied by 0.35 if a second ray
-  towards the light hits something (a shadow).
-- **Specular** uses the half-vector to the camera, raised to the 40th power, for
-  the glint.
-
-### 4. Snap the light to a palette ramp
-
-This step makes it look like pixel art rather than a render. The whistle's
-red ramp:
-
-| condition | letter | colour |
+| solid | what it is | the question |
 | --- | --- | --- |
-| specular > 0.6 | `w` | paper (the glint) |
-| diffuse > 0.78 | `k` | blush (lit) |
-| diffuse > 0.2 | `r` | red (middle) |
-| facing down and diffuse > 0.02 | `r` | red (light bounced off the page) |
-| otherwise | `s` | slate (shadow) |
+| `box` | an axis-aligned box | three slabs |
+| `hull` | any convex polyhedron, as planes `n . p <= w` | one plane at a time |
+| `cone` | radius changing linearly along an axis, flat at both ends; a cylinder is a cone with one radius | the slab between the ends, then a quadratic for the side |
+| `ball` | a unit sphere | a quadratic |
 
-The other ramps the palette gives you:
+Each answers an *interval* of the ray -- in at one face, out at another -- with the
+normal at both ends. An ellipsoid is a ball put through an affine map (`Solid.ell`),
+so it can lie at any angle; a capsule is approximated by an ellipsoid along it
+(`Solid.lump`); a rounded box is a box with its edges bevelled off at 45°
+(`Solid.bevelled`), which is what a rounding a pixel wide was ever going to look
+like.
 
-| body colour | glint | lit | middle | shadow |
-| --- | --- | --- | --- | --- |
-| red | `w` | `k` blush | `r` red | `s` slate |
-| blue | `w` | `c` sky | `b` blue | `s` slate |
-| grey / metal | `w` | `w` paper | `g` graphite | `s` slate |
+A **part** is one solid and what it is made of (`mat`, handed to the model's
+`shade`), and optionally:
 
-Ink (`o`) is kept for lines, never used as a shade (see step 5). Some materials
-deliberately get fewer steps: the lanyard ring uses three, because it's small
-and a fourth step would just be noise.
+- `within`: kept only inside a second solid -- the marble's bust is kept inside its
+  block. For convex solids that is two intervals overlapped, and the normal comes
+  from whichever was entered last.
+- `minus`: a list of solids taken out -- the whistle's window, the metronome's
+  panel, the marble's eye sockets. A ray that goes in somewhere inside a cut is
+  stepped through to the cut's far wall, which is a surface whose normal is the cut's
+  own turned round; `shade` is told it is a cut, which is how the window is painted
+  ink. A half-space taken away is a plane cut off, which is how the hair is cut off
+  the face without spending a second `within`.
+- `move`: an affine map moving the part in the body -- the dictionary's front
+  board, hinged at the spine.
 
-**The bounce-light row is not optional.** Without it the shadow side is one flat
-slate shape, and at sprite size that reads as a hole cut in the body. A strip of
-mid colour where the surface faces the page brings it back as a side.
+A ray keeps the nearest part.
 
-### 5. Draw the lines
+### Everything that moves is a map
 
-Two passes after tracing, and both matter as much as the shading:
+Each solid sits in its part through its own map (`at`); each part can be `move`d in
+the body; the whole body can be posed (`pose`, a function from the model's numbers
+to a map: the stamp rocking on its heel); and the heading turns it about the pivot.
+A ray is taken back through all of them into each solid's own space -- one affine
+inverse per solid per picture -- where the question is the simple one, and the
+normal comes back out through the transpose of the same inverse. Shading is asked
+about the point in the *part's* rest space, so the stamp's label stays on its label
+however it leans and the dictionary's board is painted the same lifted or shut.
 
-- **Silhouette:** any filled pixel next to an empty one becomes ink (`o`). Every
-  sprite in the game has a dark rim, and this one has to as well or it floats.
+### Light, ramps and lines
+
+- **Diffuse** is the normal dotted with the lamp, a third of that if a ray back
+  towards the lamp hits another part first (a shadow -- the stamp's knob on its
+  label, the head on the marble's chest), and **specular** the half-vector to the
+  camera to the 40th power, for the glint.
+- **The ramp.** The model's `shade` answers a palette key for the material and the
+  point, or nothing for the red ramp every one of them is mostly made of:
+
+  | condition | letter | colour |
+  | --- | --- | --- |
+  | specular > 0.6 | `w` | paper (the glint) |
+  | diffuse > 0.78 | `k` | blush (lit) |
+  | diffuse > 0.2 | `r` | red (middle) |
+  | facing down and diffuse > 0.02 | `r` | red (light bounced off the page) |
+  | otherwise | `s` | slate (shadow) |
+
+  The other ramps the palette gives: blue (`w` glint, `c` sky, `b` blue, `s`) for
+  the whistle's ring, grey (`w` paper, `g` graphite, `s` slate) for metal, paper and
+  marble. **The bounce-light row is not optional**: without it the shadow side is
+  one slate shape and reads as a hole cut in the body.
 - **Creases:** where two neighbouring pixels of the same material have normals
-  that disagree sharply (dot product below 0.55), the lit or middle pixel steps
-  down to slate. That's what draws the edge where the barrel's flat face turns
-  into its curved side. Without it the planes merge into one blob.
+  that disagree sharply (dot below 0.55), the lit or middle one steps down to
+  slate. That is the edge where the barrel's flat face turns into its side; without
+  it the planes merge into one blob.
+- **Ink** round the silhouette -- any filled pixel next to an empty one -- and
+  along any step in depth of more than `edge` model units *where the nearer pixel
+  is another part*. Only another part: one surface seen at a grazing angle steps in
+  depth from pixel to pixel too, and the first try drew stripes down the reared
+  stamp's top.
+- Details that are **holes or print** are tested in the part's own space at the hit
+  point and painted directly: the whistle's mouth, the metronome's scale, the
+  stamp's label, the dictionary's thumb index and title, the marble's veins and
+  chisel strokes.
 
-Details that are *holes* (the window slot, the mouth of the tube) are tested in
-model space at the hit point and painted ink directly.
+### What it costs, and how it is kept cheap
 
-### 6. Every heading in one box
+LÖVE on a phone may well be running the interpreter rather than the JIT, so the
+number that matters is the interpreted one. A picture is a few thousand rays,
+two to six milliseconds on a desktop interpreter -- several times the piggy bank's.
+Four things bring it down to under a millisecond a frame on average, with no frame
+much over two:
 
-Render each of the `VIEWS` headings (16 for the whistle, one every 22.5°) into
-the same square, centred on the pivot. Then crop all of them to **one shared
-box**: the union of what every view covers, kept symmetric left to right about
-the pivot. The origin (`ox`, `oy`) is where the pivot landed in that box.
+1. **Ask only what can be hit.** Each solid's box is put through its maps onto the
+   screen each picture, and a pixel asks a part only inside both the rectangle its
+   corners land in and the circle its bounding sphere does (each is tighter than
+   the other for some shape). Parts are asked nearest first, part by part over their
+   own pixels, and a part whose nearest point is further than what a pixel already
+   holds is not asked at all. A pixel already on the face of a shared `within` (the
+   marble's block) is not asked again by anything else inside the same block.
+2. **Write it for the interpreter and the JIT both.** No assignment of several
+   values at once anywhere in the hot loop, and results left in upvalues rather than
+   returned eight at a time -- LuaJIT gives up compiling a trace over either (the red
+   pen's lesson). The per-part depth loop is a small function of its own because a
+   loop is compiled by what is live in it.
+3. **Keep the pictures.** The heading is drawn to a ninety-sixth of a turn and every
+   number the picture depends on to its model's `steps`, and a picture is kept under
+   that key, a hundred and sixty to a model and shared by every body of it. A boss
+   circling you is mostly drawn from pictures it has already painted; the marble's
+   carving, which moves on every hit, is drawn in forty steps from block to bust.
+4. **Paint the rest in slices.** A picture that has not been kept is painted in a
+   coroutine, a millisecond and a half a frame, while the last finished picture goes
+   on being drawn: a heading or a pose a frame or two late reads as nothing, and a
+   new pose costing a hitch every time would read as a stutter. The first picture a
+   body ever shows is the one painted all at once.
 
-That one rule is what makes turning look like turning: the game swaps pictures
-and the pivot never moves. It also means the hit circle, the shadow and
-everything else the game measures off the origin stay put.
+### Doing another character
 
-### 7. Bake
+1. **Add a row to `src/solids.lua`**: the pivot (the bulk of it), a `build` that
+   answers the list of parts, and a `shade` for whatever is not the red ramp. Build
+   it in made-up units at about a unit a pixel, front along −x.
+2. **Look at it before the game does.** Paint every heading and pose into one image
+   on a sample of the page it will stand on, scaled up with nearest-neighbour, and
+   judge it there -- not at one heading. A dozen goes at a model is normal.
+3. **Set `solid` on the enemy row**, and a `radius` that matches the bulk round the
+   pivot, not the whole silhouette; `ground` on the model or the row if its feet are
+   not the bottom of its picture.
+4. **If it moves**, give the model the numbers it moves by (`rest`), a row of them
+   per pose the brain names (`poses`), how fast each eases (`ease`), and which of
+   them the picture depends on and how finely (`params`, `steps`). The brain sets
+   `e.pose`; a number a brain drives directly is `e.solid:set(k, v)`.
+5. **Check it in the game** with something walking a circle round it. For a boss,
+   the title's dev BOSS button gets you straight to the fight.
 
-`python3 art/whistle.py --bake` writes everything between two marker comments
-in `src/sprites.lua`:
+### What was learned on the whistle
 
-```lua
-    -- BAKE:whistle begin
-    Sprites.WHISTLE = {
-        ox = 31, oy = 26,
-        { -- heading 0/16
-            "....",
-        },
-        ...
-    }
-    -- BAKE:whistle end
-```
+These were learned baking it and hold the same painting it live:
 
-`Sprites.load` compiles each into `Sprites.whistleViews[k]` with the shared
-origin, and puts the first one in `Sprites.enemies` so anything asking for the
-row's ordinary sprite still gets a whistle. As with `art/bake.lua`, art travels
-one way: the script is the drawing board, `sprites.lua` is the game, and nothing
-reads `art/` at runtime.
-
-## The game side
-
-One field on the enemy's row does it: `turns = "whistleViews"`, naming the list
-of views on `Sprites`.
-
-- `Enemy:update` works out which view points at the player (heading divided by
-  a sixteenth of a turn, rounded) and steps `view` towards it one view at a time,
-  the short way round, every `TURN_STEP` seconds. Stepping rather than snapping
-  is what makes it look like it turns; at 0.02s a step, half a turn takes about a
-  third of a second.
-- `Enemy:footing` hands that view to both the body and the blank stamped under
-  it, so the overprint cut-out always matches the picture.
-- Glued, it stops turning: a thing stuck to the page is stuck the way it was
-  pointing.
-
-Any row with `turns` gets this. Nothing else in the game needs to know.
-
-## Doing another character
-
-1. **Copy `art/whistle.py`** to `art/<name>.py`. Replace the `sd_*` functions,
-   `model()` and `shade()` with the new shapes and ramps, set the pivot to the
-   bulk of the body, and hand them to `Rig`. The tracer, the red ramp (the
-   default whenever `shade` answers nothing), the lines, the shared box and the
-   writing between markers are all `art/raytrace.py`; a character's file holds
-   only its model. Splitting it out changed nothing: the whistle re-bakes to the
-   same bytes.
-2. **Add markers** `-- BAKE:<name> begin` / `end` in `Sprites.load`, plus the loop
-   that compiles the views with the shared origin.
-3. **Preview before baking.** Render all views into one image, upscaled with
-   nearest-neighbour, on a sample of ruling. Judge it there, not in ASCII and not
-   at one heading. This was the loop for the whistle; a dozen iterations is
-   normal.
-4. **Set `turns`** on the row and a `radius` that matches the bulk around the
-   pivot, not the whole silhouette.
-5. **Check it in-game** with something walking a circle round it. For a boss, the
-   title's dev BOSS button gets you straight to the fight.
-
-## What was learned on the whistle
-
-- **Don't render faces in 3D.** The first version painted the eyes onto the
-  barrel in 3D, and at sprite size perspective chewed them into something nobody
-  could read. Anything that has to *read* (eyes, a mouth, a symbol) should be
-  authored flat and stamped on where the surface projects. The whistle
-  eventually dropped its face altogether.
-- **A small angle beats a dramatic one.** A strong tilt made the mouthpiece
-  stretch away up the screen. 34° downwards in the room shows the top without
-  distorting the length.
-- **Front-ish light.** Light from the side left half the body in slate. Light
-  from top left *and* towards the viewer keeps most of what you see lit, with the
-  shadow as a band down one side.
+- **Don't model faces in 3D.** The first whistle painted eyes onto the barrel, and
+  at sprite size perspective chewed them into something nobody could read. Anything
+  that has to *read* -- eyes, a mouth, a symbol -- is laid flat and stamped on where
+  the surface projects, or left off. The whistle dropped its face altogether; the
+  marble's eyes are a red pixel each, put where the sockets project and only where
+  the socket is what the camera sees there (`after` on its model).
+- **A small angle beats a dramatic one.** A strong tilt made the mouthpiece stretch
+  away up the screen. 34° shows the top without distorting the length.
+- **Front-ish light.** Light from the side left half the body in slate. Light from
+  top left *and* towards the viewer keeps most of what you see lit, with the shadow a
+  band down one side.
 - **Edge-on views are thin, and that's true.** Pointing straight at you or away,
-  you're looking along a narrow object. That's honest, but a squat character
-  turns better than a long one.
-- **One sample a pixel, always.** It's tempting to supersample for smoother
-  edges, but averaging is exactly what invents colours the palette doesn't have.
-  Smoothness comes from rounding the model's edges instead.
+  you're looking along a narrow object. A squat character turns better than a long
+  one.
+- **One sample a pixel, always.** Averaging is exactly what invents colours the
+  palette doesn't have. Smoothness comes from the model's edges instead.
 
-## A moving part on a baked body
+## A moving part on a live body: the metronome
 
-The metronome's pendulum swings, and a baked view is a fixed picture: sixteen
-headings times every angle of swing is not a budget, and stepping between swing
-angles would read as a flicker. So the body is baked and the arm is not. The
-bake writes two extra lines beside the views:
+The metronome's pendulum swings. It is not one of the body's solids: a rod a pixel
+wide is a line, and a ray at a pixel's middle cannot be relied on to hit something
+that thin, so it is plotted over the body every frame with `pixelart.line`, which
+goes down at any angle because it is plotted, not a sprite. Its pivot, lean, length
+and where the weight sits are `arm` on the model, in model units, and
+`Metronome.armPoint` puts points on it through the body's own projection
+(`Solid:project`). Three things make it sit on the body rather than float over it:
 
-```lua
-    Sprites.METRONOME = {
-        ox = 18, oy = 22,
-        arm = { x = -8.787, y = -7.500, z = 0.000, lean = 0.1806, len = 38.0, bob = 0.62 },
-        cam = { pitch = 0.59341, unit = 0.920, bias = 0.6087 },
-        ...
-```
+- **It uses the picture's heading, not the true one.** The body is drawn to a
+  ninety-sixth of a turn; an arm turned to the exact angle would slide across the
+  panel between one picture and the next, so `project` uses the map the picture
+  being drawn was painted with.
+- **Painter's order by heading.** When the panel faces away from the camera the arm
+  is drawn first and the body covers it, so from behind only the tip shows over the
+  cap; otherwise it is drawn after (`Metronome.armInFront`). A per-pixel depth test
+  was not needed for one thin rod.
+- **Its blank is its own.** The arm stands off the body, so it stamps its own paper
+  under itself; the body's mask is only the body.
 
-`arm` is where the arm hangs, in model units relative to the pivot; `cam` is the
-camera's tilt, the size of a pixel, and `bias`, which is where the pivot's own
-pixel sits (`half / unit - piv` in `Rig.bake`). `Metronome.armPoint` runs the same
-sums as the trace in reverse -- model to room by the view's heading, room to
-camera by the tilt, camera to pixels -- and gets a point on the arm in pixels
-from the sprite's origin. The arm is then plotted with `pixelart.line`, which
-goes down at any angle because it is plotted, not a sprite.
-
-Three things make it sit on the body rather than float over it:
-
-- **It uses the heading of the view being shown, not the true one.** The body
-  is quantised to sixteen; an arm turned to the exact angle would slide across
-  the panel between steps.
-- **Painter's order by view.** When the panel faces away from the camera the arm
-  is drawn first and the body covers it, so from behind only the tip shows over
-  the cap; otherwise it is drawn after (`Metronome.armInFront`). A per-pixel
-  depth test was not needed for one thin rod.
-- **The preview draws it too.** `python3 art/metronome.py --preview out.png` puts
-  every view on the MUSIC page with the arm swung, using the same sums, so the
-  pivot can be placed on the panel before anything is baked.
-
-The same split would serve any boss with one moving part: a wheel, a lid, a
-needle. Bake what turns, plot what moves, and bake the numbers the plot needs.
+The same split serves any boss with one thin moving part: a needle, a wire, a lever.
+Trace what has a surface, plot what is a line, and plot it through the body's own
+projection.
 
 ## Poses: a body that moves
 
-The stamp does not have a part that moves; the *whole thing* moves. It rocks back
-on its heel before it jumps, pitches forward as it comes down and flattens when it
-lands. None of that can be plotted on top of a picture, and none of it is a turn,
-so the answer is more pictures: each **pose** is the model bent into that shape and
-traced at every heading, a ring of its own.
+The stamp does not have a part that moves; the *whole thing* moves. It rocks back on
+its heel before it jumps, pitches forward as it comes down and flattens when it
+lands. Baked, each pose was a ring of pictures and the stamp snapped between them.
+Live, a pose is **numbers**:
 
 ```
-stand    upright                          (at rest, and in the air)
-rear     rotated 20° about the back edge  (the wind-up: front off the page)
-lean     rotated 20° about the front edge (coming down: face first)
-squash   scaled 1.12 across, 0.68 up      (the impact)
+stand    tilt 0                       sx 1     sy 1
+rear     tilt +20°  (about the heel)  sx 1     sy 1
+lean     tilt −20°  (about the toe)   sx 1     sy 1
+squash   tilt 0                       sx 1.12  sy 0.68
 ```
 
-How `art/stamp.py` does it:
+and the model's `pose` turns them into one map of the whole body: a scale about the
+middle of the pad, then a turn about whichever edge of the mount is on the page
+(`Affine.about`). The brain names a pose (`e.pose`) exactly as it did; the body eases
+each number towards it at its own rate (`ease`): the rock over a tenth of a second,
+the squash quicker -- an impact -- and back up at the same pace, so a landing springs.
 
-- **A pose is a function from the posed body back to the upright one.** `rear(p)`
-  rotates a point the other way about the heel and hands it to the ordinary
-  `model()`; `squash(p)` divides by the scale. The tracer marches the posed distance,
-  so the pose wraps the model rather than being built into it, and `shade()` is asked
-  about the *unposed* point, so the label stays on the label however the body leans.
-  A non-uniform scale is not an exact distance any more, so the distance is
-  multiplied by the smaller scale, which keeps every step of the march safe.
-- **Pose about the floor.** Each pose pivots on a point on the page -- the heel,
-  the toe, the middle of the pad -- so no pose lifts the body off its shadow. Lifting
-  is the game's job (`hop`, `Enemy:footing`), and a pose that lifted too would be
-  two answers to one question.
-- **One box for every pose.** `raytrace.share` crops every frame of every pose to
-  the union of all of them, symmetric about the pivot, with one origin. Swapping
-  `stand` for `rear` mid-air is then as still as swapping one heading for the next:
-  the pivot never moves. It does mean the bottom of the box is the bottom of the
-  lowest pose, not the foot, which is why the row carries `ground` for its shadow.
-- **Spend the symmetry.** The stamp is the same front and back, so heading *k* and
-  heading *k + 8* of an upright pose are the same picture, and leaning forward at
-  one heading is rearing back at the opposite one. So stand and squash are traced at
-  eight headings, rear at sixteen and lean not at all: sixty-four pictures in play
-  from thirty-two on disk, the rings put together in `Sprites.load`. A model without
-  that symmetry would bake all four rings in full.
-- **Bake what the game needs to line up.** The stamp's pad has to land in a ledger
-  cell, so the model is sized from the page (40px across is `40 * S` units; 12px down
-  the screen is a floor depth of `12 * S / sin(PITCH)` -- the floor is foreshortened by
-  the *sine* of the tilt and height by its *cosine*), and the bake writes `foot`, the
-  pixels from the origin down to the middle of the pad, for the brain to seat it by.
-- **Preview every pose.** `python3 art/stamp.py --preview out.png` draws the four
-  rings as the game builds them, on the ledger, with the cell the pad should cover
-  outlined under each. That outline is how the floor maths above was caught being
-  wrong the first time.
-
-The game side is one field more than `turns`: `poses = "stampPoses"` on the row,
-and the brain setting `e.pose` to a ring's name. `Enemy:footing` picks
-`Sprites[poses][pose][view]`, and the blank under it follows, so nothing else knows
-the body has more than one shape.
-
-Budget: a pose is a ring of views, so it costs what a second boss would. Thirty-two
-51x46 pictures are about 1,600 lines of `sprites.lua`. Pick poses that are held long
-enough to be seen -- a tell, a fall, an impact -- rather than in-betweens: at this
-size the eye fills the gap between two held poses by itself.
+- **Pose about the floor.** Every pose pivots on a point on the page -- the heel, the
+  toe, the middle of the pad -- so no pose lifts the body off its shadow. Lifting is
+  the game's job (`hop`, `Enemy:footing`), and a pose that lifted too would be two
+  answers to one question.
+- **Shade the unposed point.** `shade` is asked about the point in the stamp's rest
+  space, so the label stays on the label however the body leans.
+- **Bake what the game needs to line up -- in the model.** The pad has to land in a
+  ledger cell, so it is sized from the page: 40px across is `40 * UNIT` units, and
+  12px down the screen is a floor depth of `12 * UNIT / sin(PITCH)`. `foot`, the
+  pixels from the origin down to the floor under the pivot, is what the brain seats
+  it on a cell by.
 
 ## Poses with a hinge: the dictionary
 
 The GRAMMAR boss is a fat dictionary lying on the page, and it is the stamp's method
-with two things the stamp did not need. Its poses are `shut`, `ajar` (the front board
-lifted off the pages, a mouth) and `open` (on its back, both leaves flat).
+with two things the stamp did not need.
 
-- **A hinge is a pose of one part.** The stamp's poses bend the whole body; the
-  dictionary's `ajar` turns only the upper board, about the line where it meets the
-  spine. `shut_model(p, lift)` takes the point into the board's own frame for that
-  one part (`lifted`) and leaves the rest of the model alone, so the pages and the
-  spine are traced exactly as they were. The material is decided off the *board's*
-  point as well: its underside is the endpaper, so a lifted board shows a white mouth,
-  and it is lit whichever way it faces, because a slate inside reads as a hole.
-- **A pose can be a different model.** Open is not the shut book bent: it is its
-  own model, built about the spine, with the pages rising out of the gutter as a
-  height field (`page_top`; a height field's distance is not exact, so it is scaled
-  down by the slope's worst case to keep the march safe). Built about the spine
-  because the spine is the middle of the move the game plays on it, so swapping shut
-  for open shifts the picture half a book -- which is fine, because it only ever
-  happens on a landing, where nobody is looking for it.
-- **Ask the model, not the normal.** `shade` is handed the room's normal, which turns
-  with the heading. "Is this the fore-edge?" has to be asked of the point in the
-  model (its x), never of the normal's x; only the normal's y, which no heading
-  changes, is safe to read. The first preview had no thumb index for that reason.
-- **Spend the symmetry where there is some.** Shut and ajar have the spine on one
-  side, so they are baked at all sixteen headings. An open book is the same either
-  way round, so it is baked at eight and repeated: forty pictures, about 2,400 lines
-  of `sprites.lua`.
-
-`python3 art/dictionary.py --preview out.png` draws the three rings on the GRAMMAR
-page with the floor under the pivot marked, which is where `foot` is checked. The
-brain (`src/dictionary.lua`) lines the open book's spine up with the paired ruling
-off that number.
+- **A hinge is a part that moves.** `ajar` turns only the front board, about the line
+  where it meets the spine: the board is a part with a `move` -- a turn about the
+  hinge by `lift` -- and the pages and the spine are left where they are. Its
+  underside is the endpaper, so a lifted board shows a white mouth; it is asked of
+  the board's own rest-space point, lit whichever way it faces, because a slate
+  inside reads as a hole. The board swings up over a tenth of a second and snaps
+  down quicker: it bites.
+- **A pose can be a different model.** `open` is not the shut book bent: it is its
+  own list of parts, built about the spine, two leaves of boards and pages with the
+  pages rising steeply out of the gutter to a crest and easing down to the fore-edge
+  -- three planes across the top of each leaf, and the region under a top that only
+  bends down is convex, so a leaf is one `hull`. Built about the spine because the
+  spine is the middle of the move the game plays on it, so going from shut to open
+  shifts the picture half a book, which only ever happens on a landing, where nobody
+  is looking for it.
+- **A clap is a fold.** Lying open, both leaves can stand up off the page about the
+  gutter (`fold`, nought to a quarter turn), and the brain drives it as the clap's
+  fore-edges sweep in (`src/dictionary.lua`): the book shuts from both sides on
+  whoever is between them, which is what the move is named for.
+- **Ask the model, not the normal.** "Is this the fore-edge?" has to be asked of the
+  point in the model (its x), never of the room normal's x, which turns with the
+  heading; only the normal's y, which no heading changes, is safe to read.
 
 ## Stages: a body carved away
 
-ART's second boss is a block of marble with a bust in it, and its pictures are the
-stamp's poses with a different question behind them: not how the body is bent, but
-how much of it is left. Five stages, eight headings each, one shared box -- the
-stamp's machinery entire -- and the brain (`src/marble.lua`) picks the stage off the
-boss's health, so the fight carves it.
+ART's second boss is a block of marble with a bust in it. Its pose is not how it is
+bent but how much of it is left, and it is one number, `carve`, from 0 (the block) to
+4 (the bust), which the brain (`src/marble.lua`) sets off the boss's health: a whole
+number at each of the row's thresholds and the way between them in between, so every
+hit takes a little marble off, not only the hits that cross a threshold.
 
-- **One model, cut by a margin.** `art/marble.py` models the finished bust and the
-  block it is in, and every stage is the same expression with a different number:
-  `max(block(p), bust(p) - margin)`. No margin is the block; a margin of nought is
-  the bust; between, the bust grown by its margin and cut square wherever it still
-  reaches the block's faces. That last part is what makes the in-betweens read as
-  carving rather than as a blob shrinking: the flat faces the block came with stay on
-  wherever the stone has not been touched yet. Growing an SDF by a margin is only
-  subtracting a number, so this costs nothing to model and keeps every step of the
-  march safe.
-- **Rough is a distance, not a material.** Whether a pixel is stone still to come
-  off is asked of the hit point: further than a unit out from the finished bust, it
-  gets chisel strokes a step darker; on it, it is polished. So every stage is rough
-  exactly where it is not finished yet, with nothing authored per stage.
-- **Texture in the model's space carves honestly.** The veins are a field of the
-  model point, so a deeper stage shows more of the same veins, never new ones, and
-  the strokes stay on the stone as it turns. What has to read is kept off the noise:
-  the finished face has no veins, so the eyes the brain opens there (a pixel of red
-  each, at `eyes`, projected and checked visible per view by the bake) are the only
-  red on it.
-- **Eight headings serve two kinds of thing.** A block looks the same at a quarter
-  turn; a head does not. One ring of headings per stage covers both, and the brain
-  keeps the half-made stages facing the page (`e.face`) and lets the finished ones
-  turn to watch you.
-- **Bake in parallel.** Forty pictures is ten seconds over four processes
-  (`multiprocessing`, `fork`), which is what made iterating on the bust's face
-  practical. `python3 art/marble.py --preview out.png` lays every stage and view on
-  the ART page with the floor marked under the pivot and the eyes in red.
+- **One model, grown by a margin.** The bust is modelled whole -- socle, chest, neck,
+  head, jaw, nose, brow, ears, the sockets of the eyes and a cap of hair -- and every
+  stage is each of its solids grown by a margin and kept inside the block (`within`).
+  The margins are the bake's five stages (16, 7, 4, 1.8, 0) and `carve` runs between
+  them. No margin is the bust; a margin past the block's size is the block; between,
+  the bust grown and cut square wherever it still reaches the block's faces -- which
+  is what makes the in-betweens read as carving rather than as a blob shrinking: the
+  flat faces the block came with stay on wherever the stone has not been touched yet.
+- **Only what can still be seen.** Grown far enough, the nose, the brow and the ears
+  reach past the block's faces and are cut flat by them, and the socle's waist is
+  swallowed by what is round it, so a block barely started is seven solids rather
+  than thirteen. The jaw and the neck stay at every margin: they fill the waist
+  between the head and the chest, and leaving them out turned the hewn block into a
+  stack of lumps.
+- **Rough is the margin, not a material.** While it is a pixel or more out from the
+  finished bust, the stone is drawn rough -- chisel strokes a step darker in the
+  model's own space, so they stay on the stone as it turns; at the end it is polished.
+  The veins are a field of the model point, so a deeper stage shows more of the same
+  veins, never new ones. The finished face is kept clear of them, so the eyes the
+  brain opens there are the only red on it.
+- **The eyes are read off the picture.** As each picture of the finished bust is
+  painted, the middle of each socket is projected, and kept if the depth the camera
+  sees at that pixel is the socket's (`after` on the model): eyes on the back of the
+  head are not drawn.
 
-The game side is the stamp's: `turns = "marbleViews"`, `poses = "marblePoses"` and a
-`ground` on the row, the brain setting `e.pose` to a stage's name.
+The brain keeps the half-made stages facing the page (`e.face`) and lets the finished
+ones turn to watch you.
 
 ## Painted live on flat faces: the die
 
-The MATHS boss (`src/dice.lua`) is a d6, then a d10, then a d20, and it is the eye's
-method rather than the whistle's, for a reason worth keeping in mind for any future
-character: **a die has no front.** Baked views pay for headings -- sixteen pictures
-of a thing turning to face you -- and what a die needs is to tumble end over end in
-any direction and come to rest on any face. Baking that would be a picture for every
-orientation, which is not a budget; painting it fresh each frame costs about what
-the eye does.
+The MATHS boss (`src/dice.lua`) is a d6, then a d10, then a d20, and it was the
+first boss painted live while the whistle was still baked, for a reason worth
+keeping in mind for any future character: **a die has no front.** Baked views paid
+for headings -- sixteen pictures of a thing turning to face you -- and what a die
+needs is to tumble end over end in any direction and come to rest on any face.
+Baking that would have been a picture for every orientation, which is not a budget;
+painting it fresh each frame costs about what the eye does.
 
 A convex solid is also the easiest thing there is to paint this way. Each die is a
 list of face planes, `n . p <= h` in its own frame, and that list is the whole
@@ -504,18 +393,18 @@ What changes from the sphere:
 
 To make another convex thing this way, add a face list to `Dice.solids` (unit
 normals, one `h`, labels) and the rest follows. Anything with a hole or a dent is
-not convex and is back to the whistle's tracer.
+not convex and is a row in `src/solids.lua`, with the dent as a `minus`.
 
 ## Painted live under a moving light: the still life
 
 The ART boss (`src/plaster.lua`) is a plaster cube, sphere and cone on a table under a
 lamp, and it is painted live for a reason none of the others needed: **the light
-moves.** Every other boss in this file is lit from one window fixed on the screen, so
-a baked view only ever has to be lit once. The still life's whole fight is the lamp
+moves.** Every other boss in this file is lit from one window fixed in the room, so
+it only ever has to be lit one way. The still life's whole fight is the lamp
 going round it (`src/stilllife.lua`), and the body has to show where the lamp is --
 the lit side of each solid following it round -- before the shadows on the floor say
-so. Baking would be a picture for every heading of the lamp on top of every heading
-of the body. Painted, it is one dot product per pixel.
+so. Baked, it would have been a picture for every heading of the lamp on top of
+every heading of the body. Painted, it is one dot product per pixel.
 
 What is new here, against the die:
 
@@ -598,8 +487,9 @@ radian above the page (`ELEV`): the page's up-the-page becomes "into the screen 
 up", so its frame for a heading `yaw` is its nose along the heading on the page, its
 side across it, and its back tipped towards you. Turning the pig is changing `yaw`;
 nodding it is a `pitch` about its side. Nothing is rotated at draw time -- the
-picture is painted fresh for whatever way it is facing, which is exactly what the
-whistle's sixteen baked views do ahead of time.
+picture is painted fresh for whatever way it is facing, which is what the whistle's
+sixteen baked views did ahead of time, and what moved the whistle onto this method
+in the end (**Built of simple solids**).
 
 **Edges inside the silhouette.** One sphere has only a rim. Nine solids have places
 where one stands in front of another -- an ear against the barrel, a near leg against
@@ -769,14 +659,16 @@ per drop, which is fine for the few dozen a boss throws.
 
 ## Where it fits and where it doesn't
 
-- **Convex and tumbling:** a die, a block, a crystal -- anything flat-faced that has
-  to turn every way rather than face you -- is a face list painted live (the die),
-  not baked.
+- **Built of parts that face you:** something made of boxes, cylinders, cones and
+  lumps that turns to face you and moves in poses is a row in `src/solids.lua` (the
+  whistle, the metronome, the stamp, the dictionary, the marble).
+- **Convex and tumbling:** a die, a crystal -- anything flat-faced that has to turn
+  every way rather than face you -- is a face list painted by `src/dice.lua`.
 - **Lit by something that moves:** a few simple solids whose shading has to follow a
-  light around the page are a `Plaster` group (the still life), not baked.
-- **Good fits:** bosses and anything else big (the whistle is 63 by 41 pixels
-  per view), and objects whose heading matters, such as something that aims, or
-  a weapon that should point the way it's going.
+  light around the page are a `Plaster` group (the still life).
+- **Good fits:** bosses and anything else big (the whistle is 63 by 41 pixels),
+  and objects whose heading matters, such as something that aims, or a weapon that
+  should point the way it's going.
 - **Poor fits:** the ordinary horde. A blob is eight pixels across, and at that
   size the ramp has room for about two shades, so a hand-drawn doodle reads
   better. The horde is also reskinned per lesson by hand
@@ -784,6 +676,6 @@ per drop, which is fine for the few dozen a boss throws.
   too.
 - **Not at all:** anything the player draws: the hero, the sword, the star and
   the rest of the drawn designs. Those are the player's own pixels.
-- **Budget:** each view is a block of ASCII in `sprites.lua`. Sixteen views of a
-  63-wide sprite is about 700 lines, which is fine for a boss. Eight views is
-  plenty for something that turns less often or is smaller.
+- **Budget:** a few thousand rays a picture, kept by heading and pose and painted a
+  slice a frame when new (**What it costs**, above). One boss on the page at a time
+  is what that is sized for; a crowd of them would not be.

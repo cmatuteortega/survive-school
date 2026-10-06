@@ -4,22 +4,24 @@
 -- **It is the fight's own body and not a picture of one.** Every boss here is
 -- already a thing that can be seen from any side -- the eye, the die, the atom,
 -- the pig and the rest are painted a pixel at a time off a frame that turns, and
--- the whistle, the metronome, the stamp, the dictionary and the marble were
--- ray-traced into a ring of views ahead of time (3dmethod.md) -- so a turntable is
--- nothing more than that frame turned at a steady rate with no brain behind it.
+-- the whistle, the metronome, the stamp, the dictionary and the marble are
+-- ray-traced the same way out of simple solids (src/solid.lua, 3dmethod.md) --
+-- so a turntable is nothing more than that frame turned at a steady rate with no
+-- brain behind it.
 -- Drawing them from anything else would be the library keeping a second copy of
 -- fourteen drawings that could quietly stop matching the page they come from.
 --
 -- **Which kind of body is read off the row** (src/enemy.lua), the way `Enemy.new`
--- reads it: `pupil` is the eye, `dice` the die, `still` the still life, `turns` a
--- ring of baked views, and so on. So a new boss built on one of these bodies is
+-- reads it: `pupil` is the eye, `dice` the die, `still` the still life, `solid`
+-- one of the bodies built of simple solids, and so on. So a new boss built on one of these bodies is
 -- on the turntable by being one, and a new *kind* of body is one more line in
 -- `make` below -- the same place it is one more line in `Enemy.new`.
 --
 -- **How each is turned** is the body's own idea of turning, because they do not
 -- share one. A sphere, a die and a table of plaster turn about the upright; the
 -- pig, the can and the speaker turn on the spot the way they turn to face you;
--- the atom and the tesseract are already turning and are simply let run; the red
+-- the atom and the tesseract are already turning and are simply let run; the
+-- solid bodies turn on the spot in the pose they rest in; the red
 -- pen, which is longer than the page, is stood up and turned in its fingers, so
 -- what goes round is the clip and the print -- and the top of it goes off the top
 -- of the box, which is the point of it.
@@ -48,6 +50,8 @@ local Speaker = require("src.speaker")
 local RedPen = require("src.redpen")
 local Deodorant = require("src.deodorant")
 local Metronome = require("src.metronome")
+local Solid = require("src.solid")
+local Solids = require("src.solids")
 
 local Turntable = {}
 Turntable.__index = Turntable
@@ -55,9 +59,9 @@ Turntable.__index = Turntable
 local TAU = math.pi * 2
 local floor, sin, cos = math.floor, math.sin, math.cos
 
--- One turn every this many seconds. Slow enough that a ring of sixteen baked
--- views reads as a turn rather than a flicker -- a view a third of a second --
--- and quick enough that you see the back of a thing before you have looked away.
+-- One turn every this many seconds: slow enough to read as a thing being turned
+-- round to be looked at, and quick enough that you see the back of it before you
+-- have looked away.
 local PERIOD = 6
 local SPIN = TAU / PERIOD
 
@@ -70,7 +74,7 @@ local PEN_TIP = 1
 -- The body a row is drawn as, and how it turns: `turn(self, dt)` moves it on,
 -- and the rest of this file draws it. `painted` is a body with the painted
 -- bodies' shared shape -- `draw(x, y)`, `drawMask(x, y, pad)`, `shadowScale` and
--- an optional `ground` (Enemy:draw) -- and `views` a ring of baked sprites.
+-- an optional `ground` (Enemy:draw).
 local function make(self, def)
     if def.pupil then
         local eye = Eyeball.new()
@@ -143,15 +147,19 @@ local function make(self, def)
             can:spin(SPIN * dt)
             can:update(dt)
         end
-    elseif def.turns then
-        -- A ring of baked views (3dmethod.md): the turn is which of them is up.
-        -- Read off the row's `turns`, which is the ring the fight turns through
-        -- -- the stamp standing, the dictionary shut, the marble a block.
-        self.views = Sprites[def.turns]
-        self.turn = function() end
-        -- The metronome's pendulum is plotted live rather than baked, so it is
-        -- swung here on a clock of its own, at the slowest tempo the fight
-        -- plays at: the brain it is borrowed from reads only that and a state.
+    elseif def.solid then
+        -- A body of simple solids (src/solid.lua), in the pose it rests in --
+        -- the stamp standing, the dictionary shut, the marble a block -- turned.
+        local body = Solid.new(Solids[def.solid])
+        self.painted = body
+        self.turn = function(_, dt)
+            body:spin(SPIN * dt)
+            body:update(dt)
+        end
+        -- The metronome's pendulum is plotted over the body rather than traced,
+        -- so it is swung here on a clock of its own, at the slowest tempo the
+        -- fight plays at: the brain it is borrowed from reads only that and a
+        -- state.
         if def.metronome then
             self.arm = setmetatable({ def = def.metronome, clock = 0, state = "walk" },
                 Metronome)
@@ -184,15 +192,8 @@ end
 
 --- where it stands -----------------------------------------------------------
 
--- Which view of a ring is up: the one the turn has reached.
-function Turntable:view()
-    local n = #self.views
-    return floor(self.angle / TAU * n + 0.5) % n + 1
-end
-
 -- The sprite a body is drawn from, where it is drawn from one.
 function Turntable:sprite()
-    if self.views then return self.views[self:view()] end
     return self.flat or Sprites.enemies[self.def.sprite]
 end
 
@@ -251,15 +252,15 @@ function Turntable:drawMask(x, y, clip)
         self.eye:drawMask(x, y, 0)
     elseif self.painted then
         self.painted:drawMask(x, y, 0)
+        if self.arm then
+            self.arm:drawArm({ solid = self.painted }, x, y, { love.graphics.getColor() })
+        end
     elseif self.pen then
         local rows, ox, oy = penRows(self.pen, x, y, clip[2], clip[4], clip[1], clip[3])
         local r, g, b = love.graphics.getColor()
         drawRuns(rows, ox, oy, { r, g, b })
     else
         self:sprite():drawMask(x, y)
-        if self.arm then
-            self.arm:drawArm({ view = self:view() }, x, y, { love.graphics.getColor() })
-        end
     end
 end
 
@@ -309,15 +310,15 @@ function Turntable:draw(cx, floorY, box, seen, shape)
     elseif self.eye then
         self.eye:draw(x, y)
     elseif self.painted then
+        local front = self.arm and Metronome.armInFront(self.painted)
+        if self.arm and not front then self.arm:drawArm({ solid = self.painted }, x, y) end
         self.painted:draw(x, y)
+        if front then self.arm:drawArm({ solid = self.painted }, x, y) end
     elseif self.pen then
         drawRuns(penRows(self.pen, x, y, clip[2], clip[4], clip[1], clip[3]))
     else
-        local front = self.arm and Metronome.armInFront(self:view())
-        if self.arm and not front then self.arm:drawArm({ view = self:view() }, x, y) end
         love.graphics.setColor(1, 1, 1)
         self:sprite():draw(x, y)
-        if front then self.arm:drawArm({ view = self:view() }, x, y) end
     end
 
     if sx then

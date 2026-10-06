@@ -7075,10 +7075,14 @@ fight of its own, and it is chosen to be the other half of the same box -- a fig
 about **what is in the air, and about the class it calls in.** A P.E. teacher does
 not fight you. They blow the whistle and make everybody else do it.
 
-So the boss is a coach's whistle the size of the eye, in red plastic, and the one
-thing in the game drawn as a solid object: modelled and rendered from sixteen
-headings, so it swings round to point its mouthpiece at you from anywhere on the
-page with the light staying where the room's light is. It keeps the eye's 900 health, knock, hold
+So the boss is a coach's whistle the size of the eye, in red plastic, and the first
+thing in the game drawn as a solid object: modelled out of a cylinder, a box with a
+window cut in it and a ring, and ray-traced a pixel at a time for whichever way it is
+facing, so it swings round to point its mouthpiece at you from anywhere on the page
+with the light staying where the room's light is. (It was baked once, sixteen
+pictures it stepped through; it is painted live now, like the piggy bank, for the
+reasons `3dmethod.md` gives -- a turn that is a turn rather than sixteen jumps, and
+the four solid bosses after it moving rather than swapping pictures.) It keeps the eye's 900 health, knock, hold
 and contact damage, because the half minute that number was measured to is still
 the right length for a fight; what changes is what you do during it. Four calls:
 
@@ -7118,10 +7122,10 @@ third answer to the same box is a fight about **time**: not where to stand but
 the thing that keeps the beat -- a pyramid metronome in red, with a paper tempo scale
 down its front and its pendulum swinging.
 
-It is drawn the way the whistle is, sixteen traced views it turns through to face
-you, with one difference: the arm. A pendulum is the one part of a metronome that
-moves, and a baked view is a fixed picture, so the arm is plotted over the body every
-frame, in the same projection the views were traced in. From the front it swings
+It is drawn the way the whistle is, a solid ray-traced live and turned to face you,
+with one difference: the arm. A pendulum is a rod a pixel wide, which is a line
+rather than a surface, so the arm is plotted over the body every frame through the
+body's own projection. From the front it swings
 across the panel; from behind, all you see of it is the tip going over the top. The
 arm is the clock you can see -- it reaches the end of its swing exactly on each
 beat -- and the tick you hear is the same clock, higher on the one.
@@ -7184,10 +7188,11 @@ so a step up or down is enough; and the header bands count as the cell after the
 so standing on one is not a hiding place.
 
 **It moves the way a stamp is used.** It rocks back on its heel before it goes,
-pitches forward as it comes down and flattens when it hits. Those are not tweens
-on one picture; they are four poses, each traced at every heading (see
-`3dmethod.md`), and the rock back is the tell for everything it does -- short for a
-hop, long for a move. A stamp leaning away from you is a stamp about to land.
+pitches forward as it comes down and flattens when it hits. Those are four poses,
+each a tilt about the heel or the toe and a squash, and the body eases between them
+(see `3dmethod.md`) -- the rock is a rock, and the landing squashes and springs back.
+The rock back is the tell for everything it does -- short for a hop, long for a
+move. A stamp leaning away from you is a stamp about to land.
 
 - **It hops at you.** Between moves it comes on in short leaps, about the eye's
   pace, and every couple of seconds flicks a blot of ink at you, so standing still
@@ -7236,8 +7241,8 @@ the roll is the tell: the die is thrown, tumbles, comes to rest, and the face on
 it, and then there is a count-in. Luck picks the move; you always see the move
 before it lands.
 
-It is painted live, the eye's way, rather than baked like the whistle and the
-metronome, and the reason is that a die has no front. Sixteen baked headings are
+It was painted live, the eye's way, when the whistle and the metronome were still
+baked, and the reason is that a die has no front. Sixteen baked headings were
 spent on a thing turning to face you; a die needs to tumble end over end in whatever
 direction it was thrown and stop on any face at all. Each die is a handful of flat
 faces, so every frame each pixel asks which face it lands on, the face is one step
@@ -7291,17 +7296,17 @@ red dictionary lying on the page, with the thumb index cut down its fore-edge.
 
 **It is a book that bites.** It lies shut and comes at you in hops, mouth first: the
 front board lifts off the pages before it goes and snaps shut as it lands. Shut, ajar
-and open are three poses each traced at every heading (`3dmethod.md`), and the board
-going up is the tell for everything it does -- short for a hop, long for a move. A
-book opening at you is a book about to do something.
+and open are three poses (`3dmethod.md`), the board swinging up on its hinge between
+them, and the board going up is the tell for everything it does -- short for a hop,
+long for a move. A book opening at you is a book about to do something.
 
 - **It hops at you**, about the eye's pace, and every couple of seconds tears out a
   page and flicks it at you, so standing still is never free.
 - **The clap.** Mouth open at you while two pages are dashed out on the paper either
   side of a spine half a page away -- following you for as long as it is open -- then
   it leaps onto the spine and lands open on its back. A moment later it shuts: the
-  fore-edges of both pages sweep in to the spine and whoever is between them is
-  caught. It is the page's pincer drill turned into a boss, and the answer is never
+  fore-edges of both pages sweep in to the spine, the book's own leaves standing up
+  off the page to meet as they come, and whoever is between them is caught. It is the page's pincer drill turned into a boss, and the answer is never
   *which side*, because both sides are coming. It is out of the head or the tail --
   and the pages are a whole number of groups deep with their head and tail on
   printed rules, so the way out is a line you can already see -- or out past an edge
@@ -7338,8 +7343,8 @@ lamp, and you draw what the light does to them -- so that is what walks into the
 It does not walk, being a still life. It holds still and the lamp goes round it.
 
 It is painted live, like the eye and the die, and for a reason neither of them had:
-**the light moves.** A baked view can turn a whistle to face you, but no set of
-pictures can light a cube from wherever the lamp has got to. Painted fresh every
+**the light moves.** A baked view could turn a whistle to face you, but no set of
+pictures could light a cube from wherever the lamp has got to. Painted fresh every
 frame, the side of each solid that faces the lamp is the paper, the side that turns
 away is slate, and the lamp drifting round the group turns the lit sides after it.
 That is how you read where the light is before the shadows say so. It is plaster, so
@@ -7728,12 +7733,12 @@ already in the block; the job is everything that is not it. So ART's second figh
 is about *subtraction*, and what drops onto the page ten minutes after the still
 life goes down is a block of marble straight out of the quarry.
 
-**You are the chisel.** The body is baked in five stages (`art/marble.py`): the
-block with the quarry's chisel marks on it, hewn (the top corners knocked off), the
-bust roughed out a size too big, modelled, and the finished bust, polished. Which
-one is standing on the page is read off its health, so every hit you land takes
-marble off it, and at each step a chunk comes away in a spray of grit and lies on
-the page. It is the one fight in the book where you can see how far you have got by
+**You are the chisel.** The body goes through five stages: the block with the
+quarry's chisel marks on it, hewn (the top corners knocked off), the bust roughed
+out a size too big, modelled, and the finished bust, polished. How far it has got is
+read off its health, between the stages as well as at them, so every hit you land
+takes a little marble off it, and at each stage a chunk comes away in a spray of
+grit and lies on the page. It is the one fight in the book where you can see how far you have got by
 looking at the boss rather than the bar, and where what you are fighting changes
 because of what you did to it. Each stage is the block with everything more than a
 margin outside the bust cut off -- so a half carved block is its flat faces with a
@@ -9593,6 +9598,10 @@ src/
                       and moves the crowd instead
   puddle.lua          a blot of ground: the boss's wet trail, a bomb's burn
   enemy.lua           enemy types table, chase, knockback
+  solid.lua           a boss built of boxes, cones and ellipsoids, ray-traced a
+                      pixel at a time for its heading and pose (3dmethod.md)
+  solids.lua          the five built that way: whistle, metronome, stamp,
+                      dictionary, marble
   spawner.lua         offscreen ring spawning, difficulty ramp
   bullet.lua          projectiles
   gem.lua             XP pickups with magnet

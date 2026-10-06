@@ -6,10 +6,11 @@
 -- that faces the lamp is the paper, the side that turns away is the darkest
 -- your pencil goes, and the shadow each one throws across the table is a shape
 -- of its own. This boss is that exercise, and it is drawn the eye's way and the
--- die's way at once (3dmethod.md) -- painted live rather than baked -- because
--- the one thing the exercise is about is the one thing a baked view cannot do:
--- **the light moves**. Sixteen pictures can turn a whistle to face you; none of
--- them can light a cube from wherever the lamp has got to. Painted fresh every
+-- die's way at once (3dmethod.md) -- painted live, when the whistle was still
+-- baked -- because the one thing the exercise is about is the one thing a baked
+-- view could not do: **the light moves**. Sixteen pictures could turn a whistle
+-- to face you; none of them could light a cube from wherever the lamp has got
+-- to. Painted fresh every
 -- frame, the shading is just the lamp's direction dotted with a normal, and the
 -- lamp going round the group is the whole body turning its lit side after it --
 -- which is how the player reads where the light is before the shadows say so.

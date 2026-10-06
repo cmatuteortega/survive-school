@@ -1,11 +1,12 @@
 -- The MATHS boss's body: a die, painted a pixel at a time off a real solid.
 --
 -- This is the eye's method (src/eyeball.lua) on a different shape, and the
--- shape is why it was chosen over the whistle's baked views (3dmethod.md). A
--- baked boss spends its sixteen pictures on *headings*, and a die has no front:
--- what it needs is to tumble, end over end in whichever direction it was thrown,
--- and come to rest on any face at all -- which sixteen fixed pictures cannot do
--- and a body painted fresh every frame does for nothing.
+-- shape is why it was painted live back when the whistle was still baked into a
+-- ring of views (3dmethod.md). A baked boss spent its sixteen pictures on
+-- *headings*, and a die has no front: what it needs is to tumble, end over end
+-- in whichever direction it was thrown, and come to rest on any face at all --
+-- which sixteen fixed pictures could not do and a body painted fresh every frame
+-- does for nothing.
 --
 -- A die is also the easiest solid there is to paint this way. Every one of the
 -- three it turns into is *convex*: a short list of flat faces, each a plane the

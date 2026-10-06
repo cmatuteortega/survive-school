@@ -13,10 +13,12 @@
 --
 -- **It moves like a book that bites.** It lies on the page and comes at you in
 -- hops, mouth first -- the front board lifted off the pages before it goes and
--- snapped shut as it lands -- which are its baked poses (`Sprites.
--- dictionaryPoses`, art/dictionary.py): shut, ajar and open. The brain says
--- which through `e.pose` and how high off the page through `e.hop`. The board up
--- is the tell for everything it does, short for a hop and long for the moves.
+-- snapped shut as it lands -- which are its body's poses (`poses` on its row in
+-- src/solids.lua): shut, ajar and open, the board swinging between them. The
+-- brain says which through `e.pose` and how high off the page through `e.hop`,
+-- and while a clap shuts it stands the open leaves up off the page to meet
+-- (`fold`). The board up is the tell for everything it does, short for a hop and
+-- long for the moves.
 --
 --  - **It hops at you**, and every couple of seconds tears out a page and flicks
 --    it at you, so standing still is never free.
@@ -43,7 +45,7 @@
 -- shutting on anyone -- and lies there for the rest of the hold.
 
 local Palette = require("src.palette")
-local Sprites = require("src.sprites")
+local Solids = require("src.solids")
 local Camera = require("src.camera")
 local Font = require("src.font")
 local I18n = require("src.i18n")
@@ -99,7 +101,7 @@ function Dictionary:pose(e, name, hop)
 end
 
 -- Where on the page the floor under the book is: the spine, for the clap.
-local function foot() return Sprites.DICTIONARY.foot end
+local function foot() return Solids.dictionary.foot end
 
 function Dictionary:update(dt, game, e)
     self.e = e
@@ -331,6 +333,9 @@ function Dictionary:clap(dt, game, e)
     -- passes over on its way in is caught, once.
     local was = b.edge
     b.edge = math.max(0, b.edge - b.reach / c.close * dt)
+    -- And the book shuts with them: both leaves stand up off the page as the
+    -- edges come in, and meet over the spine as they get there.
+    if e.solid then e.solid:set("fold", 1 - b.edge / b.reach) end
     local p = game.player
     local off = math.abs(p.x - b.x)
     if not b.hit and p.y >= b.top - 1 and p.y <= b.bottom + 1

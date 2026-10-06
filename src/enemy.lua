@@ -23,6 +23,8 @@ local PenBoss = require("src.redpenboss")
 local Deodorant = require("src.deodorant")
 local DeoBoss = require("src.deodorantboss")
 local Marble = require("src.marble")
+local Solid = require("src.solid")
+local Solids = require("src.solids")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
 
@@ -71,11 +73,11 @@ local HIT_BUMP_TIME = 0.12  -- and how long it takes to slide home
 -- as standing in one.
 local SOAK_COOL = 1.2
 
--- How long a `turns` body takes to swing one view (a sixteenth of a turn) round
--- towards you. Stepped through the views in between rather than snapped, so a
--- whistle you run round turns to follow you instead of jumping, and quickly
--- enough that half a turn is under a third of a second.
-local TURN_STEP = 0.02
+-- How fast a `solid` body turns towards you, in radians a second: half a turn
+-- in under a third of a second, so a whistle you run round turns to follow you
+-- instead of jumping, and quickly. (The pace the sixteen baked views it was once
+-- drawn from stepped at: a sixteenth of a turn every fiftieth of a second.)
+local TURN_RATE = math.pi * 2 / 16 / 0.02
 
 -- The sound a whistle makes, drawn: two rings going out from it over BLARE_TIME,
 -- from the body's own radius to BLARE_REACH past it. A mark rather than a hit --
@@ -143,8 +145,9 @@ local BLARE_REACH = 34
 -- (its name under the HUD's bar), `call` (the line the page says as it walks
 -- on), `pupil` (an eye that watches you: the body is a ball painted a pixel at a
 -- time and turned to face the player, with a gait of its own --
--- src/eyeball.lua), `turns` (a body drawn from a ring of baked views, the one
--- facing you -- 3dmethod.md), `trail` (a wet blot dropped behind it as it
+-- src/eyeball.lua), `solid` (a body built of simple solids and ray-traced live,
+-- turned to face you -- its row in src/solids.lua, 3dmethod.md), `trail` (a
+-- wet blot dropped behind it as it
 -- walks), `tears` (the same wet thrown rather than walked, three ways --
 -- Game:updateTears), `attacks` (the moves it picks between, read by its brain
 -- and nowhere else -- src/eyeboss.lua), `whistle` (the P.E. boss's four
@@ -159,9 +162,7 @@ local BLARE_REACH = 34
 -- ART boss: three plaster solids painted a pixel at a time and lit by a lamp
 -- that moves, src/plaster.lua, with its brain in the same socket,
 -- src/stilllife.lua), `marble` (ART's encore: a block of marble carved into a
--- bust by the hits it takes, each stage a ring of `poses` -- src/marble.lua) and
--- `poses` (a `turns` body baked in more than one pose, each a ring of views,
--- the brain saying which through `pose` -- art/stamp.py), `last` (the line the
+-- bust by the hits it takes -- src/marble.lua), `last` (the line the
 -- page says as it goes down), `wreck` (how it comes apart: the colours it
 -- bursts into, how many rings roll out of the burst, and the sound --
 -- src/wreck.lua; the eye comes apart its own way, EyeBoss.fall) and `arrive`
@@ -813,7 +814,8 @@ Enemy.types = {
     -- down at a master's and a doctorate, and the fight about *subtraction* --
     -- every hit takes marble off, and the stage it is at is read off its health
     -- (`stages`). The moves and why they are these moves are src/marble.lua; the
-    -- body is baked in five stages by art/marble.py.
+    -- body, a bust grown inside its block and cut back as it is hurt, is its row
+    -- in src/solids.lua.
     --
     -- The eye's numbers where the fight is the same fight -- 900 health, the
     -- knock, the hold, 20 on contact -- priced a cycle on by the spawner like the
@@ -822,7 +824,7 @@ Enemy.types = {
     -- `ground` is the near edge of its foot on the page, where the shadow goes.
     marble = { name = "MARBLE", sprite = "marble", hp = 900, speed = 0, radius = 15,
                damage = 20, xp = 250, shadow = 30, ground = 20, boss = true,
-               turns = "marbleViews", poses = "marblePoses", knock = 0.06, hold = 0.3,
+               solid = "marble", knock = 0.06, hold = 0.3,
                title = "THE MARBLE", call = "SET IN STONE",
                last = "MASTERPIECE", wreck = { ink = { "graphite", "slate", "red" }, rings = 2 },
                arrive = true,
@@ -897,7 +899,7 @@ Enemy.types = {
     -- it does and the thing that is always happening, so standing still is
     -- never free even between the calls below.
     whistle = { name = "WHISTLE", sprite = "whistle", hp = 900, speed = 22, radius = 13, damage = 20,
-                xp = 250, shadow = 26, boss = true, turns = "whistleViews", knock = 0.06, hold = 0.3,
+                xp = 250, shadow = 26, boss = true, solid = "whistle", knock = 0.06, hold = 0.3,
                 title = "THE WHISTLE", call = "THE WHISTLE BLOWS",
                 last = "FULL TIME", wreck = { ink = { "red", "ink", "slate" }, rings = 3, sound = "whistle" },
                 arrive = true,
@@ -970,7 +972,7 @@ Enemy.types = {
     -- on the row is a stride, and what it covers on average is 25, about the
     -- eye's 26 and still well under your 58.
     metronome = { name = "METRONOME", sprite = "metronome", hp = 900, speed = 50, radius = 12,
-                  damage = 20, xp = 250, shadow = 30, boss = true, turns = "metronomeViews",
+                  damage = 20, xp = 250, shadow = 30, boss = true, solid = "metronome",
                   knock = 0.06, hold = 0.3,
                   title = "THE METRONOME", call = "THE METRONOME TICKS",
                   last = "OUT OF TIME", wreck = { ink = { "ink", "slate", "red" }, rings = 4, sound = "tick" },
@@ -1028,8 +1030,8 @@ Enemy.types = {
     -- The FINANCE boss: an office rubber stamp, and the fight in the book about
     -- *cells*. Its pad is one cell of the ledger and everything it does is come
     -- down on one, outlined on the page first; the moves and how it picks
-    -- between them are src/stamp.lua, and why it is baked in four poses rather
-    -- than one is art/stamp.py.
+    -- between them are src/stamp.lua, and the body it rocks, leans and squashes
+    -- is its row in src/solids.lua.
     --
     -- The body keeps the eye's numbers where the fight is the same fight: 900
     -- health for the measured half minute, the same knock, hold and 20 on
@@ -1038,10 +1040,11 @@ Enemy.types = {
     -- every step it takes is a leap the brain draws, and its hops at you cover
     -- about 25 a second between moves -- the eye's pace, in jumps.
     -- `ground` is the front edge of the pad, where the shadow goes: the bottom
-    -- of the cell it is standing on (`foot` in Sprites.STAMP, and six more).
+    -- of the cell it is standing on (`foot` on its model in src/solids.lua, and
+    -- six more).
     stamp = { name = "STAMP", sprite = "stamp", hp = 900, speed = 26, radius = 13,
-              damage = 20, xp = 250, shadow = 40, ground = 13, boss = true, turns = "stampViews",
-              poses = "stampPoses", knock = 0.06, hold = 0.3,
+              damage = 20, xp = 250, shadow = 40, ground = 12, boss = true, solid = "stamp",
+              knock = 0.06, hold = 0.3,
               title = "THE STAMP", call = "THE STAMP COMES DOWN",
               last = "CANCELLED", wreck = { ink = { "red", "blush", "ink" }, rings = 1 },
               arrive = true,
@@ -1090,7 +1093,8 @@ Enemy.types = {
     -- The GRAMMAR boss: a fat dictionary, and the fight in the book about
     -- *lines*. Its pages are whole groups of the paired ruling deep and what it
     -- writes it writes on the lines; the moves and how it picks between them are
-    -- src/dictionary.lua, and why it is baked in three poses is art/dictionary.py.
+    -- src/dictionary.lua, and the body that bites, opens and claps shut is its
+    -- row in src/solids.lua.
     --
     -- The body keeps the eye's numbers where the fight is the same fight: 900
     -- health for the measured half minute, the same knock, hold and 20 on
@@ -1098,10 +1102,11 @@ Enemy.types = {
     -- walks -- every step is a hop the brain draws, about 25 a second between
     -- moves, the eye's pace and the stamp's. `ground` is the near edge of the
     -- book on the page, where the shadow goes: the floor under its middle
-    -- (`foot` in Sprites.DICTIONARY) and half the book's depth seen from above.
+    -- (`foot` on its model in src/solids.lua) and half the book's depth seen
+    -- from above.
     dictionary = { name = "DICTIONARY", sprite = "dictionary", hp = 900, speed = 0, radius = 14,
                    damage = 20, xp = 250, shadow = 40, ground = 16, boss = true,
-                   turns = "dictionaryViews", poses = "dictionaryPoses", knock = 0.06, hold = 0.3,
+                   solid = "dictionary", knock = 0.06, hold = 0.3,
                    title = "THE DICTIONARY", call = "THE DICTIONARY OPENS",
                    last = "THE END", wreck = { ink = { "ink", "slate", "graphite" }, rings = 2 },
                    arrive = true,
@@ -1547,9 +1552,12 @@ function Enemy.new(kind, x, y, scale)
         squadT = def.whistle and def.whistle.squad.every * 0.5 or nil,
         squads = 0, pumps = 0,
         blowT = 0, volleys = 0, volleyT = 0, gapA = 0, blareT = 0,
-        -- Which of its views a `turns` body is showing (1-based, nil until it has
-        -- first looked at you), and how long until it may step to the next.
-        view = nil, viewT = 0,
+        -- The body a `solid` row is drawn as (src/solid.lua): ray-traced live,
+        -- turned to face you, posed by its brain. nil on everything else.
+        solid = def.solid and Solid.new(Solids[def.solid]) or nil,
+        -- Whether it has looked at you yet: a body's first look is a snap, not a
+        -- turn from wherever it was made facing.
+        looked = false,
         headX = 0, headY = 0, -- the way it is actually going, vs the way it wants to
         -- The ball an eye boss is drawn as, and how it gets about
         -- (src/eyeball.lua). nil on everything that is a sprite.
@@ -1623,12 +1631,12 @@ function Enemy.new(kind, x, y, scale)
             or def.deodorant and DeoBoss.new(def)
             or def.marble and Marble.new(def) or nil,
         drive = nil, ghost = false,
-        -- A heading for a `turns` body to face instead of you, while a brain
+        -- A heading for a `solid` body to face instead of you, while a brain
         -- wants it planted facing one way (the metronome's sweep); and how
         -- many pixels a brain has it off the ground (its hop on the beat).
-        -- And which of its poses a body baked in several is in (`poses`, the
-        -- stamp's stand / rear / lean / squash, the dictionary's shut / ajar /
-        -- open), nil for the first.
+        -- And which of its poses a body that has several is in (`poses` on its
+        -- row in src/solids.lua: the stamp's stand / rear / lean / squash, the
+        -- dictionary's shut / ajar / open), nil for the first.
         face = nil, hop = 0, pose = nil,
         slipT = 0, slipTurn = 0,
         -- Somewhere else to walk to, and how long it goes on being somewhere else
@@ -1809,24 +1817,18 @@ function Enemy:update(dt, player, walls, slick)
         gait = self.eyeball:update(dt, self.x, self.y, player, self.frozen > 0)
     end
 
-    -- And a body drawn from a ring of views turns to the one pointing at you,
-    -- a view at a time (TURN_STEP), the short way round. Not while glued, for
-    -- the pupil's reason inverted: a whistle stuck to the page is stuck the
+    -- And a solid body turns to point at you (TURN_RATE), the short way round,
+    -- and takes whatever pose its brain has put it in. Not turning while glued,
+    -- for the pupil's reason inverted: a whistle stuck to the page is stuck the
     -- way it was pointing.
-    if self.def.turns and self.frozen <= 0 then
-        local n = #Sprites[self.def.turns]
-        local a = self.face or math.atan2(player.y - self.y, player.x - self.x)
-        local want = math.floor(a / (math.pi * 2) * n + 0.5) % n + 1
-        if not self.view then
-            self.view = want
-        else
-            self.viewT = self.viewT - dt
-            if self.view ~= want and self.viewT <= 0 then
-                local d = (want - self.view) % n
-                self.view = (self.view - 1 + (d <= n / 2 and 1 or -1)) % n + 1
-                self.viewT = TURN_STEP
-            end
+    if self.solid then
+        if self.frozen <= 0 then
+            local a = self.face or math.atan2(player.y - self.y, player.x - self.x)
+            self.solid:face(a, self.looked and TURN_RATE or nil, dt)
+            self.looked = true
         end
+        self.solid:pose(self.pose)
+        self.solid:update(dt)
     end
     self.blareT = math.max(0, self.blareT - dt)
 
@@ -2175,14 +2177,6 @@ function Enemy:footing()
     -- would be two chances for that to stop being true.
     local sprite = Sprites.enemy(self.def.sprite)
     if self.fury then sprite = Sprites.enraged(sprite) end
-    -- A body drawn from a ring of views is whichever one it has turned to, so
-    -- the blank under it is that view's too.
-    -- And one baked in poses is that view of whichever pose the brain has it in.
-    if self.def.turns and self.view then
-        local ring = Sprites[self.def.turns]
-        if self.def.poses and self.pose then ring = Sprites[self.def.poses][self.pose] or ring end
-        sprite = ring[self.view]
-    end
 
     -- The recoil is folded in here and never into x/y, for both of the reasons
     -- this function exists. Where a thing is *standing* is what every hit
@@ -2294,18 +2288,19 @@ function Enemy:drawSolid()
         return
     end
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract or self.speaker or self.redpen or self.deodorant
+        or self.tesseract or self.speaker or self.redpen or self.deodorant or self.solid
     if painted then
         love.graphics.setColor(Palette.paper)
         painted:drawMask(x, y, self:outlineColour() and 1 or 0)
+        -- The metronome's arm, which stands off the body and so needs its own
+        -- blank.
+        if self.def.metronome then self.brain:drawArm(self, x, y, Palette.paper) end
         return
     end
 
     love.graphics.setColor(Palette.paper)
     if self:outlineColour() then outline(sprite, x, y, Palette.paper, self.grow) end
     sprite:drawMask(x, y, nil, self.grow)
-    -- The metronome's arm, which stands off the body and so needs its own blank.
-    if self.def.metronome then self.brain:drawArm(self, x, y, Palette.paper) end
 end
 
 function Enemy:draw()
@@ -2348,7 +2343,7 @@ function Enemy:draw()
     -- The still life leaves none of its own: its shadows are thrown by its
     -- lamp, and drawn by its brain (src/stilllife.lua).
     local painted = self.dice or self.plaster or self.nucleus or self.piggy
-        or self.tesseract or self.speaker or self.redpen or self.deodorant
+        or self.tesseract or self.speaker or self.redpen or self.deodorant or self.solid
     if painted then
         if painted.hidden then return end
         shadow = math.floor(shadow * painted:shadowScale(self.hop, stuck) + 0.5)
@@ -2393,39 +2388,37 @@ function Enemy:draw()
         return
     end
     -- The die the same way, off its own painter (src/dice.lua), and the still
-    -- life off its (src/plaster.lua).
+    -- life off its (src/plaster.lua), and the solid bodies off theirs
+    -- (src/solid.lua).
     if painted then
+        -- The metronome's arm is plotted live (src/metronome.lua), behind the
+        -- body when the panel it swings in front of is turned away from you
+        -- and in front of it otherwise -- so from behind, all you see of it is
+        -- the tip going over the top.
+        local arm = self.def.metronome and self.brain
+        local armFront = arm and Metronome.armInFront(self.solid)
         if ring then
             love.graphics.setColor(ring)
             painted:drawMask(x, y, 1)
         end
+        if arm and not armFront then arm:drawArm(self, x, y, lit) end
         if lit then
             love.graphics.setColor(lit)
             painted:drawMask(x, y, 0)
         else
             painted:draw(x, y)
         end
-        return
-    end
-
-    if ring then outline(sprite, x, y, ring, grow) end
-
-    -- The metronome's arm is plotted live (src/metronome.lua), behind the body
-    -- when the panel it swings in front of is turned away from you and in front
-    -- of it otherwise -- so from behind, all you see of it is the tip going
-    -- over the top.
-    local arm = self.def.metronome and self.brain
-    local armFront = arm and Metronome.armInFront(self.view or 1)
-    if arm and not armFront then arm:drawArm(self, x, y, lit) end
-
-    if lit then
-        love.graphics.setColor(lit)
-        sprite:drawMask(x, y, nil, grow)
+        if armFront then arm:drawArm(self, x, y, lit) end
     else
-        love.graphics.setColor(1, 1, 1)
-        sprite:draw(x, y, nil, grow)
+        if ring then outline(sprite, x, y, ring, grow) end
+        if lit then
+            love.graphics.setColor(lit)
+            sprite:drawMask(x, y, nil, grow)
+        else
+            love.graphics.setColor(1, 1, 1)
+            sprite:draw(x, y, nil, grow)
+        end
     end
-    if armFront then arm:drawArm(self, x, y, lit) end
 
     -- The blast going out (`blareT`, set by Game:updateWhistle). Two rings a
     -- third of the reach apart, plotted a pixel at a time like every circle in

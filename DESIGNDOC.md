@@ -1206,6 +1206,26 @@ one place and nothing else in the game knows it exists:
   `spill` dust off a landing, and the shot, the lane and the ring `kick` it.
   `Sprites.enemies.bosseye` is still loaded and still what `Enemy:footing`
   measures the shadow off; nothing draws it.
+- **`solid`** — `Enemy.new` hands the row a `Solid` (`src/solid.lua`) built off
+  the model of that name in `src/solids.lua`: the whistle, the metronome, the
+  stamp, the dictionary and the marble. Each is a list of parts -- a box, a convex
+  hull, a cone (a cylinder being a cone of one radius) or an ellipsoid, each
+  optionally kept `within` another and with `minus` solids taken out of it, and
+  moved in the body by a map -- and every pixel's ray is solved against them in
+  closed form, lit from a lamp fixed in the room (with a ray back to it for
+  shadows), coloured by the model's `shade` or the red ramp, creased where one
+  material's faces meet at an angle and inked round the outside and where one part
+  stands in front of another. The camera is the one these five were once baked in:
+  34° above the page, 0.92 model units a pixel, the pivot at the origin.
+  `Enemy:update` turns it towards the player (`TURN_RATE`, not while glued) and
+  hands it `e.pose`; the model eases the numbers that pose is made of. Pictures
+  are kept by heading (a ninety-sixth of a turn) and those numbers (to the model's
+  `steps`), a hundred and sixty to a model and shared with the library's
+  turntable, and one not kept yet is painted a slice a frame in a coroutine while
+  the last finished one is drawn -- under a millisecond a frame on average with no
+  JIT. `foot` on a model is the pixels from the origin down to the floor under the
+  pivot, which the brains stand things on the page by. `Sprites.enemies` keeps a
+  plain block under each name that nothing draws.
 - **`attacks`** — `Enemy.new` hands the row an `EyeBoss` (`src/eyeboss.lua`), its
   brain, which `Game:updateEnemies` steps *before* `Enemy:update`. It is a state
   machine (`enter` → `wake` → `idle` ⇄ a move → `resting`), and everything it
@@ -1505,24 +1525,27 @@ itself. Phase lines are `EXTRA STRONG!` and `SHAKE WELL!`. On death (`dropParts`
 air clears and `drag` is let go.
 
 **The marble** (`marble`, ART's encore) is a fight about *subtraction*: the still
-life is what an art class draws, this is what it carves. Its body is baked, not
-painted: `art/marble.py` models a bust (a round socle, a chest cut under the
-shoulders, neck, head with nose, brow, jaw, ears and a cap of hair) and the block it
-is in, and bakes five **stages** -- `block`, `hewn`, `roughed`, `modelled`, `bust` --
-each `max(block, bust - margin)` for a shrinking margin, eight headings each, all in
-one box (`raytrace.share`). Stone still more than a unit outside the finished bust
+life is what an art class draws, this is what it carves. Its body is `solid =
+"marble"` (`src/solids.lua`, ray-traced live by `src/solid.lua`): a bust (a round
+socle, a chest cut under the shoulders, neck, head with nose, brow, jaw, ears, eye
+sockets and a cap of hair) whose every solid is grown by a margin and kept inside the
+block (`within`). One number, `carve`, runs from 0 to 4 through the five **stages**
+-- `block`, `hewn`, `roughed`, `modelled`, `bust`, margins 16, 7, 4, 1.8 and 0 -- and
+is drawn in steps of a tenth. Stone still more than a unit outside the finished bust
 is drawn rough (chisel strokes a step darker, in model space), so only the last
 stage is polished; red veins are a field in model space, so carving reveals more of
-the same ones (and the finished face is kept clear of them). The row has `turns` and
-`poses` like the stamp, and the bake writes `foot` and `eyes` (where the finished
-bust's eyes are in each view).
+the same ones (and the finished face is kept clear of them). The model's `after`
+reads where the finished bust's eyes are off each picture as it is painted, and
+whether the camera can see them.
 
 Its brain, `src/marble.lua`, reads the stage off its health (`stages`, the
 thresholds after the block: 0.8, 0.66, 0.5, 0.33 -- the second and last thirds start
-on a stage, `ROUGHED OUT!` and `IT LIVES!`) and sets `e.pose`; each step down throws
-grit and leaves lumps lying on the page (`carve`, cosmetic). It faces the page
-(`e.face`) until it has a head (stage 3), then turns to you; finished, its eyes are
-drawn open in red over the view it is showing (`drawAir`). It hops at you like the
+on a stage, `ROUGHED OUT!` and `IT LIVES!`) and sets `carve` off the same health,
+between the thresholds as well as at them (`Marble:carving`), so every hit takes a
+little off; each stage passed throws grit and leaves lumps lying on the page
+(`carve`, cosmetic). It faces the page (`e.face`) until it has a head (stage 3), then
+turns to you; finished, its eyes are drawn open in red where the picture it is showing
+says they are (`drawAir`). It hops at you like the
 stamp (`hop`, higher once alive) and flicks a `chip` every `chip.every`. Its moves:
 
 | move | tell | what |
@@ -1537,18 +1560,16 @@ rubble not yet thrown) and it stands; on death `sweep` clears the lot. It has
 `arrive`, and the call `SET IN STONE`; it goes down on `MASTERPIECE`.
 
 **The whistle** (`whistle`, P.E.) is a fight about *the air and the class*. Its
-body is `turns = "whistleViews"`: sixteen views of a modelled whistle, one every
-sixteenth of a turn, ray-traced at size by `art/whistle.py` and baked between the
-`BAKE:whistle` markers in `src/sprites.lua` (`python3 art/whistle.py --bake`). It
-is the rendering rule kept rather than bent -- nothing is rotated at draw time,
-every heading is baked up front as `pixelart.turn` bakes the rocket's eight -- and
-the light is fixed in the room, so it stays top left whichever way the thing
-points. `Enemy:update` steps `view` one at a time the short way round towards the
-player (`TURN_STEP`), and `Enemy:footing` hands that view to both the body and the
-blank under it. Every view is the same box with the barrel's middle at the origin,
-so a turn swaps pictures with the drum standing still and the 13px hit circle is
-always the drum. The method in full, and how to use it for another character,
-is `3dmethod.md`. It has the wad's `charge` at the boss's size (84px of lunge
+body is `solid = "whistle"`: a modelled whistle -- a cylinder of a barrel, a
+mouthpiece with its window cut out, a washer of a lanyard ring -- ray-traced live by
+`src/solid.lua` from its row in `src/solids.lua`. It is the rendering rule kept
+rather than bent -- nothing is rotated at draw time, the body is painted fresh for
+the heading it faces -- and the light is fixed in the room, so it stays top left
+whichever way the thing points. `Enemy:update` turns it towards the player at
+`TURN_RATE` the short way round (not while glued), and the body is drawn and blanked
+from one picture. The barrel's middle is the pivot and the origin, so the drum stands
+still while it turns and the 13px hit circle is always the drum. The method in full,
+and how to use it for another character, is `3dmethod.md`. It has the wad's `charge` at the boss's size (84px of lunge
 against a 150 trigger), a three-pea `shot`, and a `whistle` block of four calls,
 all in `Game:updateWhistle`:
 
@@ -1570,16 +1591,16 @@ invulnerability window (`Game:updateSpikes`, beside `Game:updatePuddles`), drawn
 the page beside the wet, and it goes by blinking out for its last second rather than
 by drying.
 
-**The metronome** (`metronome`, MUSIC) is a fight about *time*. Its body is baked
-views like the whistle's -- `turns = "metronomeViews"`, sixteen views of a pyramid
-metronome traced by `art/metronome.py` into the `BAKE:metronome` markers -- but its
-pendulum is not in them, because it swings. The bake also writes `arm` (the arm's
-pivot, lean, length and where the weight sits, in model units) and `cam` (the
-camera's tilt, the size of a pixel and where the pivot's pixel is) beside the views,
-and `Metronome.armPoint` projects the arm with those every frame, so the arm and the
-body it hangs off read their geometry from one place. `Enemy:draw` plots it behind
-the body when the panel is turned away from the camera and in front of it otherwise
-(`Metronome.armInFront`); `Enemy:drawSolid` blanks under it.
+**The metronome** (`metronome`, MUSIC) is a fight about *time*. Its body is a solid
+like the whistle's -- `solid = "metronome"`, a pyramid metronome on a plinth with a
+paper panel let into its front and a winding key out of its side -- but its pendulum
+is not one of its solids, because a rod a pixel wide is a line. The model carries
+`arm` (the arm's pivot, lean, length and where the weight sits, in model units), and
+`Metronome.armPoint` puts the arm through the body's own projection
+(`Solid:project`, at the heading of the picture being drawn) every frame, so the arm
+and the body it hangs off read their geometry from one place. `Enemy:draw` plots it
+behind the body when the panel is turned away from the camera and in front of it
+otherwise (`Metronome.armInFront`); `Enemy:drawSolid` blanks under it.
 
 Everything else is its `brain` (`src/metronome.lua`), in the same socket the eye's
 uses: `update`, `busy`, `drawGround`, `drawAir`, steering through `drive`. It keeps a
@@ -1602,18 +1623,15 @@ stops the clock: nothing advances while it is frozen, a count-in is dropped for 
 to the next downbeat, and the wall's notes are given back the time so they do not run
 out of life half way across.
 
-**The stamp** (`stamp`, FINANCE) is a fight about *cells*. Its body is baked like the
-whistle's, but in **poses**: `turns = "stampViews"` is the ring the turning counts
-(sixteen), and `poses = "stampPoses"` names `Sprites.stampPoses`, four rings of
-sixteen -- `stand`, `rear` (rocked back on its heel), `lean` (pitched onto its toe)
-and `squash` (pressed into the page). `Enemy:footing` draws `stampPoses[e.pose][view]`
-when the brain has set `e.pose`, and the shadow goes at the row's `ground` (13px
-below the origin, the front edge of the pad) rather than at the bottom of the box,
-since the box is shared by every pose. `art/stamp.py` traces stand and squash at
-eight headings and rear at sixteen, all cut to one box (`raytrace.share`); the
-loader in `Sprites.load` repeats the first two after half a turn and builds `lean` as
-`rear` turned half round, which is true because the stamp is the same front and
-back. `Sprites.STAMP.foot` is how far below the origin the middle of the pad is.
+**The stamp** (`stamp`, FINANCE) is a fight about *cells*. Its body is a solid like
+the whistle's, in **poses**: the brain names one in `e.pose` -- `stand`, `rear`
+(rocked back on its heel), `lean` (pitched onto its toe) and `squash` (pressed into
+the page) -- and the body eases its tilt and squash towards that pose's numbers
+(`poses` and `ease` on its row in `src/solids.lua`), so the rock is a rock and the
+landing springs. Every pose turns or scales about a point on the floor, so none of
+them lifts it. The shadow goes at the row's `ground` (12px below the origin, the
+front edge of the pad) rather than at the bottom of the picture, which moves with the
+pose. `foot` on its model is how far below the origin the middle of the pad is.
 
 Its `brain` (`src/stamp.lua`) works in **ledger cells**: `colAt` / `rowAt` /
 `colLeft` / `rowTop` are the FINANCE page's own numbers (a 10px header column and
@@ -1639,15 +1657,15 @@ is doing -- a leap ends where it is, unstamped -- for a short rest. Every landin
 plays `stamp` (a synthesised thump, `src/sfx/stamp.mp3`).
 
 **The dictionary** (`dictionary`, GRAMMAR) is a fight about *lines*. Its body is the
-stamp's method again: `turns = "dictionaryViews"` (the shut ring) and `poses =
-"dictionaryPoses"`, three rings of sixteen -- `shut` (lying closed), `ajar` (the front
-board lifted off the pages about the spine: a mouth, and the tell for everything) and
-`open` (on its back, both leaves flat, built about its spine). `art/dictionary.py`
-traces shut and ajar at sixteen headings -- the spine is on one side, so neither
-repeats -- and open at eight, which the loader repeats after half a turn. The front of
-the model is the fore-edge, so a book facing you opens at you. `Sprites.DICTIONARY.foot`
-is how far below the origin the floor under its middle is; the shadow goes at the
-row's `ground` (16).
+stamp's method again, `solid = "dictionary"`, in three poses -- `shut` (lying
+closed), `ajar` (the front board lifted off the pages about the spine: a mouth, and
+the tell for everything; the board is a part with a hinge, and swings up and snaps
+down) and `open` (on its back, both leaves flat, built about its spine). Lying open,
+its leaves stand up off the page about the gutter by `fold`, which the brain drives
+as the clap's fore-edges sweep in, so the book is seen to shut on you. The front of
+the model is the fore-edge, so a book facing you opens at you. `foot` on its model is
+how far below the origin the floor under its middle is; the shadow goes at the row's
+`ground` (16).
 
 Its `brain` (`src/dictionary.lua`) works in **groups of the paired ruling**: `GROUP`
 (30) and `LINE` (12, the two rules and what is between them) are the GRAMMAR page's
@@ -1670,8 +1688,9 @@ leap ends where it is, a clap lets go unshut, a half-written pass is left to dry
 for a short rest. The shut plays `stamp`.
 
 **The die** (`die`, MATHS) is a fight about *number*: every move is decided by a roll
-the player watches land. Its body is painted live like the eye's, not baked -- a die
-has no front for sixteen headings to be spent on, and it has to tumble any way at all
+the player watches land. Its body is painted live like the eye's -- the first boss
+that was, while the whistle was still baked: a die has no front for headings to be
+spent on, and it has to tumble any way at all
 -- by `src/dice.lua`, which holds three convex solids as lists of face planes
 (`n . p <= h`, one `h` per solid): the cube, a pentagonal trapezohedron (`TILT` is its
 whole shape) and the icosahedron, labelled so opposite faces add to 7, 11 and 21. Its
@@ -1724,7 +1743,8 @@ fumbling for the whole last third.
 **The still life** (`stilllife`, ART) is a fight about *light*: a plaster cube,
 sphere and cone under a lamp, the first thing an art class draws. Its body is painted
 live by `src/plaster.lua`, because the one thing the fight is about is the one thing a
-baked view cannot do -- the lamp moves, and every solid's lit side has to follow it.
+baked view could not do -- the lamp moves, and every solid's lit side has to follow
+it.
 Three pieces, each solved per pixel rather than traced: the cube is the die's six
 planes (turned by its own axes, so it tumbles), the sphere the eye's disc, and the
 cone a quadratic -- `(Q.D)^2 = c2 |Q|^2` off its apex `A` and unit axis `D`, with the
@@ -3039,13 +3059,14 @@ is looked at and kept, so stepping back to one does not start it from the front.
 Only the one being read is updated. It builds the fight's own body off the row the
 way `Enemy.new` does -- `pupil` the `Eyeball`, `dice` a `Dice`, `still`
 `StillLife.body()`, `atom`, `piggy`, `tesseract`, `speaker`, `redpen`,
-`deodorant`, and `turns` the ring of baked views (with the metronome's arm swung by
-a borrowed `Metronome` that holds only a clock) -- and turns it the body's own way,
+`deodorant`, and `solid` a `Solid` off its row in `src/solids.lua` (with the
+metronome's arm swung by a borrowed `Metronome` that holds only a clock) -- and turns
+it the body's own way,
 one turn every `PERIOD` (6s): the eye's `wy` spin, the die and the still life about
 the room's upright (the still life's pieces moved round its middle, the cube turned
 with them, the lamp left where it is), the pig's `yaw`, the speaker's and the
-deodorant's `spin`, the atom's and the tesseract's own `update`, a ring's view
-index, and the red pen's `roll` -- stood on its nib, clicked out, cut to the box by
+deodorant's `spin`, the atom's and the tesseract's own `update`, a solid's
+`spin`, and the red pen's `roll` -- stood on its nib, clicked out, cut to the box by
 its own `raster` clip in place of the camera's (`RedPen:raster` takes the view; the
 turntable hands it the box). It stands on a floor line where `Enemy:draw` would put
 the shadow (`painted.ground`, `def.ground`, or the sprite's `h - oy`) with the
@@ -6623,10 +6644,10 @@ and are all the same 11x11 glyph.
   `encore`, the second boss a lesson ends on at a course whose `bosses` is 2 --
   in `Subjects.list`. No `TABLE` row and no `art/vanilla` copy: it is sent, never
   picked, and no page reskins it. What it does is the blocks it carries -- the
-  eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `turns`/`whistle`, the
-  metronome's `turns`/`metronome`, the stamp's `turns`/`poses`/`ground`/`stamp`, the
-  dictionary's `turns`/`poses`/`ground`/`dictionary`, the die's `dice`, the still
-  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, the red pen's `redpen`, the deodorant's `deodorant`, the marble's `turns`/`poses`/`ground`/`marble`, and any of the horde's (`shot`, `charge`) -- see
+  eye's `pupil`/`trail`/`tears`/`attacks`, the whistle's `solid`/`whistle`, the
+  metronome's `solid`/`metronome`, the stamp's `solid`/`ground`/`stamp`, the
+  dictionary's `solid`/`ground`/`dictionary`, the die's `dice`, the still
+  life's `still`, the atom's `atom`, the piggy bank's `piggy`, the tesseract's `tesseract`, the speaker's `speaker`, the red pen's `redpen`, the deodorant's `deodorant`, the marble's `solid`/`ground`/`marble`, and any of the horde's (`shot`, `charge`) -- see
   **The bosses**. A new kind of call is a field on the row and one function beside
   `Game:updateTears` and `Game:updateWhistle`, read from `Game:updateEnemies`; a
   boss with a mind of its own is a `brain` module like `src/eyeboss.lua`,
@@ -6637,11 +6658,12 @@ and are all the same 11x11 glyph.
   a point stands bodies of its own on the page for the rest of itself (`stand` on
   them, Enemy:hurt: the still life's `stillpiece`, the red pen's `penpart`), moves
   them from its turn, and takes them off in `sweep` (`src/wreck.lua`), never in
-  `dropParts`. A solid body is a script beside `art/whistle.py` over
-  `art/raytrace.py` (one that animates is baked in poses like `art/stamp.py` or
-  `art/dictionary.py`, or in stages carved away like `art/marble.py`), or -- for anything convex that
-  has to tumble -- a face list in `Dice.solids` painted live, or for a few simple
-  solids under a light that moves, pieces in a `Plaster` group (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
+  `dropParts`. A solid body is a row in `src/solids.lua` -- boxes, hulls, cones and
+  ellipsoids, a `shade`, and for one that moves the numbers its poses are made of
+  (the stamp's, the dictionary's hinge, the marble's carving) -- named by `solid` on
+  the enemy row, or -- for anything convex that has to tumble -- a face list in
+  `Dice.solids`, or for a few simple solids under a light that moves, pieces in a
+  `Plaster` group (`3dmethod.md`). Keep it on the eye's 900 unless the fight has
   been re-measured, and fight it from the title's dev BOSS button. It is on the
   library's boss section and the homework's `BOSSES` / `ENCORES` by being named in
   `Subjects.list` (`Subjects.bosses`), and on the library's turntable by being built

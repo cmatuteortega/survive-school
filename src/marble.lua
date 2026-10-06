@@ -8,11 +8,11 @@
 -- everything that is not it. So that is what drops onto the page ten minutes
 -- after the still life goes down: a block of marble straight out of the quarry.
 --
--- **You are the chisel.** The body is baked in five stages (art/marble.py) --
--- the block, hewn, roughed out, modelled, the finished bust -- and which one is
--- standing on the page is read off its health: every hit takes marble off, and
--- at each step down a chunk of it comes away in a spray of grit and lies on the
--- page. Until it has a head it stands square to the page; from the roughing out
+-- **You are the chisel.** The body is a bust grown inside its block by a
+-- margin (its model in src/solids.lua), through five stages -- the block, hewn,
+-- roughed out, modelled, the finished bust -- and how far it has got is read
+-- off its health: every hit takes a little marble off, and at each stage a chunk
+-- of it comes away in a spray of grit and lies on the page. Until it has a head it stands square to the page; from the roughing out
 -- on it turns to watch you, and the last third is the finished bust, polished
 -- and alive, with its eyes open. A fight you can see the end of from the start:
 -- what you are hitting is the shape of how far you have got.
@@ -48,7 +48,7 @@
 -- already off it is not the block any more, so it carries on.
 
 local Palette = require("src.palette")
-local Sprites = require("src.sprites")
+local Solids = require("src.solids")
 local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
@@ -60,7 +60,7 @@ Marble.__index = Marble
 local TAU = math.pi * 2
 local floor = math.floor
 
--- The five stages, in the order they are carved (art/marble.py).
+-- The five stages, in the order they are carved (src/solids.lua).
 local STAGES = { "block", "hewn", "roughed", "modelled", "bust" }
 
 local function pick(list, phase) return type(list) == "table" and list[phase] or list end
@@ -70,7 +70,14 @@ local function scaled(e, damage) return damage * e.damage / e.def.damage end
 
 -- The floor under it, which is where everything it does to the page starts:
 -- the origin is up in its chest, `foot` pixels above the page.
-local function feet(e) return e.x, e.y + Sprites.MARBLE.foot end
+local function feet(e) return e.x, e.y + Solids.marble.foot end
+
+-- The top of it on the page as it is drawn now, which gets lower as it is
+-- carved.
+local function crown(e)
+    local rows = e.solid and e.solid:raster().rows
+    return e.y + (rows and rows[1] and rows[1].j or -31)
+end
 
 function Marble.new(def)
     local m = def.marble
@@ -93,6 +100,21 @@ end
 
 function Marble:busy()
     return self.state ~= "idle"
+end
+
+-- How far it is carved, off its health, from 0 (the block) to 4 (the bust): a
+-- whole number at each of the thresholds on the row and the way between them
+-- between, so every hit takes some off and not only the hits that cross one.
+function Marble:carving(e)
+    local share = e.hp / e.maxHp
+    local above = 1
+    for k, at in ipairs(self.def.stages) do
+        if share > at then
+            return k - 1 + (above - share) / (above - at)
+        end
+        above = at
+    end
+    return #self.def.stages
 end
 
 -- Which stage it is at, off its health: the thresholds on the row, each one
@@ -131,7 +153,7 @@ function Marble:update(dt, game, e)
         Camera.knock(phase >= 3 and 4 or 3)
         game:say(phase == 2 and "ROUGHED OUT!" or "IT LIVES!")
     end
-    e.pose = STAGES[self.stage]
+    if e.solid then e.solid:set("carve", self:carving(e)) end
     -- Square to the page until it has a head to turn; then it watches you.
     e.face = self.stage < 3 and math.pi / 2 or nil
 
@@ -157,7 +179,7 @@ end
 -- they land. Nothing here hurts -- it is the one thing it does that is yours.
 function Marble:carve(game, e)
     local x, y = feet(e)
-    local top = y - Sprites.MARBLE.oy
+    local top = crown(e)
     for k, colour in ipairs({ Palette.paper, Palette.graphite, Palette.slate }) do
         game.particles:burst(e.x, e.y - 8, 14 - 3 * k, colour)
     end
@@ -434,7 +456,7 @@ function Marble:start_rubble(game, e)
     self.t = r.wind
     -- Lumps up out of the top of it, and everyone gets a moment to see them go.
     Camera.knock(2)
-    game.particles:burst(e.x, e.y - Sprites.MARBLE.oy + 6, 12, Palette.graphite)
+    game.particles:burst(e.x, crown(e) + 6, 12, Palette.graphite)
     Sfx.play("stapler", 0.9)
 end
 
@@ -643,11 +665,12 @@ function Marble:drawAir(time, e)
         end
     end
 
-    -- Alive: the finished bust opens its eyes, red, in whichever view it has
-    -- turned to (the bake says where they are). Not while it is lit by a hit:
-    -- a white flash with two red eyes in it reads as the eyes being hit.
-    if self.stage >= #STAGES and e.view and e.flash <= 0 then
-        local eyes = Sprites.MARBLE.eyes[e.view]
+    -- Alive: the finished bust opens its eyes, red, wherever they are in the
+    -- picture it is drawn as (the picture says, and whether they can be seen).
+    -- Not while it is lit by a hit: a white flash with two red eyes in it reads
+    -- as the eyes being hit.
+    if self.stage >= #STAGES and e.solid and e.flash <= 0 then
+        local eyes = e.solid:raster().eyes
         if eyes then
             local _, x, y = e:footing()
             love.graphics.setColor(Palette.red)
