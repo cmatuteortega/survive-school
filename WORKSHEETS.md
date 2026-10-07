@@ -134,7 +134,8 @@ lessons at once.
       the notes, or from the bell, passes clear of every other note and the
       bell.
 
-- [x] **Dodgeball pit** (P.E.). A block of the calendar's day boxes, 4 by 3,
+- [x] **Dodgeball pit** (P.E.). A block of the calendar's day boxes (5 by 5 at
+      HIGH SCHOOL, 4 by 4 at BACHELOR, 4 by 3 at MASTERS and PHD),
       ruled round heavier than the page, a red flag on its corner. **Walk in**
       and the whistle goes; the class is **thrown** at you -- monsters of the
       minute launched off the ring in a straight line through where you stand.

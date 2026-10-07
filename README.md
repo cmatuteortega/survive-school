@@ -8432,8 +8432,10 @@ sound in the book that already means a drill has begun or ended. Each has a
 red flag where it starts. Losing either costs nothing but the prize: the sheet
 fades off the page the way a failed Simon does.
 
-- **The dodgeball pit** is four boxes by three, ruled round heavier than the
-  page. **Walk in** and the whistle goes, the border turns red, and the class is
+- **The dodgeball pit** is a block of boxes ruled round heavier than the page:
+  five by five at HIGH SCHOOL, four by four at BACHELOR, and four by three at
+  MASTERS and PHD, where there is less room to run and dodging is stepping
+  aside. **Walk in** and the whistle goes, the border turns red, and the class is
   **thrown** at you: monsters of the minute launched off the ring in a straight
   line through where you are standing, at three or four times walking pace.
   **Last the clock** -- 10 seconds at HIGH SCHOOL, 12 at BACHELOR, 15 at

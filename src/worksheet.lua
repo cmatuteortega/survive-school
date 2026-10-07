@@ -966,7 +966,11 @@ end
 local D = {}
 D.__index = D
 
-local PIT_W, PIT_H = 4, 3 -- in day boxes: one screen of floor, with room round it
+-- In day boxes, and the other way the pit climbs the course: a first-year's is
+-- a roomy 5 by 5 to run round in (160 by 120, two thirds of a screen's height),
+-- a bachelor's 4 by 4, and from a master's on 4 by 3 -- one screen of floor
+-- with room round it, where dodging is stepping aside rather than running.
+local PIT = { school = { 5, 5 }, bachelor = { 4, 4 }, masters = { 4, 3 }, phd = { 4, 3 } }
 local PIT_TIME = { school = 10, bachelor = 12, masters = 15, phd = 15 }
 local THROW_EVERY = { school = 1.4, bachelor = 1.1, masters = 0.9, phd = 0.7 }
 local THROW_SPEED = { school = 140, bachelor = 155, masters = 170, phd = 190 }
@@ -974,10 +978,11 @@ local THROW_SPREAD = 0.12 -- radians either side of dead on: aimed, not homing
 local THROW_FIRST = 0.8   -- the first comes a beat after the whistle, not on it
 
 function D.new(x, y, courseKey, days)
-    local i0 = math.floor(x / days.w) - math.floor(PIT_W / 2)
-    local j0 = math.floor(y / days.h) - math.floor(PIT_H / 2)
+    local pw, ph = unpack(PIT[courseKey] or PIT.school)
+    local i0 = math.floor(x / days.w) - math.floor(pw / 2)
+    local j0 = math.floor(y / days.h) - math.floor(ph / 2)
     local l, t = i0 * days.w, j0 * days.h
-    local r, b = l + PIT_W * days.w, t + PIT_H * days.h
+    local r, b = l + pw * days.w, t + ph * days.h
     return setmetatable({
         kind = "dodgeball",
         x = (l + r) / 2, y = (t + b) / 2,
@@ -1088,7 +1093,7 @@ function D:draw()
     fadeSeed = self.seed
 
     -- Heavier than the page's own ruling, so the pit reads as painted on the
-    -- gym floor rather than as twelve more days: two pixels all round, in slate
+    -- gym floor rather than as more days: two pixels all round, in slate
     -- until the whistle and red while you are in it. Just inside the ruling
     -- rather than over it, because red printed over the sky rules overprints
     -- to slate (src/overprint.lua) and the pit going live would go live on two

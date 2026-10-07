@@ -6543,7 +6543,8 @@ with `call(game, text)`: `Game:say` plus `Sfx.play("whistle")`. Both plant
 `Sprites.FLAG` (and the hopscotch `Sprites.CHEQUERED`), rows plotted through
 the fade like the hand bell. Both lose by fading for `GYM_FADE` the way Simon
 does, and nothing else.
-- **Dodgeball** (`D`): `PIT_W` x `PIT_H` (4x3) boxes round the sheet's spot,
+- **Dodgeball** (`D`): `PIT[course]` boxes round the sheet's spot (5x5 at
+  HIGH SCHOOL, 4x4 at BACHELOR, 4x3 at MASTERS and PHD),
   edges `x0`, `y0`, `x1`, `y1` on the page's rules, bordered 2px just inside
   them (slate, red while live: red over the sky rules would overprint to
   slate). `open` until the player's centre is `inside`, then `live` for
