@@ -6429,6 +6429,63 @@ is its spin. Nothing turns at draw time — see the rendering
 rules, and note that this is exactly why the beam, which has no sprite, is free
 of the eight.
 
+### Worksheets
+
+`src/worksheet.lua` puts puzzles on the page; `src/quiz.lua` writes the questions
+and typesets them. `WORKSHEETS.md` is the idea list and says which have shipped.
+
+**Placement** is the fixed pickups' rule on a coarser grid: one sheet in
+`DENSITY` (0.4) of 520px cells, positioned and typed by `util.hash01` off
+`Game.pickupSeed` so a run's page is one layout. `Worksheet.materialize` looks
+at each cell once a run (`game.worksheetCells`). Nothing is printed within 200px
+of the start, and nothing is printed while `game.arena` is up. A sheet is never
+dropped once printed: it has state, so the list grows by one every few hundred
+pixels walked, and only sheets within `ACTIVE` (260px) are updated.
+`Worksheet.covers` keeps pickups off a sheet's footprint. Both `Pickup.scatter`
+and the fixed layer ask it through `clearOf`, which requires the module lazily
+because the worksheet requires `src/pickup.lua` to pay out.
+
+**What a page prints** is the subject row's `worksheets` weights
+(`{ quiz = 2, tictactoe = 1 }` on MATHS), with `{ tictactoe = 1 }` for every
+row that carries none. A new kind is a constructor in `KINDS` plus an object
+with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`.
+
+**Tic-tac-toe** (`T`): `deal` builds a game three moves each from a winning
+line outwards and rerolls until the O's have not already won. Input is the pen
+read through `Camera.steady` (as in `Game:updateDrawing`), walked a pixel at a
+time between frames. Each empty cell counts 2px cells covered, and `COVER_MIN`
+(10, against `scribble.lua`'s 6, because this box sits on the page you fight on)
+commits an X. A cell's count is forgotten after `COVER_FORGET` (1s) without ink,
+so a cross can be two strokes. A committed X that makes three draws itself in
+(`CROSS_TIME`), then the line (`LINE_TIME`), then drops a `coin` pickup under
+the grid. Any other cell gets the page's O in the gap and the sheet is spent.
+
+**The pop quiz** (`Q`): `Quiz.new(game.course.key)` returns `{ q, answers,
+right }`. `Quiz.byCourse` is a weighted list of rungs per course; PHD is
+`{ PHD, 2 }, { MASTERS, 1 }`. Each rung is a list of generators returning the
+question, the right answer and two wrong ones that are typical mistakes. A
+generator may return nil, and a roll whose answers collide is rerolled. Standing
+inside an answer's ellipse fills its `hold` over `HOLD` (1.5s) and drains it at
+`DRAIN` times that rate when you step off. Full is the answer:
+- Right: a `diamond` pickup just above it.
+- Wrong: `Spawner:giant`, which is `Spawner:pick` at `BLOWN_GROW` on the ring
+  and skips the blow-up meter.
+
+The notices are `THREE IN A ROW`, `CORRECT!` and `WRONG ANSWER`, through
+`Game:say`.
+
+**Typesetting** is `Quiz.layout(s)`, returning `{ ops, w, top, bottom }`, and
+`Quiz.print(lay, x, y)`:
+- `^` raises the next glyph or `{group}` 3px, and `_` lowers it 2px.
+- `∫` is drawn ten rows tall as rectangles, and `∫` / `Σ` take `_lo` and `^hi`
+  as limits beside the sign.
+- `√` draws its tick and a bar over the next group.
+
+Everything else is `Font.print` at a whole pixel. The 3x5 face gained
+`= ( ) < > × ÷ √ ∫ π Σ →` for it.
+
+Not bookmarked, the same as the pickups: a resumed run has a fresh page.
+
 ### Spatial hashes
 
 Two, with different rebuild policies:
@@ -6458,7 +6515,8 @@ pass**.
 
 `Game:draw`'s ink order is load-bearing and commented at each step: spent
 pins/staples (page memory, culled to the camera by `Game:eachSpent`) → lingering
-marks → other marks → the arena box → the boss's puddles and the whistle's jacks → what a weapon has left
+marks → other marks → the arena box → the boss's puddles and the whistle's jacks → the worksheets
+(`Worksheet.draw`) → what a weapon has left
 lying on the page (`Loadout:drawGround`, the bomb's burning crater, the
 skate's trail and every spiral) → drop marks/ruler guides/compass guides/cuts (the blades still
 travelling down one included) and the cross an anchor is waiting on → gems →
@@ -6686,6 +6744,13 @@ and are all the same 11x11 glyph.
   `src/i18n.lua` and the four `src/lang/` files. Every scene is timed by
   `Intro:sceneEnd` and drawn by its kind's `draw*`. A new *kind* is one branch in
   each of those two, and in `Intro:draw`.
+- **Worksheet:** a constructor in `KINDS` in `src/worksheet.lua` and an object
+  with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`, and
+  its weight in a subject's `worksheets` row (rows without one get
+  `DEFAULT_MIX`). A new quiz question is a generator in its rung's list in
+  `src/quiz.lua`, and a rung for a new course is a row in `Quiz.byCourse`.
+  Anything it says goes through `Game:say`, so it needs a line in `src/i18n.lua`
+  and the four `src/lang/` files. Questions are notation and need none.
 - **Enemy:** sprite in `Sprites.enemies` + row in `Enemy.types` + row in `TABLE`
   in `src/spawner.lua` (unlock time, weight). A reference copy of the art goes in
   `art/vanilla/<name>.txt` with its size in `BASE` and its place in `ORDER` in

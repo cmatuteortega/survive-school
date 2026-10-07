@@ -8254,6 +8254,68 @@ and the diamond is cut from paper, so like the eye and the ruler body it wipes
 the ruling rather than stacking on it: the rarest thing on the page reads as an
 object lying on it, not another ink doodle.
 
+## Worksheets on the page
+
+Every page has a few puzzles printed on it, and solving one pays. Every lesson
+has **tic-tac-toe**, and MATHS also sets a **pop quiz**. They sit at fixed spots
+the way the fixed pickups do: a pure function of where they are and the run's
+seed, found by walking, and solved once each per run.
+
+The horde doesn't stop for them, and that is the design. A sum is easy. A sum
+with skulls closing in is the game, and the reason these are worth doing in a
+survivors run rather than a menu is that solving one means standing still or
+drawing somewhere other than at the crowd for a few seconds. So nothing here
+takes longer than that. The 3x5 face also rules out anything small: no word
+searches, no crosswords. `WORKSHEETS.md` keeps the longer list of ideas.
+
+Neither reads handwriting. Both are things the game already asks of your hands:
+
+- **Tic-tac-toe** is a game in progress: red O's, black X's, and one cell that
+  finishes three X's in a row. **Scribble a cross into it.** That is ground
+  covered inside the cell, the rule every box in the book is answered by (see
+  **Asking by drawing**), set higher here because the grid is on the page you
+  fight on, and a stroke at a blob that clips a corner is not an answer. A cross
+  can be two strokes; a cell forgets ink a second after the last of it. Get it
+  right and the line strikes through the three and a **coin** drops under the
+  grid, one into the purse like the piggy bank's. Get it wrong and the page plays
+  its O where yours should have gone, and the sheet is spent.
+- **The pop quiz** is a question on a board with three answers ruled out under
+  it. **Stand on one until the circle round it has finished drawing**, about a
+  second and a half. Step off and it undraws, faster than it drew, so walking
+  across an answer is not choosing it. Right is a **diamond**, a whole level, set
+  a step above the answer you stood on. Wrong is a **giant**: whatever the minute
+  would have sent, three times the size, walking in off the ring like any
+  arrival. Your answer is struck out in red and the right one is circled in
+  blue, so the sheet teaches as well as punishes.
+
+The giant is the right price because it is the game's own unit of trouble. It
+is the same blow-up the page sends by chance (**Blow-ups**), so it needs nothing
+explained. It arrives from the ring rather than on top of you, because a
+punishment you could not have seen coming teaches nothing. It also skips the
+blow-up meter rather than spending it: a giant you earned by getting a sum wrong
+must not cancel the one the page had coming.
+
+**The questions climb with the course** (see **The course you sit it as**):
+
+| Course | What the board asks |
+| --- | --- |
+| HIGH SCHOOL | two-digit sums and differences, times tables, exact division, `3 + 4 × 2`, squares, fractions over one denominator |
+| BACHELOR | fractions added, taken away, multiplied and divided; powers, square roots, `3X + 5 = 20`, factorials |
+| MASTERS | `C(n,k)` and `P(n,2)`, factorial ratios, a quadratic's roots, logarithms, the power rule, Gauss's `1+2+...+100` |
+| PHD | definite and indefinite integrals, `LIM SIN X/X`, `E^{Iπ} + 1`, the chain and product rules, the sum of a row of Pascal's triangle -- and a master's question one time in three |
+
+The wrong answers are the **mistakes**, not random numbers. A fraction sum's
+wrong answer adds the tops and adds the bottoms, a times table's is one row out,
+an integral's forgot to divide by the new power, and `3 + 4 × 2` offers 14. A
+wrong answer nobody would give is not a choice, it is a gift.
+
+The board is written in notation rather than words, and that is what let the
+quiz ship in six languages without a single translated question: `7 × 8` is
+`7 × 8` in all of them. The 3x5 face gained what the notation needs (`= ( ) × ÷
+√ ∫ π Σ →`). The board raises an exponent, lowers a subscript, sets an
+integral's limits beside a sign three rows taller than a letter, and draws a
+root's bar, all at whole pixels in the same face.
+
 ## On a phone
 
 The game takes the whole screen and fills it, whatever shape it is. The scale

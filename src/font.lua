@@ -158,6 +158,26 @@ local GLYPHS = {
     ["$"] = { ".##", "##.", ".#.", ".##", "##." },
     ["\226\130\172"] = { ".##", "##.", "#..", "##.", ".##" }, -- euro
     ["\194\163"] = { ".##", ".#.", "###", ".#.", "###" },      -- pound
+
+    -- Mathematics, for the pop quiz's board (src/worksheet.lua), which is
+    -- written in notation precisely so that it needs no translation. The
+    -- brackets are one pixel shy of C at the top and bottom, which is the only
+    -- thing that tells them apart in three columns. The integral sign here is
+    -- the fallback: the board draws its own, three rows taller, with its limits
+    -- set beside it (`Worksheet.printMath`), and the root's bar is drawn there
+    -- too.
+    ["="] = { "...", "###", "...", "###", "..." },
+    ["("] = { ".#.", "#..", "#..", "#..", ".#." },
+    [")"] = { ".#.", "..#", "..#", "..#", ".#." },
+    ["<"] = { "..#", ".#.", "#..", ".#.", "..#" },
+    [">"] = { "#..", ".#.", "..#", ".#.", "#.." },
+    ["\195\151"] = { "...", "#.#", ".#.", "#.#", "..." },     -- times
+    ["\195\183"] = { ".#.", "...", "###", "...", ".#." },     -- divided by
+    ["\226\136\154"] = { "..#", "..#", "#.#", "#.#", ".#." }, -- root
+    ["\226\136\171"] = { "..#", ".#.", ".#.", ".#.", "#.." }, -- integral
+    ["\207\128"] = { "###", "#.#", "#.#", "#.#", "#.#" },     -- pi
+    ["\206\163"] = { "###", "#..", ".#.", "#..", "###" },     -- sigma
+    ["\226\134\146"] = { "...", "..#", "###", "..#", "..." }, -- arrow
 }
 
 -- Every stroke is two pixels thick and every counter is one, which is what lets

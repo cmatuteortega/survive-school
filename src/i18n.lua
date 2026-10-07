@@ -636,6 +636,11 @@ local ES = {
     -- line in this table that has to stay a *number*: a champion is twice the
     -- size and unannounced, so what this says is which of the two just walked on.
     ["DRAWN THREE TIMES THE SIZE"] = "TRES VECES MAS GRANDE",
+    -- The worksheets (src/worksheet.lua). TRES EN RAYA is what the game is called
+    -- in Spain, so the line names the game the way a Spanish player would.
+    ["THREE IN A ROW"] = "TRES EN RAYA",
+    ["CORRECT!"] = "¡CORRECTO!",
+    ["WRONG ANSWER"] = "RESPUESTA INCORRECTA",
     -- And the enraged one (Spawner:fury), which is the other line here that names
     -- a monster rather than a moment -- and the one that has to name a *pen*. A
     -- red-pen correction over the top of your work is the same thing in a Spanish

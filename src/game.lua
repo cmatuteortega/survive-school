@@ -9,6 +9,7 @@ local Enemy = require("src.enemy")
 local Bullet = require("src.bullet")
 local Gem = require("src.gem")
 local Pickup = require("src.pickup")
+local Worksheet = require("src.worksheet")
 local Particles = require("src.particles")
 local Damage = require("src.damage")
 local Multikill = require("src.multikill")
@@ -694,6 +695,10 @@ function Game:reset()
     self.pickupTimer = Pickup.EVERY * 0.5
     self.pickupSeed = love.math.random(2 ^ 20)
     self.pickupTaken = {} -- fixed spots spent this run, by cell key
+    -- The puzzles printed on the page (src/worksheet.lua): tic-tac-toe on every
+    -- lesson, the pop quiz on MATHS. Placed off the same seed as the fixed
+    -- pickups, so a run's page is one layout and not two that disagree.
+    Worksheet.init(self)
     self.strokes = {}
     self.stroke = nil
     -- Everything that was tapped onto the page rather than drawn on it: pins
@@ -4978,6 +4983,7 @@ function Game:update(dt)
         self:spendHits()
         self:updateGems(dt)
         self:updatePickups(dt)
+        Worksheet.update(self, dt)
 
         self.noticeT = math.max(0, self.noticeT - dt)
 
@@ -5248,6 +5254,10 @@ function Game:draw()
     -- The jacks, on the page beside the wet and for the same reason: they are
     -- ground that is not yours, and have to be read before you walk onto them.
     for _, k in ipairs(self.spikes) do k:draw() end
+    -- The worksheets, printed on the page with the rest of what is not yours:
+    -- under the crowd, which walks over a tic-tac-toe grid the way it walks over
+    -- the ruling, and under the pickups a solved one pays out.
+    Worksheet.draw(self)
     -- Where the eye boss is about to land or come up (src/eyeboss.lua): on the
     -- page with the wet, since it is a place on the floor to keep off.
     -- Not while it is still dropping in (Game:dropIn): its brain has not

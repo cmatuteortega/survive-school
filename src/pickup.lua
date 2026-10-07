@@ -119,11 +119,13 @@ local function kindFor(roll)
     return KINDS[1].kind
 end
 
-local function clearOf(pickups, x, y)
+-- And never on a worksheet (src/worksheet.lua), required here rather than at
+-- the top because the worksheet is what pays out pickups: it requires this file.
+local function clearOf(pickups, x, y, game)
     for _, p in ipairs(pickups) do
         if util.len(p.x - x, p.y - y) < MIN_APART then return false end
     end
-    return true
+    return not (game and require("src.worksheet").covers(game, x, y))
 end
 
 function Pickup.new(kind, x, y)
@@ -164,7 +166,7 @@ end
 function Pickup.scatter(game)
     for _ = 1, 8 do
         local x, y = pastEdge(game)
-        if clearOf(game.pickups, x, y) then
+        if clearOf(game.pickups, x, y, game) then
             return Pickup.new(kindFor(love.math.random()), x, y)
         end
     end
@@ -204,7 +206,7 @@ function Pickup.materialize(game)
             if not game.pickupTaken[key] and not awake[key] then
                 local kind, x, y = fixedAt(cx, cy, game.pickupSeed)
                 if kind and util.len(x - px, y - py) < MATERIALIZE
-                    and clearOf(game.pickups, x, y) then
+                    and clearOf(game.pickups, x, y, game) then
                     local p = Pickup.new(kind, x, y)
                     p.cell = key
                     game.pickups[#game.pickups + 1] = p

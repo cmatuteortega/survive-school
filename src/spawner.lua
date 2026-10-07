@@ -1128,6 +1128,21 @@ function Spawner:dropAt(game, x, y, kind)
     return e
 end
 
+-- A blow-up on demand: the price of a wrong answer on a pop quiz
+-- (src/worksheet.lua). Whatever the minute would have sent, drawn three times
+-- the size, walking in off the ring like any arrival -- never on top of you,
+-- since a punishment you could not have seen coming teaches nothing. It skips
+-- the meter (Spawner:blown) rather than spending it: a giant you asked for by
+-- getting a sum wrong must not quietly cancel the one the page had coming.
+function Spawner:giant(game)
+    local kind = self:pick(game.time)
+    local a = love.math.random() * math.pi * 2
+    local r = self:ring(game) + love.math.random() * 24
+    return game:spawnEnemy(kind,
+        game.player.x + math.cos(a) * r, game.player.y + math.sin(a) * r,
+        self:scale(game.time, false, kind, BLOWN_GROW))
+end
+
 -- How many of something a drill asks for right now: what it asks for in the
 -- first cycle, a third again for every cycle since, and never more than the page
 -- has room left for. The cap is checked here rather than inside each shape so

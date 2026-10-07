@@ -34,6 +34,10 @@ for it.
       blot, bulb and grin each do (README **What walks on**).
 - [ ] **Stage hazards / gimmicks** — obstacles, layouts or a rule unique to each
       subject, so lessons differ in *where* you fight as well as *what* comes.
+  - [ ] **Worksheets** — puzzles printed on the page that pay for being solved
+        under pressure (`src/worksheet.lua`, `WORKSHEETS.md`, README
+        **Worksheets on the page**). Tic-tac-toe on every page and MATHS's pop
+        quiz are built; one puzzle per lesson is the rest of it.
 
 ## 3. Audio
 
