@@ -109,7 +109,8 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
       The notes sit on the corners of a square, the one layout where any note
       can be walked to from any other without crossing a third, and the bell is
       above it, off every line between two. It lights as well as sounds, so it
-      can be played on mute.
+      can be played on mute: a sounding note's pad floods blue, its head jumps
+      and a ring spreads out from it; a wrong one floods pink and shakes.
 
 ### What the built seven pay
 

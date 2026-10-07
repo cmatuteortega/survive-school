@@ -6509,12 +6509,16 @@ twice running. States:
 - `idle`: pads play their note and count for nothing.
 - `playing`: rung by the player's centre entering the bell's ellipse or the pen
   entering its box (both edge-triggered, never during a tune). After `LEAD`, one
-  note a `BEAT`, each lit for `LIT`; pads are inert.
+  note a `BEAT`, each lit for `LIT`; pads are inert. A lit pad (here or when
+  struck by you) is drawn to be read with the sound off: filled `sky`, its head
+  jumping `HOP` px off the stave on a half sine and back, and a third ring
+  spreading `RIPPLE` px out (dotted for its second half). `hw`/`hh` include
+  `RIPPLE`.
 - `answer`: a pad is struck on arrival (`self.on` changing), so a note is struck
   again only by stepping off and on. The right one sounds and advances `pos`;
   the last pays a `heart` at the square's centre and says `BRAVO!`. A wrong one
-  plays `sour` (the note and a semitone over it, together), flashes red for
-  `FLASH`, resets `pos` and spends one of `TRIES` (3). Ringing the bell again
+  plays `sour` (the note and a semitone over it, together), flashes for
+  `FLASH` (pad filled `blush`, red rings, the head shaking a pixel each way), resets `pos` and spends one of `TRIES` (3). Ringing the bell again
   replays the tune and resets `pos`.
 - `fading` for `FADE` once the tries are gone: every colour steps down its
   `FADED` ramp and pixels drop out by `util.hash01` (the module-local

@@ -522,6 +522,8 @@ local BELL_RX, BELL_RY = 8, 8
 local LEAD = 0.35   -- the bell swings this long before the first note
 local BEAT = 0.42   -- one note of the tune
 local LIT = 0.3     -- how long a note stays lit, of its beat
+local HOP = 4       -- how high a sounding note jumps off its stave
+local RIPPLE = 5    -- how far the ring round a sounding note spreads
 local FLASH = 0.45  -- how long a wrong note stays red
 local TRIES = 3
 local FADE = 1.2
@@ -558,8 +560,8 @@ function S.new(x, y, courseKey)
     local s = setmetatable({
         kind = "simon",
         x = x, y = y,
-        hw = PAD_DX + PAD_RX + 2,
-        hh = math.max(-BELL_Y + BELL_RY + 2, PAD_BOTTOM + PAD_RY + 2),
+        hw = PAD_DX + PAD_RX + RIPPLE + 2,
+        hh = math.max(-BELL_Y + BELL_RY + 2, PAD_BOTTOM + PAD_RY + RIPPLE + 2),
         tune = compose(TUNE[courseKey] or TUNE.school),
         pads = {},
         state = "idle",
@@ -736,31 +738,59 @@ end
 
 local HEAD = { ".ooo.", "ooooo", ".ooo." }
 
+local function fillEllipse(cx, cy, rx, ry)
+    for dy = -ry, ry do
+        local w = math.floor(rx * math.sqrt(1 - (dy / ry) ^ 2))
+        rect(cx - w, cy + dy, w * 2 + 1, 1)
+    end
+end
+
+-- A sounding note has to be *seen* sounding, because plenty of phones are
+-- played on mute and the tune is the whole puzzle: so it does three things at
+-- once, each readable from across the screen on its own -- its pad floods
+-- light blue, its head jumps off the stave and drops back, and a ring spreads
+-- out from it. A wrong note floods pink and shakes instead of jumping.
 function S:drawPad(i)
     local p = self.pads[i]
     local cx, cy = math.floor(p.x), math.floor(p.y)
+    local lit, wrong = self.lit[i], self.flash == i
+    local u = lit and 1 - lit / LIT or 0 -- 0 to 1 over the note's light
+
+    if wrong or lit then
+        colour(wrong and Palette.blush or Palette.sky)
+        fillEllipse(cx, cy, PAD_RX, PAD_RY)
+    end
 
     -- The stave a little high in its ring, since the heads hang under it.
     local sy = cy - 2
     colour(Palette.graphite)
     for l = -2, 2 do rect(cx - 8, sy + l * LINE, 17, 1) end
 
-    local hot = self.flash == i and Palette.red
-        or (self.lit[i] or self.state == "won") and Palette.blue
-        or Palette.ink
-    local hy = sy - NOTES[i].step * LINE / 2
-    colour(hot)
+    local hot = wrong and Palette.red or Palette.blue
+    local hx, hy = cx, sy - NOTES[i].step * LINE / 2
+    if wrong then
+        hx = hx + (math.floor(self.flashT * 30) % 2 == 0 and -1 or 1)
+    elseif lit then
+        hy = hy - math.floor(HOP * math.sin(math.pi * u) + 0.5)
+    end
+    -- The head stays ink on a lit pad -- blue on light blue is the one pairing
+    -- here that would hide the jump -- and turns blue only once the tune is won.
+    colour(self.state == "won" and not (lit or wrong) and Palette.blue or Palette.ink)
     for r, row in ipairs(HEAD) do
         for c = 1, #row do
-            if row:sub(c, c) == "o" then dot(cx - 3 + c, hy - 2 + r) end
+            if row:sub(c, c) == "o" then dot(hx - 3 + c, hy - 2 + r) end
         end
     end
-    rect(cx + 2, hy - 7, 1, 7)
+    rect(hx + 2, hy - 7, 1, 7)
 
-    if self.flash == i or self.lit[i] then
+    if wrong or lit then
         colour(hot)
         ellipse(cx, cy, PAD_RX, PAD_RY)
         ellipse(cx, cy, PAD_RX + 1, PAD_RY + 1)
+        if lit then
+            local o = 2 + math.floor((RIPPLE - 1) * u)
+            ellipse(cx, cy, PAD_RX + o, PAD_RY + o, u > 0.5)
+        end
     elseif self.state == "won" then
         colour(Palette.blue)
         ellipse(cx, cy, PAD_RX, PAD_RY)

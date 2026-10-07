@@ -8396,9 +8396,11 @@ note lighting as it sounds. Then **walk the notes in the same order**. Right is 
   rather than a melody.
 - **Before the bell the notes just play.** Walking over one and hearing it is
   how you find out it is an instrument, and none of it counts.
-- **It lights as well as sounds**, because a lot of phones are played on mute,
-  and the notes are pentatonic so whatever tune is dealt is a tune: higher on
-  the stave is higher in the ear.
+- **It lights as well as sounds**, because a lot of phones are played on mute:
+  a sounding note's pad floods light blue, its head jumps off the stave and a
+  ring spreads out from it, each one readable from across the screen alone. A
+  wrong note floods pink and shakes instead. And the notes are pentatonic so
+  whatever tune is dealt is a tune: higher on the stave is higher in the ear.
 - **It climbs the course by length**: three notes at HIGH SCHOOL, then four,
   five, and six at PHD. Six is still under five seconds of walking.
 
