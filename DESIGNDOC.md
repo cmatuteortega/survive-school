@@ -430,6 +430,12 @@ The same `Purse.draw` pair is read in two more places. The timetable hangs
 puts what *this run* is worth so far under the ink bar, right-aligned on the ink
 bar's edge -- `Game:runWorth`, the sum the end card pays, never the purse.
 
+While an ink droplet's free pen runs (`Game.inkFree`, set by `src/pickup.lua`,
+counted down in `Game:updateDrawing`, which holds the meter full; `Game:spendInk`
+charges nothing while it is above zero), `Hud.draw` swaps the ink bar for
+`inkWave`: a blue bar with a sky swell and an ink undertow plotted column by
+column off `game.time`, blinking back to the plain slate bar for the last second.
+
 **The counter has four sections** (five with `SHOP`), turned by dragging the page
 (`src/spread.lua`) or `←`/`→`, and the section's name is the heading -- struck off
 the widest section name so the guard that steps it under the corners never moves

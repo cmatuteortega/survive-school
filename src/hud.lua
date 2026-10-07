@@ -894,6 +894,51 @@ local function bar(x, y, w, h, fill, color, fromRight)
     end
 end
 
+-- The ink meter while an ink droplet's free pen is running (`Game.inkFree`,
+-- src/pickup.lua): the full bar turned into water, a sky swell rolling across
+-- the blue with an ink undertow running the other way under it. The one time
+-- the meter goes blue, since for those seconds it is not a readout of a
+-- resource -- the pen is simply running free, and the meter is part of the
+-- show. Column by column in whole pixels, two sines quantised to rows, so it is
+-- pixel art and not a smooth curve. Off the run's clock, so a paused run's
+-- sea stands still with it.
+--
+-- And blinking back to its plain slate for the last stretch, on and off in
+-- tenths, so the window closing is something you see coming rather than a
+-- stroke that suddenly starts costing again.
+local INK_WAVE_WARN = 1     -- seconds of blinking before it ends
+local INK_WAVE_BLINK = 0.1  -- half a blink
+
+local function inkWave(x, y, w, h, left, t)
+    if left < INK_WAVE_WARN and math.floor(left / INK_WAVE_BLINK) % 2 == 0 then
+        bar(x, y, w, h, 1, Palette.slate)
+        return
+    end
+
+    bar(x, y, w, h, 1, Palette.blue)
+    local ih = h - 2
+    for i = 0, w - 3 do
+        local cx = x + 1 + i
+        -- The swell: how far down from the top of the bar the water starts.
+        local surf = math.floor(ih * 0.3 + math.sin(i * 0.35 - t * 6) * 1.6 + 0.5)
+        surf = math.max(0, math.min(ih - 1, surf))
+        if surf > 0 then
+            love.graphics.setColor(Palette.sky)
+            love.graphics.rectangle("fill", cx, y + 1, 1, surf)
+        end
+        -- The undertow: a single row of ink near the bottom going the other way,
+        -- broken where the sine dips so it reads as a current and not a rule.
+        local wave = math.sin(i * 0.5 + t * 4)
+        if wave > -0.3 then
+            local deep = math.floor(ih * 0.7 + wave * 1.2 + 0.5)
+            if deep > surf and deep < ih then
+                love.graphics.setColor(Palette.ink)
+                love.graphics.rectangle("fill", cx, y + 1 + deep, 1, 1)
+            end
+        end
+    end
+end
+
 local function clock(t)
     return ("%d:%02d"):format(math.floor(t / 60), math.floor(t % 60))
 end
@@ -997,8 +1042,12 @@ function Hud.draw(game)
     -- also leaves the blush at the bottom of it the only colour the meter ever
     -- takes and so the only thing about it that can shout.
     local inkX = right - barW
-    bar(inkX, top, barW, BAR_H, game.ink / game.loadout.stats.inkMax,
-        game.ink < Tools.MIN_INK and Palette.blush or Palette.slate, true)
+    if game.inkFree > 0 then
+        inkWave(inkX, top, barW, BAR_H, game.inkFree, game.time)
+    else
+        bar(inkX, top, barW, BAR_H, game.ink / game.loadout.stats.inkMax,
+            game.ink < Tools.MIN_INK and Palette.blush or Palette.slate, true)
+    end
     love.graphics.setColor(Palette.ink)
     Font.printRight(("%d"):format(game.ink * 100), inkX - BAR_TEXT_GAP, rowText)
 

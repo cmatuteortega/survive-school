@@ -8232,15 +8232,25 @@ because touched means touched: a pickup the magnet hauled in would be a gem
 with a different sprite, and the walk is the point. Walk far enough away
 (480px, wider than the enemies' despawn) and one is abandoned rather than
 hoarded — a scattered one for good, a fixed one until the next visit. Touching
-one always consumes it, even when the bar it refills has no room: a heart that
+one always consumes it, even when it has nothing to give: a heart that
 refused a full bar hung around holding one of the eight slots, quietly
 throttling the scatter for as long as you stayed healthy.
 
 Three kinds, weighted 4 : 4 : 1:
 
 - **A heart** heals 25 — a quarter of the base bar.
-- **An ink droplet** refills half the well — half of whatever the well *is*, so
-  an inkwell build drinks deeper from the same droplet.
+- **An ink droplet** makes drawing free for four seconds: the meter is held full
+  and nothing spends from it (`Game.inkFree`, which `Game:spendInk` reads). It
+  used to refill half the well, which was worth most when the well was empty
+  and nothing when it was full — a droplet walked into between strokes was a
+  prize you could not tell you had won. A window of free ink is worth the same
+  whenever you take it, and what it asks is that you *spend* it: the walk out
+  there pays off in the frantic drawing after. A second droplet inside the
+  window starts the four seconds again rather than stacking them. For the
+  length of it the ink meter turns to water — a sky swell rolling across a blue
+  bar with an ink undertow running the other way — and blinks back to its
+  plain grey in tenths over the last second, so the window closing is something
+  you see coming rather than a stroke that suddenly starts costing again.
 - **A diamond** is a whole level, banked exactly the way an earned one is
   (`Player:levelUp`) and spent through the ordinary draft at the end of the
   frame. It keeps the xp already saved towards the next level — the ladder
@@ -9267,7 +9277,9 @@ themselves — the nib, the shots, the rocket, the beam — so a blue meter is t
 readout claiming to be one of them. Grey is what the readout actually is:
 furniture, read for its length and not for its colour. It also leaves the blush
 at the bottom of the meter as the only colour it ever takes, and so the only
-thing about it that can shout.
+thing about it that can shout. (The one exception is the ink droplet's free pen,
+when the meter turns into rolling blue water for four seconds: for those seconds
+it is not a readout of a resource at all — see **Scattered on the page**.)
 
 It drains by the pixel — a full meter is about 230px of pencil, 170 of pen, 150
 of rubber, 120 of highlighter, 90 of glue — or by the use, for the five tools

@@ -831,6 +831,9 @@ function Game:reset()
     self.bookmarkT = 0
     self.ink = self.loadout.stats.inkMax
     self.inkDelay = 0
+    -- Seconds left of the ink droplet's free pen (src/pickup.lua). Not
+    -- bookmarked: four seconds is not worth a field in the save.
+    self.inkFree = 0
     self.drawBlocked = false
     self.wasDown = false
     -- What the current stroke sounds like: the swish it last fired, and how
@@ -3130,7 +3133,13 @@ end
 -- What the tool charges is not scaled here. That already happened, once, when
 -- the run's copy of the tool was built (src/loadout.lua): the blotter discounts
 -- the row, and everything downstream simply pays what the row says.
+--
+-- And nothing at all while an ink droplet's window is open (`inkFree`, from
+-- src/pickup.lua): the meter is held full below rather than charged, so every
+-- check that asks whether the meter can afford something -- the brush's budget,
+-- a pin's flat price, the compass's reach -- says yes without being told why.
 function Game:spendInk(cost)
+    if self.inkFree > 0 then return end
     self.ink = math.max(0, self.ink - cost)
     self.inkDelay = Tools.DELAY * self.loadout.stats.inkDelay
 end
@@ -4657,7 +4666,11 @@ function Game:updateDrawing(dt)
     -- to fill from empty. That is the trade the line makes, and the cartridge is
     -- the line that undoes it.
     local stats = self.loadout.stats
-    if self.inkDelay > 0 then
+    if self.inkFree > 0 then
+        self.inkFree = math.max(0, self.inkFree - dt)
+        self.ink = stats.inkMax
+        self.inkDelay = 0
+    elseif self.inkDelay > 0 then
         self.inkDelay = self.inkDelay - dt
     else
         self.ink = math.min(stats.inkMax,

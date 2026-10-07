@@ -1,5 +1,6 @@
 -- What the page scatters for you to walk to. Three kinds -- a heart that heals,
--- a droplet that refills the ink well, a diamond worth a whole level -- and all
+-- a droplet that makes drawing free for a moment, a diamond worth a whole
+-- level -- and all
 -- of them land out of view, because the reward is the walk: a gem is thrown at
 -- your feet by a kill you already made, and these are the opposite half of that
 -- idea, something out there that pays a run for moving instead of standing in
@@ -57,7 +58,13 @@ local DENSITY = 0.35
 local MATERIALIZE = 440
 
 local HEAL = 25      -- a quarter of the base bar
-local INK = 0.5      -- fraction of the well, so a bigger well drinks deeper
+-- The droplet does not pour ink into the well: it makes the pen free for a few
+-- seconds (`Game.inkFree`, read by Game:spendInk). A refill was worth most when
+-- the well was empty and nothing when it was full, so a droplet walked into
+-- between strokes was a prize you could not tell you had won; a window of free
+-- ink is worth the same whenever you take it, and what it asks is that you
+-- spend it -- the walk out there pays off in the frantic drawing after.
+local INK_FREE = 4
 
 -- The diamond is rare because it is a draft in disguise -- a free level is
 -- worth more than anything else on this table -- and rarity is what keeps
@@ -86,9 +93,12 @@ local TAKE = {
         end
         game.particles:burst(x, y, 6, Palette.red)
     end,
+    -- Topped up and held there rather than added to: a second droplet inside
+    -- the window starts the four seconds again instead of stacking them, the
+    -- way a heart on a full bar is spent on nothing.
     ink = function(game, x, y)
-        local max = game.loadout.stats.inkMax
-        game.ink = math.min(max, game.ink + max * INK)
+        game.inkFree = INK_FREE
+        game.ink = game.loadout.stats.inkMax
         game.particles:burst(x, y, 6, Palette.blue)
     end,
     diamond = function(game, x, y)
