@@ -14,7 +14,7 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
 Every lesson prints tic-tac-toe, and on top of that each one should have **two
 sheets nobody else has** -- ideally answered two different ways, so a lesson's
 pair is two kinds of puzzle rather than one puzzle with two question books.
-MATHS and MUSIC are done; the rest is the list below.
+MATHS, MUSIC and P.E. are done; the rest is the list below.
 
 | Lesson | Its first | Its second | Left | Pick next (machine) |
 | --- | --- | --- | --- | --- |
@@ -24,10 +24,10 @@ MATHS and MUSIC are done; the rest is the list below.
 | **FINANCE** | Till (stand) | -- | one | **Exact change** (collect coins to a sum); balance the ledger is another stand-on board, so second choice |
 | **GRAMMAR** | -- | -- | two | **Red pen** (scribble the backwards letter) and **alphabet run** (walk in order, Simon's machine) |
 | **ART** | -- | -- | two | **Join the dots** (draw through in order) and **symmetry** (scribble the mirror half) |
-| **P.E.** | -- | -- | two | **Hopscotch** (walk in order, against a timer) and **dodgeball circle** (stand in a ring and survive) |
+| **P.E.** | Dodgeball pit (stay in a box) | Hopscotch (walk in order, against a clock) | -- done | -- |
 
-That is seven sheets to go. The cheapest are the ones on a built machine:
-alphabet run and hopscotch reuse Simon's walk-in-order code, and red pen and
+That is five sheets to go. The cheapest are the ones on a built machine:
+alphabet run reuses Simon's and hopscotch's walk-in-order idea, and red pen and
 symmetry reuse tic-tac-toe's scribbled cells. The draw-a-line machine (close the
 circuit, join the dots) is the one not built yet, and it would serve two
 lessons at once.
@@ -134,7 +134,27 @@ lessons at once.
       the notes, or from the bell, passes clear of every other note and the
       bell.
 
-### What the built seven pay
+- [x] **Dodgeball pit** (P.E.). A block of the calendar's day boxes, 4 by 3,
+      ruled round heavier than the page, a red flag on its corner. **Walk in**
+      and the whistle goes; the class is **thrown** at you -- monsters of the
+      minute launched off the ring in a straight line through where you stand.
+      **Last the clock** (10s HIGH SCHOOL, 12s BACHELOR, 15s MASTERS and PHD,
+      throws faster and more often up the course) for a **diamond** in the
+      middle. **Any hit, or stepping out**, is out: the whistle, and the sheet
+      fades. Nothing locks you in.
+- [x] **Hopscotch** (P.E.). A path of day boxes numbered from 1, a red flag in
+      the first and a chequered flag in the last. **Step into box 1** and the
+      whistle goes; every box you step into must be the next. A box off the
+      path, a box gone back to, a box skipped, or the clock (about 1.5s a box
+      at HIGH SCHOOL down to 1s at PHD, plus 2) is out and the sheet fades. The
+      last box is a **heart**. 6 boxes at HIGH SCHOOL, 8, 10, 12 at PHD; the
+      path never touches itself, so the next box is always the one numbered
+      box beside you.
+
+Both P.E. sheets start and finish on the whistle, and while one is under way its
+clock counts down in red under the run's.
+
+### What the built nine pay
 
 | Board | Where | Right | Wrong | Stakes |
 | --- | --- | --- | --- | --- |
@@ -145,11 +165,14 @@ lessons at once.
 | Till | FINANCE | three coins (into the purse) | a giant | the purse, against trouble |
 | Stave | MUSIC | a heart | 20 HP off the bar | health, both ways |
 | Simon | MUSIC | a heart | three wrong notes fade the sheet away | none: a lost prize |
+| Dodgeball pit | P.E. | a diamond | a hit or a step out fades it away | none: a lost prize |
+| Hopscotch | P.E. | a heart | a wrong box or the clock fades it away | none: a lost prize |
 
 On MATHS the page prints them 2 quiz : 2 sequence : 1 tic-tac-toe, on MUSIC
 2 stave : 2 Simon : 1 tic-tac-toe, and on SCIENCE and FINANCE 2 of their board :
-1 tic-tac-toe (the `worksheets` rows in `src/subjects.lua`). GRAMMAR, ART and
-P.E. print only tic-tac-toe until they have a puzzle of their own.
+1 tic-tac-toe, on P.E. 2 dodgeball : 2 hopscotch : 1 tic-tac-toe (the
+`worksheets` rows in `src/subjects.lua`). GRAMMAR and ART print only
+tic-tac-toe until they have a puzzle of their own.
 
 ## Ideas, by lesson
 
@@ -167,7 +190,7 @@ P.E. print only tic-tac-toe until they have a puzzle of their own.
 | **SCIENCE** | **Close the circuit**: battery and bulb with a gap in the wire | A **pen** line across the gap -- pen lines are walls already (`src/walls.lua`) | -- |
 | **SCIENCE** (alt) | **Memory pairs**: six face-down cards | Scribble two to flip them | Cards reshuffle |
 | **FINANCE** | **Exact change**: a price tag, coins scattered round it | Collect exactly that amount | Overpay and the change is lost |
-| **P.E.** | **Hopscotch**: ten squares, 1 to 10 | Step on them in order against a timer | Time runs out |
+| **P.E.** | ~~Hopscotch~~ -- built: a path of day boxes | Step on them in order against a clock | A wrong box or the clock: the sheet fades |
 | any | ~~Tic-tac-toe~~ -- built | Scribble a cell | The page plays its O |
 | any | **Maze worksheet**: a little printed maze, the prize in the middle | Pencil from the mouth to the middle without touching a wall | Touch one and start again |
 | any | **True or false**: one statement, two boxes | Stand on one | -- |
@@ -187,7 +210,7 @@ line through the page is still an idea).
 | **ART** | **Colour mixing**: a target swatch and ink pots, the overprint lookup as the puzzle | Scribble a cell | Scribble the two pots that overprint to the target | -- (check first that the overprint pairs read as mixes) |
 | **SCIENCE** | **Bounce the beam**: a lamp, a target, and a mirror you draw | Draw | A pen line as the mirror (the laser beam and pen walls exist) | -- |
 | **P.E.** | **Laps**: a ring of cones | Walk | Run round it N times against the clock | The whistle calls in a crowd |
-| **P.E.** | **Dodgeball circle**: a chalk ring | Stand | Stay inside it ten seconds while balls are thrown | A hit |
+| **P.E.** | ~~Dodgeball circle~~ -- built as the pit: the class is thrown, not balls | Stand | Stay inside it while monsters are thrown | A hit or a step out |
 | **FINANCE** | **Balance the ledger**: a column with one cell missing | Stand on an answer | Stand on the figure that makes it sum (a PAID stamp to finish) | A giant |
 
 Hangman's idea above is still the most expensive one; the red pen gives

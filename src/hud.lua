@@ -12,6 +12,7 @@ local Upgrades = require("src.upgrades")
 local Input = require("src.input")
 local pixelart = require("src.pixelart")
 local Purse = require("src.purse")
+local Worksheet = require("src.worksheet")
 
 local Hud = {}
 
@@ -930,6 +931,20 @@ local function drawBoss(game)
     Font.printCentered(I18n.t(boss.def.title or "THE EYE"), centre, y + BOSS_BAR_H + 2)
 end
 
+-- A worksheet's own clock while one is under way (P.E.'s pit and hopscotch,
+-- src/worksheet.lua), under the run's: the run's counts up to the boss, this
+-- counts down to the whistle, and in red because running out is how you lose
+-- one of them. Under the boss's bar and name if there is a fight on as well,
+-- rather than over them.
+local function drawSheetClock(game, centre)
+    local left = Worksheet.clock(game)
+    if not left then return end
+    local y = game.inset.t + 4 + BAR_H + 3
+    if game.boss then y = y + BOSS_BAR_H + 2 + Font.height + 3 end
+    love.graphics.setColor(Palette.red)
+    Font.printCentered(clock(math.ceil(left)), centre, y)
+end
+
 function Hud.draw(game)
     local vw, vh = game.vw, game.vh
     local ins = game.inset
@@ -1002,6 +1017,7 @@ function Hud.draw(game)
     -- boss.
     Font.printCentered(clock(game.time), centre, rowText)
     drawBoss(game)
+    drawSheetClock(game, centre)
 
     -- Level and experience, along the whole foot of the page, with the level
     -- printed in the middle of the bar it is filling.

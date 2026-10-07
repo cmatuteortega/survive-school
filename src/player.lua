@@ -122,6 +122,10 @@ function Player.new(x, y, loadout)
         hp = stats.maxHp,
         maxHp = stats.maxHp,
         invuln = 0,
+        -- Every hit that landed, counted rather than flagged: the dodgeball pit
+        -- (src/worksheet.lua) asks whether one landed since it started, and a
+        -- count read against where it stood then needs nobody to reset it.
+        hits = 0,
 
         level = 1,
         xp = 0,
@@ -291,6 +295,7 @@ function Player:hurt(amount)
     if self.invuln > 0 or self.truce then return false end
     self.hp = math.max(0, self.hp - amount)
     self.invuln = INVULN_TIME
+    self.hits = self.hits + 1
 
     -- Here rather than at the four places that hit you, for Enemy:hurt's reason:
     -- everything arrives through this one door, so there is one place that has
