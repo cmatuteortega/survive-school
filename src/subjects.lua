@@ -154,12 +154,18 @@ local SQUARED = {
 -- drawing anyway, so it costs the page nothing and is the thing that goes past
 -- you. The row rules are tested first so they win the crossing, for the reason
 -- they win it on the ruled page.
+--
+-- `days` is that geometry read by something other than the tile, as `staff` is
+-- on the staves: P.E.'s dodgeball pit and hopscotch path (src/worksheet.lua)
+-- are made of the page's own day boxes, so they have to know where those are.
+local DAYS = { w = 32, h = 24, rule = 2 }
 local CALENDAR = {
     w = 224, h = 120,
+    days = DAYS,
     at = function(x, y)
-        if y % 24 < 2 then return Palette.sky end
+        if y % DAYS.h < DAYS.rule then return Palette.sky end
         if x == 0 then return Palette.blush end
-        if x % 32 == 0 then return Palette.sky end
+        if x % DAYS.w == 0 then return Palette.sky end
         return Palette.paper
     end,
 }
@@ -371,6 +377,10 @@ Subjects.list = {
         -- the one this lesson can justify.
         drills = { every = 38, of = { line = 4, pincer = 4, side = 2,
                                       ring = 2 } },
+        -- Two sheets of the gym's own, both made of the calendar's day boxes:
+        -- the dodgeball pit (stay in it while the class is thrown at you) and
+        -- hopscotch (a numbered path of boxes, against the clock).
+        worksheets = { dodgeball = 2, hopscotch = 2, tictactoe = 1 },
     },
     {
         key = "language",

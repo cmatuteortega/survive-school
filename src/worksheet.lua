@@ -2,7 +2,7 @@
 -- stopping to solve one while the horde keeps coming (WORKSHEETS.md is the
 -- idea list, README **Worksheets on the page** the argument).
 --
--- Three machines today, each a row or more in KINDS:
+-- Each a row or more in KINDS:
 --
 -- - **Tic-tac-toe**, on every page. A game already in play -- red O's, black
 --   X's -- with one cell that finishes three X's in a row. Scribble a cross into
@@ -20,6 +20,11 @@
 -- - **Simon says**, on MUSIC. A hand bell and four notes: ring the bell by
 --   walking onto it or drawing over it, hear a tune, and walk the notes in the
 --   same order. Right is a heart; three wrong notes and the sheet fades away.
+-- - **The dodgeball pit**, on P.E. A block of the calendar's own day boxes:
+--   walk in and the class is thrown at you. Last the clock untouched and
+--   inside for a diamond; a hit or a step out and the sheet fades away.
+-- - **Hopscotch**, on P.E. too: a numbered path of day boxes to step along in
+--   order against a clock, for a heart; a wrong box or the clock and it fades.
 --
 -- They are placed the way the fixed pickups are (src/pickup.lua): a pure
 -- function of the cell and the run's seed, one in a fraction of a coarser
@@ -43,6 +48,7 @@ local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
 local Sprites = require("src.sprites")
+local Font = require("src.font")
 local util = require("src.util")
 
 local Worksheet = {}
@@ -900,6 +906,393 @@ function S:draw()
     fade = 0
 end
 
+--- the gym -------------------------------------------------------------------------
+
+-- P.E.'s two sheets, and the only two printed out of the page itself: the
+-- calendar's day boxes (`days` on its paper in src/subjects.lua) are the gym
+-- floor, so the pit is a block of them and the hopscotch a path of them, and
+-- nothing is ruled that the page had not ruled already.
+--
+-- Both are races against a clock hung under the run's own (src/hud.lua, through
+-- Worksheet.clock), both are flagged where they start, and both open and close
+-- on the whistle -- the P.E. boss's own (src/sfx.lua), which is the one sound in
+-- the book that means a drill has begun or ended. Losing either costs nothing
+-- but the prize: the sheet fades off the page the way a failed Simon does.
+
+local DAYS = { w = 32, h = 24, rule = 2 } -- a page with no day boxes of its own
+local GYM_FADE = 1.2
+
+-- How far into a box the player's middle must be before it counts as standing
+-- in it. Without it the rule between two boxes is a pixel you are in both of,
+-- and a hopscotch turned at a corner would clip the box off the path beside it.
+local SURE = 3
+
+local function daysOf(game)
+    return game.subject.paper and game.subject.paper.days or DAYS
+end
+
+-- A flag's rows (src/sprites.lua), its pole's foot at (x, y), through the fade.
+local function plant(rows, x, y)
+    local top = y - #rows + 1
+    for r, row in ipairs(rows) do
+        for c = 1, #row do
+            local ch = row:sub(c, c)
+            if ch ~= "." then
+                colour(Palette.key[ch])
+                dot(x + c - 1, top + r - 1)
+            end
+        end
+    end
+end
+
+-- What a sheet that is under way says when it starts and when it is over, and
+-- what every one of those moments sounds like.
+local function call(game, text)
+    game:say(text)
+    Sfx.play("whistle")
+end
+
+-- The dodgeball pit. A block of day boxes, ruled round heavier than the page,
+-- with a flag on its corner. Walk in and the whistle goes: from then on the
+-- class is *thrown* at you -- monsters of the minute launched off the ring in a
+-- straight line through where you are, at a pace no walker has -- and you have
+-- to last the clock without being touched and without stepping out. Any hit,
+-- from a thrown one or anything else on the page, is out; so is leaving.
+-- Lasting it is a diamond in the middle of the pit.
+--
+-- Not a wall: nothing stops you walking out, because walking out is the other
+-- way to lose, and a pit you could not leave would be the boss's box with a
+-- prize in it. The thrown ones fly on past the pit and, once well clear of it
+-- (or the moment the drill is over), stop being balls and join the horde --
+-- dodgeballs are the class, after all.
+local D = {}
+D.__index = D
+
+local PIT_W, PIT_H = 4, 3 -- in day boxes: one screen of floor, with room round it
+local PIT_TIME = { school = 10, bachelor = 12, masters = 15, phd = 15 }
+local THROW_EVERY = { school = 1.4, bachelor = 1.1, masters = 0.9, phd = 0.7 }
+local THROW_SPEED = { school = 140, bachelor = 155, masters = 170, phd = 190 }
+local THROW_SPREAD = 0.12 -- radians either side of dead on: aimed, not homing
+local THROW_FIRST = 0.8   -- the first comes a beat after the whistle, not on it
+
+function D.new(x, y, courseKey, days)
+    local i0 = math.floor(x / days.w) - math.floor(PIT_W / 2)
+    local j0 = math.floor(y / days.h) - math.floor(PIT_H / 2)
+    local l, t = i0 * days.w, j0 * days.h
+    local r, b = l + PIT_W * days.w, t + PIT_H * days.h
+    return setmetatable({
+        kind = "dodgeball",
+        x = (l + r) / 2, y = (t + b) / 2,
+        hw = (r - l) / 2 + 1, hh = (b - t) / 2 + days.rule,
+        x0 = l, y0 = t, x1 = r, y1 = b, rule = days.rule,
+        time = PIT_TIME[courseKey] or PIT_TIME.school,
+        every = THROW_EVERY[courseKey] or THROW_EVERY.school,
+        speed = THROW_SPEED[courseKey] or THROW_SPEED.school,
+        thrown = {},
+        state = "open",
+        seed = util.hash01(x, y, 5) * 1000,
+    }, D)
+end
+
+-- Inside the border, not on it: the border is the line you step over.
+function D:inside(px, py)
+    return px > self.x0 + 2 and px < self.x1 - 2
+        and py > self.y0 + self.rule + 2 and py < self.y1 - 2
+end
+
+function D:throw(game)
+    local p, spawner = game.player, game.spawner
+    local a = love.math.random() * math.pi * 2
+    local reach = spawner:ring(game)
+    local sx, sy = p.x + math.cos(a) * reach, p.y + math.sin(a) * reach
+    local e = game:spawnEnemy(spawner:pick(game.time), sx, sy)
+    local aim = math.atan2(p.y - sy, p.x - sx)
+        + (love.math.random() * 2 - 1) * THROW_SPREAD
+    -- The bowl's own steering (Enemy:update): down a locked line at a locked
+    -- speed, stopped by a pen line like anything else -- which is the one
+    -- thing you can do about a throw besides stepping out of its way.
+    e.drive = { dash = true, dx = math.cos(aim), dy = math.sin(aim), speed = self.speed }
+    self.thrown[#self.thrown + 1] = { e = e, x = sx, y = sy, far = reach * 2 }
+end
+
+-- Thrown ones that have flown their course, or all of them when the drill is
+-- over, go back to walking: what was a ball is a monster again.
+function D:land(all)
+    for k = #self.thrown, 1, -1 do
+        local t = self.thrown[k]
+        if t.e.gone or all or util.len(t.e.x - t.x, t.e.y - t.y) > t.far then
+            if t.e.drive and t.e.drive.dash then t.e.drive = nil end
+            table.remove(self.thrown, k)
+        end
+    end
+end
+
+function D:finish(game, won)
+    self.live = false
+    self:land(true)
+    if won then
+        self.state = "won"
+        game.pickups[#game.pickups + 1] = Pickup.new("diamond", self.x, self.y)
+        game.particles:burst(self.x, self.y, 10, Palette.blue)
+        call(game, "SAFE!")
+    else
+        self.state = "fading"
+        self.t = 0
+        call(game, "OUT!")
+    end
+end
+
+function D:update(dt, game)
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= GYM_FADE then self.state = "gone" end
+        return
+    end
+    if self.state ~= "open" and not self.live then return end
+
+    local p = game.player
+    local inside = self:inside(p.x, p.y)
+    if not self.live then
+        if inside then
+            self.live = true
+            self.left = self.time
+            self.throwT = THROW_FIRST
+            self.hits = p.hits
+            call(game, "DODGE!")
+        end
+        return
+    end
+
+    if not inside or p.hits > self.hits then
+        self:finish(game, false)
+        return
+    end
+    self:land(false)
+    self.left = self.left - dt
+    if self.left <= 0 then
+        self:finish(game, true)
+        return
+    end
+    self.throwT = self.throwT - dt
+    if self.throwT <= 0 then
+        self.throwT = self.throwT + self.every
+        self:throw(game)
+    end
+end
+
+function D:clock()
+    return self.live and self.left
+end
+
+function D:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / GYM_FADE, 0, 1) or 0
+    fadeSeed = self.seed
+
+    -- Heavier than the page's own ruling, so the pit reads as painted on the
+    -- gym floor rather than as twelve more days: two pixels all round, in slate
+    -- until the whistle and red while you are in it. Just inside the ruling
+    -- rather than over it, because red printed over the sky rules overprints
+    -- to slate (src/overprint.lua) and the pit going live would go live on two
+    -- of its four sides.
+    colour(self.live and Palette.red or Palette.slate)
+    local l, t = self.x0 + 1, self.y0 + self.rule
+    local w, h = self.x1 - l, self.y1 - t
+    rect(l, t, w, 2)
+    rect(l, self.y1 - 2, w, 2)
+    rect(l, t, 2, h)
+    rect(self.x1 - 2, t, 2, h)
+
+    if self.state == "open" then plant(Sprites.FLAG, self.x0 - 1, self.y0 - 1) end
+    fade = 0
+end
+
+-- Hopscotch. A path of day boxes, numbered from 1, a flag in the first and the
+-- chequered flag in the last. Step into box 1 and the whistle goes; then every
+-- box you step into must be the next one along. Stepping into a box off the
+-- path, back into one you have been in, or past one, is out, and so is the
+-- clock running down. The last box is a heart.
+--
+-- The path is a walk of boxes that never touches itself -- no box on it sits
+-- beside any other but the ones before and after it -- so the way on is always
+-- the one numbered box beside you, and a corner turned is never a corner cut
+-- through a box that also belongs to the path.
+local H = {}
+H.__index = H
+
+local HOP_BOXES = { school = 12, bachelor = 16, masters = 20, phd = 24 }
+-- Seconds a box, on top of HOP_GRACE. A box is half a second's walk across at
+-- the bare speed, so the slack is for the horde standing on the path.
+local HOP_PER = { school = 1.5, bachelor = 1.3, masters = 1.15, phd = 1.0 }
+local HOP_GRACE = 2
+local HOP_SPAN_X, HOP_SPAN_Y = 5, 3 -- how far from the first box it may wander
+
+local function boxKey(i, j) return i * 65536 + j end
+
+-- A walk of `n` boxes from (0, 0), redealt until it fits in the span without
+-- touching itself.
+local function hopPath(n)
+    local steps = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
+    for _ = 1, 500 do
+        local path, on = { { 0, 0 } }, { [boxKey(0, 0)] = 1 }
+        while #path < n do
+            local last = path[#path]
+            local can = {}
+            for _, s in ipairs(steps) do
+                local i, j = last[1] + s[1], last[2] + s[2]
+                local ok = math.abs(i) <= HOP_SPAN_X and math.abs(j) <= HOP_SPAN_Y
+                    and not on[boxKey(i, j)]
+                if ok then
+                    for _, t in ipairs(steps) do
+                        local k = on[boxKey(i + t[1], j + t[2])]
+                        if k and k ~= #path then ok = false; break end
+                    end
+                end
+                if ok then can[#can + 1] = { i, j } end
+            end
+            if #can == 0 then break end
+            local c = can[love.math.random(#can)]
+            path[#path + 1] = c
+            on[boxKey(c[1], c[2])] = #path
+        end
+        if #path == n then return path end
+    end
+end
+
+function H.new(x, y, courseKey, days)
+    local n = HOP_BOXES[courseKey] or HOP_BOXES.school
+    local walk = hopPath(n)
+    if not walk then return end
+    local bi, bj = math.floor(x / days.w), math.floor(y / days.h)
+    local path, index = {}, {}
+    local l, t, r, b = math.huge, math.huge, -math.huge, -math.huge
+    for k, c in ipairs(walk) do
+        local i, j = bi + c[1], bj + c[2]
+        path[k] = { i = i, j = j, x = i * days.w, y = j * days.h }
+        index[boxKey(i, j)] = k
+        l, t = math.min(l, path[k].x), math.min(t, path[k].y)
+        r, b = math.max(r, path[k].x + days.w), math.max(b, path[k].y + days.h)
+    end
+    return setmetatable({
+        kind = "hopscotch",
+        x = (l + r) / 2, y = (t + b) / 2, hw = (r - l) / 2, hh = (b - t) / 2,
+        days = days, path = path, index = index,
+        time = HOP_GRACE + n * (HOP_PER[courseKey] or HOP_PER.school),
+        reached = 0,
+        state = "open",
+        seed = util.hash01(x, y, 6) * 1000,
+    }, H)
+end
+
+function H:covers(x, y, pad)
+    local d = self.days
+    for _, c in ipairs(self.path) do
+        if x > c.x - pad and x < c.x + d.w + pad
+            and y > c.y - pad and y < c.y + d.h + pad then
+            return true
+        end
+    end
+    return false
+end
+
+function H:finish(game, won)
+    self.live = false
+    if won then
+        self.state = "won"
+        local c = self.path[#self.path]
+        local hx, hy = c.x + self.days.w / 2, c.y + self.days.h / 2
+        game.pickups[#game.pickups + 1] = Pickup.new("heart", hx, hy)
+        game.particles:burst(hx, hy, 10, Palette.red)
+        call(game, "FINISH!")
+    else
+        self.state = "fading"
+        self.t = 0
+        call(game, "OUT!")
+    end
+end
+
+-- Arriving in box `k` of the path, or in a box off it (`k` nil).
+function H:step(k, game)
+    if not self.live then
+        if k == 1 then
+            self.live = true
+            self.reached = 1
+            self.left = self.time
+            call(game, "HOP!")
+        end
+        return
+    end
+    if k == self.reached + 1 then
+        self.reached = k
+        if k == #self.path then
+            self:finish(game, true)
+        else
+            Sfx.play("tick")
+        end
+    else
+        self:finish(game, false)
+    end
+end
+
+function H:update(dt, game)
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= GYM_FADE then self.state = "gone" end
+        return
+    end
+    if self.state ~= "open" then return end
+
+    -- The box under you changes only once you are well into the new one.
+    local d, p = self.days, game.player
+    local ix, iy = p.x % d.w, p.y % d.h
+    if ix >= SURE and ix <= d.w - SURE and iy >= d.rule + SURE and iy <= d.h - SURE then
+        local key = boxKey(math.floor(p.x / d.w), math.floor(p.y / d.h))
+        if key ~= self.at then
+            self.at = key
+            self:step(self.index[key], game)
+        end
+    end
+
+    if self.live then
+        self.left = self.left - dt
+        if self.left <= 0 then self:finish(game, false) end
+    end
+end
+
+function H:clock()
+    return self.live and self.left
+end
+
+function H:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / GYM_FADE, 0, 1) or 0
+    fadeSeed = self.seed
+
+    -- Each box chalked round a pixel inside the page's own ruling, with its
+    -- number in the middle: slate ahead of you, blue once hopped.
+    local d = self.days
+    for k, c in ipairs(self.path) do
+        local x, y = c.x + 2, c.y + d.rule + 1
+        local w, h = d.w - 3, d.h - d.rule - 2
+        colour(k <= self.reached and Palette.blue or Palette.slate)
+        rect(x, y, w, 1)
+        rect(x, y + h - 1, w, 1)
+        rect(x, y, 1, h)
+        rect(x + w - 1, y, 1, h)
+        -- A flagged box's number stands a little right, off its flag.
+        local flagged = k == 1 or k == #self.path
+        if fade < 0.5 then
+            Font.printCentered(tostring(k), c.x + d.w / 2 + (flagged and 4 or 1),
+                math.floor(c.y + (d.h + d.rule - Font.height) / 2))
+        end
+    end
+
+    local first, last = self.path[1], self.path[#self.path]
+    plant(Sprites.FLAG, first.x + 4, first.y + d.h - 3)
+    plant(Sprites.CHEQUERED, last.x + 4, last.y + d.h - 3)
+    fade = 0
+end
+
 --- the page ------------------------------------------------------------------------
 
 local KINDS = {
@@ -907,6 +1300,9 @@ local KINDS = {
     simon = function(x, y, game)
         return S.new(x, y, game.course.key, game.subject.paper and game.subject.paper.staff)
     end,
+    dodgeball = function(x, y, game) return D.new(x, y, game.course.key, daysOf(game)) end,
+    -- Back empty, like Simon, when no path was dealt; the cell is spent anyway.
+    hopscotch = function(x, y, game) return H.new(x, y, game.course.key, daysOf(game)) end,
 }
 for kind in pairs(BOARDS) do
     KINDS[kind] = function(x, y, game) return Q.new(x, y, game.course.key, kind) end
@@ -967,7 +1363,9 @@ function Worksheet.update(game, dt)
 
     local px, py = game.player.x, game.player.y
     for _, s in ipairs(game.worksheets) do
-        if math.abs(s.x - px) < ACTIVE and math.abs(s.y - py) < ACTIVE then
+        -- And a sheet under way wherever you are: its clock and its rules do not
+        -- stop because you walked off it (which is usually how it was lost).
+        if s.live or (math.abs(s.x - px) < ACTIVE and math.abs(s.y - py) < ACTIVE) then
             s:update(dt, game, pen)
         end
     end
@@ -980,6 +1378,15 @@ function Worksheet.draw(game)
             and s.y + s.hh > top - 4 and s.y - s.hh < top + h + 4 then
             s:draw()
         end
+    end
+end
+
+-- What is left on the clock of the sheet under way, if one is, for the HUD to
+-- hang under the run's own (P.E.'s pit and hopscotch).
+function Worksheet.clock(game)
+    for _, s in ipairs(game.worksheets or {}) do
+        local left = s.clock and s:clock()
+        if left then return math.max(0, left) end
     end
 end
 

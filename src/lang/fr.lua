@@ -338,6 +338,11 @@ return {
     ["THREE IN A ROW"] = "TROIS EN LIGNE",
     ["CORRECT!"] = "EXACT!",
     ["WRONG ANSWER"] = "MAUVAISE REPONSE",
+    ["DODGE!"] = "ESQUIVE!",
+    ["SAFE!"] = "SAUVE!",
+    ["OUT!"] = "ELIMINE!",
+    ["HOP!"] = "SAUTE!",
+    ["FINISH!"] = "ARRIVEE!",
     ["GONE OVER IN RED PEN"] = "CORRIGE EN ROUGE",
     ["%s   %d KILLS"] = "%s   %d VAINCUS",
 

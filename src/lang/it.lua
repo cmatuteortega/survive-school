@@ -332,6 +332,11 @@ return {
     ["THREE IN A ROW"] = "TRIS!",
     ["CORRECT!"] = "ESATTO!",
     ["WRONG ANSWER"] = "RISPOSTA SBAGLIATA",
+    ["DODGE!"] = "SCHIVA!",
+    ["SAFE!"] = "SALVO!",
+    ["OUT!"] = "FUORI!",
+    ["HOP!"] = "SALTA!",
+    ["FINISH!"] = "TRAGUARDO!",
     ["GONE OVER IN RED PEN"] = "CORRETTO IN ROSSO",
     ["%s   %d KILLS"] = "%s   %d UCCISI",
 

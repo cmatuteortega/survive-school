@@ -8259,7 +8259,9 @@ object lying on it, not another ink doodle.
 Every page has a few puzzles printed on it, and solving one pays. Every lesson
 has **tic-tac-toe**, MATHS also sets a **pop quiz** and a **sequence**, and
 SCIENCE, FINANCE and MUSIC each set a board of their own -- the **lab**, the
-**till** and the **stave** -- and MUSIC sets **Simon says** besides. They sit
+**till** and the **stave** -- and MUSIC sets **Simon says** besides. P.E. sets
+two sheets made of its own calendar boxes, the **dodgeball pit** and
+**hopscotch**. They sit
 at fixed spots
 the way the fixed pickups do: a pure function of where they are and the run's
 seed, found by walking, and solved once each per run.
@@ -8420,6 +8422,47 @@ health for a wrong note, so a second health gamble on the same page would make
 MUSIC one sheet printed twice. Simon is the free try, like tic-tac-toe, and
 pays the heart because a tune you had to hold in your head with the horde
 coming is worth more than one coin.
+
+**P.E.'s two sheets are made of the page itself.** The calendar's day boxes are
+the gym floor, so neither prints a board or a grid of its own: the pit is a
+block of boxes and the hopscotch a path of them. Both are races against a clock
+of their own, hung in red under the run's clock while one is under way, and
+both start and stop on the whistle -- the P.E. boss's whistle, which is the one
+sound in the book that already means a drill has begun or ended. Each has a
+red flag where it starts. Losing either costs nothing but the prize: the sheet
+fades off the page the way a failed Simon does.
+
+- **The dodgeball pit** is four boxes by three, ruled round heavier than the
+  page. **Walk in** and the whistle goes, the border turns red, and the class is
+  **thrown** at you: monsters of the minute launched off the ring in a straight
+  line through where you are standing, at three or four times walking pace.
+  **Last the clock** -- 10 seconds at HIGH SCHOOL, 12 at BACHELOR, 15 at
+  MASTERS and PHD, the throws coming faster and quicker at each -- and a
+  **diamond** drops in the middle. **Any hit is out**, from a throw or from
+  anything else on the page, and so is **stepping out of the pit**. Nothing
+  stops you leaving: walking out is the other way to lose, and a pit you could
+  not leave would be the boss's box with a prize in it. A thrown monster flies
+  on past and, once well clear (or the moment the whistle goes), walks like any
+  other -- dodgeballs are the class. A pen line stops a throw like it stops
+  anything, which is the one answer besides stepping aside.
+- **Hopscotch** is a path of boxes, numbered from 1, with the red flag in the
+  first and a **chequered flag** in the last. **Step into box 1** and the
+  whistle goes; from then on every box you step into must be the next one.
+  Stepping into a box off the path, back into one you have left, or past the
+  next one is out, and so is the clock running down. The last box is a
+  **heart**. The path is 12 boxes at HIGH SCHOOL, 16, 20, and 24 at PHD, with
+  about a second and a half a box at HIGH SCHOOL down to one at PHD, plus two
+  to start with -- a box is half a second's walk, so the slack is for the horde
+  standing on the path. It never touches itself: no box on it sits beside any
+  but the boxes before and after it, so the way on is always the one numbered
+  box beside you and a corner turned is never a box cut through. And a step
+  counts once you are a few pixels into a box rather than on its rule, so
+  brushing a corner is not stepping off.
+
+The pit pays the quiz's diamond because it costs what a wrong answer there
+costs -- trouble you could not have walked away from -- and hopscotch pays
+Simon's heart because it is Simon's machine, walking places in order, with a
+clock instead of a tune.
 
 ## On a phone
 

@@ -147,6 +147,39 @@ Sprites.HANDBELL = {
     "....ooo....",
 }
 
+-- The flags on P.E.'s two sheets (src/worksheet.lua), plotted a pixel at a time
+-- like the hand bell so they fade with the rest of the sheet. A red pennant
+-- where a sheet starts -- the dodgeball pit's edge, the first box of the
+-- hopscotch -- and the chequered flag on the hopscotch's last box, which says
+-- finish line in every language. The pole's foot is the bottom-left pixel.
+Sprites.FLAG = {
+    "orr....",
+    "orrrr..",
+    "orrrrrr",
+    "orrrr..",
+    "orr....",
+    "o......",
+    "o......",
+    "o......",
+    "o......",
+    "oo.....",
+}
+
+Sprites.CHEQUERED = {
+    "ooooooooooo",
+    "oooowwoowwo",
+    "oooowwoowwo",
+    "oowwoowwooo",
+    "oowwoowwooo",
+    "oooowwoowwo",
+    "oooowwoowwo",
+    "ooooooooooo",
+    "o..........",
+    "o..........",
+    "o..........",
+    "oo.........",
+}
+
 -- The star that orbits you (src/orbital.lua). Solid rather than outlined: at
 -- seven pixels across an outline is three pixels of star and four of paper, and
 -- this one has to be legible while it crosses a crowd.

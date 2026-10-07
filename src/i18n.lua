@@ -645,6 +645,13 @@ local ES = {
     -- dynamics, and the same word on every stage in Europe, so only Spanish
     -- needs a line -- for its opening mark -- and the other four fall through.
     ["BRAVO!"] = "¡BRAVO!",
+    -- P.E.'s two sheets: the dodgeball pit and the hopscotch, called on the
+    -- whistle when each starts and when it is over.
+    ["DODGE!"] = "¡ESQUIVA!",
+    ["SAFE!"] = "¡A SALVO!",
+    ["OUT!"] = "¡ELIMINADO!",
+    ["HOP!"] = "¡SALTA!",
+    ["FINISH!"] = "¡META!",
     -- And the enraged one (Spawner:fury), which is the other line here that names
     -- a monster rather than a moment -- and the one that has to name a *pen*. A
     -- red-pen correction over the top of your work is the same thing in a Spanish

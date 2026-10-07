@@ -6448,9 +6448,14 @@ because the worksheet requires `src/pickup.lua` to pay out.
 **What a page prints** is the subject row's `worksheets` weights
 (`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS, `{ music = 2, simon = 2,
 tictactoe = 1 }` on MUSIC, `{ science = 2, tictactoe = 1 }` and the like on
-SCIENCE and FINANCE), with
+SCIENCE and FINANCE, `{ dodgeball = 2, hopscotch = 2, tictactoe = 1 }` on P.E.), with
 `{ tictactoe = 1 }` for every row that carries none. A new kind is a constructor in `KINDS` plus an object
-with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`.
+with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`. A
+sheet may also carry `covers(x, y, pad)` (a footprint that is not its box),
+`live` (under way: updated wherever the player is, not only within `ACTIVE`)
+and `clock()` (seconds left while live, nil otherwise; `Worksheet.clock` hands
+the first one to `src/hud.lua`, which prints it in red under the run clock, or
+under the boss's bar and name when there is one).
 
 **Tic-tac-toe** (`T`): `deal` builds a game three moves each from a winning
 line outwards and rerolls until the O's have not already won. Input is the pen
@@ -6531,8 +6536,40 @@ synthesised at G6, two octaves over what is written as a glockenspiel sounds, so
   `fade`/`fadeSeed` the helpers read), then `gone`, which draws nothing and is
   skipped by `Worksheet.covers`.
 
+**The gym** (P.E.): two sheets made of the calendar's day boxes, whose
+geometry is the CALENDAR paper's `days` row (`{ w = 32, h = 24, rule = 2 }`,
+which `CALENDAR.at` reads too), read by `daysOf(game)`. Both open and close
+with `call(game, text)`: `Game:say` plus `Sfx.play("whistle")`. Both plant
+`Sprites.FLAG` (and the hopscotch `Sprites.CHEQUERED`), rows plotted through
+the fade like the hand bell. Both lose by fading for `GYM_FADE` the way Simon
+does, and nothing else.
+- **Dodgeball** (`D`): `PIT_W` x `PIT_H` (4x3) boxes round the sheet's spot,
+  edges `x0`, `y0`, `x1`, `y1` on the page's rules, bordered 2px just inside
+  them (slate, red while live: red over the sky rules would overprint to
+  slate). `open` until the player's centre is `inside`, then `live` for
+  `PIT_TIME[course]` (10/12/15/15s), noting `player.hits` (counted by
+  `Player:hurt`). Lost (`OUT!`) the frame the centre leaves or `hits` rises;
+  won (`SAFE!`) when the clock runs out, dropping a `diamond` in the middle.
+  While live it throws one every `THROW_EVERY[course]` (1.4 to 0.7s, the first
+  `THROW_FIRST` after the whistle): `Spawner:pick` spawned on `Spawner:ring` and
+  given the bowl's `drive = { dash, dx, dy, speed }` (`THROW_SPEED`, 140 to
+  190) at the player, within `THROW_SPREAD` radians. `D:land` takes the drive
+  off each once it is `2 x ring` from where it was thrown, or off all of them
+  when the pit is over, and they walk like the rest of the horde.
+- **Hopscotch** (`H`): `hopPath(HOP_BOXES[course])` (12/16/20/24) is a random walk
+  of boxes from the spot within `HOP_SPAN_X` x `HOP_SPAN_Y` (5, 3) boxes of
+  it, never stepping beside any box on it but the last, redealt up to 500 times
+  (nil and the cell is spent, like Simon). `H:covers` is its boxes. The box
+  under the player changes only once their centre is `SURE` (3) px off every
+  rule, and `H:step(index)` takes the new one: box 1 starts it (`HOP!`, clock
+  `HOP_GRACE + n x HOP_PER[course]`); the next box advances `reached` (a `tick`);
+  the last pays a `heart` in it (`FINISH!`); anything else, or the clock, is
+  `OUT!`. Boxes are chalked 1px inside the ruling, slate ahead and blue once
+  hopped, numbered in the face.
+
 The notices are `THREE IN A ROW`, `CORRECT!`, `WRONG ANSWER` and `BRAVO!`
-(Spanish only: the other four fall through to the Italian), through
+(Spanish only: the other four fall through to the Italian), and P.E.'s
+`DODGE!`, `SAFE!`, `HOP!`, `FINISH!` and `OUT!`, through
 `Game:say`.
 
 **Typesetting** is `Quiz.layout(s)`, returning `{ ops, w, top, bottom }`, and
@@ -6808,7 +6845,8 @@ and are all the same 11x11 glyph.
 - **Worksheet:** a constructor in `KINDS` in `src/worksheet.lua` and an object
   with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`, and
   its weight in a subject's `worksheets` row (rows without one get
-  `DEFAULT_MIX`). A board answered by standing is a row in `BOARDS` (`book`,
+  `DEFAULT_MIX`). A sheet with a clock of its own gives `live` and `clock()`
+  and the HUD shows it. A board answered by standing is a row in `BOARDS` (`book`,
   `right`, `wrong`); its `KINDS` constructor comes for free. A new question is
   a generator in its rung's list in `src/quiz.lua`, a new book is four rung lists
   and a table keyed by course like `Quiz.science`, and a rung for a new course
