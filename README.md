@@ -8450,7 +8450,7 @@ fades off the page the way a failed Simon does.
   whistle goes; from then on every box you step into must be the next one.
   Stepping into a box off the path, back into one you have left, or past the
   next one is out, and so is the clock running down. The last box is a
-  **heart**. The path is 6 boxes at HIGH SCHOOL, 8, 10, and 12 at PHD, with
+  **heart**. The path is 12 boxes at HIGH SCHOOL, 16, 20, and 24 at PHD, with
   about a second and a half a box at HIGH SCHOOL down to one at PHD, plus two
   to start with -- a box is half a second's walk, so the slack is for the horde
   standing on the path. It never touches itself: no box on it sits beside any

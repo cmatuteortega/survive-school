@@ -6556,8 +6556,8 @@ does, and nothing else.
   190) at the player, within `THROW_SPREAD` radians. `D:land` takes the drive
   off each once it is `2 x ring` from where it was thrown, or off all of them
   when the pit is over, and they walk like the rest of the horde.
-- **Hopscotch** (`H`): `hopPath(HOP_BOXES[course])` (6/8/10/12) is a random walk
-  of boxes from the spot within `HOP_SPAN_X` x `HOP_SPAN_Y` (3, 2) boxes of
+- **Hopscotch** (`H`): `hopPath(HOP_BOXES[course])` (12/16/20/24) is a random walk
+  of boxes from the spot within `HOP_SPAN_X` x `HOP_SPAN_Y` (5, 3) boxes of
   it, never stepping beside any box on it but the last, redealt up to 500 times
   (nil and the cell is spent, like Simon). `H:covers` is its boxes. The box
   under the player changes only once their centre is `SURE` (3) px off every

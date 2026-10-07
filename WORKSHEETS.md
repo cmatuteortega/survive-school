@@ -147,7 +147,7 @@ lessons at once.
       whistle goes; every box you step into must be the next. A box off the
       path, a box gone back to, a box skipped, or the clock (about 1.5s a box
       at HIGH SCHOOL down to 1s at PHD, plus 2) is out and the sheet fades. The
-      last box is a **heart**. 6 boxes at HIGH SCHOOL, 8, 10, 12 at PHD; the
+      last box is a **heart**. 12 boxes at HIGH SCHOOL, 16, 20, 24 at PHD; the
       path never touches itself, so the next box is always the one numbered
       box beside you.
 

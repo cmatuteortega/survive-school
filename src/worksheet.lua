@@ -1118,12 +1118,12 @@ end
 local H = {}
 H.__index = H
 
-local HOP_BOXES = { school = 6, bachelor = 8, masters = 10, phd = 12 }
+local HOP_BOXES = { school = 12, bachelor = 16, masters = 20, phd = 24 }
 -- Seconds a box, on top of HOP_GRACE. A box is half a second's walk across at
 -- the bare speed, so the slack is for the horde standing on the path.
 local HOP_PER = { school = 1.5, bachelor = 1.3, masters = 1.15, phd = 1.0 }
 local HOP_GRACE = 2
-local HOP_SPAN_X, HOP_SPAN_Y = 3, 2 -- how far from the first box it may wander
+local HOP_SPAN_X, HOP_SPAN_Y = 5, 3 -- how far from the first box it may wander
 
 local function boxKey(i, j) return i * 65536 + j end
 
