@@ -895,19 +895,51 @@ local function bar(x, y, w, h, fill, color, fromRight)
 end
 
 -- The ink meter while an ink droplet's free pen is running (`Game.inkFree`,
--- src/pickup.lua): the full bar turned into water, a sky swell rolling across
--- the blue with an ink undertow running the other way under it. The one time
--- the meter goes blue, since for those seconds it is not a readout of a
--- resource -- the pen is simply running free, and the meter is part of the
--- show. Column by column in whole pixels, two sines quantised to rows, so it is
--- pixel art and not a smooth curve. Off the run's clock, so a paused run's
--- sea stands still with it.
+-- src/pickup.lua): the full bar turned into a lit glass tube with star power
+-- in it. Every row of the tube is shaded off where a round bar would catch the
+-- light -- a pale rim at the top, a hard highlight line under it, the body, and
+-- the dark belly at the bottom -- so it reads as raised off the page rather
+-- than printed on it. The colour inside runs in diagonal bands through the
+-- palette's three ramps (blue, red, silver), scrolling along like a power-up
+-- flashing, and a glint sweeps across the whole of it every so often. The one
+-- time the meter is anything but slate: for those seconds it is not a readout
+-- of a resource -- the pen is simply running free, and the meter is part of
+-- the show.
+--
+-- No alpha and no shader: every pixel is one of the eight colours, picked from
+-- a ramp by its shade level, so the "reflection" is the pixel art kind -- a
+-- lighter step of the same hue -- and the overprint rule is never in question.
+-- Off the run's clock, so a paused run's tube stands still with it.
 --
 -- And blinking back to its plain slate for the last stretch, on and off in
 -- tenths, so the window closing is something you see coming rather than a
 -- stroke that suddenly starts costing again.
 local INK_WAVE_WARN = 1     -- seconds of blinking before it ends
 local INK_WAVE_BLINK = 0.1  -- half a blink
+
+-- Light to dark, a step per shade level: 0 is the highlight, 3 the belly.
+-- Paper is the top of every ramp because a specular highlight has no hue.
+local STAR_RAMPS = {
+    { Palette.paper, Palette.sky,      Palette.blue,  Palette.slate },
+    { Palette.paper, Palette.blush,    Palette.red,   Palette.slate },
+    -- Grey a step lighter than the others, so its band reads as silver
+    -- rather than as a hole in the tube.
+    { Palette.paper, Palette.paper,    Palette.graphite, Palette.slate },
+}
+local STAR_BAND = 5      -- pixels wide, each colour band
+local STAR_SCROLL = 36   -- pixels a second the bands run along the bar
+local STAR_LEAN = 0.5    -- pixels the bands and the glint lean per row
+local GLINT_EVERY = 1.1  -- seconds between glints
+local GLINT_SPAN = 0.45  -- seconds a glint takes to cross the bar
+
+-- The tube's profile: which shade a row is, off how far down the bar it sits.
+local function starShade(v)
+    if v < 0.12 then return 1 end   -- the rim catching the light
+    if v < 0.26 then return 0 end   -- the highlight line
+    if v < 0.38 then return 1 end
+    if v < 0.74 then return 2 end   -- the body
+    return 3                        -- the belly in shadow
+end
 
 local function inkWave(x, y, w, h, left, t)
     if left < INK_WAVE_WARN and math.floor(left / INK_WAVE_BLINK) % 2 == 0 then
@@ -916,25 +948,28 @@ local function inkWave(x, y, w, h, left, t)
     end
 
     bar(x, y, w, h, 1, Palette.blue)
-    local ih = h - 2
-    for i = 0, w - 3 do
-        local cx = x + 1 + i
-        -- The swell: how far down from the top of the bar the water starts.
-        local surf = math.floor(ih * 0.3 + math.sin(i * 0.35 - t * 6) * 1.6 + 0.5)
-        surf = math.max(0, math.min(ih - 1, surf))
-        if surf > 0 then
-            love.graphics.setColor(Palette.sky)
-            love.graphics.rectangle("fill", cx, y + 1, 1, surf)
-        end
-        -- The undertow: a single row of ink near the bottom going the other way,
-        -- broken where the sine dips so it reads as a current and not a rule.
-        local wave = math.sin(i * 0.5 + t * 4)
-        if wave > -0.3 then
-            local deep = math.floor(ih * 0.7 + wave * 1.2 + 0.5)
-            if deep > surf and deep < ih then
-                love.graphics.setColor(Palette.ink)
-                love.graphics.rectangle("fill", cx, y + 1 + deep, 1, 1)
+    local iw, ih = w - 2, h - 2
+    -- Where the glint's leading edge is, run from before the left end to past
+    -- the right one and then held off the bar until the next.
+    local glint = (t % GLINT_EVERY) / GLINT_SPAN * (iw + ih + 8) - 4
+    for r = 0, ih - 1 do
+        local shade = starShade((r + 0.5) / ih)
+        local lean = r * STAR_LEAN
+        for i = 0, iw - 1 do
+            local band = math.floor((i - lean + t * STAR_SCROLL) / STAR_BAND)
+            local ramp = STAR_RAMPS[band % #STAR_RAMPS + 1]
+            local s = shade
+            -- The glint: two pixels of paper and a lighter step trailing it,
+            -- leaning with the bands. The belly takes it a step dimmer, so the
+            -- tube keeps its bottom edge even under the flash.
+            local g = glint - (i - lean)
+            if g >= 0 and g < 2 then
+                s = shade == 3 and 1 or 0
+            elseif g >= 2 and g < 3.5 then
+                s = math.max(0, s - 1)
             end
+            love.graphics.setColor(ramp[s + 1])
+            love.graphics.rectangle("fill", x + 1 + i, y + 1 + r, 1, 1)
         end
     end
 end

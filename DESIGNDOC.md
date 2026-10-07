@@ -433,8 +433,11 @@ bar's edge -- `Game:runWorth`, the sum the end card pays, never the purse.
 While an ink droplet's free pen runs (`Game.inkFree`, set by `src/pickup.lua`,
 counted down in `Game:updateDrawing`, which holds the meter full; `Game:spendInk`
 charges nothing while it is above zero), `Hud.draw` swaps the ink bar for
-`inkWave`: a blue bar with a sky swell and an ink undertow plotted column by
-column off `game.time`, blinking back to the plain slate bar for the last second.
+`inkWave`: a lit glass tube plotted pixel by pixel off `game.time` -- each row
+shaded off a round bar's profile (rim, highlight line, body, belly) through one of
+three ramps (`STAR_RAMPS`: blue, red, silver) chosen by leaning bands that scroll
+along it, with a paper glint sweeping across every `GLINT_EVERY` seconds --
+blinking back to the plain slate bar for the last second.
 
 The other three timed or lasting pickups keep their state where it is read. The
 wall clock calls `Enemy:freeze` once on every enemy on the page but a boss's

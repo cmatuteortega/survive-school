@@ -8262,8 +8262,9 @@ Six kinds, weighted 4 : 4 : 1 : 1 : 1 : 1:
   whenever you take it, and what it asks is that you *spend* it: the walk out
   there pays off in the frantic drawing after. A second droplet inside the
   window starts the four seconds again rather than stacking them. For the
-  length of it the ink meter turns to water — a sky swell rolling across a blue
-  bar with an ink undertow running the other way — and blinks back to its
+  length of it the ink meter turns into a power-up — a shiny tube lit like a
+  raised bar, star-power bands of blue, red and silver running along it and a
+  glint sweeping across — and blinks back to its
   plain grey in tenths over the last second, so the window closing is something
   you see coming rather than a stroke that suddenly starts costing again.
 - **A diamond** is a whole level, banked exactly the way an earned one is
