@@ -58,6 +58,18 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
   - **PHD** -- Catalan, Bell, partitions, derangements, Lucas, `n^n`,
     tribonacci, look-and-say -- and a masters run now and then.
 
+### What the built three pay
+
+| Board | Where | Right | Wrong | Stakes |
+| --- | --- | --- | --- | --- |
+| Tic-tac-toe | every lesson | a coin (into the purse) | the page plays its O; nothing lost | none: a free try |
+| Pop quiz | MATHS | a diamond (a whole level) | a giant walks in off the ring | power, against trouble |
+| Sequence | MATHS | a heart (+25 HP) | 20 HP off the bar | health, both ways |
+
+On MATHS the page prints them 2 quiz : 2 sequence : 1 tic-tac-toe (the
+`worksheets` row in `src/subjects.lua`); every other lesson prints only
+tic-tac-toe until it has a puzzle of its own.
+
 ## Ideas, one per lesson
 
 | Lesson | Puzzle | How you answer | Fail state |
@@ -76,6 +88,17 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
 | any | **Maze worksheet**: a little printed maze, the prize in the middle | Pencil from the mouth to the middle without touching a wall | Touch one and start again |
 | any | **True or false**: one statement, two boxes | Stand on one | -- |
 
+### More MATHS boards (the stand-on-an-answer board makes each one a row)
+
+- **Mini-sudoku**: a 4x4 grid with one cell missing, three digits to stand on.
+- **Odd one out**: four numbers, one is not like the others (not prime, not a
+  square, not in the times table). Four answers instead of three.
+- **Bigger or smaller**: two expressions, stand on the larger -- `2^10` or `10^3`,
+  `7/8` or `8/9`. Two answers, quick, good for high school.
+- **Estimate**: `√50 ≈ ?` with 6, 7, 8 -- a question where being close is right.
+- **Units and shapes**: the area of a drawn rectangle or triangle, its sides
+  ruled on the page in squares.
+
 ### Tic-tac-toe twists not built (yet)
 
 - **The horde plays O.** Any monster that walks into a cell claims it, so you
@@ -89,8 +112,9 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
 ## Rewards, from least to most disruptive
 
 - **The pickups that already exist** -- heart, ink, diamond (a whole level), and
-  the coin (`banked`, one into the purse). The built two use the coin and the
-  diamond.
+  the coin (`banked`, one into the purse). The built three use the coin, the
+  diamond and the heart -- and the sequence is the first to charge health for a
+  wrong answer rather than sending something.
 - **Coins paid straight into the purse** as a run term -- this touches
   `Game:runWorth`, and README argues for every payout term, so it would want its
   own paragraph.
