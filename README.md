@@ -8259,15 +8259,19 @@ coin -- the piggy bank's -- goes edge-on with the purse's 1 on both faces. A
 thing turning over the floor is the oldest way a game has of saying *prize*, and
 the turn is also what shows each is an object rather than another doodle printed
 on the page; like the crowd, each blanks the page out under itself, so the ruling
-stops at its edge. They hover two pixels up and bob one more, whole pixels at a
-time, and the graphite shadow under them narrows as they rise and as they turn
-edge-on.
+stops at its edge. They hover three pixels up and bob one more, whole pixels at a
+time, over a flat graphite oval that narrows as they rise and as they turn
+edge-on. The shading steps down through checkered pairs into slate, and the rim
+is two colours -- the kind's own on the lit side, a darker one round the far
+side -- which at this size is most of what makes a thing look round.
 
 Each keeps the colour of what it refills — red for health, blue for ink, its
 rim in that colour too — and the diamond is still cut from paper, with sky for
-its shade. **None of them is bigger than the hero**: nine pixels across at most,
-against his 15 by 19 board, because a prize larger than whoever picks it up reads
-as something to walk round rather than into.
+its shade. **None of them is bigger than the hero**: thirteen pixels across at
+most, against his 15 by 19 board, because a prize larger than whoever picks it up
+reads as something to walk round rather than into. Thirteen rather than the old
+sprites' nine because at nine the ramp had room for two shades, and two shades
+turning read as a flat sticker changing shape.
 
 What a pickup looks like is only which kind it is and how far round it has
 turned, so each kind is painted at 32 headings, each the first time it is

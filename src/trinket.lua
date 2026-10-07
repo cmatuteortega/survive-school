@@ -19,15 +19,19 @@
 -- lamp one after another -- which is what tells it apart from the doodles
 -- printed on the page round it.
 --
--- **No bigger than the hero.** Each is nine pixels across at most (the hero's
--- board is 15 by 19): a prize larger than the one who picks it up reads as
--- something to walk round rather than into, and the old sprites' sizes are kept
--- as near as the shapes allow.
+-- **No bigger than the hero.** Each is thirteen pixels across at most (the
+-- hero's board is 15 by 19): a prize larger than the one who picks it up reads as
+-- something to walk round rather than into. Thirteen and not the old sprites'
+-- nine because the turn needs the room -- at nine the ramp had space for two
+-- shades and a glint, and a solid with two shades reads as a flat sticker
+-- changing shape rather than an object going round.
 --
 -- Drawn the eye's way otherwise: eight colours, no alpha, the ramp stepping down
--- through checkered pairs, and a rim one pixel deep round the outside in the
--- colour the kind was always outlined in -- red for health, blue for ink, ink for
--- the coin and slate for the diamond -- so the colour code survives the turn.
+-- through checkered pairs into slate, and a rim one pixel deep round the outside
+-- in two colours -- the one the kind was always outlined in (red for health, blue
+-- for ink, slate for the diamond, ink for the coin) on the side the lamp is on,
+-- and a darker one on the side away from it. The rim going dark round the far
+-- side is most of what makes something this small look round.
 
 local Palette = require("src.palette")
 
@@ -39,7 +43,7 @@ local TAU = math.pi * 2
 
 -- How many headings a turn is cut into. Thirty-two is a picture every eleven
 -- degrees: at the fastest spin below that is a new picture every 40ms, which on
--- a nine-pixel body is as smooth as the turn can look.
+-- a thirteen-pixel body is as smooth as the turn can look.
 local STEPS = 32
 
 -- Seen from a little above, the piggy bank's way: the top of a thing tipped a
@@ -49,6 +53,10 @@ local STEPS = 32
 -- thickness fills the dip between the lobes, and the dip is half of what makes it
 -- a heart.
 local ELEV = 0.3
+
+-- Every solid below is written at the old sprites' size and blown up by this:
+-- the shapes were tuned at nine pixels and a scale keeps them the same shapes.
+local SIZE = 1.3
 
 -- The eye's lamp: up, left and in front, fixed on the screen (y down, z at you).
 local LX, LY, LZ = -0.48, -0.62, 0.62
@@ -62,10 +70,10 @@ do
     HX, HY, HZ = HX / n, HY / n, HZ / n
 end
 
--- The box a picture is painted in, about its centre: nine across and nine down
--- with a pixel of slack each way for the rim, and the march's depth.
-local BOX = 6
-local DEPTH = 8
+-- The box a picture is painted in, about its centre: thirteen across and down
+-- with slack each way for the rim, and the march's depth.
+local BOX = 9
+local DEPTH = 12
 
 local paper, graphite, slate, ink = Palette.paper, Palette.graphite, Palette.slate, Palette.ink
 local red, blush, blue, sky = Palette.red, Palette.blush, Palette.blue, Palette.sky
@@ -78,7 +86,7 @@ local red, blush, blue, sky = Palette.red, Palette.blush, Palette.blue, Palette.
 -- turning is a playing card; a puffed one is a sweet, which is what it is.
 local HEART_S = 7.5     -- the 2D shape is about 1.2 by 1.1; this makes it nine by eight
 local HEART_Y = 4.1     -- lifts its point off the bottom so the middle is the middle
-local HEART_T, HEART_R = 0.9, 0.8
+local HEART_T, HEART_R = 1.2, 1.0
 
 local function heart2(x, y)
     x = abs(x)
@@ -131,9 +139,9 @@ end
 -- girdle and eight pavilion facets down to the point, the lower ring turned half
 -- a facet so the two never line up. Flat faces under a lamp are what a turning
 -- stone is for: each one flashes as it comes round.
-local GIRDLE, GIRDLE_Y = 4.6, 1.2
-local TABLE, TABLE_Y = 2.4, 3.0
-local POINT_Y = -4.4
+local GIRDLE, GIRDLE_Y = 4.6, 1.6
+local TABLE, TABLE_Y = 2.6, 3.4
+local POINT_Y = -4.6
 local FACETS = 8
 local CROWN, PAVILION = {}, {}
 do
@@ -151,8 +159,7 @@ do
     for k = 0, FACETS - 1 do
         local a = k / FACETS * TAU
         CROWN[k + 1] = { cos(a) * cr, cy, sin(a) * cr, cd }
-        local b = (k + 0.5) / FACETS * TAU
-        PAVILION[k + 1] = { cos(b) * pr, py, sin(b) * pr, pd }
+        PAVILION[k + 1] = { cos(a) * pr, py, sin(a) * pr, pd }
     end
 end
 
@@ -170,7 +177,7 @@ end
 -- The coin: a disc, the purse's coin given a thickness. The 1 on its face is
 -- painted onto it below rather than cut into it -- at nine pixels a relief is
 -- one shade and the figure would be lost in the ramp.
-local COIN_R, COIN_T = 4.4, 0.8
+local COIN_R, COIN_T = 4.7, 1.1
 
 local function coin(x, y, z)
     local dr = sqrt(x * x + y * y) - COIN_R
@@ -188,22 +195,23 @@ local FIGURE = { ".#.", "##.", ".#.", ".#.", "###" }
 
 local RAMP = {
     heart = {
-        { at = 0.35, blush }, { at = 0.08, blush, red },
-        { at = -0.4, red }, { at = -2, red, slate },
+        { at = 0.45, blush }, { at = 0.2, blush, red },
+        { at = -0.15, red }, { at = -0.45, red, slate }, { at = -2, slate },
     },
     ink = {
-        { at = 0.35, sky }, { at = 0.08, sky, blue },
-        { at = -0.4, blue }, { at = -2, blue, slate },
+        { at = 0.45, sky }, { at = 0.2, sky, blue },
+        { at = -0.15, blue }, { at = -0.45, blue, slate }, { at = -2, slate },
     },
     -- Cut from paper, as it always was: like the eye and the ruler body it is
     -- the paper side of the ramp that does the work, and sky is its shade.
     diamond = {
         { at = 0.8, paper }, { at = 0.55, paper, sky },
-        { at = 0.25, sky }, { at = -0.1, sky, blue }, { at = -2, blue },
+        { at = 0.25, sky }, { at = -0.1, sky, blue }, { at = -0.4, blue },
+        { at = -2, blue, slate },
     },
     coin = {
-        { at = 0.3, blush }, { at = 0.0, blush, red },
-        { at = -0.4, red }, { at = -2, red, slate },
+        { at = 0.35, blush }, { at = 0.05, blush, red },
+        { at = -0.3, red }, { at = -2, red, slate },
     },
 }
 
@@ -216,11 +224,13 @@ local GLINT = { heart = 0.96, ink = 0.97, diamond = 0.9, coin = 0.96 }
 -- anything painted on top of the ramp, handed the point it hit in its own frame.
 
 local KINDS = {
-    heart = { sdf = heart, rim = red, turns = 0.55, elev = 0.05 },
-    ink = { sdf = drop, rim = blue, turns = 0.7, lean = DROP_LEAN },
-    diamond = { sdf = diamond, rim = slate, turns = 0.4 },
+    heart = { sdf = heart, rim = red, dark = slate, turns = 0.55, elev = 0.12 },
+    ink = { sdf = drop, rim = blue, dark = slate, turns = 0.7, lean = DROP_LEAN },
+    diamond = { sdf = diamond, rim = slate, dark = ink, turns = 0.4, elev = 0.12 },
+    -- Seen from higher than the rest, so its milled edge shows as a band under
+    -- the face rather than a line.
     coin = {
-        sdf = coin, rim = ink, turns = 0.8,
+        sdf = coin, rim = ink, dark = ink, turns = 0.8, elev = 0.45,
         -- The 1 on both faces, read the right way round from either side, and
         -- the milled edge a step darker than the face.
         face = function(x, y, z, colour)
@@ -233,7 +243,11 @@ local KINDS = {
                 end
                 return colour
             end
-            return colour == blush and red or colour
+            -- The edge: the face's ramp a step down, so the band reads as the
+            -- side of a thick coin and not more of its face.
+            if colour == blush then return red end
+            if colour == red then return slate end
+            return colour
         end,
     },
 }
@@ -270,14 +284,14 @@ local function paint(kindName, step)
     local sdf, ramp, glint = kind.sdf, RAMP[kindName], GLINT[kindName]
 
     local function at(sx, sy, sz)
-        return sdf(toObject(kind, ca, sa, sx, sy, sz))
+        return sdf(toObject(kind, ca, sa, sx / SIZE, sy / SIZE, sz / SIZE)) * SIZE
     end
 
     -- First pass: march each pixel's ray in from the front, light what it hits.
-    local hit = {}
+    local hit, lit = {}, {}
     for j = -BOX, BOX do
         local row = {}
-        hit[j] = row
+        hit[j], lit[j] = row, {}
         for i = -BOX, BOX do
             local sx, sy = i + 0.5, j + 0.5
             local z = DEPTH
@@ -305,11 +319,12 @@ local function paint(kindName, step)
                     end
                 end
                 if kind.face then
-                    local ox, oy, oz = toObject(kind, ca, sa, sx, sy, z)
+                    local ox, oy, oz = toObject(kind, ca, sa, sx / SIZE, sy / SIZE, z / SIZE)
                     colour = kind.face(ox, oy, oz, colour)
                 end
                 if HX * nx + HY * ny + HZ * nz > glint then colour = paper end
                 row[i] = colour
+                lit[j][i] = light > 0
             end
         end
     end
@@ -323,7 +338,7 @@ local function paint(kindName, step)
             local colour = row[i]
             if colour then
                 if not (row[i - 1] and row[i + 1] and up[i] and down[i]) then
-                    colour = kind.rim
+                    colour = lit[j][i] and kind.rim or kind.dark
                 end
                 top, bottom = top or j, j
                 left, right = min(left or i, i), max(right or i, i)
@@ -359,9 +374,9 @@ end
 
 --- drawing --------------------------------------------------------------------
 
--- How high it floats over its shadow: two pixels, and a slow bob of one more
+-- How high it floats over its shadow: three pixels, and a slow bob of one more
 -- each way on top -- whole pixels, so it steps rather than swims.
-local HOVER, BOB, BOB_RATE = 2, 1, 2.6
+local HOVER, BOB, BOB_RATE = 3, 1, 2.6
 
 local function lift(t)
     return HOVER + floor(sin(t * BOB_RATE) * BOB + 0.5)
@@ -376,14 +391,19 @@ local function place(pic, x, y, t)
     return floor(x), floor(y) + GROUND - lift(t) - pic.bottom - 1
 end
 
--- The scrap of graphite on the page under it: as wide as the body is this
--- frame, less a pixel each side, and narrower again the higher it floats -- so a
--- coin edge-on throws a sliver, and the bob reads as height off the paper.
+-- The patch of graphite on the page under it: a flat oval two rows deep, as wide
+-- as the body is this frame less a pixel each side, and narrower again the
+-- higher it floats -- so a coin edge-on throws a sliver, and the bob reads as
+-- height off the paper. Two rows rather than the crowd's one because a thing in
+-- the air throws a pool, not a line under its feet, and the pool is what says it
+-- is off the ground.
 function Trinket.drawShadow(kindName, x, y, t)
     local pic = picture(kindName, t)
-    local w = max(pic.width - 2 - (lift(t) - HOVER + 1), 1)
+    local w = max(pic.width - 2 - 2 * (lift(t) - HOVER + 1), 1)
+    local x0, y0 = floor(x) - floor(w / 2), floor(y) + GROUND
     love.graphics.setColor(graphite)
-    love.graphics.rectangle("fill", floor(x) - floor(w / 2), floor(y) + GROUND, w, 1)
+    love.graphics.rectangle("fill", x0, y0, w, 1)
+    if w > 4 then love.graphics.rectangle("fill", x0 + 2, y0 + 1, w - 4, 1) end
 end
 
 -- The silhouette in whatever colour is set: the blank stamped into the page
