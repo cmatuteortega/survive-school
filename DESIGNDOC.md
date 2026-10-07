@@ -436,6 +436,19 @@ charges nothing while it is above zero), `Hud.draw` swaps the ink bar for
 `inkWave`: a blue bar with a sky swell and an ink undertow plotted column by
 column off `game.time`, blinking back to the plain slate bar for the last second.
 
+The other three timed or lasting pickups keep their state where it is read. The
+wall clock calls `Enemy:freeze` once on every enemy on the page but a boss's
+stand-ins and one still dropping in (a boss takes it through its own `hold`), and
+sets `Game.stopped`, which `Pickup.tickStopped` counts down from
+`Game:updatePickups` purely to sound it: `tick` on the whole seconds, then every
+half second climbing, then `note` at half pitch on the thaw. The alarm clock walks
+the horde backwards and `Game:killEnemy`s everything inside `Camera.bounds()`
+that is not a boss, a stand-in or arriving -- gems, splits and bulbs all as for
+any kill -- and plays `alarm`. The gold star adds one to `Loadout.stars` and
+rebuilds; `Loadout:rebuild` multiplies `stats.damage` by `1 + Pickup.STAR *
+stars` after the catalogue and before the tool multipliers, and the bookmark
+writes `stars`. Neither `stopped` nor the frozen enemies are bookmarked.
+
 **The counter has four sections** (five with `SHOP`), turned by dragging the page
 (`src/spread.lua`) or `←`/`→`, and the section's name is the heading -- struck off
 the widest section name so the guard that steps it under the corners never moves
@@ -6865,6 +6878,13 @@ and are all the same 11x11 glyph.
   notes (`NOTE_SHAPES`) are.
   Anything it says goes through `Game:say`, so it needs a line in `src/i18n.lua`
   and the four `src/lang/` files. Questions are notation and need none.
+- **Pickup:** a row in `KINDS` (its weight in the scatter and the fixed layer)
+  and a function in `TAKE` in `src/pickup.lua`, and its body in
+  `src/trinket.lua`: a distance function, a row in `RAMP`, one in `GLINT` and one
+  in its `KINDS` (`rim`, `dark`, `turns`, and `elev`, `lean` or `face` as it
+  needs). Thirteen pixels across at most. Anything it changes that a level
+  rebuild would wipe (a stat) is counted on the loadout and folded in by
+  `Loadout:rebuild`, as `stars` is, and written into the bookmark.
 - **Enemy:** sprite in `Sprites.enemies` + row in `Enemy.types` + row in `TABLE`
   in `src/spawner.lua` (unlock time, weight). A reference copy of the art goes in
   `art/vanilla/<name>.txt` with its size in `BASE` and its place in `ORDER` in

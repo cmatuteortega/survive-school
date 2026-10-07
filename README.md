@@ -8236,7 +8236,7 @@ one always consumes it, even when it has nothing to give: a heart that
 refused a full bar hung around holding one of the eight slots, quietly
 throttling the scatter for as long as you stayed healthy.
 
-Three kinds, weighted 4 : 4 : 1:
+Six kinds, weighted 4 : 4 : 1 : 1 : 1 : 1:
 
 - **A heart** heals 25 — a quarter of the base bar.
 - **An ink droplet** makes drawing free for four seconds: the meter is held full
@@ -8255,9 +8255,44 @@ Three kinds, weighted 4 : 4 : 1:
   (`Player:levelUp`) and spent through the ordinary draft at the end of the
   frame. It keeps the xp already saved towards the next level — the ladder
   steps up underneath it, but nothing the horde paid out is thrown away. It is
-  a draft in disguise, which is why it is the rare one: at these weights one
-  turns up about every 45 seconds, and spotting one stays an event rather than
+  a draft in disguise, which is why it is one of the rare ones: at these weights
+  one turns up about once a minute, and spotting one stays an event rather than
   an errand.
+- **A wall clock** stops everything on the page for five seconds — the horde as
+  it stands, glued in place (`Enemy:freeze`), a boss only for the part of it its
+  own `hold` lets through, the way it takes glue. What walks on while it is
+  stopped walks on: the clock stopped the crowd that had you, not the
+  afternoon. A stopped monster still hurts to walk into, because frozen is
+  glued, and a page that stopped also letting you through it would be a free
+  exit rather than a breather. You hear it run down rather than read it: a
+  tick-tock on each of the first whole seconds, then a tick every half second
+  climbing in pitch over the last two, then a low ding on the thaw — so the
+  eyes stay on the page, which is where five free seconds are spent. A second
+  clock inside the window starts it again rather than stacking, the droplet's
+  rule.
+- **An alarm clock** goes off: everything on the screen dies at once, through
+  the same door every kill comes through (`Game:killEnemy`), so each leaves its
+  gem where it stood and the walk back through the clearing is the pay. Whatever
+  a thing does on dying it still does — a blot bursts into drops, a bulb goes off
+  on you if you are standing in it — because a page that went up in your face
+  should cost something. Bosses are not on it: it clears the room the boss walked
+  into and leaves the boss. It is red because red is the other side, and this is
+  the one prize that goes bang.
+- **A gold star** — purple, red and blue checkered pixel by pixel, the one thing
+  on the page that is both sides at once — is two percent more damage on
+  everything for the rest of the run, stacking: `Loadout.stars`, folded into
+  `stats.damage` on every rebuild, and kept in the bookmark. Two percent is
+  small because it is the one pickup whose worth keeps adding up; a run that has
+  walked to twenty of them should feel it without the stars becoming the build.
+
+All six turn in the air the same way (`src/trinket.lua`): each is a small solid
+painted a pixel at a time off a distance function. The wall clock is the coin's
+disc made thicker, with a black bezel, a paper dial and its hands at three
+o'clock — an L, which reads as a clock at nine pixels where the poster clock's ten
+past ten reads as a tick — on both faces, for the coin's reason. The alarm clock
+is a red drum on two black feet with its two bells and a knob on its head, the
+dial on the front only. The star is a five-pointed star puffed into a pillow the
+heart's way, a sticker rather than a badge.
 
 Each is a small solid turning in the air over its own shadow
 (`src/trinket.lua`), painted the bosses' way a pixel at a time and lit by the

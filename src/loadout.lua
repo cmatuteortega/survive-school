@@ -130,6 +130,12 @@ function Loadout.new(vw, vh, startTool, startWeapon)
         -- It survives a rebuild along with the weapons, since taking a level is
         -- not a reason to forget what the last one earned.
         owed = 0,
+        -- Gold stars picked up off the page this run (`star` in src/pickup.lua),
+        -- each one Pickup.STAR more damage on everything. Counted here rather
+        -- than on the run because what it changes is `stats.damage`, and this
+        -- file builds that afresh on every rebuild: a multiplier written straight
+        -- onto the stats would be gone at the next level.
+        stars = 0,
     }, Loadout)
 
     -- What a run is handed before it has been asked anything, and it is two
@@ -627,6 +633,15 @@ function Loadout:rebuild(vw, vh)
             end
         end
     end)
+
+    -- The gold stars, on the one multiplier every hit in the game already reads
+    -- -- the tools through `mult` below, the weapons at the point they fire --
+    -- so a star needs nothing in any of them. Here, after the catalogue, so it
+    -- multiplies what the levels made rather than being multiplied by them.
+    -- Required here rather than at the top for the worksheet's reason: the
+    -- pickups reach this file through the game, and this file is loaded first.
+    self.stats.damage = self.stats.damage
+        * (1 + require("src.pickup").STAR * (self.stars or 0))
 
     -- The four multipliers that apply to every tool at once, landing after
     -- every tool's own upgrades rather than before them.

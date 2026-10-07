@@ -1,5 +1,6 @@
--- The pickups' bodies (src/pickup.lua): the heart, the ink drop, the diamond and
--- the coin, each a small solid turning on the spot over its own shadow.
+-- The pickups' bodies (src/pickup.lua): the heart, the ink drop, the diamond,
+-- the coin, the wall clock, the alarm clock and the gold star, each a small solid
+-- turning on the spot over its own shadow.
 --
 -- The bosses' method shrunk to nine pixels, as the teardrop showed it could be
 -- (3dmethod.md): every pixel is a ray fired into the page, asked where it meets
@@ -189,6 +190,98 @@ end
 -- The purse's 1, three by five, on the face's own grid.
 local FIGURE = { ".#.", "##.", ".#.", ".#.", "###" }
 
+-- The wall clock: the coin's disc again, a little thicker, with the classroom
+-- clock's face painted on it -- a black bezel, a paper dial, and the hands at
+-- three o'clock, an L that reads as a clock at nine pixels where the poster
+-- clock's ten past ten reads as a tick. The dial is on both faces for the coin's
+-- reason: half of every turn is the back, and a prize you can only read half the
+-- time is half a prize.
+local CLOCK_R, CLOCK_T = 4.8, 1.2
+local DIAL = 3.6      -- inside this, dial; outside it, bezel
+local HAND_W = 0.62   -- half a hand's width: under a pixel at SIZE and the
+                      -- march misses it, over and the hands are blobs
+
+-- How far (x, y) is from the segment out of the middle to (hx, hy).
+local function hand(x, y, hx, hy)
+    local t = max(0, min(1, (x * hx + y * hy) / (hx * hx + hy * hy)))
+    local dx, dy = x - hx * t, y - hy * t
+    return sqrt(dx * dx + dy * dy)
+end
+
+-- A clock face at (x, y) on its own grid: the hands, then the bezel, then the
+-- dial. Shared by the wall clock and the alarm clock, which differ in how big a
+-- dial they have and what goes round it.
+local function dial(x, y, r, hourX, minY)
+    if hand(x, y, hourX, 0) < HAND_W or hand(x, y, 0, minY) < HAND_W then
+        return "hand"
+    end
+    if sqrt(x * x + y * y) > r then return "bezel" end
+    return "dial"
+end
+
+local function clock(x, y, z)
+    local dr = sqrt(x * x + y * y) - CLOCK_R
+    local dz = abs(z) - CLOCK_T
+    local ox, oz = max(dr, 0), max(dz, 0)
+    return min(max(dr, dz), 0) + sqrt(ox * ox + oz * oz)
+end
+
+-- The alarm clock: a squat drum on two feet with the two bells on its head and
+-- a knob between them -- the one drawing of an alarm clock everybody knows. Red
+-- all over because it is the fire alarm of the page (Pickup's `alarm`): red is
+-- the other side in every module, and this is the one prize that goes off.
+local ALARM_R, ALARM_T = 3.9, 1.7
+local BELL_X, BELL_Y, BELL_R = 2.75, 3.55, 1.6
+local KNOB_Y, KNOB_R = 4.35, 0.65
+local FOOT_X, FOOT_Y, FOOT_R = 2.5, -3.95, 0.8
+local ALARM_DIAL = 2.8
+
+local function ball(x, y, z, cx, cy, r)
+    local dx, dy = x - cx, y - cy
+    return sqrt(dx * dx + dy * dy + z * z) - r
+end
+
+local function alarm(x, y, z)
+    local dr = sqrt(x * x + y * y) - ALARM_R
+    local dz = abs(z) - ALARM_T
+    local ox, oz = max(dr, 0), max(dz, 0)
+    local d = min(max(dr, dz), 0) + sqrt(ox * ox + oz * oz)
+    local ax = abs(x)
+    d = min(d, ball(ax, y, z, BELL_X, BELL_Y, BELL_R))
+    d = min(d, ball(ax, y, z, 0, KNOB_Y, KNOB_R))
+    return min(d, ball(ax, y, z, FOOT_X, FOOT_Y, FOOT_R))
+end
+
+-- The gold star, puffed: Inigo Quilez's five-pointed star pushed out into a
+-- pillow the heart's way. A flat star turning is a sheriff's badge; a puffed one
+-- is the sticker on the top of a page, which is what it is. Sized so its points
+-- span the thirteen pixels and no more.
+local STAR_R, STAR_IN = 5.0, 0.48
+local STAR_T, STAR_ROUND = 0.9, 0.7
+local K1X, K1Y = 0.809016994, -0.587785252
+
+local function star2(x, y)
+    x = abs(x)
+    local d = 2 * max(K1X * x + K1Y * y, 0)
+    x, y = x - d * K1X, y - d * K1Y
+    d = 2 * max(-K1X * x + K1Y * y, 0)
+    x, y = x + d * K1X, y - d * K1Y
+    x = abs(x)
+    y = y - STAR_R
+    local bx, by = STAR_IN * -K1Y - 0, STAR_IN * K1X - 1
+    local h = max(0, min(STAR_R, (x * bx + y * by) / (bx * bx + by * by)))
+    local px, py = x - bx * h, y - by * h
+    local l = sqrt(px * px + py * py)
+    return (y * bx - x * by) < 0 and -l or l
+end
+
+local function star(x, y, z)
+    local d2 = star2(x, y + 0.35) + STAR_ROUND
+    local dz = abs(z) - STAR_T
+    local ox, oz = max(d2, 0), max(dz, 0)
+    return min(max(d2, dz), 0) + sqrt(ox * ox + oz * oz) - STAR_ROUND
+end
+
 --- the ramps ------------------------------------------------------------------
 -- Down the light, brightest first: past `at` a pixel is the first colour, or the
 -- two checkered when there are two. The last row catches everything left.
@@ -213,11 +306,35 @@ local RAMP = {
         { at = 0.35, blush }, { at = 0.05, blush, red },
         { at = -0.3, red }, { at = -2, red, slate },
     },
+    -- The wall clock's ramp is its dial's, paper going down to graphite; the
+    -- bezel and the edge are stepped off it in its `face` below.
+    clock = {
+        { at = 0.3, paper }, { at = 0.0, paper, graphite },
+        { at = -0.35, graphite }, { at = -2, graphite, slate },
+    },
+    alarm = {
+        { at = 0.45, blush }, { at = 0.2, blush, red },
+        { at = -0.15, red }, { at = -0.45, red, slate }, { at = -2, slate },
+    },
+    -- Purple, which the palette does not have and is not allowed to grow: it is
+    -- red and blue checkered pixel by pixel, the way every in-between shade on
+    -- the ramps is made, and their light ends checkered over it. Slate -- the
+    -- palette's own purple-grey -- is the shade, so the dark side lands on a
+    -- colour that was already the right hue. It is the one thing on the page
+    -- that is both sides at once, which is why a thing that makes *everything*
+    -- hit harder wears it.
+    star = {
+        { at = 0.72, blush, sky }, { at = -0.1, red, blue },
+        { at = -0.45, blue, slate }, { at = -2, slate },
+    },
 }
 
 -- How fine a highlight is: past this along the half-way vector, paper. A
 -- diamond's is wide on purpose, so a whole facet flashes as it comes round.
-local GLINT = { heart = 0.96, ink = 0.97, diamond = 0.9, coin = 0.96 }
+local GLINT = {
+    heart = 0.96, ink = 0.97, diamond = 0.9, coin = 0.96,
+    clock = 0.97, alarm = 0.96, star = 0.95,
+}
 
 --- the kinds ------------------------------------------------------------------
 -- `turns` is turns a second, `lean` a tilt applied before the turn, and `face`
@@ -250,6 +367,42 @@ local KINDS = {
             return colour
         end,
     },
+    -- Seen from a little higher than the coin is not: the dial wants facing
+    -- you, and the edge is a band of black under it either way.
+    clock = {
+        sdf = clock, rim = slate, dark = ink, turns = 0.6, elev = 0.2,
+        face = function(x, y, z, colour)
+            if abs(z) > CLOCK_T - 0.35 then
+                local fx = z > 0 and x or -x
+                local part = dial(fx, y, DIAL, 2.2, 3.1)
+                if part == "hand" then return ink end
+                if part == "bezel" then return colour == paper and slate or ink end
+                return colour
+            end
+            return colour == paper and slate or ink
+        end,
+    },
+    -- The dial only on the front, because an alarm clock's back is its winding
+    -- keys and a plain red tin: turned away it is a red drum with bells on, which
+    -- is still an alarm clock and nothing else. The feet are black.
+    alarm = {
+        sdf = alarm, rim = red, dark = slate, turns = 0.5, elev = 0.15,
+        face = function(x, y, z, colour)
+            if y < FOOT_Y + FOOT_R * 0.6 and abs(x) > 1.2 then
+                return (colour == blush or colour == red) and slate or ink
+            end
+            if z > ALARM_T - 0.35 and sqrt(x * x + y * y) < ALARM_R - 0.6 then
+                local part = dial(x, y, ALARM_DIAL, 1.6, 2.3)
+                if part == "hand" then return ink end
+                if part == "dial" then
+                    if colour == blush then return paper end
+                    if colour == red then return graphite end
+                end
+            end
+            return colour
+        end,
+    },
+    star = { sdf = star, rim = slate, dark = ink, turns = 0.6, elev = 0.12 },
 }
 
 --- painting -------------------------------------------------------------------

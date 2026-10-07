@@ -687,7 +687,7 @@ function Game:reset()
     -- exception, so everything that asks about it asks `if self.arena`.
     self.arena = nil
     self.gems = {}
-    -- Hearts, ink and diamonds (src/pickup.lua): fixed spots baked into the
+    -- Hearts, ink, diamonds, clocks and stars (src/pickup.lua): fixed spots baked into the
     -- page for this run, plus a scatter past the screen edge. The first
     -- scattered one lands half a clock in, so a fresh run has somewhere to go
     -- before the horde has given it a reason to.
@@ -834,6 +834,10 @@ function Game:reset()
     -- Seconds left of the ink droplet's free pen (src/pickup.lua). Not
     -- bookmarked: four seconds is not worth a field in the save.
     self.inkFree = 0
+    -- Seconds left on the wall clock's stop (src/pickup.lua), which every enemy
+    -- it caught is already counting down on its own; this is only the voice
+    -- saying how long is left. Not bookmarked, for the droplet's reason.
+    self.stopped = 0
     self.drawBlocked = false
     self.wasDown = false
     -- What the current stroke sounds like: the swish it last fired, and how
@@ -1204,6 +1208,9 @@ function Game:openBookmark()
 
     self:reset()
 
+    -- The stars before the levels, because `restore` rebuilds and the rebuild
+    -- is where a star is worth anything.
+    self.loadout.stars = mark.stars
     self.loadout:restore(mark.lines, self.vw, self.vh)
     for _, id in ipairs(mark.banned) do self.loadout:expel(id) end
     self.player:applyStats()
@@ -2902,6 +2909,7 @@ end
 -- rich patch of it must not switch the scatter off.
 function Game:updatePickups(dt)
     Pickup.materialize(self)
+    Pickup.tickStopped(self, dt)
 
     self.pickupTimer = self.pickupTimer - dt
     if self.pickupTimer <= 0 then

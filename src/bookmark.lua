@@ -69,6 +69,9 @@ function Bookmark.save(game)
         ("skipped %d"):format(game.skipped or 0),
         -- And the piggy bank's coins it has picked up (`banked`): the same.
         ("banked %d"):format(game.banked or 0),
+        -- And the gold stars (`Loadout.stars`): a run picked back up has to hit
+        -- as hard as the one that was put down.
+        ("stars %d"):format(loadout.stars or 0),
         -- The two ad offers it has spent (src/ads.lua), each once a run: a run
         -- carried over a closed program is the same run.
         ("adrevived %d"):format(game.adRevived and 1 or 0),
@@ -176,6 +179,7 @@ function Bookmark.load()
         lines = lines,
         skipped = int(vals.skipped, 0),
         banked = int(vals.banked, 0),
+        stars = int(vals.stars, 0),
         adRevived = int(vals.adrevived, 0) ~= 0,
         doubled = int(vals.doubled, 0) ~= 0,
         perks = perks,

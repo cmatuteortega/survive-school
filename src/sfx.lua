@@ -77,7 +77,7 @@ local DEFS = {
 
     -- What happens to you, and what you walk onto. `hurt` sounds where the page
     -- is knocked (Player:hurt) because they are one event, and `item` covers all
-    -- three of the things lying out there (src/pickup.lua) because from where
+    -- the things lying out there (src/pickup.lua) because from where
     -- the player is standing they are one kind of thing -- a prize reached.
     -- Both are rare enough to sit at the common level.
     hurt        = { gain = 0.26 },
@@ -154,6 +154,12 @@ local DEFS = {
     -- (0.045 over its loudest 300ms) rather than by RMS, which is what a
     -- tone this pure needs to sit at the same loudness to an ear.
     note        = { gain = 1.0 },
+    -- The alarm clock pickup going off (src/pickup.lua). Synthesised -- a
+    -- hammer flicking between two bells at 2.35 and 2.62kHz twenty-two times a
+    -- second, each strike a bell's partials dying in a few hundredths over a
+    -- click of noise, for just under a second -- and written to the common level
+    -- at source, up where a phone's speaker plays it.
+    alarm       = { gain = 1.0 },
 
     rubbing     = { gain = 59, loop = true },
     eraser      = { gain = 0.89 },

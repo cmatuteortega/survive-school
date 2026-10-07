@@ -1,6 +1,8 @@
--- What the page scatters for you to walk to. Three kinds -- a heart that heals,
+-- What the page scatters for you to walk to. Six kinds -- a heart that heals,
 -- a droplet that makes drawing free for a moment, a diamond worth a whole
--- level -- and all
+-- level, a wall clock that stops the horde where it stands, an alarm clock that
+-- goes off and takes the screen with it, and a gold star that makes everything
+-- hit a little harder for the rest of the run -- and all
 -- of them land out of view, because the reward is the walk: a gem is thrown at
 -- your feet by a kill you already made, and these are the opposite half of that
 -- idea, something out there that pays a run for moving instead of standing in
@@ -23,6 +25,7 @@
 -- it stays on the page when the fight is over.
 
 local Trinket = require("src.trinket")
+local Camera = require("src.camera")
 local Palette = require("src.palette")
 local Sfx = require("src.sfx")
 local util = require("src.util")
@@ -66,14 +69,48 @@ local HEAL = 25      -- a quarter of the base bar
 -- spend it -- the walk out there pays off in the frantic drawing after.
 local INK_FREE = 4
 
--- The diamond is rare because it is a draft in disguise -- a free level is
--- worth more than anything else on this table -- and rarity is what keeps
--- spotting one an event rather than an errand.
+-- The wall clock: everything on the page stops for this long. A boss shrugs
+-- most of it off through its own `hold` (Enemy:freeze), exactly as it shrugs off
+-- glue -- a boss stood still for five seconds is a boss that is not a fight.
+local FREEZE = 5
+
+-- When the stopped clock says how long it has left: a tick-tock on each of the
+-- first whole seconds, then a tick every half second climbing in pitch over the
+-- last two, so the thaw is something you hear coming without looking away from
+-- the page -- and the page is where you want to be looking while it is stopped.
+local CUES = {
+    { at = 4, pitch = 1.0 }, { at = 3, pitch = 0.8 }, { at = 2, pitch = 1.0 },
+    { at = 1.5, pitch = 1.25 }, { at = 1, pitch = 1.4 }, { at = 0.5, pitch = 1.6 },
+}
+
+-- The gold star: this much more damage on everything, for every star the run has
+-- picked up, until the run ends (`Loadout.stars`, read in Loadout:rebuild). Two
+-- percent is small on purpose. It is the one pickup whose worth keeps adding up,
+-- and a run that has walked to twenty of them should feel it without the stars
+-- becoming the build.
+Pickup.STAR = 0.02
+
+-- The rare ones are rare because each is an event: the diamond is a draft in
+-- disguise -- a free level is worth more than anything else on this table -- the
+-- wall clock and the alarm clock are each a way out of a crowd that had you, and
+-- the star is a permanent stat. Rarity is what keeps spotting one an event rather
+-- than an errand. Together they are as common as a heart.
 local KINDS = {
     { kind = "heart",   weight = 4 },
     { kind = "ink",     weight = 4 },
     { kind = "diamond", weight = 1 },
+    { kind = "clock",   weight = 1 },
+    { kind = "alarm",   weight = 1 },
+    { kind = "star",    weight = 1 },
 }
+
+-- What the wall clock stops and the alarm clock goes off on: the horde, but not
+-- a boss's stand-ins (`stand`, src/redpenboss.lua and src/stilllife.lua), which
+-- are the boss and are kept where it put them, and not one still dropping onto
+-- the page (`arrive`), which is not in the fight yet.
+local function bystander(e)
+    return not (e.stand or e.ghost or e.arrive)
+end
 
 -- Always consumed, even by a bar with no room for it: a heart that refused a
 -- full bar hung around holding one of the MAX slots, quietly throttling the
@@ -113,7 +150,63 @@ local TAKE = {
         game.banked = (game.banked or 0) + 1
         game.particles:burst(x, y, 6, Palette.blush)
     end,
+    -- Everything already on the page is stopped, and a second clock inside the
+    -- window starts the five seconds again rather than stacking them -- the
+    -- droplet's rule. What walks on while it is stopped walks on: the clock
+    -- stopped the horde that was there, not the afternoon. Frozen is glued
+    -- (Enemy:freeze), so a stopped monster still hurts to walk into, and is
+    -- still there to be hit.
+    clock = function(game, x, y)
+        for _, e in ipairs(game.enemies) do
+            if bystander(e) then e:freeze(FREEZE) end
+        end
+        game.stopped = FREEZE
+        game.particles:burst(x, y, 8, Palette.slate)
+    end,
+    -- Everything in view goes off at once, through the one door every kill
+    -- comes through (Game:killEnemy), so each leaves its gem where it stood and
+    -- whatever it does on dying it still does -- a blot still bursts into drops
+    -- and a bulb still goes off, which is what a page that went up in your face
+    -- should cost. Bosses are not on it: the alarm clears the room the boss
+    -- walked into, and leaves the boss.
+    alarm = function(game, x, y)
+        local left, top, w, h = Camera.bounds()
+        local enemies = game.enemies
+        for i = #enemies, 1, -1 do
+            local e = enemies[i]
+            if e and bystander(e) and not e.def.boss
+                and e.x >= left and e.x <= left + w
+                and e.y >= top and e.y <= top + h then
+                game.particles:burst(e.x, e.y, 5, Palette.red)
+                game:killEnemy(i)
+            end
+        end
+        game.particles:burst(x, y, 16, Palette.red)
+        Camera.knock(3)
+        Sfx.play("alarm")
+    end,
+    star = function(game, x, y)
+        local loadout = game.loadout
+        loadout.stars = loadout.stars + 1
+        loadout:rebuild(game.vw, game.vh)
+        game.particles:burst(x, y, 4, Palette.red)
+        game.particles:burst(x, y, 4, Palette.blue)
+    end,
 }
+
+-- The stopped clock running down (`Game.stopped`), from Game:updatePickups: it
+-- holds no enemy itself -- each carries its own `frozen` -- and is only here to
+-- say out loud how long is left, and to ring when it is over.
+function Pickup.tickStopped(game, dt)
+    local was = game.stopped
+    if was <= 0 then return end
+    local now = math.max(0, was - dt)
+    game.stopped = now
+    for _, cue in ipairs(CUES) do
+        if was > cue.at and now <= cue.at then Sfx.play("tick", cue.pitch) end
+    end
+    if now <= 0 then Sfx.play("note", 0.5) end
+end
 
 -- One weighted table serves both layers: the scatter rolls the dice, a fixed
 -- spot hashes its cell, and either way the roll lands in [0,1).
@@ -238,10 +331,11 @@ function Pickup:update(dt, game)
 
     if dist < player.radius + TOUCH then
         TAKE[self.kind](game, self.x, self.y)
-        -- One sound for all three, here rather than three times over in TAKE:
-        -- what the heart, the droplet and the diamond have in common is the
-        -- thing the sound is about -- you walked out there and it was worth it --
-        -- and which of them it was is what the body and the burst are for.
+        -- One sound for all of them, here rather than over and over in TAKE:
+        -- what they have in common is the thing the sound is about -- you
+        -- walked out there and it was worth it -- and which of them it was is
+        -- what the body and the burst are for. The alarm clock's ring is on top
+        -- of this, because what it did is not a prize but a bang.
         Sfx.play("item")
 
         -- A fixed spot is spent for the run; a scattered one just dies.
