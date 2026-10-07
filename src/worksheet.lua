@@ -53,6 +53,32 @@ local util = require("src.util")
 
 local Worksheet = {}
 
+-- What a sheet that pays a heart or a diamond actually pays, and the colour it
+-- bursts in. Below a master's it is what the sheet says; at the top two rungs
+-- it is a diamond or a star, always (`prize` on the course's row,
+-- src/course.lua) -- a heart is not worth a stop with the horde at twice the
+-- health, and a sheet nobody stops for is a sheet that is not there. Coins are
+-- left alone: they are the purse's, and the course already pays it at its rate.
+local GLINT = {
+    heart = Palette.red, diamond = Palette.sky, star = Palette.red,
+}
+
+function Worksheet.prize(game, kind)
+    local better = game.course and game.course.prize
+    if better and (kind == "heart" or kind == "diamond") then
+        kind = better[love.math.random(#better)]
+    end
+    return kind, GLINT[kind]
+end
+
+-- Put down where it was won, through the course's say on what it is.
+local function award(game, kind, x, y)
+    local colour
+    kind, colour = Worksheet.prize(game, kind)
+    game.pickups[#game.pickups + 1] = Pickup.new(kind, x, y)
+    game.particles:burst(x, y, 10, colour)
+end
+
 -- Coarser than the pickups' 260 and sparser: a worksheet is an event you turn
 -- for, and a page tiled in them would be a page of homework.
 local CELL = 520
@@ -311,11 +337,8 @@ local SEQUENCE_HURT = 20
 
 -- What a board can pay and charge. Three prizes and two prices, shared out
 -- between the boards below so that each lesson's says something about it.
-local function drop(kind, colour)
-    return function(game, x, y)
-        game.pickups[#game.pickups + 1] = Pickup.new(kind, x, y)
-        game.particles:burst(x, y, 10, colour)
-    end
+local function drop(kind)
+    return function(game, x, y) award(game, kind, x, y) end
 end
 
 -- Three coins in a row under the answer, into the purse like tic-tac-toe's.
@@ -354,11 +377,11 @@ end
 -- outlives the run. MUSIC is the sequence's, a heart against a sting -- a wrong
 -- note hurts.
 local BOARDS = {
-    quiz = { book = Quiz.byCourse, right = drop("diamond", Palette.sky), wrong = giant },
-    sequence = { book = Quiz.sequences, right = drop("heart", Palette.red), wrong = sting },
-    science = { book = Quiz.science, right = drop("diamond", Palette.sky), wrong = giant },
+    quiz = { book = Quiz.byCourse, right = drop("diamond"), wrong = giant },
+    sequence = { book = Quiz.sequences, right = drop("heart"), wrong = sting },
+    science = { book = Quiz.science, right = drop("diamond"), wrong = giant },
     finance = { book = Quiz.finance, right = coins, wrong = giant },
-    music = { book = Quiz.music, right = drop("heart", Palette.red), wrong = sting },
+    music = { book = Quiz.music, right = drop("heart"), wrong = sting },
 }
 
 function Q.new(x, y, courseKey, kind)
@@ -712,8 +735,7 @@ function S:step(i, game)
             -- A step above the last note rather than on it, so taking it is a
             -- thing you do (the boards' reason).
             local p = self.pads[i]
-            game.pickups[#game.pickups + 1] = Pickup.new("heart", p.x, p.y - 18)
-            game.particles:burst(p.x, p.y - 18, 10, Palette.red)
+            award(game, "heart", p.x, p.y - 18)
             game:say("BRAVO!")
             Sfx.play("accept")
         end
@@ -1037,8 +1059,7 @@ function D:finish(game, won)
     self:land(true)
     if won then
         self.state = "won"
-        game.pickups[#game.pickups + 1] = Pickup.new("diamond", self.x, self.y)
-        game.particles:burst(self.x, self.y, 10, Palette.blue)
+        award(game, "diamond", self.x, self.y)
         call(game, "SAFE!")
     else
         self.state = "fading"
@@ -1206,8 +1227,7 @@ function H:finish(game, won)
         self.state = "won"
         local c = self.path[#self.path]
         local hx, hy = c.x + self.days.w / 2, c.y + self.days.h / 2
-        game.pickups[#game.pickups + 1] = Pickup.new("heart", hx, hy)
-        game.particles:burst(hx, hy, 10, Palette.red)
+        award(game, "heart", hx, hy)
         call(game, "FINISH!")
     else
         self.state = "fading"

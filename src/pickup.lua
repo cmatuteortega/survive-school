@@ -23,6 +23,12 @@
 -- lanes and as what bursts out of it. It is here rather than in its brain
 -- because it is the same thing as the other three -- touched means taken, and
 -- it stays on the page when the fight is over.
+--
+-- And a third way in: a boss going down spills its loot (`Pickup.spill`), a
+-- handful of coins and pickups tossed out of where it fell, how many and which
+-- read off the course's row (`loot`, src/course.lua). They land while it comes
+-- apart and cannot be taken until it has, so what they are is the first thing
+-- the ten minutes after it -- ENDLESS, or the encore -- hands you.
 
 local Trinket = require("src.trinket")
 local Camera = require("src.camera")
@@ -209,14 +215,23 @@ function Pickup.tickStopped(game, dt)
 end
 
 -- One weighted table serves both layers: the scatter rolls the dice, a fixed
--- spot hashes its cell, and either way the roll lands in [0,1).
-local function kindFor(roll)
+-- spot hashes its cell, and either way the roll lands in [0,1). Each weight is
+-- leant on by the course the run is sat at (`luck`, src/course.lua), so a
+-- doctorate's page turns up stars that high school's mostly does not -- a
+-- multiplier on the row rather than a second table, so a new kind costs a
+-- course nothing until it wants to say something about it.
+local function weightOf(row, luck)
+    return row.weight * (luck and luck[row.kind] or 1)
+end
+
+local function kindFor(roll, game)
+    local luck = game and game.course and game.course.luck
     local total = 0
-    for _, row in ipairs(KINDS) do total = total + row.weight end
+    for _, row in ipairs(KINDS) do total = total + weightOf(row, luck) end
 
     roll = roll * total
     for _, row in ipairs(KINDS) do
-        roll = roll - row.weight
+        roll = roll - weightOf(row, luck)
         if roll <= 0 then return row.kind end
     end
     return KINDS[1].kind
@@ -273,7 +288,7 @@ function Pickup.scatter(game)
     for _ = 1, 8 do
         local x, y = pastEdge(game)
         if clearOf(game.pickups, x, y, game) then
-            return Pickup.new(kindFor(love.math.random()), x, y)
+            return Pickup.new(kindFor(love.math.random(), game), x, y)
         end
     end
 end
@@ -283,10 +298,10 @@ end
 -- all runs would hand every one of them the same opening pickups -- the same
 -- diamond a hundred pixels from the start, every time -- and an opening you
 -- can memorise is an opening, not a discovery. Within the run it never moves.
-local function fixedAt(cx, cy, seed)
+local function fixedAt(cx, cy, seed, game)
     if util.hash01(cx, cy, seed + 7) >= DENSITY then return end
 
-    return kindFor(util.hash01(cx, cy, seed + 8)),
+    return kindFor(util.hash01(cx, cy, seed + 8), game),
         (cx + 0.2 + util.hash01(cx, cy, seed + 9) * 0.6) * CELL,
         (cy + 0.2 + util.hash01(cx, cy, seed + 10) * 0.6) * CELL
 end
@@ -310,7 +325,7 @@ function Pickup.materialize(game)
                  math.floor((px + MATERIALIZE) / CELL) do
             local key = cx * 100000 + cy
             if not game.pickupTaken[key] and not awake[key] then
-                local kind, x, y = fixedAt(cx, cy, game.pickupSeed)
+                local kind, x, y = fixedAt(cx, cy, game.pickupSeed, game)
                 if kind and util.len(x - px, y - py) < MATERIALIZE
                     and clearOf(game.pickups, x, y, game) then
                     local p = Pickup.new(kind, x, y)
@@ -322,10 +337,67 @@ function Pickup.materialize(game)
     end
 end
 
+-- A boss's loot (`loot` on the course's row), tossed out of (x, y) on a
+-- spiral so each lands on its own spot -- the golden angle, which is what keeps
+-- twenty things from lining up into spokes -- and kept inside the box the fight
+-- was in, which is still standing while the boss comes apart. Coins first and
+-- nearest, so the purse's share is the inner ring and the pickups are what you
+-- walk round it for.
+local TOSS = 0.55       -- seconds in the air
+local TOSS_HIGH = 18    -- pixels at the top of the arc
+local GOLDEN = math.pi * (3 - math.sqrt(5))
+
+function Pickup.spill(game, x, y, loot)
+    if not loot then return end
+    local turn = love.math.random() * math.pi * 2
+    local i = 0
+    for _, row in ipairs(loot) do
+        for _ = 1, row[2] do
+            i = i + 1
+            local a = turn + i * GOLDEN
+            local r = 14 + 8 * math.sqrt(i)
+            local tx, ty = x + math.cos(a) * r, y + math.sin(a) * r
+            if game.arena then tx, ty = game.arena:clamp(tx, ty, 6) end
+
+            local p = Pickup.new(row[1], tx, ty)
+            p.loot = true
+            p.toss = { x = x, y = y, tx = tx, ty = ty,
+                t = -i * 0.03, z = 0 }
+            p.x, p.y = x, y
+            game.pickups[#game.pickups + 1] = p
+        end
+    end
+end
+
+-- One step of the toss: an arc from where the boss fell to where it lands, and
+-- a puff of graphite when it gets there. Staggered by a beat each (`t` starts
+-- below zero), so the spill pours out of the body rather than popping.
+local function flight(self, dt, game)
+    local f = self.toss
+    f.t = f.t + dt
+    local s = util.clamp(f.t / TOSS, 0, 1)
+    self.x = f.x + (f.tx - f.x) * s
+    self.y = f.y + (f.ty - f.y) * s
+    f.z = math.floor(TOSS_HIGH * 4 * s * (1 - s) + 0.5)
+    if s >= 1 then
+        self.toss = nil
+        game.particles:burst(self.x, self.y, 3, Palette.graphite)
+    end
+end
+
 function Pickup:update(dt, game)
     -- Already gone: a coin the piggy bank called home this frame
     -- (src/piggyboss.lua) is in the air now, and is not still here to be taken.
     if self.dead then return end
+    self.t = self.t + dt
+    if self.toss then
+        flight(self, dt, game)
+        return
+    end
+    -- And loot waits for the boss to finish coming apart: the run is about to
+    -- stop for the win card, and a star taken in the second before it is a
+    -- prize you never saw yourself win.
+    if self.loot and game.fallen then return end
     local player = game.player
     local dist = util.len(player.x - self.x, player.y - self.y)
 
@@ -350,16 +422,18 @@ function Pickup:update(dt, game)
         self.dead = true
         return
     end
-
-    self.t = self.t + dt
 end
 
 -- Turning in the air over its own shadow (src/trinket.lua). The shadow is on the
 -- paper and goes on darkening over a rule like every other mark; the body is
 -- standing proud of it, and blanks the page under itself (Pickup:drawSolid).
+--
+-- One in the air is drawn that far above its shadow, which stays on the paper
+-- under it -- the shadow is what says where it is going to land.
 function Pickup:draw()
+    local z = self.toss and self.toss.z or 0
     Trinket.drawShadow(self.kind, self.x, self.y, self.t)
-    Trinket.draw(self.kind, self.x, self.y, self.t)
+    Trinket.draw(self.kind, self.x, self.y - z, self.t)
 end
 
 -- The blank stamped into the page under it, from inside Overprint.beginSolid and
@@ -367,7 +441,7 @@ end
 -- not printed into it, and the ruling coming through a heart made it a sticker.
 function Pickup:drawSolid()
     love.graphics.setColor(Palette.paper)
-    Trinket.drawMask(self.kind, self.x, self.y, self.t)
+    Trinket.drawMask(self.kind, self.x, self.y - (self.toss and self.toss.z or 0), self.t)
 end
 
 return Pickup

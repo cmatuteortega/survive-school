@@ -1181,12 +1181,27 @@ it, and there are eight of those multiples:
 | how soon the next one walks on enraged | — | — | 60× |
 | how many bosses a lesson ends on | 1 | 2 | 2 |
 | **what the run pays** | **1.4×** | **2×** | **3×** |
+| how often a gold star turns up | 1.5× | 2.2× | 3.5× |
+| what a boss spills going down | 5 coins and three pickups | 8 coins and six | 12 coins and nine |
+| what a worksheet's heart or diamond pays | — | a diamond or a star | a diamond or a star |
 
 Which comes out as a blob — 4 health, the pencil's own number — being 5, 6 and 8
 before the ramp has started, and 19, 28 and 40 by the time the eye walks on against
 high school's 14. And an eye of 1260 being 2646 at the top. At a fixed rate of
 damage a doctorate clears 44% of the bodies high school does in the same ten
 minutes.
+
+**A harder class is a richer page, not only a harder one.** The last three rows
+are the purse's multiplier paid out on the paper. The rare pickups lean up the
+ladder and the star most of all — it is the one whose worth adds up over a run,
+and a doctorate's run is the one that needs its build to keep up. A boss going
+down tosses its loot out of where it fell: coins, and hearts, clocks and stars and
+at the top diamonds, which land while it comes apart and are there for you the
+moment ENDLESS (or the encore) gives the run back. High school's boss spills three
+coins, a heart and a clock. And at a master's a worksheet stops paying hearts: a
+heart is not worth a stop with the horde at twice the health, and a sheet nobody
+stops for is a sheet that is not there, so every heart or diamond it would have
+paid is a diamond or a star.
 
 **At a master's the lesson does not end on its boss.** It is the end of the first
 ten minutes. The bar goes, the box comes down, the page says NOT DONE YET, and the

@@ -1025,6 +1025,18 @@ The three below it are written as multiples of it.
 | `fury` | `FURY_RISE`, the enraged meter — a gate, not a lean | 0 | 0 | 60 |
 | `bosses` | how many of a lesson's bosses stand before the win card (`Spawner:lineup`) — a gate | 1 | 2 | 2 |
 | `pay` | the whole of what a run is worth | 1.4 | 2 | 3 |
+| `luck` | a pickup's weight in the scatter and the fixed layer (`kindFor` in `src/pickup.lua`), by kind | star 1.5, the other rare three 1.2 | star 2.2, others 1.3–1.4 | star 3.5, others 1.5–1.6 |
+| `loot` | what a boss spills going down (`Pickup.spill`) | 5 coins, heart, clock, star | 8 coins, 2 hearts, clock, 2 stars, diamond | 12 coins, 2 hearts, clock, alarm, 3 stars, 2 diamonds |
+| `prize` | what a worksheet's heart or diamond becomes (`Worksheet.prize`) | — | diamond or star | diamond or star |
+
+High school's `luck` is empty and its `loot` is 3 coins, a heart and a clock.
+The three are the page's half of `pay`: a gold star is 8% of a high-school
+scatter and 12%, 15% and 22% up the ladder. A boss's loot is tossed on a golden-
+angle spiral out of where it went down, clamped into the box, and each piece is
+untouchable while in the air (`toss`) and while the boss is still coming apart
+(`Game.fallen`) -- so it is lying there under the win card for ENDLESS, or for
+the encore at the top two rungs. It is marked `loot` and does not count against
+the scatter's `MAX`, the piggy bank's coins' rule.
 
 Which comes out as a blob of 4 health being 5, 6 and 8 in the grace minute and 19,
 28 and 40 by the time the eye walks on against high school's 14; an eye of 1260
@@ -6512,6 +6524,10 @@ twenty is never swallowed by the window after a hit. Its questions are
 `run(terms)` strings (`"2, 4, 6, ?"`), and `line(t)`, the straight-line next
 term, is the usual wrong answer.
 
+Every heart or diamond a sheet pays (the boards, Simon, the pit, hopscotch) goes
+down through `award`, which asks `Worksheet.prize`: at MASTERS and PHD (`prize` on
+the course's row) it is a diamond or a star instead, rolled. Coins are untouched.
+
 SCIENCE's `science` board pays the quiz's way (diamond, giant), FINANCE's
 `finance` drops three `coin` pickups 9px apart against a giant, and MUSIC's
 `music` pays the sequence's way (heart, `SEQUENCE_HURT`). Their books keep money
@@ -6878,8 +6894,9 @@ and are all the same 11x11 glyph.
   notes (`NOTE_SHAPES`) are.
   Anything it says goes through `Game:say`, so it needs a line in `src/i18n.lua`
   and the four `src/lang/` files. Questions are notation and need none.
-- **Pickup:** a row in `KINDS` (its weight in the scatter and the fixed layer)
-  and a function in `TAKE` in `src/pickup.lua`, and its body in
+- **Pickup:** a row in `KINDS` (its weight in the scatter and the fixed layer;
+  a course leans on it only if its `luck` names it) and a function in `TAKE` in
+  `src/pickup.lua`, and its body in
   `src/trinket.lua`: a distance function, a row in `RAMP`, one in `GLINT` and one
   in its `KINDS` (`rim`, `dark`, `turns`, and `elev`, `lean` or `face` as it
   needs). Thirteen pixels across at most. Anything it changes that a level

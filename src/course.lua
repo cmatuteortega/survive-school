@@ -133,6 +133,19 @@
 --   health is the eighth eye the note at the top of this file is about. A lesson
 --   that has no second boss yet ends on its first at every rung -- the dial asks
 --   for one, it does not invent one.
+-- - `luck`, `loot` and `prize` are the rest of that side of it, paid on the page
+--   rather than into the purse: a harder class is a richer page as well as a
+--   harder one. `luck` multiplies a pickup's weight in the scatter and on the
+--   fixed layer (`Pickup.kindFor`) -- the hearts and droplets are left alone and
+--   the rare ones lean up, the gold star most of all, because the star is the one
+--   pickup whose worth adds up over a run, and a doctorate's run is the one that
+--   needs a build that keeps up. `loot` is what a boss spills when it goes down
+--   (`Pickup.spill`): coins for the purse and a few pickups for the ten minutes
+--   after it, lying there for a run that takes ENDLESS or has an encore coming.
+--   `prize` is what a worksheet that pays a heart or a diamond pays instead
+--   (`Worksheet.prize`): at the top two rungs a heart is not worth stopping for
+--   with the horde at twice the health, so the sheets there pay a diamond or a
+--   star, always.
 -- - `pay` is the other side of the bargain and the reason anybody enrols
 --   (`Purse.forRun`): a doctorate pays three times what high school does, so the
 --   counter it was bought over is also what it is spent on.
@@ -196,6 +209,8 @@ Course.list = {
         clock = 1, hp = 1, ramp = 1, speed = 1,
         elite = 1, blown = 1, fury = 0, pay = 1,
         bosses = 1,
+        luck = {},
+        loot = { { "coin", 3 }, { "heart", 1 }, { "clock", 1 } },
     },
     -- A first departure, and it is meant to be one you take *because* you have
     -- stopped losing rather than because you want a harder time: a quarter more
@@ -211,6 +226,8 @@ Course.list = {
         clock = 1.2, hp = 1.25, ramp = 1.08, speed = 1.04,
         elite = 1.25, blown = 3, fury = 0, pay = 1.4,
         bosses = 1,
+        luck = { star = 1.5, diamond = 1.2, clock = 1.2, alarm = 1.2 },
+        loot = { { "coin", 5 }, { "heart", 1 }, { "clock", 1 }, { "star", 1 } },
     },
     -- The middle of the ladder, and where the numbers stop being trim: 1.6 times
     -- the health under a curve 16% steeper comes out near twice the horde's
@@ -221,6 +238,10 @@ Course.list = {
         clock = 1.4, hp = 1.6, ramp = 1.16, speed = 1.08,
         elite = 1.6, blown = 9, fury = 0, pay = 2,
         bosses = 2,
+        luck = { star = 2.2, diamond = 1.4, clock = 1.3, alarm = 1.3 },
+        loot = { { "coin", 8 }, { "heart", 2 }, { "clock", 1 }, { "star", 2 },
+            { "diamond", 1 } },
+        prize = { "diamond", "star" },
     },
     -- And the top of it, at three times the health, two thirds again the crowd,
     -- half again as many champions on the page and about 1.6 times as many
@@ -232,6 +253,10 @@ Course.list = {
         clock = 1.65, hp = 2.1, ramp = 1.25, speed = 1.12,
         elite = 2, blown = 60, fury = 60, pay = 3,
         bosses = 2,
+        luck = { star = 3.5, diamond = 1.6, clock = 1.5, alarm = 1.5 },
+        loot = { { "coin", 12 }, { "heart", 2 }, { "clock", 1 }, { "alarm", 1 },
+            { "star", 3 }, { "diamond", 2 } },
+        prize = { "diamond", "star" },
     },
 }
 

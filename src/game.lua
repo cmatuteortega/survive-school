@@ -2094,6 +2094,11 @@ function Game:killEnemy(index)
         -- test, which is not a run the book saw (Game:bankRun).
         if not self.bossTest then Tally.down(e.kind) end
         self.particles:burst(e.x, e.y, 40, Palette.blue)
+        -- And what it was carrying, tossed out of it as it comes apart: more of
+        -- it and better the harder the course (`loot`, src/course.lua). Lying
+        -- there under the win card for ENDLESS to hand back, or straight away
+        -- when the lesson has an encore to come.
+        Pickup.spill(self, e.x, e.y, (self.course or Course.default).loot)
     end
 end
 
@@ -2919,8 +2924,11 @@ function Game:updatePickups(dt)
         for _, p in ipairs(self.pickups) do
             -- Nor do the piggy bank's coins (src/piggyboss.lua), which are
             -- the fight's and not the page's: a box carpeted in them must not
-            -- switch the scatter off either.
-            if not p.cell and p.kind ~= "coin" then scattered = scattered + 1 end
+            -- switch the scatter off either -- and nor does a boss's loot
+            -- (`Pickup.spill`), for the same reason.
+            if not p.cell and not p.loot and p.kind ~= "coin" then
+                scattered = scattered + 1
+            end
         end
         if scattered < Pickup.MAX then
             -- Nil when every roll landed on something already out there; the
