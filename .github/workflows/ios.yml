@@ -232,9 +232,12 @@ jobs:
           test -f "$app/game.love" || { echo "::error::game.love is not in the app bundle"; exit 1; }
           # iap.lua finds the store through ffi.C: the six functions must have
           # survived stripping (love-iap README, iOS step 3).
+          # Listed once to a file: piping nm into grep -q breaks nm's pipe on
+          # the first match, which pipefail then reports as a missing symbol.
+          nm -gU "$app/SurviveSchool" > "$RUNNER_TEMP/symbols.txt"
           missing=0
           for f in liap_start liap_buy liap_finish liap_restore liap_poll liap_error; do
-            nm -gU "$app/SurviveSchool" | grep -q " _$f\$" || { echo "::error::$f is not exported"; missing=1; }
+            grep -q " _$f\$" "$RUNNER_TEMP/symbols.txt" || { echo "::error::$f is not exported"; missing=1; }
           done
           [ "$missing" = 0 ]
           echo "APP=$app" >> "$GITHUB_ENV"
