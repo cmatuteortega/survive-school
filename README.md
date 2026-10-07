@@ -8257,7 +8257,9 @@ object lying on it, not another ink doodle.
 ## Worksheets on the page
 
 Every page has a few puzzles printed on it, and solving one pays. Every lesson
-has **tic-tac-toe**, and MATHS also sets a **pop quiz** and a **sequence**. They sit at fixed spots
+has **tic-tac-toe**, MATHS also sets a **pop quiz** and a **sequence**, and
+SCIENCE, FINANCE and MUSIC each set a board of their own -- the **lab**, the
+**till** and the **stave**. They sit at fixed spots
 the way the fixed pickups do: a pure function of where they are and the run's
 seed, found by walking, and solved once each per run.
 
@@ -8340,6 +8342,42 @@ answer carries on in a straight line. Catalan's is the Fibonacci rule, because
 `1, 1, 2, 5` could be anything. Most rows roll their own start and step, so a
 run seen once is not a run learned by heart. The famous ones are fixed, because
 recognising them is what a doctorate is being asked to do.
+
+**The lessons' own boards** are the pop quiz's board asking out of a book of
+that subject, and each takes the stakes of a board that already existed, so
+there is nothing new to learn about what a wrong answer costs:
+
+| Board | Lesson | Right | Wrong | Why that price |
+| --- | --- | --- | --- | --- |
+| The lab | SCIENCE | a diamond | a giant | the quiz's: an experiment gone wrong grows something |
+| The till | FINANCE | three coins, into the purse | a giant | the one board whose prize outlives the run, so it pays in the thing a ledger counts |
+| The stave | MUSIC | a heart | twenty off the bar | the sequence's: a wrong note stings |
+
+The till's three coins are tic-tac-toe's coin three times over. Tic-tac-toe is a
+free try and pays one; the till can send a giant, so it pays more of the same
+thing rather than something new for `Game:runWorth` to weigh.
+
+They climb the course the same way and keep the same rule about wrong answers:
+
+| Course | The lab | The till | The stave |
+| --- | --- | --- | --- |
+| HIGH SCHOOL | speed, `F = MA`, Ohm's law, °C to K, atoms in a formula | a discount, a markup, change from a note, a receipt, the price of one | whole, half and quarter notes added up, how many of one in another, a bar's last note |
+| BACHELOR | balancing an equation, molar mass, kinetic energy, resistors in parallel, `P = VI`, pH | simple interest, markup against margin, down and back up, tax taken out, two rises | dotted notes and eighths, harder bars, seconds at a tempo |
+| MASTERS | `E = MC^2`, half-life, the inverse square, Boyle, `P = I^2R`, oxidation states | compound interest, the rule of 72, Fisher, break-even | compound time, a note's length at a tempo, sixteenths, harmonics, beats between two tones |
+| PHD | Bohr's levels, the Lorentz factor, fission, decay, `T^4`, a shell's `L`, dichromate -- and a master's one time in three | present value, the growing perpetuity, the effective rate, bonds, put-call parity -- and a master's one time in three | equal temperament, metric modulation, odd meters, a dotted beat -- and a master's one time in three |
+
+The wrong answers are again the mistakes: Fahrenheit offered for Kelvin, the
+atomic numbers added for a molar mass, the half forgotten in `MV^2/2`, a
+discount's percent taken off as dollars, two rises of 10% added to 20%, a
+half note read as half a beat, a dot ignored, an eighth of a dotted beat taken
+as a half of it, the octave split in a straight line instead of by a ratio.
+
+None of it needed translating, for the quiz's reason. A unit is a symbol
+(`M/S`, `KG`, `HZ`, `$`, `%`), an equation is an arrow between formulae, and a
+note is a note. The face gained the ohm and the degree, and the board draws six
+notes the way it draws the integral -- taller than a letter, out of rectangles,
+with a dot after one dotting it. Caps only means salt is NACL; a chemist will
+forgive it.
 
 ## On a phone
 

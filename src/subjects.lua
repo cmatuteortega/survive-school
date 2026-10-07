@@ -330,6 +330,9 @@ Subjects.list = {
         -- literally -- a row of monsters coming in along the lines you write on
         -- -- and the ring is the only other thing it has to say.
         drills = { every = 60, of = { line = 4, ring = 2, side = 1 } },
+        -- The lab's board (src/quiz.lua's science book): formulae, units and
+        -- equations to balance, a diamond against a giant.
+        worksheets = { science = 2, tictactoe = 1 },
     },
     {
         key = "pe",
@@ -405,6 +408,9 @@ Subjects.list = {
         -- a considered line drawn across a block is the whole of this lesson.
         drills = { every = 44, of = { grid = 4, line = 3, side = 1,
                                       pincer = 1 } },
+        -- The till's board: discounts, interest and present values, paid in
+        -- coins that outlive the run.
+        worksheets = { finance = 2, tictactoe = 1 },
     },
     {
         key = "music",
@@ -428,6 +434,9 @@ Subjects.list = {
         -- is the page whose events all arrive on the beat.
         drills = { every = 40, of = { ring = 4, line = 3, pincer = 1,
                                       grid = 1 } },
+        -- The stave's board: notes added up, bars filled, tempos timed -- a
+        -- heart against a wrong note's sting.
+        worksheets = { music = 2, tictactoe = 1 },
     },
     {
         key = "maths",

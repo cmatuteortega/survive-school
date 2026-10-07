@@ -2,7 +2,7 @@
 -- stopping to solve one while the horde keeps coming (WORKSHEETS.md is the
 -- idea list, README **Worksheets on the page** the argument).
 --
--- Three today, and each is a row in KINDS:
+-- Two machines today, each a row or more in KINDS:
 --
 -- - **Tic-tac-toe**, on every page. A game already in play -- red O's, black
 --   X's -- with one cell that finishes three X's in a row. Scribble a cross into
@@ -14,6 +14,9 @@
 --   ring (Spawner:giant) and the right answer circled for next time.
 -- - **The sequence**, on MATHS too: the same board with a run of numbers and
 --   the next one missing. Right is a heart, wrong is twenty off the bar.
+-- - **A board of the lesson's own** on SCIENCE, FINANCE and MUSIC: the pop
+--   quiz's board asking out of that subject's book -- equations, prices,
+--   notes -- and paying the way its row in BOARDS says.
 --
 -- They are placed the way the fixed pickups are (src/pickup.lua): a pure
 -- function of the cell and the run's seed, one in a fraction of a coarser
@@ -296,44 +299,61 @@ local RY = 7
 -- comes in by (Player:hurt), so it shakes and buzzes like being bitten.
 local SEQUENCE_HURT = 20
 
--- The boards that are answered by standing: what each asks and what it pays.
--- Two today, both MATHS's, and they share everything else -- the board, the
--- three answers, the circle that draws while you stand -- so a third is a row.
+-- What a board can pay and charge. Three prizes and two prices, shared out
+-- between the boards below so that each lesson's says something about it.
+local function drop(kind, colour)
+    return function(game, x, y)
+        game.pickups[#game.pickups + 1] = Pickup.new(kind, x, y)
+        game.particles:burst(x, y, 10, colour)
+    end
+end
+
+-- Three coins in a row under the answer, into the purse like tic-tac-toe's.
+local function coins(game, x, y)
+    for k = -1, 1 do
+        game.pickups[#game.pickups + 1] = Pickup.new("coin", x + k * 9, y)
+    end
+    game.particles:burst(x, y, 10, Palette.blush)
+end
+
+local function giant(game)
+    game.spawner:giant(game)
+end
+
+-- Through the invulnerability window rather than lost to it: a wrong answer
+-- given a moment after a blob bit you still costs the twenty.
+local function sting(game)
+    local p = game.player
+    p.invuln = 0
+    p:hurt(SEQUENCE_HURT)
+end
+
+-- The boards that are answered by standing: which book of questions each asks
+-- out of (src/quiz.lua) and what it pays. They share everything else -- the
+-- board, the three answers, the circle that draws while you stand -- so a new
+-- one is a row.
 --
 -- The pop quiz is the high-stakes one: a whole level, or a giant. The sequence
 -- is the low one, and pays in the same coin both ways: health. A heart for the
 -- right answer and twenty off the bar for the wrong one, so a run low on
 -- health is taking a real gamble on a board it could just walk past.
+--
+-- The other lessons take one each and say which kind of gamble they are.
+-- SCIENCE is the quiz's: an experiment that goes wrong grows something. FINANCE
+-- pays the purse, three coins against a giant, the one board whose prize
+-- outlives the run. MUSIC is the sequence's, a heart against a sting -- a wrong
+-- note hurts.
 local BOARDS = {
-    quiz = {
-        ask = function(courseKey) return Quiz.new(courseKey) end,
-        right = function(game, x, y)
-            game.pickups[#game.pickups + 1] = Pickup.new("diamond", x, y)
-            game.particles:burst(x, y, 10, Palette.sky)
-        end,
-        wrong = function(game)
-            game.spawner:giant(game)
-        end,
-    },
-    sequence = {
-        ask = function(courseKey) return Quiz.new(courseKey, Quiz.sequences) end,
-        right = function(game, x, y)
-            game.pickups[#game.pickups + 1] = Pickup.new("heart", x, y)
-            game.particles:burst(x, y, 10, Palette.red)
-        end,
-        -- Through the invulnerability window rather than lost to it: a wrong
-        -- answer given a moment after a blob bit you still costs the twenty.
-        wrong = function(game)
-            local p = game.player
-            p.invuln = 0
-            p:hurt(SEQUENCE_HURT)
-        end,
-    },
+    quiz = { book = Quiz.byCourse, right = drop("diamond", Palette.sky), wrong = giant },
+    sequence = { book = Quiz.sequences, right = drop("heart", Palette.red), wrong = sting },
+    science = { book = Quiz.science, right = drop("diamond", Palette.sky), wrong = giant },
+    finance = { book = Quiz.finance, right = coins, wrong = giant },
+    music = { book = Quiz.music, right = drop("heart", Palette.red), wrong = sting },
 }
 
 function Q.new(x, y, courseKey, kind)
     local row = BOARDS[kind]
-    local quiz = row.ask(courseKey)
+    local quiz = Quiz.new(courseKey, row.book)
     local q = setmetatable({
         kind = kind,
         row = row,
@@ -468,11 +488,10 @@ end
 
 local KINDS = {
     tictactoe = function(x, y) return T.new(x, y) end,
-    quiz = function(x, y, game) return Q.new(x, y, game.course.key, "quiz") end,
-    sequence = function(x, y, game)
-        return Q.new(x, y, game.course.key, "sequence")
-    end,
 }
+for kind in pairs(BOARDS) do
+    KINDS[kind] = function(x, y, game) return Q.new(x, y, game.course.key, kind) end
+end
 
 function Worksheet.init(game)
     game.worksheets = {}

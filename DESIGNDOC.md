@@ -6446,8 +6446,9 @@ and the fixed layer ask it through `clearOf`, which requires the module lazily
 because the worksheet requires `src/pickup.lua` to pay out.
 
 **What a page prints** is the subject row's `worksheets` weights
-(`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS), with `{ tictactoe = 1 }` for every
-row that carries none. A new kind is a constructor in `KINDS` plus an object
+(`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS, `{ science = 2,
+tictactoe = 1 }` and the like on SCIENCE, FINANCE and MUSIC), with
+`{ tictactoe = 1 }` for every row that carries none. A new kind is a constructor in `KINDS` plus an object
 with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`.
 
 **Tic-tac-toe** (`T`): `deal` builds a game three moves each from a winning
@@ -6460,13 +6461,17 @@ so a cross can be two strokes. A committed X that makes three draws itself in
 (`CROSS_TIME`), then the line (`LINE_TIME`), then drops a `coin` pickup under
 the grid. Any other cell gets the page's O in the gap and the sheet is spent.
 
-**The boards you stand on** (`Q`) are the pop quiz and the sequence, two rows
-in `BOARDS`. Each row has `ask(courseKey)`, `right(game, x, y)` and
-`wrong(game)`, and everything else (the board, the answers, the hold) is shared.
+**The boards you stand on** (`Q`) are rows in `BOARDS`: `quiz`, `sequence`,
+`science`, `finance` and `music`. Each row has `book` (which set of rungs in
+`src/quiz.lua` it asks from), `right(game, x, y)` and `wrong(game)`, built from
+the shared payouts above it (`drop(kind, colour)`, `coins`, `giant`, `sting`),
+and everything else (the board, the answers, the hold) is shared. `KINDS` gets a
+constructor for every row of `BOARDS` by itself.
 `Quiz.new(courseKey, book)` returns `{ q, answers, right }`. `book` is
-`Quiz.byCourse` for the quiz (the default) or `Quiz.sequences` for the
-sequence. `Quiz.byCourse` is a weighted list of rungs per course; PHD is
-`{ PHD, 2 }, { MASTERS, 1 }`. Each rung is a list of generators returning the
+`Quiz.byCourse` for the quiz (the default), `Quiz.sequences` for the sequence,
+and `Quiz.science`, `Quiz.finance` or `Quiz.music` for the lessons' own.
+Every book is a weighted list of rungs per course, and each one's PHD is
+`{ PHD, 2 }, { MASTERS, 1 }` in its own rungs. Each rung is a list of generators returning the
 question, the right answer and two wrong ones that are typical mistakes. A
 generator may return nil, and a roll whose answers collide is rerolled. Standing
 inside an answer's ellipse fills its `hold` over `HOLD` (1.5s) and drains it at
@@ -6480,6 +6485,18 @@ The sequence pays a `heart` above the answer when right. When wrong it costs
 twenty is never swallowed by the window after a hit. Its questions are
 `run(terms)` strings (`"2, 4, 6, ?"`), and `line(t)`, the straight-line next
 term, is the usual wrong answer.
+
+SCIENCE's `science` board pays the quiz's way (diamond, giant), FINANCE's
+`finance` drops three `coin` pickups 9px apart against a giant, and MUSIC's
+`music` pays the sequence's way (heart, `SEQUENCE_HURT`). Their books keep money
+in cents (`money`), percentages and decimals to two places (`pct`, `dec`), and
+music in eighths (the `N` table: a dotted quarter is 3, 6/8 is 6), so a bar to
+fill (`bar(sigs, fill, gaps, pool, most)`) and a sum of notes
+(`sum(first, rest, misread)`) are whole-number arithmetic. The notes are the
+Unicode musical symbols (𝅝 𝅗𝅥 ♩ ♪ ♫ ♬), drawn by `Quiz.layout` from
+`NOTE_SHAPES` -- a 4x3 head on the bottom three rows, a stem to three rows
+above the line -- and a `.` straight after one is a 1px dot beside the head.
+The face carries `Ω` and `°` for the lab's units.
 
 The notices are `THREE IN A ROW`, `CORRECT!` and `WRONG ANSWER`, through
 `Game:say`.
@@ -6757,10 +6774,14 @@ and are all the same 11x11 glyph.
 - **Worksheet:** a constructor in `KINDS` in `src/worksheet.lua` and an object
   with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`, and
   its weight in a subject's `worksheets` row (rows without one get
-  `DEFAULT_MIX`). A board answered by standing is a row in `BOARDS` (`ask`,
-  `right`, `wrong`) and a constructor in `KINDS`. A new quiz question or
-  sequence is a generator in its rung's list in `src/quiz.lua`, and a rung for a
-  new course is a row in `Quiz.byCourse` and `Quiz.sequences`.
+  `DEFAULT_MIX`). A board answered by standing is a row in `BOARDS` (`book`,
+  `right`, `wrong`); its `KINDS` constructor comes for free. A new question is
+  a generator in its rung's list in `src/quiz.lua`, a new book is four rung lists
+  and a table keyed by course like `Quiz.science`, and a rung for a new course
+  is a row in every book (`Quiz.byCourse`, `Quiz.sequences`, `Quiz.science`,
+  `Quiz.finance`, `Quiz.music`). A mark the board must draw that the 3x5 face
+  cannot hold is rectangles in `Quiz.layout`, as the integral, the root and the
+  notes (`NOTE_SHAPES`) are.
   Anything it says goes through `Game:say`, so it needs a line in `src/i18n.lua`
   and the four `src/lang/` files. Questions are notation and need none.
 - **Enemy:** sprite in `Sprites.enemies` + row in `Enemy.types` + row in `TABLE`

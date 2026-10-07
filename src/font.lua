@@ -164,7 +164,7 @@ local GLYPHS = {
     -- brackets are one pixel shy of C at the top and bottom, which is the only
     -- thing that tells them apart in three columns. The integral sign here is
     -- the fallback: the board draws its own, three rows taller, with its limits
-    -- set beside it (`Worksheet.printMath`), and the root's bar is drawn there
+    -- set beside it (`Quiz.layout`), and the root's bar is drawn there
     -- too.
     ["="] = { "...", "###", "...", "###", "..." },
     ["("] = { ".#.", "#..", "#..", "#..", ".#." },
@@ -178,6 +178,11 @@ local GLYPHS = {
     ["\207\128"] = { "###", "#.#", "#.#", "#.#", "#.#" },     -- pi
     ["\206\163"] = { "###", "#..", ".#.", "#..", "###" },     -- sigma
     ["\226\134\146"] = { "...", "..#", "###", "..#", "..." }, -- arrow
+    -- And the two marks a SCIENCE board's units need that letters cannot spell:
+    -- the ohm, which is an O standing on two splayed feet, and the degree, a
+    -- ring in the top three rows so it sits where a raised O would.
+    ["\206\169"] = { ".#.", "#.#", "#.#", ".#.", "#.#" },     -- omega
+    ["\194\176"] = { ".#.", "#.#", ".#.", "...", "..." },     -- degree
 }
 
 -- Every stroke is two pixels thick and every counter is one, which is what lets

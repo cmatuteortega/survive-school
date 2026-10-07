@@ -15,13 +15,18 @@
 -- would give is not a choice, it is a gift.
 --
 -- MATHS sets two boards out of these (src/worksheet.lua): the questions, and a
--- run of numbers with the next one missing (**sequences**, below).
+-- run of numbers with the next one missing (**sequences**, below). SCIENCE,
+-- FINANCE and MUSIC set one each out of books of their own (**the other
+-- lessons' boards**, below), on the same four rungs and the same rule about
+-- wrong answers.
 --
 -- The typesetting is a handful of marks on top of the 3x5 face (src/font.lua):
 -- `^` raises the next glyph or `{group}`, `_` lowers it, an integral or a sigma
 -- carries both as limits beside it, and a root draws its bar over what follows.
 -- Everything is still the 3x5 face at a whole pixel -- a raised 2 is a 2 three
--- pixels up -- so nothing here bends the rendering rules.
+-- pixels up -- so nothing here bends the rendering rules. The six notes a MUSIC
+-- board writes are drawn the integral's way, as rectangles, a dot after one
+-- dotting it.
 
 local Font = require("src.font")
 
@@ -434,6 +439,606 @@ Quiz.sequences = {
     phd      = { { SEQ_PHD, 2 }, { SEQ_MASTERS, 1 } },
 }
 
+--- the other lessons' boards ---------------------------------------------------
+
+-- SCIENCE, FINANCE and MUSIC each set a board of their own, on the pop quiz's
+-- terms: notation rather than words, four rungs that climb with the course, and
+-- wrong answers that are the mistakes a student of that subject actually makes.
+-- A unit is a symbol and a symbol needs no translating -- `M/S`, `KG`, `Ω`,
+-- `HZ`, `$`, `%` -- and an equation is an arrow between formulae, so these
+-- shipped in six languages for the same reason the sums did. The face is caps
+-- only, which is why NACL is salt and a chemist will forgive it.
+
+-- Money is kept in cents, so a price never picks up a float's tail on its way
+-- to the board, and written the way a till writes it: `$7`, `$6.50`.
+local function money(c)
+    c = math.floor(c + 0.5)
+    local sign = c < 0 and "-" or ""
+    c = math.abs(c)
+    if c % 100 == 0 then return string.format("%s$%d", sign, c / 100) end
+    return string.format("%s$%d.%02d", sign, math.floor(c / 100), c % 100)
+end
+
+-- A percentage to two places at most, and none when it is whole.
+local function pct(v)
+    local r = math.floor(v * 100 + 0.5) / 100
+    if r == math.floor(r) then return string.format("%d%%", r) end
+    return (string.format("%.2f", r):gsub("0$", "")) .. "%"
+end
+
+-- A decimal the way a board would round one: up to two places, no trailing 0.
+local function dec(v)
+    local r = math.floor(v * 100 + 0.5) / 100
+    if r == math.floor(r) then return string.format("%d", r) end
+    return (string.format("%.2f", r):gsub("0$", ""))
+end
+
+--- SCIENCE ---
+
+-- How many of one element a formula holds. The wrong answers are the subscript
+-- of the element beside it, and the bracket's multiplier forgotten.
+local ATOMS = {
+    { "H_2SO_4", "O", 4, 2, 7 },
+    { "C_6H_{12}O_6", "H", 12, 6, 24 },
+    { "NH_3", "H", 3, 1, 4 },
+    { "CA(OH)_2", "H", 2, 1, 3 },
+    { "CH_4", "H", 4, 1, 5 },
+    { "CO_2", "O", 2, 1, 3 },
+}
+
+-- A coefficient missing from an equation that balances with it.
+local EQUATIONS = {
+    { "?H_2 + O_2 → 2H_2O", 2, 1, 4 },
+    { "N_2 + ?H_2 → 2NH_3", 3, 2, 6 },
+    { "2NA + CL_2 → ?NACL", 2, 1, 4 },
+    { "CH_4 + ?O_2 → CO_2 + 2H_2O", 2, 1, 3 },
+    { "4FE + 3O_2 → ?FE_2O_3", 2, 4, 3 },
+    { "?AL + 3CL_2 → 2ALCL_3", 2, 3, 6 },
+    { "C_3H_8 + ?O_2 → 3CO_2 + 4H_2O", 5, 4, 10 },
+}
+
+-- Grams per mole. Wrong: an atom counted once that the formula has twice, or
+-- the atomic numbers added up instead of the masses.
+local MOLAR = {
+    { "H_2O", 18, 17, 10 },
+    { "CO_2", 44, 28, 22 },
+    { "CH_4", 16, 13, 10 },
+    { "NH_3", 17, 15, 10 },
+    { "O_2", 32, 16, 64 },
+    { "NAOH", 40, 24, 20 },
+}
+
+-- Oxidation states, with the peroxide and the ammonia as the traps they are.
+local OXIDATION = {
+    { "FE_2O_3: FE = ?", "+3", "+2", "+6" },
+    { "KMNO_4: MN = ?", "+7", "+4", "+8" },
+    { "H_2SO_4: S = ?", "+6", "+4", "+8" },
+    { "CO_2: C = ?", "+4", "+2", "-4" },
+    { "NH_3: N = ?", "-3", "+3", "0" },
+    { "H_2O_2: O = ?", "-1", "-2", "+1" },
+}
+
+local SCI_SCHOOL = {
+    -- Speed: the wrong answers multiply instead, or take one from the other.
+    function()
+        local v, t = R(2, 9), R(2, 9)
+        local d = v * t
+        return "V = " .. d .. "M ÷ " .. t .. "S", v .. "M/S",
+            { (d * t) .. "M/S", (d - t) .. "M/S" }
+    end,
+    -- Newton's second law, and the right number with the wrong unit.
+    function()
+        local m, a = R(2, 9), R(2, 5)
+        return "F = " .. m .. "KG × " .. a .. "M/S^2", (m * a) .. "N",
+            { (m + a) .. "N", (m * a) .. "J" }
+    end,
+    function()
+        local i, r = R(2, 6), R(2, 9)
+        return "V = " .. i .. "A × " .. r .. "Ω", (i * r) .. "V",
+            { (i + r) .. "V", frac(r, i) .. "V" }
+    end,
+    -- Kelvin: 273 taken away instead of added, or Fahrenheit.
+    function()
+        local c = pick({ 0, 20, 25, 37, 100 })
+        return c .. "°C = ?K", c + 273,
+            { c - 273, math.floor(c * 9 / 5 + 32 + 0.5) }
+    end,
+    function()
+        local m = pick(ATOMS)
+        return m[1] .. ": " .. m[2] .. " = ?", m[3], { m[4], m[5] }
+    end,
+}
+
+local SCI_BACHELOR = {
+    function()
+        local e = pick(EQUATIONS)
+        return e[1], e[2], { e[3], e[4] }
+    end,
+    function()
+        local m = pick(MOLAR)
+        return m[1] .. " = ?G/MOL", m[2], { m[3], m[4] }
+    end,
+    -- Kinetic energy: the half forgotten, or the square.
+    function()
+        local m, v = 2 * R(1, 3), R(2, 5)
+        return "E = " .. m .. "KG × (" .. v .. "M/S)^2 ÷ 2",
+            (m * v * v / 2) .. "J", { (m * v * v) .. "J", (m * v / 2) .. "J" }
+    end,
+    -- Resistors in parallel. Wrong: added as if in series, or 1/R left unflipped.
+    function()
+        local p = pick({ { 6, 3 }, { 12, 6 }, { 4, 4 }, { 20, 5 }, { 10, 15 },
+                         { 12, 4 }, { 6, 6 } })
+        local a, b = p[1], p[2]
+        return "1/R = 1/" .. a .. " + 1/" .. b, "R=" .. (a * b / (a + b)) .. "Ω",
+            { "R=" .. (a + b) .. "Ω", "R=" .. frac(a + b, a * b) .. "Ω" }
+    end,
+    function()
+        local v, i = pick({ 3, 6, 9, 12 }), R(2, 5)
+        return "P = " .. v .. "V × " .. i .. "A", (v * i) .. "W",
+            { (v + i) .. "W", frac(v, i) .. "W" }
+    end,
+    -- pH: the sign of the logarithm kept, or the pOH given instead.
+    function()
+        local n = R(2, 12)
+        if n == 7 then return nil end
+        return "H^+ = 10^{-" .. n .. "} → PH = ?", n, { -n, 14 - n }
+    end,
+}
+
+local SCI_MASTERS = {
+    -- Mass-energy: the square forgotten, or the kilogram taken for a gram.
+    function()
+        if R(1, 2) == 1 then
+            return "E = MC^2, M = 1KG", "9×10^{16}J",
+                { "3×10^8J", "9×10^{13}J" }
+        end
+        return "E = MC^2, M = 2KG", "1.8×10^{17}J",
+            { "6×10^8J", "1.8×10^{14}J" }
+    end,
+    -- Half-life, and the halvings miscounted by one either way.
+    function()
+        local t, k, n0 = R(2, 5), R(2, 4), pick({ 800, 1600, 640, 960 })
+        return "N_0=" .. n0 .. " T_{1/2}=" .. t .. "S → N(" .. (t * k) .. "S)=?",
+            n0 / 2 ^ k, { n0 / 2 ^ (k - 1), n0 / 2 ^ (k + 1) }
+    end,
+    -- The inverse square: halved instead of quartered, or the wrong way up.
+    function()
+        local k = R(2, 4)
+        return "F=GMM/R^2, R → " .. k .. "R", "F/" .. (k * k),
+            { "F/" .. k, (k * k) .. "F" }
+    end,
+    function()
+        local k = R(2, 4)
+        return "PV=K, P → " .. k .. "P: V → ?", "V/" .. k,
+            { k .. "V", "V" }
+    end,
+    function()
+        local i, r = R(2, 5), R(2, 6)
+        return "P = I^2R, I = " .. i .. "A, R = " .. r .. "Ω", (i * i * r) .. "W",
+            { (i * r) .. "W", (2 * i * r) .. "W" }
+    end,
+    function()
+        local o = pick(OXIDATION)
+        return o[1], o[2], { o[3], o[4] }
+    end,
+}
+
+local SCI_PHD = {
+    -- Bohr's hydrogen: the square forgotten, or the binding energy's sign.
+    function()
+        local n = R(2, 4)
+        local e = -13.6 / (n * n)
+        return "E_N = -13.6EV/N^2, N = " .. n, dec(e) .. "EV",
+            { dec(-13.6 / n) .. "EV", dec(-e) .. "EV" }
+    end,
+    -- The Lorentz factor: the reciprocal forgotten, or the root.
+    function()
+        if R(1, 2) == 1 then
+            return "(1-V^2/C^2)^{-1/2}, V=0.6C", "1.25", { "0.8", "1.56" }
+        end
+        return "(1-V^2/C^2)^{-1/2}, V=0.8C", "1.67", { "0.6", "2.78" }
+    end,
+    -- Fission: the neutron that went in counted, or not.
+    function()
+        if R(1, 2) == 1 then
+            return "^{235}U+N → ^{141}BA+^{92}KR+?N", 3, { 2, 4 }
+        end
+        return "^{235}U+N → ^{140}XE+^{94}SR+?N", 2, { 1, 3 }
+    end,
+    function()
+        return pick({
+            function() return "^{238}U → ^{234}TH + ?", "^4HE", { "^2H", "E^-" } end,
+            function() return "^{14}C → ^{14}N + ?", "E^-", { "^4HE", "E^+" } end,
+            function() return "^{222}RN → ? + ^4HE", "^{218}PO", { "^{220}PO", "^{218}RN" } end,
+        })()
+    end,
+    -- Stefan-Boltzmann: the fourth power read as a square, or as times four.
+    function()
+        local k = R(2, 3)
+        return "P = KT^4, T → " .. k .. "T", (k ^ 4) .. "P",
+            { (k * k) .. "P", (4 * k) .. "P" }
+    end,
+    -- Which orbitals a shell has: one too many, or counted from one.
+    function()
+        local n = R(2, 4)
+        local function list(a, b)
+            local t = {}
+            for v = a, b do t[#t + 1] = v end
+            return table.concat(t, ",")
+        end
+        return "N = " .. n .. " → L = ?", list(0, n - 1),
+            { list(1, n), list(0, n) }
+    end,
+    function()
+        if R(1, 2) == 1 then
+            return "CR_2O_7^{2-}: CR = ?", "+6", { "+7", "+12" }
+        end
+        return "MNO_4^-: MN = ?", "+7", { "+8", "+6" }
+    end,
+}
+
+Quiz.science = {
+    school   = { { SCI_SCHOOL, 1 } },
+    bachelor = { { SCI_BACHELOR, 1 } },
+    masters  = { { SCI_MASTERS, 1 } },
+    phd      = { { SCI_PHD, 2 }, { SCI_MASTERS, 1 } },
+}
+
+--- FINANCE ---
+
+local FIN_SCHOOL = {
+    -- A discount: the percentage taken off as dollars, or the discount given as
+    -- the price.
+    function()
+        local p, d = pick({ 20, 40, 50, 60, 80, 120 }), pick({ 10, 20, 25, 50 })
+        return "$" .. p .. " - " .. d .. "% = ?", money(p * (100 - d)),
+            { money((p - d) * 100), money(p * d) }
+    end,
+    function()
+        local p, d = pick({ 20, 40, 60, 80, 120 }), pick({ 10, 20, 25, 50 })
+        return "$" .. p .. " + " .. d .. "% = ?", money(p * (100 + d)),
+            { money((p + d) * 100), money(p * d) }
+    end,
+    -- Change from a note, and the dollar borrowed or not borrowed.
+    function()
+        local price = R(26, 194) * 10
+        local paid = price < 1000 and 1000 or 2000
+        local c = paid - price
+        return money(paid) .. " - " .. money(price) .. " = ?", money(c),
+            { money(c + 100), money(c - 100) }
+    end,
+    function()
+        local a, b = R(21, 99) * 5, R(21, 99) * 5
+        return money(a) .. " + " .. money(b) .. " = ?", money(a + b),
+            { money(a + b - 100), money(a + b + 10) }
+    end,
+    -- The unit price: multiplied instead of divided, or a little off.
+    function()
+        local n, u = R(2, 5), R(4, 18) * 5
+        return n .. " = " .. money(n * u) .. " → 1 = ?", money(u),
+            { money(n * n * u), money(u + 10) }
+    end,
+}
+
+local FIN_BACHELOR = {
+    -- Simple interest: the total given for the interest, or one year of it.
+    function()
+        local p, r, n = pick({ 500, 1000, 2000, 5000 }), pick({ 2, 3, 4, 5, 10 }), R(2, 5)
+        return "I=PRT: $" .. p .. " " .. r .. "% " .. n,
+            money(p * r * n), { money(p * 100 + p * r * n), money(p * r) }
+    end,
+    -- A markup, and the margin on the selling price taken for it.
+    function()
+        local c, m = pick({ 40, 60, 80, 120 }), pick({ 20, 25, 50 })
+        local s = c * (100 + m) / 100
+        return "$" .. c .. " → $" .. s .. " = ?", "+" .. m .. "%",
+            { "+" .. pct(100 * (s - c) / s), "+" .. (s - c) .. "%" }
+    end,
+    -- Down and back up by the same percentage is not where it started.
+    function()
+        local p, d = pick({ 50, 100, 200 }), pick({ 10, 20, 50 })
+        return "$" .. p .. " - " .. d .. "% + " .. d .. "% = ?",
+            money(p * (100 - d) * (100 + d) / 100),
+            { money(p * 100), money(p * (100 + d * d / 100)) }
+    end,
+    -- Tax taken back out: the rate taken off the total instead.
+    function()
+        local v, base = pick({ 10, 20, 25 }), pick({ 80, 100, 120, 200 })
+        local total = base * (100 + v) / 100
+        return "? + " .. v .. "% = $" .. dec(total), money(base * 100),
+            { money(total * (100 - v)), money((total - v) * 100) }
+    end,
+    -- Two rises compound; they do not add.
+    function()
+        local a, b = pick({ 10, 20, 50 }), pick({ 10, 20, 50 })
+        return "+" .. a .. "%, +" .. b .. "% = ?",
+            "+" .. pct((100 + a) * (100 + b) / 100 - 100),
+            { "+" .. (a + b) .. "%", "+" .. pct(a * b / 100) }
+    end,
+}
+
+local FIN_MASTERS = {
+    -- Compound interest: simple interest instead, or the interest without the
+    -- principal.
+    function()
+        local p, r, n = pick({ 500, 1000, 2000 }), pick({ 5, 10, 20 }), R(2, 3)
+        local fv = p * 100 * (1 + r / 100) ^ n
+        return "$" .. p .. " I=" .. r .. "% N=" .. n .. " → ?", money(fv),
+            { money(p * (100 + r * n)), money(fv - p * 100) }
+    end,
+    -- The rule of 72, and the rule of 100 people reach for instead.
+    function()
+        local r = pick({ 4, 6, 8, 9, 12 })
+        return "I = " .. r .. "% → ×2: N = ?", 72 / r,
+            { dec(100 / r), 144 / r }
+    end,
+    -- Fisher: inflation added instead of taken off, or multiplied.
+    function()
+        local i, p = R(4, 9), R(1, 3)
+        return "I = " .. i .. "%, π = " .. p .. "% → R = ?", (i - p) .. "%",
+            { (i + p) .. "%", (i * p) .. "%" }
+    end,
+    -- Break-even: fixed cost over the margin, not over the price or the cost.
+    function()
+        local f, p = pick({ 600, 1200, 2400 }), pick({ 10, 12, 15 })
+        local v = p - pick({ 3, 4, 5, 6 })
+        return "F=$" .. f .. " P=$" .. p .. " V=$" .. v .. " → Q=?",
+            dec(f / (p - v)), { dec(f / p), dec(f / v) }
+    end,
+    -- Down and up the other way round: it lands short every time.
+    function()
+        local d = pick({ 10, 20, 25, 50 })
+        return "-" .. d .. "%, +" .. d .. "% = ?", "-" .. pct(d * d / 100),
+            { "0%", "+" .. pct(d * d / 100) }
+    end,
+}
+
+local FIN_PHD = {
+    -- Present value: discounted as if it were a loss, or simple discounting.
+    function()
+        local p, r = pick({ 500, 1000 }), pick({ 10, 20 })
+        local fv = p * (1 + r / 100) ^ 2
+        return money(fv * 100) .. " I=" .. r .. "% N=2 → PV=?",
+            money(p * 100),
+            { money(fv * 100 * (1 - r / 100) ^ 2), money(fv * 100 / (1 + 2 * r / 100)) }
+    end,
+    -- The growing perpetuity: growth ignored, or added to the rate.
+    function()
+        local c, gap = pick({ 20, 40, 50, 60, 100 }), pick({ 2, 4, 5 })
+        local g = R(1, 3)
+        local r = g + gap
+        return "C=$" .. c .. " I=" .. r .. "% G=" .. g .. "% → PV=?",
+            money(c * 10000 / gap), { money(c * 10000 / r), money(c * 10000 / (r + g)) }
+    end,
+    -- The effective rate of a monthly one: the nominal rate, or a month of it.
+    function()
+        local apr = pick({ 6, 12, 24 })
+        return "(1 + " .. apr .. "%/12)^{12} - 1 = ?",
+            pct(((1 + apr / 1200) ^ 12 - 1) * 100),
+            { apr .. "%", pct(apr / 12) }
+    end,
+    -- A bond against its yield.
+    function()
+        return pick({
+            function() return "C = 5%, Y = 5% → P = ?", "100", { "95", "105" } end,
+            function() return "C = 5%, Y = 6% → P = ?", "<100", { ">100", "100" } end,
+            function() return "C = 6%, Y = 5% → P = ?", ">100", { "<100", "100" } end,
+        })()
+    end,
+    -- Put-call parity at a rate of nothing: the sign of the spread flipped, or
+    -- the spread forgotten.
+    function()
+        local c, s, k = R(8, 15), pick({ 95, 100, 105 }), pick({ 95, 100, 105 })
+        local p = c - s + k
+        if p <= 0 then return nil end
+        return "C=" .. c .. " S=" .. s .. " K=" .. k .. " → P=?", p,
+            { c + s - k, c }
+    end,
+}
+
+Quiz.finance = {
+    school   = { { FIN_SCHOOL, 1 } },
+    bachelor = { { FIN_BACHELOR, 1 } },
+    masters  = { { FIN_MASTERS, 1 } },
+    phd      = { { FIN_PHD, 2 }, { FIN_MASTERS, 1 } },
+}
+
+--- MUSIC ---
+
+-- The notes the board can draw (Quiz.layout sets them, below), each with how
+-- long it lasts in eighths -- the smallest unit any of these boards counts in,
+-- so a dotted crotchet is a whole number and 6/8 is six of them. A dot after a
+-- note is the dotted note.
+local WHOLE, HALF = "\240\157\133\157", "\240\157\133\158"
+local QUARTER, EIGHTH = "\226\153\169", "\226\153\170"
+local PAIR, SIXTEENTHS = "\226\153\171", "\226\153\172"
+
+local N = {
+    W  = { WHOLE, 8 },
+    H  = { HALF, 4 },
+    Hd = { HALF .. ".", 6 },
+    Q  = { QUARTER, 2 },
+    Qd = { QUARTER .. ".", 3 },
+    E  = { EIGHTH, 1 },
+    P  = { PAIR, 2 },
+    S  = { SIXTEENTHS, 1 },
+}
+
+-- Beats are crotchets, and a board says 1.5 rather than 3/2: that is how a
+-- musician counts.
+local function beats(e) return dec(e / 2) end
+
+-- A bar with its last note missing. `sigs` are the time signatures it may be
+-- in, `fill` the notes it is written in, `gaps` what may be missing and `pool`
+-- what the wrong answers are drawn from: notes that do not last what is left.
+local function bar(sigs, fill, gaps, pool, most)
+    local sig = pick(sigs)
+    local top, bottom = sig:match("(%d+)/(%d+)")
+    local total = tonumber(top) * 8 / tonumber(bottom)
+    local gap = pick(gaps)
+    local left = total - gap[2]
+    if left < 1 then return nil end
+
+    local notes = {}
+    while left > 0 do
+        local fits = {}
+        for _, n in ipairs(fill) do
+            if n[2] <= left then fits[#fits + 1] = n end
+        end
+        if #fits == 0 or #notes >= (most or 4) then return nil end
+        local n = pick(fits)
+        notes[#notes + 1] = n[1]
+        left = left - n[2]
+    end
+
+    local wrong = {}
+    for _, n in ipairs(pool) do
+        if n[2] ~= gap[2] then wrong[#wrong + 1] = n[1] end
+    end
+    if #wrong < 2 then return nil end
+    local a = R(1, #wrong)
+    local b = R(1, #wrong - 1)
+    if b >= a then b = b + 1 end
+    return sig .. " = " .. table.concat(notes, " ") .. " ?", gap[1],
+        { wrong[a], wrong[b] }
+end
+
+-- Notes added up. `misread` is what each would be worth to the student making
+-- the mistake this rung is about, and is the second wrong answer; the first is
+-- always the number of notes, which is counting what is on the page rather
+-- than how long it lasts.
+local function sum(first, rest, misread)
+    local notes = { pick(first) }
+    for _ = 1, R(1, 2) do notes[#notes + 1] = pick(rest) end
+    local syms, total, wrong = {}, 0, 0
+    for i, n in ipairs(notes) do
+        syms[i] = n[1]
+        total = total + n[2]
+        wrong = wrong + (misread[n[1]] or n[2])
+    end
+    return table.concat(syms, " + ") .. " = ?", beats(total),
+        { tostring(#notes), beats(wrong) }
+end
+
+local MUS_SCHOOL = {
+    -- The commonest mistake in the first lesson: a half note read as half a
+    -- beat, and a whole note as one.
+    function()
+        local any = { N.W, N.H, N.Q }
+        return sum({ N.W, N.H }, any, { [WHOLE] = 2, [HALF] = 1 })
+    end,
+    -- How many of one go into another, and the answer turned upside down.
+    function()
+        local p = pick({ { N.W, N.Q }, { N.W, N.H }, { N.H, N.Q }, { N.Q, N.E },
+                         { N.H, N.E } })
+        local n = p[1][2] / p[2][2]
+        return p[1][1] .. " = ?" .. p[2][1], n,
+            { frac(1, n), n == 2 and 4 or 2 }
+    end,
+    function()
+        return bar({ "2/4", "3/4", "4/4" }, { N.H, N.Q }, { N.Q, N.H },
+            { N.W, N.H, N.Q, N.E })
+    end,
+}
+
+local MUS_BACHELOR = {
+    -- Dots: forgotten.
+    function()
+        return sum({ N.Hd, N.Qd }, { N.H, N.Q, N.E, N.P, N.Qd },
+            { [HALF .. "."] = 4, [QUARTER .. "."] = 2 })
+    end,
+    function()
+        return bar({ "2/4", "3/4", "4/4" }, { N.H, N.Q, N.Qd, N.E, N.P },
+            { N.E, N.Q, N.Qd, N.H, N.Hd }, { N.W, N.Hd, N.H, N.Qd, N.Q, N.E })
+    end,
+    -- Seconds at a tempo: the beats taken for seconds, or the tempo read upside
+    -- down.
+    function()
+        local bpm, s = pick({ 90, 120, 150, 180 }), R(2, 6)
+        local n = s * bpm / 60
+        if n ~= math.floor(n) or n > 16 then return nil end
+        return QUARTER .. " = " .. bpm .. ": " .. n .. QUARTER .. " = ?S", s,
+            { n, n * bpm / 60 }
+    end,
+}
+
+local MUS_MASTERS = {
+    -- Compound time, where the beat is dotted.
+    function()
+        return bar({ "3/8", "6/8", "9/8", "12/8" }, { N.Qd, N.Q, N.E, N.Hd },
+            { N.E, N.Q, N.Qd, N.H, N.Hd }, { N.Hd, N.H, N.Qd, N.Q, N.E })
+    end,
+    -- A note's length at a tempo, in seconds: the tempo inverted, or an eighth
+    -- taken for a crotchet.
+    function()
+        local bpm, n = pick({ 75, 80, 90, 100, 120 }), pick({ N.E, N.Q, N.Qd, N.H })
+        return QUARTER .. " = " .. bpm .. ": " .. n[1] .. " = ?S",
+            frac(60 * n[2], bpm * 2),
+            { frac(bpm * 2, 60 * n[2]), frac(60 * n[2], bpm) }
+    end,
+    -- Sixteenths: a beamed pair of them taken for a beamed pair of eighths.
+    function()
+        return sum({ N.S, N.Hd, N.Qd }, { N.S, N.E, N.P, N.Qd, N.Q },
+            { [SIXTEENTHS] = 2, [HALF .. "."] = 4, [QUARTER .. "."] = 2 })
+    end,
+    -- The harmonic series is a sum, not a run of octaves.
+    function()
+        local f, n = pick({ 100, 110, 220 }), R(3, 5)
+        return "F_1 = " .. f .. "HZ → F_" .. n .. " = ?", n * f,
+            { f * 2 ^ (n - 1), (n - 1) * f }
+    end,
+    -- Two tones beat at their difference, not at their sum or their middle.
+    function()
+        local a = pick({ 220, 440 })
+        local b = a + R(2, 6)
+        return a .. "HZ + " .. b .. "HZ → ?HZ", b - a, { a + b, (a + b) / 2 }
+    end,
+}
+
+local MUS_PHD = {
+    -- Equal temperament: the octave split in a straight line instead of by a
+    -- ratio, or a semitone miscounted.
+    function()
+        local f, n = pick({ 220, 440 }), pick({ 3, 4, 7, 9, 10 })
+        return f .. "HZ × 2^{" .. n .. "/12} = ?",
+            math.floor(f * 2 ^ (n / 12) + 0.5),
+            { math.floor(f * (1 + n / 12) + 0.5),
+              math.floor(f * 2 ^ ((n - 1) / 12) + 0.5) }
+    end,
+    -- A metric modulation: the new X lasts as long as the old Y, so the new
+    -- crotchet runs at the old tempo times X over Y. Wrong: Y over X, or no
+    -- change at all.
+    function()
+        local bpm = pick({ 60, 90, 120, 144 })
+        local p = pick({ { N.Qd, N.Q }, { N.Q, N.Qd }, { N.E, N.Q }, { N.H, N.Q },
+                         { N.Q, N.H } })
+        local x, y = p[1], p[2]
+        return QUARTER .. " = " .. bpm .. ", " .. x[1] .. " = " .. y[1] ..
+            " → " .. QUARTER .. " = ?",
+            bpm * x[2] / y[2], { bpm * y[2] / x[2], bpm }
+    end,
+    -- Odd meters, five notes long.
+    function()
+        return bar({ "5/8", "7/8", "11/8", "5/4", "7/4" },
+            { N.Q, N.Qd, N.E, N.H, N.Hd }, { N.E, N.Q, N.Qd, N.H, N.Hd },
+            { N.Hd, N.H, N.Qd, N.Q, N.E }, 5)
+    end,
+    -- A dotted beat: an eighth is a third of it, not a half.
+    function()
+        local bpm, n = pick({ 40, 60, 80, 100 }), pick({ N.E, N.Q, N.Hd })
+        return QUARTER .. ". = " .. bpm .. ": " .. n[1] .. " = ?S",
+            frac(60 * n[2], 3 * bpm),
+            { frac(60 * n[2], 2 * bpm), frac(60, bpm) }
+    end,
+}
+
+Quiz.music = {
+    school   = { { MUS_SCHOOL, 1 } },
+    bachelor = { { MUS_BACHELOR, 1 } },
+    masters  = { { MUS_MASTERS, 1 } },
+    phd      = { { MUS_PHD, 2 }, { MUS_MASTERS, 1 } },
+}
+
 local function str(v)
     if type(v) == "number" then
         if v == math.floor(v) then return string.format("%d", v) end
@@ -484,6 +1089,48 @@ local ADV = Font.advance
 local INTEGRAL = "\226\136\171"
 local SIGMA = "\206\163"
 local ROOT = "\226\136\154"
+
+-- The six notes a MUSIC board writes, drawn here rather than in the face for
+-- the integral's reason: a note is a head on the line with a stem three rows
+-- above it, taller than any letter. Each is a list of rectangles off its left
+-- edge and how wide it is; a head is four pixels by three, filled or hollow, and
+-- sits on the bottom three rows so a dot after it lands beside it.
+local NOTE_SHAPES = (function()
+    local function head(x, hollow, out)
+        out[#out + 1] = { x + 1, 2, 3, 1 }
+        if hollow then
+            out[#out + 1] = { x, 3, 1, 1 }
+            out[#out + 1] = { x + 3, 3, 1, 1 }
+        else
+            out[#out + 1] = { x, 3, 4, 1 }
+        end
+        out[#out + 1] = { x, 4, 3, 1 }
+        return out
+    end
+    local function stem(x, out)
+        out[#out + 1] = { x + 3, -3, 1, 5 }
+        return out
+    end
+    local quarter = stem(0, head(0, false, {}))
+    local eighth = stem(0, head(0, false, {}))
+    eighth[#eighth + 1] = { 4, -2, 1, 1 }
+    eighth[#eighth + 1] = { 5, -1, 1, 2 }
+    local pair = stem(6, head(6, false, stem(0, head(0, false, {}))))
+    pair[#pair + 1] = { 3, -3, 7, 1 }
+    local sixteenths = stem(6, head(6, false, stem(0, head(0, false, {}))))
+    sixteenths[#sixteenths + 1] = { 3, -3, 7, 1 }
+    sixteenths[#sixteenths + 1] = { 3, -1, 7, 1 }
+    return {
+        -- The whole note is a wider ring with no stem.
+        ["\240\157\133\157"] = { w = 5, { 1, 2, 3, 1 }, { 0, 3, 1, 1 },
+                                   { 4, 3, 1, 1 }, { 1, 4, 3, 1 } },
+        ["\240\157\133\158"] = { w = 4, unpack(stem(0, head(0, true, {}))) },
+        ["\226\153\169"] = { w = 4, unpack(quarter) },
+        ["\226\153\170"] = { w = 6, unpack(eighth) },
+        ["\226\153\171"] = { w = 10, unpack(pair) },
+        ["\226\153\172"] = { w = 10, unpack(sixteenths) },
+    }
+end)()
 
 local function glyphLen(s, i)
     local b = s:byte(i)
@@ -556,6 +1203,19 @@ function Quiz.layout(s)
             if lo ~= "" then text(lo, lx, 5) end
             x = lx + math.max(plainWidth(lo), plainWidth(hi))
             if lo ~= "" or hi ~= "" then x = x + 1 end
+        elseif NOTE_SHAPES[ch] then
+            i = i + w
+            local shape = NOTE_SHAPES[ch]
+            for _, r in ipairs(shape) do rect(x + r[1], r[2], r[3], r[4]) end
+            x = x + shape.w
+            -- A dot straight after a note is the note dotted: one pixel beside
+            -- the head rather than a full stop's whole advance.
+            if s:sub(i, i) == "." then
+                rect(x + 1, 3, 1, 1)
+                x = x + 2
+                i = i + 1
+            end
+            x = x + 1
         elseif ch == ROOT then
             local g
             g, i = group(s, i + w)
