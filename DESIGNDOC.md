@@ -6446,8 +6446,9 @@ and the fixed layer ask it through `clearOf`, which requires the module lazily
 because the worksheet requires `src/pickup.lua` to pay out.
 
 **What a page prints** is the subject row's `worksheets` weights
-(`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS, `{ science = 2,
-tictactoe = 1 }` and the like on SCIENCE, FINANCE and MUSIC), with
+(`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS, `{ music = 2, simon = 2,
+tictactoe = 1 }` on MUSIC, `{ science = 2, tictactoe = 1 }` and the like on
+SCIENCE and FINANCE), with
 `{ tictactoe = 1 }` for every row that carries none. A new kind is a constructor in `KINDS` plus an object
 with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`.
 
@@ -6498,7 +6499,30 @@ Unicode musical symbols (𝅝 𝅗𝅥 ♩ ♪ ♫ ♬), drawn by `Quiz.layout` 
 above the line -- and a `.` straight after one is a 1px dot beside the head.
 The face carries `Ω` and `°` for the lab's units.
 
-The notices are `THREE IN A ROW`, `CORRECT!` and `WRONG ANSWER`, through
+**Simon says** (`S`, MUSIC): a hand bell (`Sprites.HANDBELL`, kept as rows and
+plotted a pixel at a time) at `BELL_Y` over four pads on the corners of a square
+(`PAD_DX`, `PAD_TOP`, `PAD_BOTTOM`). Each pad is a five-line stave scrap with a
+note head at its `NOTES` step (D4, E4, G4, A4, all under the middle line so
+the stems go up; a step is half of `LINE`, 4px) and plays `note`
+(`src/sfx/note.mp3`, a struck bar synthesised at G4) at `2^(semis/12)`. `compose` deals `TUNE[course.key]` notes (3 to 6), never one
+twice running. States:
+- `idle`: pads play their note and count for nothing.
+- `playing`: rung by the player's centre entering the bell's ellipse or the pen
+  entering its box (both edge-triggered, never during a tune). After `LEAD`, one
+  note a `BEAT`, each lit for `LIT`; pads are inert.
+- `answer`: a pad is struck on arrival (`self.on` changing), so a note is struck
+  again only by stepping off and on. The right one sounds and advances `pos`;
+  the last pays a `heart` at the square's centre and says `BRAVO!`. A wrong one
+  plays `sour` (the note and a semitone over it, together), flashes red for
+  `FLASH`, resets `pos` and spends one of `TRIES` (3). Ringing the bell again
+  replays the tune and resets `pos`.
+- `fading` for `FADE` once the tries are gone: every colour steps down its
+  `FADED` ramp and pixels drop out by `util.hash01` (the module-local
+  `fade`/`fadeSeed` the helpers read), then `gone`, which draws nothing and is
+  skipped by `Worksheet.covers`.
+
+The notices are `THREE IN A ROW`, `CORRECT!`, `WRONG ANSWER` and `BRAVO!`
+(Spanish only: the other four fall through to the Italian), through
 `Game:say`.
 
 **Typesetting** is `Quiz.layout(s)`, returning `{ ops, w, top, bottom }`, and

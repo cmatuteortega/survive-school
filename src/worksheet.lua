@@ -2,7 +2,7 @@
 -- stopping to solve one while the horde keeps coming (WORKSHEETS.md is the
 -- idea list, README **Worksheets on the page** the argument).
 --
--- Two machines today, each a row or more in KINDS:
+-- Three machines today, each a row or more in KINDS:
 --
 -- - **Tic-tac-toe**, on every page. A game already in play -- red O's, black
 --   X's -- with one cell that finishes three X's in a row. Scribble a cross into
@@ -17,6 +17,9 @@
 -- - **A board of the lesson's own** on SCIENCE, FINANCE and MUSIC: the pop
 --   quiz's board asking out of that subject's book -- equations, prices,
 --   notes -- and paying the way its row in BOARDS says.
+-- - **Simon says**, on MUSIC. A hand bell and four notes: ring the bell by
+--   walking onto it or drawing over it, hear a tune, and walk the notes in the
+--   same order. Right is a heart; three wrong notes and the sheet fades away.
 --
 -- They are placed the way the fixed pickups are (src/pickup.lua): a pure
 -- function of the cell and the run's seed, one in a fraction of a coarser
@@ -28,9 +31,9 @@
 --
 -- Nothing here reads handwriting. A cross is *ground covered* inside a cell,
 -- on a 2px grid, the rule src/scribble.lua answers every question in the book
--- by; an answer is a place you stand. Both are things the game already asks
--- you to do with your hands, so a worksheet is a new question, not a new
--- control.
+-- by; an answer is a place you stand, or a row of places walked in order. All
+-- three are things the game already asks you to do with your hands, so a
+-- worksheet is a new question, not a new control.
 
 local Palette = require("src.palette")
 local Pickup = require("src.pickup")
@@ -39,6 +42,7 @@ local Input = require("src.input")
 local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
+local Sprites = require("src.sprites")
 local util = require("src.util")
 
 local Worksheet = {}
@@ -484,10 +488,328 @@ function Q:draw()
     end
 end
 
+--- simon says --------------------------------------------------------------------
+
+-- A hand bell and four notes, each on a scrap of stave of its own. Ring the bell
+-- -- walk onto it or draw over it -- and it plays a tune on the four, each note
+-- lighting as it sounds; then walk the notes back in the same order. Right is a
+-- heart. A wrong note sounds sour and starts you over, and the third one fades
+-- the whole sheet off the page. Nothing else is lost: a failed Simon costs the
+-- heart you did not get, which is the price of a sheet that asked nothing of you
+-- but your ears and a few seconds.
+--
+-- It is the third way a sheet is answered -- not standing still, not drawing,
+-- but walking through places in an order -- and so the layout is the rule: the
+-- four sit on the corners of a square, which is the one arrangement where any
+-- note can be walked to from any other without stepping on a third. The bell
+-- sits above the square for the same reason, off every line between two notes.
+--
+-- It lights as well as sounds, so a phone on mute can still play it, and the
+-- notes are written where they sit on a treble stave -- D, E, G and A, out of
+-- the pentatonic, so any tune dealt off them is a tune -- so that higher on the
+-- stave is higher in the ear, for a player who reads music. All four sit under
+-- the middle line, which is what lets their stems go up as a stave writes
+-- them: a stem hanging off the left of a head this small reads as a flag.
+
+local S = {}
+S.__index = S
+
+local PAD_DX, PAD_TOP, PAD_BOTTOM = 20, -4, 28 -- the square, off the sheet's middle
+local PAD_RX, PAD_RY = 13, 12
+local LINE = 4      -- between a stave's lines, so a head fits a space
+local BELL_Y = -28
+local BELL_RX, BELL_RY = 8, 8
+local LEAD = 0.35   -- the bell swings this long before the first note
+local BEAT = 0.42   -- one note of the tune
+local LIT = 0.3     -- how long a note stays lit, of its beat
+local FLASH = 0.45  -- how long a wrong note stays red
+local TRIES = 3
+local FADE = 1.2
+
+-- Semitones off G4 (the pitch src/sfx/note.mp3 is struck at, in the middle of
+-- the four so no note is pitched far enough to drag), and the step each sits
+-- on, counted up from the stave's middle line (B4): half a LINE apiece.
+local NOTES = {
+    { semis = -5, step = -5 }, -- D, the space under the bottom line
+    { semis = -3, step = -4 }, -- E, the bottom line
+    { semis = 0, step = -2 },  -- G, the second line
+    { semis = 2, step = -1 },  -- A, the second space
+}
+
+-- How long the tune is, by course: a note more for every rung, so a doctorate
+-- is copying six -- still well inside the few seconds a sheet may ask for.
+local TUNE = { school = 3, bachelor = 4, masters = 5, phd = 6 }
+
+local function ratio(semis) return 2 ^ (semis / 12) end
+
+-- A tune never strikes one note twice running: a repeat would ask you to step
+-- off a note and back on, which is a stumble, not a melody.
+local function compose(n)
+    local tune, last = {}, nil
+    for i = 1, n do
+        local k
+        repeat k = love.math.random(#NOTES) until k ~= last
+        tune[i], last = k, k
+    end
+    return tune
+end
+
+function S.new(x, y, courseKey)
+    local s = setmetatable({
+        kind = "simon",
+        x = x, y = y,
+        hw = PAD_DX + PAD_RX + 2,
+        hh = math.max(-BELL_Y + BELL_RY + 2, PAD_BOTTOM + PAD_RY + 2),
+        tune = compose(TUNE[courseKey] or TUNE.school),
+        pads = {},
+        state = "idle",
+        tries = TRIES,
+        lit = {},
+        seed = util.hash01(x, y, 5) * 1000,
+    }, S)
+    -- Rising in reading order, so the square reads like a line of music would.
+    for i = 1, #NOTES do
+        s.pads[i] = {
+            x = x + (i % 2 == 1 and -PAD_DX or PAD_DX),
+            y = y + (i <= 2 and PAD_TOP or PAD_BOTTOM),
+        }
+    end
+    return s
+end
+
+local function inside(px, py, cx, cy, rx, ry)
+    local dx, dy = (px - cx) / rx, (py - cy) / ry
+    return dx * dx + dy * dy <= 1
+end
+
+function S:padAt(px, py)
+    for i, p in ipairs(self.pads) do
+        if inside(px, py, p.x, p.y, PAD_RX, PAD_RY) then return i end
+    end
+end
+
+function S:sound(i)
+    Sfx.play("note", ratio(NOTES[i].semis))
+    self.lit[i] = LIT
+end
+
+function S:ring()
+    self.state = "playing"
+    self.t = 0
+    self.beat = 0
+    self.pos = 1
+end
+
+-- The note and the one a semitone over it, struck together: the one interval
+-- no tune off a pentatonic can make, so it can only be a mistake.
+function S:sour(i)
+    local r = ratio(NOTES[i].semis)
+    Sfx.play("note", r)
+    Sfx.play("note", r * ratio(1))
+    self.flash, self.flashT = i, FLASH
+end
+
+function S:step(i, game)
+    if self.state == "idle" then
+        -- Before the bell the notes are an instrument: playing them is how you
+        -- find out they play, and none of it counts.
+        self:sound(i)
+        return
+    end
+    if self.state ~= "answer" then return end
+
+    if self.tune[self.pos] == i then
+        self:sound(i)
+        self.pos = self.pos + 1
+        if self.pos > #self.tune then
+            self.state = "won"
+            game.pickups[#game.pickups + 1] =
+                Pickup.new("heart", self.x, self.y + (PAD_TOP + PAD_BOTTOM) / 2)
+            game.particles:burst(self.x, self.y + (PAD_TOP + PAD_BOTTOM) / 2, 10, Palette.red)
+            game:say("BRAVO!")
+            Sfx.play("accept")
+        end
+    else
+        self:sour(i)
+        self.tries = self.tries - 1
+        self.pos = 1
+        if self.tries <= 0 then
+            self.state = "fading"
+            self.t = 0
+        end
+    end
+end
+
+function S:update(dt, game, pen)
+    for i, l in pairs(self.lit) do
+        self.lit[i] = l > dt and l - dt or nil
+    end
+    if self.flashT then
+        self.flashT = self.flashT - dt
+        if self.flashT <= 0 then self.flash, self.flashT = nil, nil end
+    end
+
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= FADE then self.state = "gone" end
+        return
+    end
+    if self.state == "won" or self.state == "gone" then return end
+
+    if self.state == "playing" then
+        self.t = self.t + dt
+        local k = math.floor((self.t - LEAD) / BEAT) + 1
+        if k > self.beat and k >= 1 then
+            self.beat = k
+            if k <= #self.tune then
+                self:sound(self.tune[k])
+            else
+                self.state = "answer"
+            end
+        end
+    end
+
+    -- Things happen as you arrive on them, not while you stand there: a note
+    -- is struck once by stepping on it, and struck again by stepping off and on.
+    local p = game.player
+    local on = self:padAt(p.x, p.y)
+    if on and on ~= self.on then self:step(on, game) end
+    self.on = on
+
+    local bell = inside(p.x, p.y, self.x, self.y + BELL_Y, BELL_RX, BELL_RY)
+    local drawn = pen and math.abs(pen.x - self.x) <= BELL_RX
+        and math.abs(pen.y - (self.y + BELL_Y)) <= BELL_RY
+    if (bell and not self.onBell) or (drawn and not self.penBell) then
+        -- Not over a tune already playing; any other time it starts the tune
+        -- again, and your answer with it.
+        if self.state ~= "playing" then self:ring() end
+    end
+    self.onBell, self.penBell = bell, drawn
+end
+
+-- The fade, the way every fade in the book goes: each colour a step down its
+-- ramp, and the stamps dropping out at random a pixel at a time.
+local FADED = {
+    [Palette.ink] = { Palette.ink, Palette.slate, Palette.graphite },
+    [Palette.slate] = { Palette.slate, Palette.graphite, Palette.graphite },
+    [Palette.graphite] = { Palette.graphite, Palette.graphite, Palette.graphite },
+    [Palette.blue] = { Palette.blue, Palette.sky, Palette.sky },
+    [Palette.sky] = { Palette.sky, Palette.sky, Palette.sky },
+    [Palette.red] = { Palette.red, Palette.blush, Palette.blush },
+    [Palette.paper] = { Palette.paper, Palette.paper, Palette.paper },
+}
+
+-- Set for the length of one S:draw, so the helpers below need not be handed it.
+local fade, fadeSeed = 0, 0
+
+local function colour(c)
+    local ramp = FADED[c]
+    love.graphics.setColor(ramp and ramp[math.min(3, math.floor(fade * 3) + 1)] or c)
+end
+
+local function dot(x, y)
+    x, y = math.floor(x), math.floor(y)
+    if fade == 0 or util.hash01(x, y, fadeSeed) > fade then
+        love.graphics.rectangle("fill", x, y, 1, 1)
+    end
+end
+
+local function rect(x, y, w, h)
+    if fade == 0 then
+        love.graphics.rectangle("fill", math.floor(x), math.floor(y), w, h)
+        return
+    end
+    for j = 0, h - 1 do
+        for i = 0, w - 1 do dot(x + i, y + j) end
+    end
+end
+
+local function ellipse(cx, cy, rx, ry, dotted)
+    local n = math.floor(2 * math.pi * math.max(rx, ry) * 1.5)
+    for k = 0, n - 1 do
+        if not dotted or k % 4 == 0 then
+            local a = 2 * math.pi * k / n
+            dot(cx + math.cos(a) * rx + 0.5, cy + math.sin(a) * ry + 0.5)
+        end
+    end
+end
+
+local HEAD = { ".ooo.", "ooooo", ".ooo." }
+
+function S:drawPad(i)
+    local p = self.pads[i]
+    local cx, cy = math.floor(p.x), math.floor(p.y)
+
+    -- The stave a little high in its ring, since the heads hang under it.
+    local sy = cy - 2
+    colour(Palette.graphite)
+    for l = -2, 2 do rect(cx - 8, sy + l * LINE, 17, 1) end
+
+    local hot = self.flash == i and Palette.red
+        or (self.lit[i] or self.state == "won") and Palette.blue
+        or Palette.ink
+    local hy = sy - NOTES[i].step * LINE / 2
+    colour(hot)
+    for r, row in ipairs(HEAD) do
+        for c = 1, #row do
+            if row:sub(c, c) == "o" then dot(cx - 3 + c, hy - 2 + r) end
+        end
+    end
+    rect(cx + 2, hy - 7, 1, 7)
+
+    if self.flash == i or self.lit[i] then
+        colour(hot)
+        ellipse(cx, cy, PAD_RX, PAD_RY)
+        ellipse(cx, cy, PAD_RX + 1, PAD_RY + 1)
+    elseif self.state == "won" then
+        colour(Palette.blue)
+        ellipse(cx, cy, PAD_RX, PAD_RY)
+    else
+        colour(Palette.graphite)
+        ellipse(cx, cy, PAD_RX, PAD_RY, true)
+    end
+end
+
+function S:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / FADE, 0, 1) or 0
+    fadeSeed = self.seed
+
+    for i = 1, #self.pads do self:drawPad(i) end
+
+    -- The bell, a pixel to one side on every other beat while it plays: a
+    -- swing, at whole pixels and no angle.
+    local rows = Sprites.HANDBELL
+    local swing = 0
+    if self.state == "playing" then
+        swing = self.beat % 2 == 0 and -1 or 1
+    end
+    local bx = math.floor(self.x - #rows[1] / 2) + swing
+    local by = math.floor(self.y + BELL_Y - #rows / 2)
+    for r, row in ipairs(rows) do
+        for c = 1, #row do
+            local ch = row:sub(c, c)
+            if ch ~= "." then
+                colour(Palette.key[ch])
+                dot(bx + c - 1, by + r - 1)
+            end
+        end
+    end
+
+    -- Tries left, as tally strokes beside the bell; a spent one goes red.
+    for k = 1, TRIES do
+        colour(k <= TRIES - self.tries and Palette.red or Palette.slate)
+        rect(self.x + BELL_RX + 2 + k * 3, self.y + BELL_Y - 2, 1, 5)
+    end
+
+    fade = 0
+end
+
 --- the page ------------------------------------------------------------------------
 
 local KINDS = {
     tictactoe = function(x, y) return T.new(x, y) end,
+    simon = function(x, y, game) return S.new(x, y, game.course.key) end,
 }
 for kind in pairs(BOARDS) do
     KINDS[kind] = function(x, y, game) return Q.new(x, y, game.course.key, kind) end
@@ -568,7 +890,7 @@ end
 function Worksheet.covers(game, x, y)
     if not game.worksheets then return false end
     for _, s in ipairs(game.worksheets) do
-        if math.abs(x - s.x) < s.hw + PAD and math.abs(y - s.y) < s.hh + PAD then
+        if s.state ~= "gone" and math.abs(x - s.x) < s.hw + PAD and math.abs(y - s.y) < s.hh + PAD then
             return true
         end
     end

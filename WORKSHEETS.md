@@ -98,7 +98,20 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
     (`♩ = 120, ♩. = ♩ → ♩ = ?`), odd meters, a dotted beat -- and a masters
     question now and then.
 
-### What the built six pay
+- [x] **Simon says** (MUSIC). A hand bell over four notes, each written on a
+      scrap of stave where it sits (D, E, G, A). **Walk onto the bell or draw
+      over it** and it plays a tune on the four, each lighting as it sounds;
+      then **walk the notes in the same order**. Before the bell is rung the
+      notes just play, like an instrument. Right is a **heart**. A wrong note
+      sounds sour (a semitone clash) and starts you over; the third
+      fades the whole sheet off the page. The tune is 3 notes at HIGH SCHOOL, 4
+      at BACHELOR, 5 at MASTERS and 6 at PHD, never one note twice running.
+      The notes sit on the corners of a square, the one layout where any note
+      can be walked to from any other without crossing a third, and the bell is
+      above it, off every line between two. It lights as well as sounds, so it
+      can be played on mute.
+
+### What the built seven pay
 
 | Board | Where | Right | Wrong | Stakes |
 | --- | --- | --- | --- | --- |
@@ -108,9 +121,11 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
 | Lab | SCIENCE | a diamond | a giant | power, against trouble |
 | Till | FINANCE | three coins (into the purse) | a giant | the purse, against trouble |
 | Stave | MUSIC | a heart | 20 HP off the bar | health, both ways |
+| Simon | MUSIC | a heart | three wrong notes fade the sheet away | none: a lost prize |
 
-On MATHS the page prints them 2 quiz : 2 sequence : 1 tic-tac-toe, and on
-SCIENCE, FINANCE and MUSIC 2 of their board : 1 tic-tac-toe (the `worksheets`
+On MATHS the page prints them 2 quiz : 2 sequence : 1 tic-tac-toe, on MUSIC
+2 stave : 2 Simon : 1 tic-tac-toe, and on SCIENCE and FINANCE 2 of their board :
+1 tic-tac-toe (the `worksheets`
 rows in `src/subjects.lua`). GRAMMAR, ART and P.E. print only tic-tac-toe until
 they have a puzzle of their own.
 
@@ -126,7 +141,7 @@ they have a puzzle of their own.
 | **GRAMMAR** | **Hangman**: blanks on the page, letters scattered as pickups | Collect letters; a wrong one adds a limb | Hanged: the hanged man climbs down as a champion |
 | **ART** | **Join the dots** (not "dot to dot" -- that is a fusion's name): numbered dots, drawn through in order, reveal a picture | Pencil through the dots in order | The dots wander off |
 | **ART** (alt) | **Trace the shape**: a dashed star or heart traced within a tolerance | Pencil | -- |
-| **MUSIC** | **Simon says**: four notes on a stave light in order | Tap them back | Wrong note: a sting, and the crowd near you goes into fury |
+| **MUSIC** | ~~Simon says~~ -- built: a bell plays a tune on four notes | Walk them back in order | Three wrong notes and the sheet fades (the sting and the fury were dropped: a wrong note is already sour, and the stave charges health) |
 | **SCIENCE** | **Close the circuit**: battery and bulb with a gap in the wire | A **pen** line across the gap -- pen lines are walls already (`src/walls.lua`) | -- |
 | **SCIENCE** (alt) | **Memory pairs**: six face-down cards | Scribble two to flip them | Cards reshuffle |
 | **FINANCE** | **Exact change**: a price tag, coins scattered round it | Collect exactly that amount | Overpay and the change is lost |
@@ -139,8 +154,8 @@ they have a puzzle of their own.
 
 The three built machines decide how cheap an idea is: **stand on an answer**
 (the quiz board -- a new board is rows in `src/quiz.lua`), **scribble a cell**
-(the tic-tac-toe grid), and **walk or draw through the page** (a pen line, or a
-path walked in order).
+(the tic-tac-toe grid), and **walk through places in order** (Simon -- a pen
+line through the page is still an idea).
 
 | Lesson | Puzzle | Machine | How you answer | Fail state |
 | --- | --- | --- | --- | --- |
@@ -180,7 +195,7 @@ GRAMMAR a board of its own without a word list.
 ## Rewards, from least to most disruptive
 
 - **The pickups that already exist** -- heart, ink, diamond (a whole level), and
-  the coin (`banked`, one into the purse). The built six use the coin, the
+  the coin (`banked`, one into the purse). The built seven use the coin, the
   diamond and the heart -- the sequence was the first to charge health for a
   wrong answer rather than sending something, and the till the first to pay
   more than one coin.

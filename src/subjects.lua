@@ -435,8 +435,9 @@ Subjects.list = {
         drills = { every = 40, of = { ring = 4, line = 3, pincer = 1,
                                       grid = 1 } },
         -- The stave's board: notes added up, bars filled, tempos timed -- a
-        -- heart against a wrong note's sting.
-        worksheets = { music = 2, tictactoe = 1 },
+        -- heart against a wrong note's sting. And Simon: a tune rung on a hand
+        -- bell and walked back over four notes, the one sheet answered by ear.
+        worksheets = { music = 2, simon = 2, tictactoe = 1 },
     },
     {
         key = "maths",

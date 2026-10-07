@@ -138,6 +138,13 @@ local DEFS = {
     -- the longer sprays played lower, and the gap is what keeps a held button
     -- re-sounding every half second from piling up into a roar.
     spray       = { gain = 1.0, gap = 0.1, pitch = { 0.95, 1.05 } },
+    -- MUSIC's Simon sheet (src/worksheet.lua): one struck bar at G4, played at
+    -- a pitch for every note of the tune. Synthesised -- the fundamental ringing
+    -- longest, the octave fainter and shorter, and a glockenspiel's inharmonic
+    -- 2.76 partial dying in a few hundredths for the strike -- and written to
+    -- the common level at source. No range, for the tick's reason: every play
+    -- names its note, and a tune that wandered would be a tune out of tune.
+    note        = { gain = 1.0 },
 
     rubbing     = { gain = 59, loop = true },
     eraser      = { gain = 0.89 },

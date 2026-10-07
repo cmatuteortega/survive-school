@@ -126,6 +126,27 @@ Sprites.HERO_SKATEMAN = {
     ".....o...o.....",
 }
 
+-- The hand bell on MUSIC's Simon sheet (src/worksheet.lua): step on it or draw
+-- over it and it plays the tune to copy. Rows rather than a compiled sprite,
+-- because the sheet plots them a pixel at a time so it can dither them away
+-- with the rest of itself when it is failed. A wooden handle over a graphite
+-- body, a paper glint down its left flank so it reads as metal, and the
+-- clapper hanging under the lip.
+Sprites.HANDBELL = {
+    "....sss....",
+    "....sss....",
+    "....sss....",
+    "...ooooo...",
+    "..owwgggo..",
+    "..owggggo..",
+    ".owggggggo.",
+    ".owggggggo.",
+    "owggggggggo",
+    "ooooooooooo",
+    ".....o.....",
+    "....ooo....",
+}
+
 -- The star that orbits you (src/orbital.lua). Solid rather than outlined: at
 -- seven pixels across an outline is three pixels of star and four of paper, and
 -- this one has to be legible while it crosses a crowd.

@@ -641,6 +641,10 @@ local ES = {
     ["THREE IN A ROW"] = "TRES EN RAYA",
     ["CORRECT!"] = "¡CORRECTO!",
     ["WRONG ANSWER"] = "RESPUESTA INCORRECTA",
+    -- MUSIC's Simon sheet, played back right. Italian, like the multikill's
+    -- dynamics, and the same word on every stage in Europe, so only Spanish
+    -- needs a line -- for its opening mark -- and the other four fall through.
+    ["BRAVO!"] = "¡BRAVO!",
     -- And the enraged one (Spawner:fury), which is the other line here that names
     -- a monster rather than a moment -- and the one that has to name a *pen*. A
     -- red-pen correction over the top of your work is the same thing in a Spanish

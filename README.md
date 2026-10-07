@@ -8259,7 +8259,8 @@ object lying on it, not another ink doodle.
 Every page has a few puzzles printed on it, and solving one pays. Every lesson
 has **tic-tac-toe**, MATHS also sets a **pop quiz** and a **sequence**, and
 SCIENCE, FINANCE and MUSIC each set a board of their own -- the **lab**, the
-**till** and the **stave**. They sit at fixed spots
+**till** and the **stave** -- and MUSIC sets **Simon says** besides. They sit
+at fixed spots
 the way the fixed pickups do: a pure function of where they are and the run's
 seed, found by walking, and solved once each per run.
 
@@ -8270,7 +8271,7 @@ drawing somewhere other than at the crowd for a few seconds. So nothing here
 takes longer than that. The 3x5 face also rules out anything small: no word
 searches, no crosswords. `WORKSHEETS.md` keeps the longer list of ideas.
 
-Neither reads handwriting. Both are things the game already asks of your hands:
+None of them reads handwriting. All are things the game already asks of your hands:
 
 - **Tic-tac-toe** is a game in progress: red O's, black X's, and one cell that
   finishes three X's in a row. **Scribble a cross into it.** That is ground
@@ -8378,6 +8379,39 @@ note is a note. The face gained the ohm and the degree, and the board draws six
 notes the way it draws the integral -- taller than a letter, out of rectangles,
 with a dot after one dotting it. Caps only means salt is NACL; a chemist will
 forgive it.
+
+**Simon says** is the one sheet answered by ear, and the one answered by walking
+through places in order rather than standing on one. A hand bell sits over four
+notes, each written on a scrap of stave where it really sits -- D, E, G and A.
+**Walk onto the bell, or draw over it**, and it plays a tune on the four, each
+note lighting as it sounds. Then **walk the notes in the same order**. Right is a
+**heart**.
+
+- **The layout is the rule.** The four sit on the corners of a square, the one
+  arrangement where any note can be walked to from any other without stepping on
+  a third, and the bell is above the square, off every line between two. A
+  row of notes would have made every tune that skips one unplayable.
+- **A note is struck by arriving on it**, not by standing there, so a repeat is
+  a step off and back on. A tune never asks for one, because that is a stumble
+  rather than a melody.
+- **Before the bell the notes just play.** Walking over one and hearing it is
+  how you find out it is an instrument, and none of it counts.
+- **It lights as well as sounds**, because a lot of phones are played on mute,
+  and the notes are pentatonic so whatever tune is dealt is a tune: higher on
+  the stave is higher in the ear.
+- **It climbs the course by length**: three notes at HIGH SCHOOL, then four,
+  five, and six at PHD. Six is still under five seconds of walking.
+
+A wrong note sounds sour -- the note and the one a semitone over it, struck
+together, the one interval none of these tunes can make -- flashes red, and starts you over;
+ring the bell again if you have lost the tune. **The third wrong note fades the
+sheet off the page**, every colour stepping down its ramp while the pixels drop
+out, the way every fade in the book goes. That is the whole price, and it is
+deliberately the cheapest one: the stave beside it already charges twenty
+health for a wrong note, so a second health gamble on the same page would make
+MUSIC one sheet printed twice. Simon is the free try, like tic-tac-toe, and
+pays the heart because a tune you had to hold in your head with the horde
+coming is worth more than one coin.
 
 ## On a phone
 
