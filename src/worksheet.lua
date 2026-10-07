@@ -2,7 +2,7 @@
 -- stopping to solve one while the horde keeps coming (WORKSHEETS.md is the
 -- idea list, README **Worksheets on the page** the argument).
 --
--- Two today, and each is a row in KINDS:
+-- Three today, and each is a row in KINDS:
 --
 -- - **Tic-tac-toe**, on every page. A game already in play -- red O's, black
 --   X's -- with one cell that finishes three X's in a row. Scribble a cross into
@@ -12,6 +12,8 @@
 --   out under it (src/quiz.lua). Stand on one until the circle round it has
 --   finished drawing: right is a diamond, wrong is a giant walking in off the
 --   ring (Spawner:giant) and the right answer circled for next time.
+-- - **The sequence**, on MATHS too: the same board with a run of numbers and
+--   the next one missing. Right is a heart, wrong is twenty off the bar.
 --
 -- They are placed the way the fixed pickups are (src/pickup.lua): a pure
 -- function of the cell and the run's seed, one in a fraction of a coarser
@@ -290,10 +292,51 @@ local HOLD = 1.5        -- seconds stood on an answer to give it
 local DRAIN = 2         -- how much faster a circle undraws than draws
 local RY = 7
 
-function Q.new(x, y, courseKey)
-    local quiz = Quiz.new(courseKey)
+-- A wrong sequence costs this much health, through the one door every hit
+-- comes in by (Player:hurt), so it shakes and buzzes like being bitten.
+local SEQUENCE_HURT = 20
+
+-- The boards that are answered by standing: what each asks and what it pays.
+-- Two today, both MATHS's, and they share everything else -- the board, the
+-- three answers, the circle that draws while you stand -- so a third is a row.
+--
+-- The pop quiz is the high-stakes one: a whole level, or a giant. The sequence
+-- is the low one, and pays in the same coin both ways: health. A heart for the
+-- right answer and twenty off the bar for the wrong one, so a run low on
+-- health is taking a real gamble on a board it could just walk past.
+local BOARDS = {
+    quiz = {
+        ask = function(courseKey) return Quiz.new(courseKey) end,
+        right = function(game, x, y)
+            game.pickups[#game.pickups + 1] = Pickup.new("diamond", x, y)
+            game.particles:burst(x, y, 10, Palette.sky)
+        end,
+        wrong = function(game)
+            game.spawner:giant(game)
+        end,
+    },
+    sequence = {
+        ask = function(courseKey) return Quiz.new(courseKey, Quiz.sequences) end,
+        right = function(game, x, y)
+            game.pickups[#game.pickups + 1] = Pickup.new("heart", x, y)
+            game.particles:burst(x, y, 10, Palette.red)
+        end,
+        -- Through the invulnerability window rather than lost to it: a wrong
+        -- answer given a moment after a blob bit you still costs the twenty.
+        wrong = function(game)
+            local p = game.player
+            p.invuln = 0
+            p:hurt(SEQUENCE_HURT)
+        end,
+    },
+}
+
+function Q.new(x, y, courseKey, kind)
+    local row = BOARDS[kind]
+    local quiz = row.ask(courseKey)
     local q = setmetatable({
-        kind = "quiz",
+        kind = kind,
+        row = row,
         x = x, y = y,
         quiz = quiz,
         board = Quiz.layout(quiz.q),
@@ -346,13 +389,11 @@ function Q:update(dt, game)
             -- Just above the answer you are standing on, between it and the
             -- board: a step away, so taking it is a thing you do and the
             -- question it paid for is not hidden under it.
-            local dx, dy = self.answers[on].x, self.y - 2
-            game.pickups[#game.pickups + 1] = Pickup.new("diamond", dx, dy)
-            game.particles:burst(dx, dy, 10, Palette.sky)
+            self.row.right(game, self.answers[on].x, self.y - 2)
             game:say("CORRECT!")
             Sfx.play("accept")
         else
-            game.spawner:giant(game)
+            self.row.wrong(game)
             game.particles:burst(self.answers[on].x, self.answers[on].y, 10, Palette.red)
             game:say("WRONG ANSWER")
             Sfx.play("stamp")
@@ -427,7 +468,10 @@ end
 
 local KINDS = {
     tictactoe = function(x, y) return T.new(x, y) end,
-    quiz = function(x, y, game) return Q.new(x, y, game.course.key) end,
+    quiz = function(x, y, game) return Q.new(x, y, game.course.key, "quiz") end,
+    sequence = function(x, y, game)
+        return Q.new(x, y, game.course.key, "sequence")
+    end,
 }
 
 function Worksheet.init(game)

@@ -48,13 +48,22 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
     roots, logarithms, a derivative, Gauss's sum.
   - **PHD** -- definite and indefinite integrals, a limit, Euler's identity, the
     chain and product rules, a binomial sum -- and a masters question now and then.
+- [x] **Sequence on the board** (MATHS). The pop quiz's board with a run of
+      numbers and the next one missing, answered the same way. Right is a
+      **heart**; wrong is **20 HP** off the bar. The runs climb with the course:
+  - **HIGH SCHOOL** -- counting up or down in steps, doubling, two steps in turn.
+  - **BACHELOR** -- squares, triangular numbers, a ratio, primes, halving.
+  - **MASTERS** -- Fibonacci from a rolled start, cubes, factorials, one off a
+    power of two, a quadratic, a ratio that flips sign.
+  - **PHD** -- Catalan, Bell, partitions, derangements, Lucas, `n^n`,
+    tribonacci, look-and-say -- and a masters run now and then.
 
 ## Ideas, one per lesson
 
 | Lesson | Puzzle | How you answer | Fail state |
 | --- | --- | --- | --- |
 | **MATHS** | ~~Sum on the board~~ -- built as the pop quiz | Stand on the answer | A giant |
-| **MATHS** (alt) | **Sequence** `2, 4, 6, _`, or a 4x4 mini-sudoku with one cell missing | Stand on / scribble the number | Grid fades |
+| **MATHS** (alt) | ~~Sequence~~ -- built; a 4x4 mini-sudoku with one cell missing is still an idea | Stand on the number | 20 HP |
 | **GRAMMAR** | **Hangman**: blanks on the page, letters scattered as pickups | Collect letters; a wrong one adds a limb | Hanged: the hanged man climbs down as a champion |
 | **ART** | **Join the dots** (not "dot to dot" -- that is a fusion's name): numbered dots, drawn through in order, reveal a picture | Pencil through the dots in order | The dots wander off |
 | **ART** (alt) | **Trace the shape**: a dashed star or heart traced within a tolerance | Pencil | -- |

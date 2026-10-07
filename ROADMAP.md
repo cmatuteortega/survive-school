@@ -37,7 +37,7 @@ for it.
   - [ ] **Worksheets** — puzzles printed on the page that pay for being solved
         under pressure (`src/worksheet.lua`, `WORKSHEETS.md`, README
         **Worksheets on the page**). Tic-tac-toe on every page and MATHS's pop
-        quiz are built; one puzzle per lesson is the rest of it.
+        quiz and sequence are built; one puzzle per lesson is the rest of it.
 
 ## 3. Audio
 

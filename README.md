@@ -8257,7 +8257,7 @@ object lying on it, not another ink doodle.
 ## Worksheets on the page
 
 Every page has a few puzzles printed on it, and solving one pays. Every lesson
-has **tic-tac-toe**, and MATHS also sets a **pop quiz**. They sit at fixed spots
+has **tic-tac-toe**, and MATHS also sets a **pop quiz** and a **sequence**. They sit at fixed spots
 the way the fixed pickups do: a pure function of where they are and the run's
 seed, found by walking, and solved once each per run.
 
@@ -8315,6 +8315,31 @@ quiz ship in six languages without a single translated question: `7 × 8` is
 √ ∫ π Σ →`). The board raises an exponent, lowers a subscript, sets an
 integral's limits beside a sign three rows taller than a letter, and draws a
 root's bar, all at whole pixels in the same face.
+
+**The sequence** is the quiz's quieter twin: the same board and the same three
+answers you stand on, with a run of numbers and the next one missing. It pays in
+health both ways. Right is a **heart**; wrong is **twenty off the bar**, taken
+through the same door as being bitten (it shakes, it buzzes), and through the
+moment of safety after a hit rather than lost to it. So the quiz is the gamble
+for power and the sequence the gamble for health. A run low on health is making
+a real choice when it stops at one, and a run at full health is only playing for
+the heart it cannot yet use.
+
+Its rungs climb the same way, and its wrong answers are the same kind of mistake:
+reading the pattern one level too shallow.
+
+| Course | What the run of numbers is |
+| --- | --- |
+| HIGH SCHOOL | counting up or down in steps, doubling, two steps taken in turn |
+| BACHELOR | squares, triangular numbers, a ratio of three or four, primes, halving |
+| MASTERS | Fibonacci's rule from a rolled start, cubes, factorials, one off a power of two, a quadratic, a ratio that flips sign |
+| PHD | Catalan, Bell, partitions, derangements, Lucas, `n^n`, tribonacci, look-and-say -- and a master's run one time in three |
+
+A doubling run's wrong answer adds the last step again, and a quadratic's wrong
+answer carries on in a straight line. Catalan's is the Fibonacci rule, because
+`1, 1, 2, 5` could be anything. Most rows roll their own start and step, so a
+run seen once is not a run learned by heart. The famous ones are fixed, because
+recognising them is what a doctorate is being asked to do.
 
 ## On a phone
 

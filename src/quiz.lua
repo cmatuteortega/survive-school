@@ -14,6 +14,9 @@
 -- out, an integral's forgot to divide by the new power. A wrong answer nobody
 -- would give is not a choice, it is a gift.
 --
+-- MATHS sets two boards out of these (src/worksheet.lua): the questions, and a
+-- run of numbers with the next one missing (**sequences**, below).
+--
 -- The typesetting is a handful of marks on top of the 3x5 face (src/font.lua):
 -- `^` raises the next glyph or `{group}`, `_` lowers it, an integral or a sigma
 -- carries both as limits beside it, and a root draws its bar over what follows.
@@ -263,6 +266,174 @@ Quiz.byCourse = {
     phd      = { { PHD, 2 }, { MASTERS, 1 } },
 }
 
+--- sequences -------------------------------------------------------------------
+
+-- The second board MATHS sets: a run of numbers and a gap at the end. Same four
+-- rungs, same rule about wrong answers -- they are what you get by reading the
+-- pattern one level too shallow. A doubling run's wrong answer adds the last
+-- step again, a quadratic's carries on in a straight line, a Catalan's takes the
+-- Fibonacci rule because the first five terms look like it might be.
+--
+-- Most rows roll their own start and step, so a sequence seen once is not a
+-- sequence learned by heart; the famous ones (Catalan, Bell, partitions) are
+-- the famous ones and are what a doctorate is expected to recognise.
+
+-- `terms` written as the board writes them, the gap last.
+local function run(terms)
+    local out = {}
+    for i, t in ipairs(terms) do out[i] = string.format("%d", t) end
+    out[#out + 1] = "?"
+    return table.concat(out, ", ")
+end
+
+-- The next term if the run were a straight line: the commonest wrong reading.
+local function line(t)
+    return 2 * t[#t] - t[#t - 1]
+end
+
+local PRIMES = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47 }
+
+local SEQ_SCHOOL = {
+    function()
+        local a, d = R(1, 20), R(2, 9)
+        local t = { a, a + d, a + 2 * d, a + 3 * d }
+        return run(t), a + 4 * d, { a + 5 * d, a + 4 * d + 1 }
+    end,
+    function()
+        local a, d = R(60, 99), R(3, 9)
+        local t = { a, a - d, a - 2 * d, a - 3 * d }
+        return run(t), a - 4 * d, { a - 5 * d, a - 3 * d }
+    end,
+    function()
+        local a = R(1, 5)
+        return run({ a, 2 * a, 4 * a, 8 * a }), 16 * a, { 12 * a, 10 * a }
+    end,
+    -- Two steps taken in turn.
+    function()
+        local x, p, q = R(1, 9), R(1, 5), R(6, 9)
+        local t = { x, x + p, x + p + q, x + 2 * p + q, x + 2 * p + 2 * q }
+        return run(t), x + 3 * p + 2 * q, { x + 2 * p + 3 * q, x + 3 * p + 3 * q }
+    end,
+}
+
+local SEQ_BACHELOR = {
+    function()
+        local n = R(1, 5)
+        local t = { n * n, (n + 1) ^ 2, (n + 2) ^ 2, (n + 3) ^ 2 }
+        return run(t), (n + 4) ^ 2, { line(t), (n + 4) ^ 2 - 1 }
+    end,
+    -- Triangular numbers, from somewhere along.
+    function()
+        local k = R(1, 4)
+        local t = {}
+        for i = k, k + 4 do t[#t + 1] = i * (i + 1) / 2 end
+        local n = k + 5
+        return run(t), n * (n + 1) / 2, { line(t), n * (n + 1) / 2 + 1 }
+    end,
+    function()
+        local a, r = R(1, 3), R(3, 4)
+        local t = { a, a * r, a * r ^ 2, a * r ^ 3 }
+        return run(t), a * r ^ 4, { line(t), a * r ^ 3 * (r + 1) }
+    end,
+    -- Primes: the wrong answers are the odd numbers that look like one.
+    function()
+        local k = R(1, #PRIMES - 6)
+        local t = { PRIMES[k], PRIMES[k + 1], PRIMES[k + 2], PRIMES[k + 3], PRIMES[k + 4] }
+        local nxt = PRIMES[k + 5]
+        return run(t), nxt, { line(t), nxt + 2 }
+    end,
+    function()
+        local a = R(3, 7) * 32
+        return run({ a, a / 2, a / 4, a / 8 }), a / 16, { a / 32, a / 16 + 2 }
+    end,
+}
+
+local SEQ_MASTERS = {
+    -- Fibonacci's rule from a rolled start.
+    function()
+        local t = { R(1, 4), R(1, 5) }
+        for i = 3, 6 do t[i] = t[i - 1] + t[i - 2] end
+        local nxt = t[5] + t[6]
+        return run(t), nxt, { line(t), t[6] + t[4] }
+    end,
+    function()
+        local n = R(1, 3)
+        local t = { n ^ 3, (n + 1) ^ 3, (n + 2) ^ 3, (n + 3) ^ 3 }
+        return run(t), (n + 4) ^ 3, { line(t), (n + 4) ^ 2 }
+    end,
+    function()
+        if R(1, 2) == 1 then
+            return run({ 1, 2, 6, 24 }), 120, { 48, 96 }
+        end
+        return run({ 2, 6, 24, 120 }), 720, { 240, 600 }
+    end,
+    -- One off a power of two, either side.
+    function()
+        local s = R(1, 2) == 1 and -1 or 1
+        local t = {}
+        for i = 1, 5 do t[i] = 2 ^ i + s end
+        return run(t), 2 ^ 6 + s, { 2 ^ 6, t[5] + 2 ^ 4 }
+    end,
+    -- A quadratic: constant second differences, which a straight line misses.
+    function()
+        local a, b, c = R(1, 3), R(-3, 3), R(0, 5)
+        local t = {}
+        for n = 1, 5 do t[n] = a * n * n + b * n + c end
+        return run(t), a * 36 + b * 6 + c, { line(t), a * 36 + b * 6 + c + a }
+    end,
+    function()
+        local a, r = R(1, 3), -R(2, 3)
+        local t = { a, a * r, a * r ^ 2, a * r ^ 3, a * r ^ 4 }
+        local nxt = a * r ^ 5
+        return run(t), nxt, { -nxt, t[5] * -r }
+    end,
+}
+
+local SEQ_PHD = {
+    -- Catalan numbers. The trap is that 1, 1, 2, 5 could be anything.
+    function()
+        if R(1, 2) == 1 then
+            return run({ 1, 1, 2, 5, 14 }), 42, { 28, 43 }
+        end
+        return run({ 1, 2, 5, 14, 42 }), 132, { 84, 126 }
+    end,
+    -- Bell numbers, which share Catalan's first four terms.
+    function()
+        if R(1, 2) == 1 then
+            return run({ 1, 1, 2, 5, 15 }), 52, { 42, 45 }
+        end
+        return run({ 1, 2, 5, 15, 52 }), 203, { 132, 156 }
+    end,
+    -- Partitions of n, which look like Fibonacci until they do not.
+    function()
+        return run({ 1, 2, 3, 5, 7, 11 }), 15, { 13, 18 }
+    end,
+    -- Derangements: n times the last, plus or minus one in turn.
+    function()
+        return run({ 1, 2, 9, 44 }), 265, { 176, 220 }
+    end,
+    function()
+        return run({ 2, 1, 3, 4, 7, 11 }), 18, { 15, 17 }
+    end,
+    function()
+        return run({ 1, 4, 27, 256 }), 3125, { 1024, 625 }
+    end,
+    function()
+        return run({ 1, 1, 2, 4, 7, 13 }), 24, { 21, 20 }
+    end,
+    -- Look and say: the one that is not arithmetic at all.
+    function()
+        return run({ 1, 11, 21, 1211 }), 111221, { 1221, 2211 }
+    end,
+}
+
+Quiz.sequences = {
+    school   = { { SEQ_SCHOOL, 1 } },
+    bachelor = { { SEQ_BACHELOR, 1 } },
+    masters  = { { SEQ_MASTERS, 1 } },
+    phd      = { { SEQ_PHD, 2 }, { SEQ_MASTERS, 1 } },
+}
+
 local function str(v)
     if type(v) == "number" then
         if v == math.floor(v) then return string.format("%d", v) end
@@ -274,9 +445,11 @@ end
 -- One question for the course, shuffled into three answers. A generator may
 -- refuse its roll (nil) or come back with a wrong answer equal to the right
 -- one -- a coincidence of the dice, never a choice -- and either way it simply
--- rolls again.
-function Quiz.new(courseKey)
-    local mix = Quiz.byCourse[courseKey] or Quiz.byCourse.school
+-- rolls again. `book` is which set of rungs to draw from: the questions
+-- (`Quiz.byCourse`, the default) or the sequences (`Quiz.sequences`).
+function Quiz.new(courseKey, book)
+    book = book or Quiz.byCourse
+    local mix = book[courseKey] or book.school
     local total = 0
     for _, row in ipairs(mix) do total = total + row[2] end
 

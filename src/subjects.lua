@@ -453,9 +453,10 @@ Subjects.list = {
         drills = { every = 42, of = { grid = 5, ring = 3, line = 1,
                                       pincer = 1 } },
         -- What the page prints for you to solve (src/worksheet.lua): every
-        -- lesson plays tic-tac-toe, and this one sets a pop quiz as well -- two
-        -- boards in three, the questions climbing with the course (src/quiz.lua).
-        worksheets = { quiz = 2, tictactoe = 1 },
+        -- lesson plays tic-tac-toe, and this one sets a pop quiz and a
+        -- sequence as well -- four boards in five, the questions climbing with
+        -- the course (src/quiz.lua).
+        worksheets = { quiz = 2, sequence = 2, tictactoe = 1 },
     },
     {
         key = "art",

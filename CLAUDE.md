@@ -185,9 +185,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   the book is: the four rungs of the difficulty ladder and what each multiplies),
   `characters`, `tools`, `upgrades`, `loadout`, `perks`, `purse`, `refund`,
   `worksheet` (the puzzles printed on the page -- tic-tac-toe, and MATHS's pop
-  quiz -- placed like the fixed pickups; `WORKSHEETS.md` is the idea list),
-  `quiz` (the pop quiz's questions by course, and the typesetting that sets them
-  in the 3x5 face),
+  quiz and sequence -- placed like the fixed pickups; `WORKSHEETS.md` is the
+  idea list), `quiz` (the pop quiz's questions and the sequences by course, and
+  the typesetting that sets them in the 3x5 face),
   `store` (what is sold for money, over `iap`, love-iap's vendored file), `ads`
   (the two rewarded-ad offers),
   `collection` (what the book has opened, off `records`), `challenges` (what it

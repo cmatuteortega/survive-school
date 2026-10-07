@@ -6446,7 +6446,7 @@ and the fixed layer ask it through `clearOf`, which requires the module lazily
 because the worksheet requires `src/pickup.lua` to pay out.
 
 **What a page prints** is the subject row's `worksheets` weights
-(`{ quiz = 2, tictactoe = 1 }` on MATHS), with `{ tictactoe = 1 }` for every
+(`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS), with `{ tictactoe = 1 }` for every
 row that carries none. A new kind is a constructor in `KINDS` plus an object
 with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`.
 
@@ -6460,8 +6460,12 @@ so a cross can be two strokes. A committed X that makes three draws itself in
 (`CROSS_TIME`), then the line (`LINE_TIME`), then drops a `coin` pickup under
 the grid. Any other cell gets the page's O in the gap and the sheet is spent.
 
-**The pop quiz** (`Q`): `Quiz.new(game.course.key)` returns `{ q, answers,
-right }`. `Quiz.byCourse` is a weighted list of rungs per course; PHD is
+**The boards you stand on** (`Q`) are the pop quiz and the sequence, two rows
+in `BOARDS`. Each row has `ask(courseKey)`, `right(game, x, y)` and
+`wrong(game)`, and everything else (the board, the answers, the hold) is shared.
+`Quiz.new(courseKey, book)` returns `{ q, answers, right }`. `book` is
+`Quiz.byCourse` for the quiz (the default) or `Quiz.sequences` for the
+sequence. `Quiz.byCourse` is a weighted list of rungs per course; PHD is
 `{ PHD, 2 }, { MASTERS, 1 }`. Each rung is a list of generators returning the
 question, the right answer and two wrong ones that are typical mistakes. A
 generator may return nil, and a roll whose answers collide is rerolled. Standing
@@ -6470,6 +6474,12 @@ inside an answer's ellipse fills its `hold` over `HOLD` (1.5s) and drains it at
 - Right: a `diamond` pickup just above it.
 - Wrong: `Spawner:giant`, which is `Spawner:pick` at `BLOWN_GROW` on the ring
   and skips the blow-up meter.
+
+The sequence pays a `heart` above the answer when right. When wrong it costs
+`SEQUENCE_HURT` (20) through `Player:hurt`, with `invuln` zeroed first so the
+twenty is never swallowed by the window after a hit. Its questions are
+`run(terms)` strings (`"2, 4, 6, ?"`), and `line(t)`, the straight-line next
+term, is the usual wrong answer.
 
 The notices are `THREE IN A ROW`, `CORRECT!` and `WRONG ANSWER`, through
 `Game:say`.
@@ -6747,8 +6757,10 @@ and are all the same 11x11 glyph.
 - **Worksheet:** a constructor in `KINDS` in `src/worksheet.lua` and an object
   with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`, and
   its weight in a subject's `worksheets` row (rows without one get
-  `DEFAULT_MIX`). A new quiz question is a generator in its rung's list in
-  `src/quiz.lua`, and a rung for a new course is a row in `Quiz.byCourse`.
+  `DEFAULT_MIX`). A board answered by standing is a row in `BOARDS` (`ask`,
+  `right`, `wrong`) and a constructor in `KINDS`. A new quiz question or
+  sequence is a generator in its rung's list in `src/quiz.lua`, and a rung for a
+  new course is a row in `Quiz.byCourse` and `Quiz.sequences`.
   Anything it says goes through `Game:say`, so it needs a line in `src/i18n.lua`
   and the four `src/lang/` files. Questions are notation and need none.
 - **Enemy:** sprite in `Sprites.enemies` + row in `Enemy.types` + row in `TABLE`
