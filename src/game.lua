@@ -5346,6 +5346,7 @@ function Game:draw()
     -- sort below does not apply to it.
     Overprint.beginSolid()
     for _, e in ipairs(self.enemies) do e:drawSolid() end
+    for _, p in ipairs(self.pickups) do p:drawSolid() end
     if self.fallen then self.fallen:drawSolid() end
     if self.player.hp > 0 then self.player:drawSolid() end
     Overprint.endSolid()

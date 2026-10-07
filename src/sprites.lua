@@ -3795,62 +3795,6 @@ function Sprites.load()
         ".bcb.",
         "..b..",
     })
-
-    -- The things scattered past the screen edge for you to walk to
-    -- (src/pickup.lua). Each is drawn in the colour of what it refills -- red
-    -- for health, blue for ink -- and the diamond is cut from paper: like the
-    -- eye and the ruler body it wipes the ruling rather than stacking on it,
-    -- which is what makes the rarest thing on the page read as an object lying
-    -- on it rather than another ink doodle.
-    Sprites.pickups = {
-        -- A coin off the piggy bank (src/piggyboss.lua): the purse's own coin
-        -- (`coin` in Sprites.icons), lying on the page, because picking one
-        -- up is exactly one of those in the purse.
-        coin = pixelart.newSprite({
-            "..ooooo..",
-            ".okkkkko.",
-            "okkkwkkko",
-            "okkwwkkko",
-            "okkkwkkko",
-            "okkkwkkko",
-            "okkwwwkko",
-            ".okkkkko.",
-            "..ooooo..",
-        }),
-        heart = pixelart.newSprite({
-            ".rrr.rrr.",
-            "rkkkrkkkr",
-            "rkkkkkkkr",
-            "rkkkkkkkr",
-            ".rkkkkkr.",
-            "..rkkkr..",
-            "...rkr...",
-            "....r....",
-        }),
-        ink = pixelart.newSprite({
-            "...b...",
-            "...b...",
-            "..bcb..",
-            "..bcb..",
-            ".bcccb.",
-            ".bcwcb.",
-            "bcccccb",
-            "bcccccb",
-            ".bbbbb.",
-        }),
-        diamond = pixelart.newSprite({
-            "...sssssss...",
-            "..swwcwwwws..",
-            ".swwwwwwwwws.",
-            "swwwwwwwwwwws",
-            ".swwwwwwwwws.",
-            "..swwwwwwws..",
-            "...swwwwws...",
-            "....swwws....",
-            ".....sws.....",
-            "......s......",
-        }),
-    }
 end
 
 return Sprites

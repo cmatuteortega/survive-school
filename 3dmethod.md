@@ -678,6 +678,23 @@ glint pixel and the ink outline, and that is enough: what sells it is the shape
 pointing the way it goes, not the shading. It costs one small box of pixel tests
 per drop, which is fine for the few dozen a boss throws.
 
+## Smaller than a boss, turning on the spot: the pickups
+
+The heart, the ink drop, the diamond and the coin (`src/trinket.lua`) are the
+method at nine pixels across with one change to how a ray finds the surface:
+they are distance functions, marched rather than solved, because a heart and a
+cut stone have no tidy closed form. Marching is slow, but nothing about a pickup
+is live. What it looks like is which kind it is and how far round its turn it
+is, so each kind is painted at 32 headings, each the first time it is wanted,
+and kept, the tracer's pictures-by-heading at the smallest size. The ramp has
+room for two fills, a checkered step between them, a glint and a rim, and the
+rim is drawn in each kind's old outline colour so the colour code survives the
+turn. Two things were learned at this size. A shape that is round about its
+spin axis (the drop) shows nothing when spun, so it is leant over and the lean
+goes round. And a heart's dip is a single pixel that the view from above fills
+in with its own thickness, so the heart is seen almost side-on and has a notch
+cut down the middle of its top.
+
 ## Where it fits and where it doesn't
 
 - **Built of parts that face you:** something made of boxes, cylinders, cones and

@@ -1415,7 +1415,8 @@ touched is taken, `Game.banked` goes up one, it is not counted against the
 scatter's cap, and it outlives the fight. `banked` is the fifth term of
 `Purse.forRun` (above the course's rate) and is written to the bookmark. A coin in
 the air -- a lob of bait, a coin called home, a coin burst out -- is the brain's
-(`flying`), drawn in `drawAir` and landed as a pickup when it stops; one that hits
+(`flying`), drawn flat in `drawAir` (`Piggy.coin`) and landed as a pickup when it
+stops, where it starts turning on the spot like the others (`src/trinket.lua`); one that hits
 you is spent. On death (`dropParts`) everything in the air lands and six more spill
 out round it, harmless. Glue drops a charge's wind or a recall's tell; bait already
 spat stays.
@@ -6608,7 +6609,7 @@ The **page** pass is short and has exactly two things in it: `Background.draw`,
 and then the half of the page each live cut has taken off it
 (`Scissors:drawSever`). Everything else drawn into the page rather than onto it
 goes down from inside the ink pass through `Overprint.beginSolid()` — the
-silhouettes the crowd and the hero blank out under themselves, which is a loop of
+silhouettes the crowd, the pickups and the hero blank out under themselves, which is a loop of
 its own just before the depth sort. Both are explained under **The overprint
 pass**.
 
@@ -6618,7 +6619,8 @@ marks → other marks → the arena box → the boss's puddles and the whistle's
 (`Worksheet.draw`) → what a weapon has left
 lying on the page (`Loadout:drawGround`, the bomb's burning crater, the
 skate's trail and every spiral) → drop marks/ruler guides/compass guides/cuts (the blades still
-travelling down one included) and the cross an anchor is waiting on → gems →
+travelling down one included) and the cross an anchor is waiting on → pickups
+(each one's shadow, then its body turning over it: `src/trinket.lua`) → gems →
 enemies and
 player sorted by `y` (the hero draws his own board at his feet if the run has a
 skate, in place of the shadow; the crowd has already blanked the page out under

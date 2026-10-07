@@ -8249,10 +8249,29 @@ Three kinds, weighted 4 : 4 : 1:
   turns up about every 45 seconds, and spotting one stays an event rather than
   an errand.
 
-Each is drawn in the colour of what it refills — red for health, blue for ink —
-and the diamond is cut from paper, so like the eye and the ruler body it wipes
-the ruling rather than stacking on it: the rarest thing on the page reads as an
-object lying on it, not another ink doodle.
+Each is a small solid turning in the air over its own shadow
+(`src/trinket.lua`), painted the bosses' way a pixel at a time and lit by the
+eye's lamp: the heart is a puffed sweet that thins to a sliver as it turns, the
+ink drop a teardrop leant over and wobbling like a top about to settle (it is
+round about its own axis, so a plain spin would show nothing), the diamond a
+brilliant cut whose facets flash one after another as they come round, and the
+coin -- the piggy bank's -- goes edge-on with the purse's 1 on both faces. A
+thing turning over the floor is the oldest way a game has of saying *prize*, and
+the turn is also what shows each is an object rather than another doodle printed
+on the page; like the crowd, each blanks the page out under itself, so the ruling
+stops at its edge. They hover two pixels up and bob one more, whole pixels at a
+time, and the graphite shadow under them narrows as they rise and as they turn
+edge-on.
+
+Each keeps the colour of what it refills — red for health, blue for ink, its
+rim in that colour too — and the diamond is still cut from paper, with sky for
+its shade. **None of them is bigger than the hero**: nine pixels across at most,
+against his 15 by 19 board, because a prize larger than whoever picks it up reads
+as something to walk round rather than into.
+
+What a pickup looks like is only which kind it is and how far round it has
+turned, so each kind is painted at 32 headings, each the first time it is
+wanted, and kept: a page with thirty pickups on it costs thirty sprite draws.
 
 ## Worksheets on the page
 
@@ -9922,6 +9941,8 @@ src/
   gem.lua             XP pickups with magnet
   pickup.lua          hearts, ink and diamonds: fixed spots on the page, plus
                       a scatter past the screen edge
+  trinket.lua         their bodies, and the coin's: small solids painted a
+                      pixel at a time, turning over their shadows
   particles.lua       one-pixel ink specks
   hud.lua             bars, timer, tool selector, thumb stick, corner button
   scribble.lua        the question every screen asks: a box you scribble in

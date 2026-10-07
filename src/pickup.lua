@@ -21,7 +21,7 @@
 -- because it is the same thing as the other three -- touched means taken, and
 -- it stays on the page when the fight is over.
 
-local Sprites = require("src.sprites")
+local Trinket = require("src.trinket")
 local Palette = require("src.palette")
 local Sfx = require("src.sfx")
 local util = require("src.util")
@@ -132,7 +132,10 @@ function Pickup.new(kind, x, y)
     return setmetatable({
         kind = kind,
         x = x, y = y,
-        bob = util.hash01(x, y, 5) * 2,
+        -- How far through its turn and its bob it is: set off a different
+        -- way for every spot, so a few lying near each other do not turn in
+        -- step like a row of shop-window ornaments.
+        t = util.hash01(x, y, 5) * 10,
         dead = false,
     }, Pickup)
 end
@@ -228,7 +231,7 @@ function Pickup:update(dt, game)
         -- One sound for all three, here rather than three times over in TAKE:
         -- what the heart, the droplet and the diamond have in common is the
         -- thing the sound is about -- you walked out there and it was worth it --
-        -- and which of them it was is what the sprite and the burst are for.
+        -- and which of them it was is what the body and the burst are for.
         Sfx.play("item")
 
         -- A fixed spot is spent for the run; a scattered one just dies.
@@ -244,12 +247,23 @@ function Pickup:update(dt, game)
         return
     end
 
-    self.bob = (self.bob + dt * 3) % 2
+    self.t = self.t + dt
 end
 
+-- Turning in the air over its own shadow (src/trinket.lua). The shadow is on the
+-- paper and goes on darkening over a rule like every other mark; the body is
+-- standing proud of it, and blanks the page under itself (Pickup:drawSolid).
 function Pickup:draw()
-    love.graphics.setColor(1, 1, 1)
-    Sprites.pickups[self.kind]:draw(self.x, self.y - (self.bob >= 1 and 1 or 0))
+    Trinket.drawShadow(self.kind, self.x, self.y, self.t)
+    Trinket.draw(self.kind, self.x, self.y, self.t)
+end
+
+-- The blank stamped into the page under it, from inside Overprint.beginSolid and
+-- for Enemy:drawSolid's reason: a thing turning over the page is standing on it,
+-- not printed into it, and the ruling coming through a heart made it a sticker.
+function Pickup:drawSolid()
+    love.graphics.setColor(Palette.paper)
+    Trinket.drawMask(self.kind, self.x, self.y, self.t)
 end
 
 return Pickup

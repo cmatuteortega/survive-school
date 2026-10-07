@@ -184,7 +184,9 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   each), `course` (how hard
   the book is: the four rungs of the difficulty ladder and what each multiplies),
   `characters`, `tools`, `upgrades`, `loadout`, `perks`, `purse`, `refund`,
-  `worksheet` (the puzzles printed on the page -- tic-tac-toe, and MATHS's pop
+  `trinket` (the pickups' bodies -- heart, ink drop, diamond and coin -- as
+  small solids painted a pixel at a time, turning over their shadows, each
+  heading painted once and kept; none bigger than the hero), `worksheet` (the puzzles printed on the page -- tic-tac-toe, and MATHS's pop
   quiz and sequence -- placed like the fixed pickups; `WORKSHEETS.md` is the
   idea list), `quiz` (the pop quiz's questions and the sequences by course, and
   the typesetting that sets them in the 3x5 face),
