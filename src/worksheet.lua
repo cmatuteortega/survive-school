@@ -547,9 +547,11 @@ local FADE = 1.2
 local STAFF = { every = 40, line = 4, bar = 24 }
 local BAR_EVERY = 192
 
--- Semitones off G4 (the pitch src/sfx/note.mp3 is struck at, in the middle of
--- the four so no note is pitched far enough to drag), and the step each sits
--- on, counted up from the stave's middle line (B4): half a line apart apiece.
+-- Semitones off G (src/sfx/note.mp3 is struck at G, in the middle of the four
+-- so no note is pitched far enough to drag -- and two octaves over the G4 the
+-- stave writes, as a glockenspiel sounds, for src/sfx.lua's reason), and the
+-- step each sits on, counted up from the stave's middle line (B4): half a line
+-- apart apiece.
 local NOTES = {
     { semis = -5, step = -5 }, -- D, the space under the bottom line
     { semis = -3, step = -4 }, -- E, the bottom line

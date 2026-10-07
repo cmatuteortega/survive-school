@@ -6516,7 +6516,7 @@ five at least `APART` (40) and every straight walk between two at least `CLEAR`
 cell is spent. Since the sheet spans a screen, it has `S:covers`, which keeps
 pickups off its notes and bell only, and `Worksheet.covers` asks that before the
 `hw`/`hh` box. Each note plays `note` (`src/sfx/note.mp3`, a struck bar
-synthesised at G4) at `2^(semis/12)`. `compose` deals `TUNE[course.key]` notes
+synthesised at G6, two octaves over what is written as a glockenspiel sounds, so a phone speaker can play it) at `2^(semis/12)`. `compose` deals `TUNE[course.key]` notes
 (3 to 6), never one twice running. States:
 - `idle`: notes play when stepped on and count for nothing.
 - `playing`: rung by the player's centre entering the bell's ellipse or the pen

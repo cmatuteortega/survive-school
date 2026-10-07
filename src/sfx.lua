@@ -138,12 +138,21 @@ local DEFS = {
     -- the longer sprays played lower, and the gap is what keeps a held button
     -- re-sounding every half second from piling up into a roar.
     spray       = { gain = 1.0, gap = 0.1, pitch = { 0.95, 1.05 } },
-    -- MUSIC's Simon sheet (src/worksheet.lua): one struck bar at G4, played at
+    -- MUSIC's Simon sheet (src/worksheet.lua): one struck bar at G6, played at
     -- a pitch for every note of the tune. Synthesised -- the fundamental ringing
     -- longest, the octave fainter and shorter, and a glockenspiel's inharmonic
     -- 2.76 partial dying in a few hundredths for the strike -- and written to
     -- the common level at source. No range, for the tick's reason: every play
     -- names its note, and a tune that wandered would be a tune out of tune.
+    --
+    -- G6 and not the G4 the stave writes, because it was G4 first and could not
+    -- be heard on a phone: a phone's speaker plays next to nothing under about
+    -- 600Hz, and a soft bar at 300-400Hz matched to the common level by plain
+    -- RMS put a fifth of the tick's energy where the speaker can play it. Two
+    -- octaves up is where a glockenspiel really sounds against its written
+    -- part, and it was levelled against the tick and the whistle A-weighted
+    -- (0.045 over its loudest 300ms) rather than by RMS, which is what a
+    -- tone this pure needs to sit at the same loudness to an ear.
     note        = { gain = 1.0 },
 
     rubbing     = { gain = 59, loop = true },
