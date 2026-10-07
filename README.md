@@ -8381,32 +8381,38 @@ with a dot after one dotting it. Caps only means salt is NACL; a chemist will
 forgive it.
 
 **Simon says** is the one sheet answered by ear, and the one answered by walking
-through places in order rather than standing on one. A hand bell sits over four
-notes, each written on a scrap of stave where it really sits -- D, E, G and A.
-**Walk onto the bell, or draw over it**, and it plays a tune on the four, each
-note lighting as it sounds. Then **walk the notes in the same order**. Right is a
+through places in order rather than standing on one. Four notes are written onto
+the MUSIC page's own staves, each where it really sits -- D, E, G and A -- and a
+hand bell lies among them. **Walk onto the bell, or draw over it**, and it plays
+a tune on the four. Then **walk the notes in the same order**: each one you get
+right is circled, the way an answer on a board is. Get to the end and it pays a
 **heart**.
 
-- **The layout is the rule.** The four sit on the corners of a square, the one
-  arrangement where any note can be walked to from any other without stepping on
-  a third, and the bell is above the square, off every line between two. A
-  row of notes would have made every tune that skips one unplayable.
+- **It is written on the page, not drawn over it.** MUSIC's paper is staves
+  already, so a note is a head and a stem put on one of them, and higher on a
+  stave is higher in the ear. The notes are pentatonic, so whatever tune is
+  dealt is a tune.
+- **Spread out, but fair.** The notes and the bell are scattered over about a
+  screen's worth of page, on different staves, rather than packed into a box.
+  They are dealt so that the straight walk between any two of them passes
+  clear of every other note and of the bell. You never strike a note you were
+  only walking past, and walking the tune never rings the bell and wipes your
+  answer.
 - **A note is struck by arriving on it**, not by standing there, so a repeat is
   a step off and back on. A tune never asks for one, because that is a stumble
   rather than a melody.
 - **Before the bell the notes just play.** Walking over one and hearing it is
   how you find out it is an instrument, and none of it counts.
-- **It lights as well as sounds**, because a lot of phones are played on mute:
-  a sounding note's pad floods light blue, its head jumps off the stave and a
-  ring spreads out from it, each one readable from across the screen alone. A
-  wrong note floods pink and shakes instead. And the notes are pentatonic so
-  whatever tune is dealt is a tune: higher on the stave is higher in the ear.
+- **It shows as well as sounds**, because a lot of phones are played on mute: a
+  sounding note jumps off its line and throws a ring out round itself, readable
+  from across the screen. A wrong note goes red and shakes.
 - **It climbs the course by length**: three notes at HIGH SCHOOL, then four,
-  five, and six at PHD. Six is still under five seconds of walking.
+  five, and six at PHD.
 
 A wrong note sounds sour -- the note and the one a semitone over it, struck
-together, the one interval none of these tunes can make -- flashes red, and starts you over;
-ring the bell again if you have lost the tune. **The third wrong note fades the
+together, the one interval none of these tunes can make -- is circled in red,
+and starts you over, rubbing out the circles so far. Ring the bell again if you
+have lost the tune. **The third wrong note fades the
 sheet off the page**, every colour stepping down its ramp while the pixels drop
 out, the way every fade in the book goes. That is the whole price, and it is
 deliberately the cheapest one: the stave beside it already charges twenty

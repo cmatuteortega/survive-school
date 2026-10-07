@@ -208,12 +208,18 @@ local LEDGER = {
 -- what a bar line is: the gap between two staves is the gap between two systems
 -- and nothing is written in it. Three of them go past per tile rather than one,
 -- so the page reads as moving under you the way the horizontal rules cannot.
+--
+-- `staff` is the same geometry read by something other than the tile: MUSIC's
+-- Simon sheet (src/worksheet.lua) writes its notes onto these staves rather
+-- than ruling its own, so it has to know where they are.
+local STAFF = { every = 40, line = 4, bar = 24 }
 local STAVES = {
     w = 192, h = 120,
+    staff = STAFF,
     at = function(x, y)
-        local at = y % 40
-        if at < 20 and at % 4 == 0 then return Palette.sky end
-        if x == 24 and at <= 16 then return Palette.sky end
+        local at = y % STAFF.every
+        if at <= STAFF.line * 4 and at % STAFF.line == 0 then return Palette.sky end
+        if x == STAFF.bar and at <= STAFF.line * 4 then return Palette.sky end
         return Palette.paper
     end,
 }

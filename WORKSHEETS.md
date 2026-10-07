@@ -98,19 +98,18 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
     (`♩ = 120, ♩. = ♩ → ♩ = ?`), odd meters, a dotted beat -- and a masters
     question now and then.
 
-- [x] **Simon says** (MUSIC). A hand bell over four notes, each written on a
-      scrap of stave where it sits (D, E, G, A). **Walk onto the bell or draw
-      over it** and it plays a tune on the four, each lighting as it sounds;
-      then **walk the notes in the same order**. Before the bell is rung the
+- [x] **Simon says** (MUSIC). Four notes written onto the page's own staves
+      where they sit (D, E, G, A) and a hand bell among them, spread over about
+      a screen. **Walk onto the bell or draw over it** and it plays a tune on
+      the four, each note jumping as it sounds; then **walk the notes in the
+      same order**, each one circled as you get it. Before the bell is rung the
       notes just play, like an instrument. Right is a **heart**. A wrong note
-      sounds sour (a semitone clash) and starts you over; the third
-      fades the whole sheet off the page. The tune is 3 notes at HIGH SCHOOL, 4
-      at BACHELOR, 5 at MASTERS and 6 at PHD, never one note twice running.
-      The notes sit on the corners of a square, the one layout where any note
-      can be walked to from any other without crossing a third, and the bell is
-      above it, off every line between two. It lights as well as sounds, so it
-      can be played on mute: a sounding note's pad floods blue, its head jumps
-      and a ring spreads out from it; a wrong one floods pink and shakes.
+      sounds sour (a semitone clash), is ringed red and starts you over; the
+      third fades the whole sheet off the page. The tune is 3 notes at HIGH
+      SCHOOL, 4 at BACHELOR, 5 at MASTERS and 6 at PHD, never one note twice
+      running. The layout is redealt until every straight walk between two of
+      the notes, or from the bell, passes clear of every other note and the
+      bell.
 
 ### What the built seven pay
 

@@ -6499,27 +6499,33 @@ Unicode musical symbols (𝅝 𝅗𝅥 ♩ ♪ ♫ ♬), drawn by `Quiz.layout` 
 above the line -- and a `.` straight after one is a 1px dot beside the head.
 The face carries `Ω` and `°` for the lab's units.
 
-**Simon says** (`S`, MUSIC): a hand bell (`Sprites.HANDBELL`, kept as rows and
-plotted a pixel at a time) at `BELL_Y` over four pads on the corners of a square
-(`PAD_DX`, `PAD_TOP`, `PAD_BOTTOM`). Each pad is a five-line stave scrap with a
-note head at its `NOTES` step (D4, E4, G4, A4, all under the middle line so
-the stems go up; a step is half of `LINE`, 4px) and plays `note`
-(`src/sfx/note.mp3`, a struck bar synthesised at G4) at `2^(semis/12)`. `compose` deals `TUNE[course.key]` notes (3 to 6), never one
-twice running. States:
-- `idle`: pads play their note and count for nothing.
+**Simon says** (`S`, MUSIC): four notes and a hand bell (`Sprites.HANDBELL`, kept
+as rows and plotted a pixel at a time) scattered round the sheet's spot. `deal`
+puts each note on a stave of the page -- the MUSIC paper's `staff` row
+(`{ every, line, bar }`, which `STAVES.at` reads too) -- at its `NOTES` step
+(D4, E4, G4, A4, all under the middle line so the stems go up), never within 6px
+of a bar line, within `SPREAD_X` x `SPREAD_Y` of the spot, and the bell anywhere
+in the same box. It redeals (up to 1000 times) until `fair`: every two of the
+five at least `APART` (40) and every straight walk between two at least `CLEAR`
+(15) from every third. A constructor that never finds one returns nil and the
+cell is spent. Since the sheet spans a screen, it has `S:covers`, which keeps
+pickups off its notes and bell only, and `Worksheet.covers` asks that before the
+`hw`/`hh` box. Each note plays `note` (`src/sfx/note.mp3`, a struck bar
+synthesised at G4) at `2^(semis/12)`. `compose` deals `TUNE[course.key]` notes
+(3 to 6), never one twice running. States:
+- `idle`: notes play when stepped on and count for nothing.
 - `playing`: rung by the player's centre entering the bell's ellipse or the pen
   entering its box (both edge-triggered, never during a tune). After `LEAD`, one
-  note a `BEAT`, each lit for `LIT`; pads are inert. A lit pad (here or when
-  struck by you) is drawn to be read with the sound off: filled `sky`, its head
-  jumping `HOP` px off the stave on a half sine and back, and a third ring
-  spreading `RIPPLE` px out (dotted for its second half). `hw`/`hh` include
-  `RIPPLE`.
-- `answer`: a pad is struck on arrival (`self.on` changing), so a note is struck
-  again only by stepping off and on. The right one sounds and advances `pos`;
-  the last pays a `heart` at the square's centre and says `BRAVO!`. A wrong one
-  plays `sour` (the note and a semitone over it, together), flashes for
-  `FLASH` (pad filled `blush`, red rings, the head shaking a pixel each way), resets `pos` and spends one of `TRIES` (3). Ringing the bell again
-  replays the tune and resets `pos`.
+  note a `BEAT`; notes are inert. A sounding note (here or struck by you) is
+  drawn to be read with the sound off: its head jumps `HOP` px on a half sine,
+  and a ring spreads `RIPPLE` px out round it (dotted for its second half).
+- `answer`: a note is struck on arrival (`self.on` changing, within `NOTE_R`),
+  so a note is struck again only by stepping off and on. The right one sounds,
+  starts a blue ring scribbling round it (`circled`, over `CIRCLE`) and advances
+  `pos`. The last pays a `heart` 18px above that note and says `BRAVO!`. A wrong
+  one plays `sour` (the note and a semitone over it, together), is ringed red
+  with its head shaking for `FLASH`, clears `circled`, resets `pos` and spends
+  one of `TRIES` (3). Ringing the bell again replays the tune and clears both.
 - `fading` for `FADE` once the tries are gone: every colour steps down its
   `FADED` ramp and pixels drop out by `util.hash01` (the module-local
   `fade`/`fadeSeed` the helpers read), then `gone`, which draws nothing and is

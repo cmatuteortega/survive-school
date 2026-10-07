@@ -490,47 +490,60 @@ end
 
 --- simon says --------------------------------------------------------------------
 
--- A hand bell and four notes, each on a scrap of stave of its own. Ring the bell
--- -- walk onto it or draw over it -- and it plays a tune on the four, each note
--- lighting as it sounds; then walk the notes back in the same order. Right is a
--- heart. A wrong note sounds sour and starts you over, and the third one fades
--- the whole sheet off the page. Nothing else is lost: a failed Simon costs the
--- heart you did not get, which is the price of a sheet that asked nothing of you
--- but your ears and a few seconds.
+-- A hand bell and four notes written on the page's own staves. Ring the bell --
+-- walk onto it or draw over it -- and it plays a tune on the four, each note
+-- jumping as it sounds; then walk the notes back in the same order, each one
+-- circled as you get it right. Right to the end is a heart. A wrong note sounds
+-- sour and starts you over, and the third one fades the whole sheet off the
+-- page. Nothing else is lost: a failed Simon costs the heart you did not get,
+-- which is the price of a sheet that asked nothing of you but your ears and a
+-- few seconds.
 --
 -- It is the third way a sheet is answered -- not standing still, not drawing,
--- but walking through places in an order -- and so the layout is the rule: the
--- four sit on the corners of a square, which is the one arrangement where any
--- note can be walked to from any other without stepping on a third. The bell
--- sits above the square for the same reason, off every line between two notes.
+-- but walking through places in an order -- so where things go is the rule.
+-- The notes are spread over a screen's worth of page, each on a stave of its
+-- own, but dealt so that the straight walk between any two of them, or from
+-- the bell to any of them, passes clear of every other note and of the bell: a
+-- tune can always be walked without striking something it did not ask for, and
+-- walking it never rings the bell and wipes your answer.
 --
--- It lights as well as sounds, so a phone on mute can still play it, and the
--- notes are written where they sit on a treble stave -- D, E, G and A, out of
--- the pentatonic, so any tune dealt off them is a tune -- so that higher on the
+-- It is written in the page's notation rather than drawn over it. MUSIC's
+-- paper is staves already (src/subjects.lua, STAVES), so a note is a head and
+-- a stem put on one of them, where that pitch really sits -- D, E, G and A, out
+-- of the pentatonic so any tune dealt off them is a tune -- and higher on a
 -- stave is higher in the ear, for a player who reads music. All four sit under
--- the middle line, which is what lets their stems go up as a stave writes
--- them: a stem hanging off the left of a head this small reads as a flag.
+-- the middle line, which is what lets their stems go up as a stave writes them:
+-- a stem hanging off the left of a head this small reads as a flag.
+--
+-- It shows as well as sounds, because plenty of phones are played on mute and
+-- the tune is the whole puzzle: a sounding note jumps off its line and throws
+-- a ring out round itself.
 
 local S = {}
 S.__index = S
 
-local PAD_DX, PAD_TOP, PAD_BOTTOM = 20, -4, 28 -- the square, off the sheet's middle
-local PAD_RX, PAD_RY = 13, 12
-local LINE = 4      -- between a stave's lines, so a head fits a space
-local BELL_Y = -28
+local SPREAD_X, SPREAD_Y = 100, 50 -- how far from the sheet's middle things go
+local APART = 40      -- the least room between any two of them
+local CLEAR = 15      -- how far every walk between two stays off a third
+local NOTE_R = 9      -- a note's ring: where you stand to strike it
 local BELL_RX, BELL_RY = 8, 8
-local LEAD = 0.35   -- the bell swings this long before the first note
-local BEAT = 0.42   -- one note of the tune
-local LIT = 0.3     -- how long a note stays lit, of its beat
-local HOP = 4       -- how high a sounding note jumps off its stave
-local RIPPLE = 5    -- how far the ring round a sounding note spreads
-local FLASH = 0.45  -- how long a wrong note stays red
+local LEAD = 0.35     -- the bell swings this long before the first note
+local BEAT = 0.42     -- one note of the tune
+local LIT = 0.3       -- how long a note shows it is sounding, of its beat
+local HOP = 4         -- how high a sounding note jumps off its stave
+local RIPPLE = 5      -- how far the ring round a sounding note spreads
+local CIRCLE = 0.3    -- seconds to scribble a ring round a note you got right
+local FLASH = 0.45    -- how long a wrong note stays red
 local TRIES = 3
 local FADE = 1.2
 
+-- What STAVES is, for the page that has no staves of its own to read.
+local STAFF = { every = 40, line = 4, bar = 24 }
+local BAR_EVERY = 192
+
 -- Semitones off G4 (the pitch src/sfx/note.mp3 is struck at, in the middle of
 -- the four so no note is pitched far enough to drag), and the step each sits
--- on, counted up from the stave's middle line (B4): half a LINE apiece.
+-- on, counted up from the stave's middle line (B4): half a line apart apiece.
 local NOTES = {
     { semis = -5, step = -5 }, -- D, the space under the bottom line
     { semis = -3, step = -4 }, -- E, the bottom line
@@ -556,38 +569,99 @@ local function compose(n)
     return tune
 end
 
-function S.new(x, y, courseKey)
+-- How far a point is from the walk between two others.
+local function offPath(px, py, ax, ay, bx, by)
+    local dx, dy = bx - ax, by - ay
+    local t = util.clamp(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy), 0, 1)
+    return util.len(px - (ax + dx * t), py - (ay + dy * t))
+end
+
+-- Every spot (the four notes and the bell) at least APART from every other,
+-- and every walk between two of them at least CLEAR of every third.
+local function fair(spots)
+    for i = 1, #spots do
+        for j = i + 1, #spots do
+            local a, b = spots[i], spots[j]
+            if util.len(a.x - b.x, a.y - b.y) < APART then return false end
+            for k = 1, #spots do
+                if k ~= i and k ~= j and offPath(spots[k].x, spots[k].y,
+                    a.x, a.y, b.x, b.y) < CLEAR then
+                    return false
+                end
+            end
+        end
+    end
+    return true
+end
+
+-- Deal the four notes onto staves round (x, y) and the bell somewhere among
+-- them, until the layout is fair. Each note goes on a stave of the page and at
+-- its own pitch on it, never on a bar line, so its y is not free: it is the
+-- stave's top line plus where that note is written.
+local function deal(x, y, staff)
+    local mid = staff.line * 2 -- the middle line, off the stave's top
+    for _ = 1, 1000 do
+        local spots = {}
+        for i, n in ipairs(NOTES) do
+            local top = math.floor((y + (love.math.random() * 2 - 1) * SPREAD_Y)
+                / staff.every) * staff.every
+            local nx
+            repeat
+                nx = math.floor(x + (love.math.random() * 2 - 1) * SPREAD_X)
+            until math.abs((nx % BAR_EVERY) - staff.bar) > 6
+            -- The head's middle; the spot you stand on sits up the stem a
+            -- little, on the middle of the whole note.
+            local hy = top + mid - n.step * staff.line / 2
+            spots[i] = { x = nx, y = hy - 3, hy = hy }
+        end
+        spots[#NOTES + 1] = {
+            x = math.floor(x + (love.math.random() * 2 - 1) * SPREAD_X),
+            y = math.floor(y + (love.math.random() * 2 - 1) * SPREAD_Y),
+        }
+        if fair(spots) then return spots end
+    end
+end
+
+function S.new(x, y, courseKey, staff)
+    staff = staff or STAFF
+    local spots = deal(x, y, staff)
+    if not spots then return end
+    local bell = table.remove(spots)
     local s = setmetatable({
         kind = "simon",
         x = x, y = y,
-        hw = PAD_DX + PAD_RX + RIPPLE + 2,
-        hh = math.max(-BELL_Y + BELL_RY + 2, PAD_BOTTOM + PAD_RY + RIPPLE + 2),
+        hw = SPREAD_X + NOTE_R + RIPPLE + 2,
+        hh = SPREAD_Y + staff.every + NOTE_R + RIPPLE + 2,
+        bell = bell,
+        pads = spots,
         tune = compose(TUNE[courseKey] or TUNE.school),
-        pads = {},
         state = "idle",
         tries = TRIES,
         lit = {},
+        circled = {},
         seed = util.hash01(x, y, 5) * 1000,
     }, S)
-    -- Rising in reading order, so the square reads like a line of music would.
-    for i = 1, #NOTES do
-        s.pads[i] = {
-            x = x + (i % 2 == 1 and -PAD_DX or PAD_DX),
-            y = y + (i <= 2 and PAD_TOP or PAD_BOTTOM),
-        }
-    end
     return s
-end
-
-local function inside(px, py, cx, cy, rx, ry)
-    local dx, dy = (px - cx) / rx, (py - cy) / ry
-    return dx * dx + dy * dy <= 1
 end
 
 function S:padAt(px, py)
     for i, p in ipairs(self.pads) do
-        if inside(px, py, p.x, p.y, PAD_RX, PAD_RY) then return i end
+        if util.len(px - p.x, py - p.y) <= NOTE_R then return i end
     end
+end
+
+-- Spread out, the sheet keeps pickups off its notes and its bell rather than
+-- off the whole stretch of page it spans (Worksheet.covers).
+function S:covers(x, y, pad)
+    local r = NOTE_R + pad
+    if math.abs(x - self.bell.x) < BELL_RX + pad
+        and math.abs(y - self.bell.y) < BELL_RY + pad then
+        return true
+    end
+    for _, p in ipairs(self.pads) do
+        if util.len(x - p.x, y - p.y) < r then return true end
+    end
+    return false
 end
 
 function S:sound(i)
@@ -600,6 +674,7 @@ function S:ring()
     self.t = 0
     self.beat = 0
     self.pos = 1
+    self.circled = {}
 end
 
 -- The note and the one a semitone over it, struck together: the one interval
@@ -622,12 +697,15 @@ function S:step(i, game)
 
     if self.tune[self.pos] == i then
         self:sound(i)
+        self.circled[i] = self.circled[i] or 0
         self.pos = self.pos + 1
         if self.pos > #self.tune then
             self.state = "won"
-            game.pickups[#game.pickups + 1] =
-                Pickup.new("heart", self.x, self.y + (PAD_TOP + PAD_BOTTOM) / 2)
-            game.particles:burst(self.x, self.y + (PAD_TOP + PAD_BOTTOM) / 2, 10, Palette.red)
+            -- A step above the last note rather than on it, so taking it is a
+            -- thing you do (the boards' reason).
+            local p = self.pads[i]
+            game.pickups[#game.pickups + 1] = Pickup.new("heart", p.x, p.y - 18)
+            game.particles:burst(p.x, p.y - 18, 10, Palette.red)
             game:say("BRAVO!")
             Sfx.play("accept")
         end
@@ -635,6 +713,7 @@ function S:step(i, game)
         self:sour(i)
         self.tries = self.tries - 1
         self.pos = 1
+        self.circled = {}
         if self.tries <= 0 then
             self.state = "fading"
             self.t = 0
@@ -645,6 +724,9 @@ end
 function S:update(dt, game, pen)
     for i, l in pairs(self.lit) do
         self.lit[i] = l > dt and l - dt or nil
+    end
+    for i, c in pairs(self.circled) do
+        self.circled[i] = math.min(1, c + dt / CIRCLE)
     end
     if self.flashT then
         self.flashT = self.flashT - dt
@@ -678,9 +760,11 @@ function S:update(dt, game, pen)
     if on and on ~= self.on then self:step(on, game) end
     self.on = on
 
-    local bell = inside(p.x, p.y, self.x, self.y + BELL_Y, BELL_RX, BELL_RY)
-    local drawn = pen and math.abs(pen.x - self.x) <= BELL_RX
-        and math.abs(pen.y - (self.y + BELL_Y)) <= BELL_RY
+    local b = self.bell
+    local dx, dy = (p.x - b.x) / BELL_RX, (p.y - b.y) / BELL_RY
+    local bell = dx * dx + dy * dy <= 1
+    local drawn = pen and math.abs(pen.x - b.x) <= BELL_RX
+        and math.abs(pen.y - b.y) <= BELL_RY
     if (bell and not self.onBell) or (drawn and not self.penBell) then
         -- Not over a tune already playing; any other time it starts the tune
         -- again, and your answer with it.
@@ -726,56 +810,34 @@ local function rect(x, y, w, h)
     end
 end
 
-local function ellipse(cx, cy, rx, ry, dotted)
-    local n = math.floor(2 * math.pi * math.max(rx, ry) * 1.5)
-    for k = 0, n - 1 do
+-- A ring laid clockwise from twelve o'clock as far as `p` has got, two pixels
+-- thick -- the boards' hand-drawn ring (`ring` above), through the fade.
+local function scribble(cx, cy, r, p, dotted)
+    local n = math.floor(2 * math.pi * r * 1.5)
+    for k = 0, math.floor(n * util.clamp(p, 0, 1)) - 1 do
         if not dotted or k % 4 == 0 then
-            local a = 2 * math.pi * k / n
-            dot(cx + math.cos(a) * rx + 0.5, cy + math.sin(a) * ry + 0.5)
+            local a = -math.pi / 2 + 2 * math.pi * k / n
+            local c, s = math.cos(a), math.sin(a)
+            dot(cx + c * r + 0.5, cy + s * r + 0.5)
+            if not dotted then dot(cx + c * (r + 1) + 0.5, cy + s * (r + 1) + 0.5) end
         end
     end
 end
 
 local HEAD = { ".ooo.", "ooooo", ".ooo." }
 
-local function fillEllipse(cx, cy, rx, ry)
-    for dy = -ry, ry do
-        local w = math.floor(rx * math.sqrt(1 - (dy / ry) ^ 2))
-        rect(cx - w, cy + dy, w * 2 + 1, 1)
-    end
-end
-
--- A sounding note has to be *seen* sounding, because plenty of phones are
--- played on mute and the tune is the whole puzzle: so it does three things at
--- once, each readable from across the screen on its own -- its pad floods
--- light blue, its head jumps off the stave and drops back, and a ring spreads
--- out from it. A wrong note floods pink and shakes instead of jumping.
 function S:drawPad(i)
     local p = self.pads[i]
-    local cx, cy = math.floor(p.x), math.floor(p.y)
     local lit, wrong = self.lit[i], self.flash == i
-    local u = lit and 1 - lit / LIT or 0 -- 0 to 1 over the note's light
+    local u = lit and 1 - lit / LIT or 0 -- 0 to 1 over the note's sounding
 
-    if wrong or lit then
-        colour(wrong and Palette.blush or Palette.sky)
-        fillEllipse(cx, cy, PAD_RX, PAD_RY)
-    end
-
-    -- The stave a little high in its ring, since the heads hang under it.
-    local sy = cy - 2
-    colour(Palette.graphite)
-    for l = -2, 2 do rect(cx - 8, sy + l * LINE, 17, 1) end
-
-    local hot = wrong and Palette.red or Palette.blue
-    local hx, hy = cx, sy - NOTES[i].step * LINE / 2
+    local hx, hy = p.x, p.hy
     if wrong then
         hx = hx + (math.floor(self.flashT * 30) % 2 == 0 and -1 or 1)
     elseif lit then
         hy = hy - math.floor(HOP * math.sin(math.pi * u) + 0.5)
     end
-    -- The head stays ink on a lit pad -- blue on light blue is the one pairing
-    -- here that would hide the jump -- and turns blue only once the tune is won.
-    colour(self.state == "won" and not (lit or wrong) and Palette.blue or Palette.ink)
+    colour(wrong and Palette.red or Palette.ink)
     for r, row in ipairs(HEAD) do
         for c = 1, #row do
             if row:sub(c, c) == "o" then dot(hx - 3 + c, hy - 2 + r) end
@@ -783,20 +845,20 @@ function S:drawPad(i)
     end
     rect(hx + 2, hy - 7, 1, 7)
 
-    if wrong or lit then
-        colour(hot)
-        ellipse(cx, cy, PAD_RX, PAD_RY)
-        ellipse(cx, cy, PAD_RX + 1, PAD_RY + 1)
-        if lit then
-            local o = 2 + math.floor((RIPPLE - 1) * u)
-            ellipse(cx, cy, PAD_RX + o, PAD_RY + o, u > 0.5)
-        end
-    elseif self.state == "won" then
+    if wrong then
+        colour(Palette.red)
+        scribble(p.x, p.y, NOTE_R, 1)
+    elseif self.circled[i] then
         colour(Palette.blue)
-        ellipse(cx, cy, PAD_RX, PAD_RY)
-    else
+        scribble(p.x, p.y, NOTE_R, self.circled[i])
+    elseif self.state ~= "won" then
+        -- Where to stand, dotted, the way a board's answers are.
         colour(Palette.graphite)
-        ellipse(cx, cy, PAD_RX, PAD_RY, true)
+        scribble(p.x, p.y, NOTE_R, 1, true)
+    end
+    if lit then
+        colour(Palette.blue)
+        scribble(p.x, p.y, NOTE_R + 2 + math.floor((RIPPLE - 1) * u), 1, u > 0.5)
     end
 end
 
@@ -814,8 +876,9 @@ function S:draw()
     if self.state == "playing" then
         swing = self.beat % 2 == 0 and -1 or 1
     end
-    local bx = math.floor(self.x - #rows[1] / 2) + swing
-    local by = math.floor(self.y + BELL_Y - #rows / 2)
+    local b = self.bell
+    local bx = math.floor(b.x - #rows[1] / 2) + swing
+    local by = math.floor(b.y - #rows / 2)
     for r, row in ipairs(rows) do
         for c = 1, #row do
             local ch = row:sub(c, c)
@@ -829,7 +892,7 @@ function S:draw()
     -- Tries left, as tally strokes beside the bell; a spent one goes red.
     for k = 1, TRIES do
         colour(k <= TRIES - self.tries and Palette.red or Palette.slate)
-        rect(self.x + BELL_RX + 2 + k * 3, self.y + BELL_Y - 2, 1, 5)
+        rect(b.x + BELL_RX + 2 + k * 3, b.y - 2, 1, 5)
     end
 
     fade = 0
@@ -839,7 +902,9 @@ end
 
 local KINDS = {
     tictactoe = function(x, y) return T.new(x, y) end,
-    simon = function(x, y, game) return S.new(x, y, game.course.key) end,
+    simon = function(x, y, game)
+        return S.new(x, y, game.course.key, game.subject.paper and game.subject.paper.staff)
+    end,
 }
 for kind in pairs(BOARDS) do
     KINDS[kind] = function(x, y, game) return Q.new(x, y, game.course.key, kind) end
@@ -877,6 +942,8 @@ function Worksheet.materialize(game)
                 elseif util.len(x - px, y - py) < MATERIALIZE then
                     game.worksheetCells[key] = true
                     if util.len(x, y) > CLEAR_START then
+                        -- A constructor may come back empty (Simon, when no
+                        -- fair layout was dealt), and the cell is spent anyway.
                         game.worksheets[#game.worksheets + 1] = KINDS[kind](x, y, game)
                     end
                 end
@@ -920,7 +987,10 @@ end
 function Worksheet.covers(game, x, y)
     if not game.worksheets then return false end
     for _, s in ipairs(game.worksheets) do
-        if s.state ~= "gone" and math.abs(x - s.x) < s.hw + PAD and math.abs(y - s.y) < s.hh + PAD then
+        if s.state == "gone" then -- nothing left on the page to land on
+        elseif s.covers then
+            if s:covers(x, y, PAD) then return true end
+        elseif math.abs(x - s.x) < s.hw + PAD and math.abs(y - s.y) < s.hh + PAD then
             return true
         end
     end
