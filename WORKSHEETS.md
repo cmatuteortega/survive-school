@@ -7,7 +7,30 @@ idea list. What has shipped is ticked, and its argument lives in `README.md`
 like everything else; `src/worksheet.lua` is the code.
 
 It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ in
-*where* you fight as well as *what* comes, with one puzzle per subject.
+*where* you fight as well as *what* comes.
+
+## The goal: two of its own per lesson
+
+Every lesson prints tic-tac-toe, and on top of that each one should have **two
+sheets nobody else has** -- ideally answered two different ways, so a lesson's
+pair is two kinds of puzzle rather than one puzzle with two question books.
+MATHS and MUSIC are done; the rest is the list below.
+
+| Lesson | Its first | Its second | Left | Pick next (machine) |
+| --- | --- | --- | --- | --- |
+| **MATHS** | Pop quiz (stand) | Sequence (stand) | -- done | -- |
+| **MUSIC** | Stave (stand) | Simon says (walk in order) | -- done | -- |
+| **SCIENCE** | Lab (stand) | -- | one | **Close the circuit** (draw a pen line); memory pairs or bounce the beam as spares |
+| **FINANCE** | Till (stand) | -- | one | **Exact change** (collect coins to a sum); balance the ledger is another stand-on board, so second choice |
+| **GRAMMAR** | -- | -- | two | **Red pen** (scribble the backwards letter) and **alphabet run** (walk in order, Simon's machine) |
+| **ART** | -- | -- | two | **Join the dots** (draw through in order) and **symmetry** (scribble the mirror half) |
+| **P.E.** | -- | -- | two | **Hopscotch** (walk in order, against a timer) and **dodgeball circle** (stand in a ring and survive) |
+
+That is seven sheets to go. The cheapest are the ones on a built machine:
+alphabet run and hopscotch reuse Simon's walk-in-order code, and red pen and
+symmetry reuse tic-tac-toe's scribbled cells. The draw-a-line machine (close the
+circuit, join the dots) is the one not built yet, and it would serve two
+lessons at once.
 
 ## Rules every worksheet keeps
 
@@ -125,11 +148,10 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
 
 On MATHS the page prints them 2 quiz : 2 sequence : 1 tic-tac-toe, on MUSIC
 2 stave : 2 Simon : 1 tic-tac-toe, and on SCIENCE and FINANCE 2 of their board :
-1 tic-tac-toe (the `worksheets`
-rows in `src/subjects.lua`). GRAMMAR, ART and P.E. print only tic-tac-toe until
-they have a puzzle of their own.
+1 tic-tac-toe (the `worksheets` rows in `src/subjects.lua`). GRAMMAR, ART and
+P.E. print only tic-tac-toe until they have a puzzle of their own.
 
-## Ideas, one per lesson
+## Ideas, by lesson
 
 | Lesson | Puzzle | How you answer | Fail state |
 | --- | --- | --- | --- |
