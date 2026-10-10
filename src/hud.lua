@@ -487,6 +487,28 @@ function Hud.rightCornerBox(game)
            game.inset.t + CORNER_MARGIN
 end
 
+-- The padlock's label: what pressing it does, written beside it in the margin,
+-- since a lock alone reads as "shut" and not as "for sale". It sits to the
+-- padlock's left because the padlock is always against the right of whatever it
+-- stands in (the title's top right, the timetable's tabs), and it is pressed as
+-- part of the button -- a word that says BUY and does nothing when touched is a
+-- word that lies.
+local SHOP_LABEL = "BUY FULL GAME"
+local SHOP_GAP = 2
+
+-- How far left of the padlock's box the label reaches, gap included, for a
+-- screen that has to keep its own furniture clear of the pair.
+function Hud.shopLabelWidth()
+    return Font.width(I18n.t(SHOP_LABEL)) + SHOP_GAP
+end
+
+function Hud.shopAt(x, y, cx, cy)
+    if Hud.buttonAt(x, y, cx, cy) then return true end
+    local pad = cornerPad()
+    return cx >= x - Hud.shopLabelWidth() - pad and cx < x
+        and cy >= y - pad and cy <= y + CORNER_SIZE + pad
+end
+
 function Hud.footTarget(game, text, right)
     local pad = cornerPad()
     local x, y, w = Hud.footBox(game, text, right)
@@ -626,6 +648,22 @@ function Hud.drawFoot(game, text, hot, right)
     love.graphics.setColor(hot and Palette.red or Palette.slate)
     Font.print(text, x + math.floor((w - Font.width(text)) / 2),
         y + math.floor((CORNER_SIZE - Font.height) / 2))
+end
+
+-- The padlock and its label, both screens' one recipe for it. The label goes
+-- down on a strip of paper so a rule running under it does not strike it
+-- through: it is furniture drawn after the overprint pass, like the box beside it.
+function Hud.drawShop(x, y)
+    Hud.drawButton(x, y, CORNER_SIZE, "lock", false)
+
+    local text = I18n.t(SHOP_LABEL)
+    local w = Font.width(text)
+    local tx = x - SHOP_GAP - w
+    local ty = y + math.floor((CORNER_SIZE - Font.height) / 2)
+    love.graphics.setColor(Palette.paper)
+    love.graphics.rectangle("fill", tx - 1, ty - 1, w + 2, Font.height + 2)
+    love.graphics.setColor(Palette.slate)
+    Font.print(text, tx, ty)
 end
 
 local function drawPause(game)

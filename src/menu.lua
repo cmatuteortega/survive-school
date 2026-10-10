@@ -52,7 +52,8 @@
 --
 -- And a third, in the top *right* corner and only on a book that is not the full
 -- game yet: a padlock in the settings button's own box, mirrored to the other
--- end of the same top edge (`Hud.rightCornerBox`). Pressed, not answered, for the
+-- end of the same top edge (`Hud.rightCornerBox`), with BUY FULL GAME written to
+-- its left and pressed as part of it (`Hud.drawShop`). Pressed, not answered, for the
 -- margin's reason -- it opens the card that asks (src/fullgame.lua), and that
 -- card is where the answer is scribbled.
 --
@@ -353,7 +354,7 @@ end
 function Menu:shopAt(game, x, y)
     if Store.full() then return false end
     local bx, by = Hud.rightCornerBox(game)
-    return Hud.buttonAt(bx, by, x, y)
+    return Hud.shopAt(bx, by, x, y)
 end
 
 -- Any of the margin's buttons, for the cursor (Game:drawPointer).
@@ -819,8 +820,7 @@ function Menu:draw(game)
         Hud.drawFoot(game, I18n.t(BOSS), Dev.boss, true)
     end
     if not Store.full() then
-        local bx, by = Hud.rightCornerBox(game)
-        Hud.drawButton(bx, by, Hud.CORNER_SIZE, "lock", false)
+        Hud.drawShop(Hud.rightCornerBox(game))
     end
 end
 

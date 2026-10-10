@@ -416,6 +416,7 @@ local ES = {
     -- the counter. UTILES for the tools, the library's own word for them.
     ["SHOP"] = "TIENDA",
     ["FULL GAME"] = "JUEGO COMPLETO",
+    ["BUY FULL GAME"] = "COMPRA EL JUEGO COMPLETO",
     ["FULL GAME?"] = "¿JUEGO COMPLETO?",
     ["EVERY LESSON AND EVERY TOOL"] = "TODAS LAS CLASES Y UTILES",
     ["EVERY TOOL OPEN AND NO ADS"] = "TODO ABIERTO Y SIN ANUNCIOS",

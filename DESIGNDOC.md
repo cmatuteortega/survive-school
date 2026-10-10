@@ -2768,10 +2768,12 @@ the same reason. Rows carry `money` (the figure is `shop.priceText`, no coin) an
 for `RESTORE` and `AD PRIVACY`, `act` (no `n/n`). `section.store` puts the shop's
 own two hints -- closed, waiting -- ahead of the counter's.
 
-**The padlock** is `Hud.drawButton` with the `lock` icon at `Hud.rightCornerBox` on
+**The padlock** is `Hud.drawShop`: `Hud.drawButton` with the `lock` icon and
+`BUY FULL GAME` written to its left on a strip of paper, the word pressed as part
+of the button (`Hud.shopAt`, `Hud.shopLabelWidth`). It stands at `Hud.rightCornerBox` on
 the title (`Menu:shopAt`) and just inside the top lesson tab on the timetable
-(`Timetable:shopAt`, `lay.shopX`, which the heading steps under where they would
-meet) -- or, on a timetable held upright, at `Hud.rightCornerBox` too, over the
+(`Timetable:shopAt`, `lay.shopX`, which the heading steps under where it would
+meet the padlock or its word) -- or, on a timetable held upright, at `Hud.rightCornerBox` too, over the
 tabs, drawn and pressable only while `not Store.full()`; `B` presses it. It
 answers `"fullgame"`, and `Game:toFullGame(from)` puts up `src/fullgame.lua` over
 that screen (state `fullgame`, drawn on top of `Menu:draw` or `Timetable:draw`).

@@ -813,7 +813,8 @@ function Timetable:panel(lay, top, bottom)
     -- the band `Timetable:layout` measured the tabs down from.
     if lay.portrait
         or cx - math.ceil(colW / 2) <= lay.buttonRight + EDGE
-        or (lay.shopX and cx + math.ceil(colW / 2) >= lay.shopX - EDGE) then
+        or (lay.shopX and cx + math.ceil(colW / 2)
+            >= lay.shopX - Hud.shopLabelWidth() - EDGE) then
         top = math.max(top, lay.underButton)
     end
 
@@ -1208,7 +1209,7 @@ end
 function Timetable:shopAt(x, y)
     local lay = self.lay
     return lay ~= nil and lay.shopX ~= nil
-        and Hud.buttonAt(lay.shopX, lay.shopY, x, y)
+        and Hud.shopAt(lay.shopX, lay.shopY, x, y)
 end
 
 -- Whether a point is on the corner button, target and all.
@@ -1917,7 +1918,7 @@ function Timetable:draw(game)
         Purse.draw(("%d"):format(Purse.total), lay.purseCx, lay.purseY, Palette.ink)
     end
     if lay.shopX then
-        Hud.drawButton(lay.shopX, lay.shopY, Hud.CORNER_SIZE, "lock", false)
+        Hud.drawShop(lay.shopX, lay.shopY)
     end
 
 
