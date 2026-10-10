@@ -3762,10 +3762,9 @@ end
 -- Live ones only, and there are three separate reasons pulling the same way. A pin
 -- still falling is not in the page yet. A pin the page did not keep (Game:dropCrowded)
 -- is a crater that already happened and no drawing at all, so a thread hanging off
--- one would hang off nothing. And a *spent* pin is the page's memory of the run --
--- there is no limit on how many of those there are and there must not be, so a rule
--- that threaded to them would lattice the whole page shut over a long run, which is
--- exactly the thing the pen's own `keep` is bounded to prevent.
+-- one would hang off nothing. And a *spent* pin has finished holding and is only
+-- waiting to be pulled back out (`Pin:wither`), so a thread strung to it would be
+-- a rail on a post that is already coming out of the page.
 --
 -- Same tool by identity on the run's copy, which is the cheapest honest test there
 -- is: it excludes a staple, which is a drop like any other and would be a thread
@@ -3815,11 +3814,12 @@ function Game:stringThreads(pin)
 end
 
 -- A pin and a staple are the only two things in the game that are driven into
--- the paper rather than drawn on it, and they are the only two that do not come
--- off it. Every mark fades; these stay, and stay looking exactly as they did
--- going in. So when one finishes holding what it caught it is not thrown away --
--- it stops being updated at all and joins the page. A long run leaves a trail of
--- them behind it, which is a record of where the trouble was.
+-- the paper rather than drawn on it, and they do not fade the way marks do. So
+-- when one finishes holding what it caught it is not thrown away -- it joins the
+-- page. A staple stays there for the rest of the run, a trail of wire that is a
+-- record of where the trouble was; a pin stays a couple of seconds, long enough
+-- for whatever was strung off it to fade, and is then pulled back out (the last
+-- loop below, `Pin:wither`).
 --
 -- Two exceptions, and both are about the record rather than about the rule. A
 -- drop that came down where the page already has one is not kept, because two of
@@ -3874,6 +3874,14 @@ function Game:updateDrops(dt)
             if d.links or d.pooled then self:unstring(d) end
             if not d.lifted then self.spent[#self.spent + 1] = d end
         end
+    end
+
+    -- And the spent pile, of which only pins ever leave: a few seconds after it
+    -- stops holding, on the clock its fused marks fade on, a pin is pulled back
+    -- out of the page (`Pin:wither`). A staple has no `wither` and stays.
+    for i = #self.spent, 1, -1 do
+        local d = self.spent[i]
+        if d.wither and not d:wither(dt) then table.remove(self.spent, i) end
     end
 end
 
@@ -5335,8 +5343,8 @@ function Game:draw()
     Overprint.beginInk()
     Camera.attach()
 
-    -- Spent pins and staples are the oldest thing on the page and the only
-    -- thing on it that will still be there at the end of the run, so everything
+    -- Spent pins and staples are the oldest thing on the page, and staples the
+    -- only thing on it that will still be there at the end of the run, so everything
     -- else is drawn over them -- including an eraser sweep, which wipes them the
     -- way it wipes the ruling. They go under the crowd too, unlike the ones
     -- still holding something: while a pin is working you need to see it through

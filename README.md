@@ -8971,14 +8971,19 @@ own sake: it is what turns the ring on the page into a promise rather than a
 report. You can see where it is going to land before it lands, and so can the
 bat walking out of it, which is about eleven pixels' worth of head start.
 
-And then it stays there, exactly as it went in. The pushpin and the stapler are
-the only two things in the game that are driven through the paper rather than
-drawn on it, and they are the only two that never come off it: every mark fades,
-these accumulate. Nor do they fade in place — fading is what ink does, and these
-are not ink, so a pin looks the same on the last frame of the run as it did
-going in. A long run leaves a trail of them behind it that reads back afterwards
-as the places you were in trouble. They are also the one thing an eraser sweep
-can wipe that you put there yourself.
+And then it stays there, exactly as it went in — for a while. The pushpin and
+the stapler are the only two things in the game that are driven through the
+paper rather than drawn on it, and neither fades in place: fading is what ink
+does, and these are not ink. A staple never comes off the page, so a long run
+leaves a trail of wire behind it that reads back afterwards as the places you
+were in trouble. A pin used to as well, and a page of a long run's pins read as
+clutter long before it read as a record — so once its hold is over a pin stands
+a couple of seconds more and is then pulled back out: it lifts off the paper the
+way it fell onto it, run backwards, and breaks up on the way up. The couple of
+seconds is the clock its fusions' marks fade on (the row's `life`, 2s for a
+plain pin), so a pin strung into a fence or a shape leaves with the threads it
+was holding up rather than standing on as a post with nothing on it. Both are
+also the one thing an eraser sweep can wipe that you put there yourself.
 
 **But the page holds them one deep.** One driven inside the footprint of one
 already there — 5px for a pin, 6px for a staple, which is the size of the two
@@ -8998,10 +9003,11 @@ a sky-blue shadow, and that is what you are watching anyway.
 
 Spent ones drop under the crowd, where the working ones are drawn over it: while
 a pin is holding something you need to see it through the blob standing on it,
-and once it is spent it is just paper. Nothing about a spent one ever changes
-again, so it costs no update at all, and only the ones on screen are drawn.
+and once it is spent it is just paper. A spent staple never changes again, so it
+costs no update at all; a spent pin costs one clock until it is pulled. Only the
+ones on screen are drawn.
 
-There is no limit on how many a run accumulates. The cull is what buys that: a
+There is no limit on how many staples a run accumulates. The cull is what buys that: a
 20-minute run of nonstop stapling is about 2000 marks and costs 0.16ms a frame,
 five times that costs 0.35ms, and the walk over the list only starts to show up
 around 50,000 — hours of continuous tapping. Drawing them all instead of just

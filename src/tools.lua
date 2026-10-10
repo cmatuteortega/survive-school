@@ -951,9 +951,9 @@ Tools.list = {
         -- pinned. Anything that killed outright would leave the pinning with
         -- nothing to pin.
         --
-        -- The pin does not come out and does not fade: one driven through paper
-        -- stays in it, looking the way it did going in, for the rest of the run.
-        -- Which means the pin is not the timer on its own hold -- the enemy is,
+        -- The pin does not fade: one driven through paper stays in it, looking
+        -- the way it did going in, until a couple of seconds after its hold is
+        -- over, when it is pulled back out (`Pin:wither`). Which means the pin is not the timer on its own hold -- the enemy is,
         -- and always was the better place to read it, since a held enemy stops
         -- moving and grows a blue shadow.
         drop = { lands = Pin, radius = 20, damage = 10, freeze = 2.5, life = 2.5 },
@@ -1604,8 +1604,7 @@ Tools.list = {
         -- number, and 0.55 against it is the trade the fusion makes. The pushpin
         -- is the second-dearest single use on the strip because one tap is one
         -- crater; this is that crater dragged twice round a circle, and what it
-        -- leaves behind is the only thing in the game that never comes off the
-        -- page.
+        -- leaves behind is a pin in the page.
         ink = 0.55,
     },
     {

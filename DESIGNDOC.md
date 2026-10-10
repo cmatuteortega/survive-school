@@ -4981,9 +4981,9 @@ never had to know what is lying near it.
   or three threads at the very most. *Live* ones only, and three reasons pull the
   same way: a falling pin is not in the page yet, a pin the page did not keep
   (`Game:dropCrowded`) is a crater that happened and no drawing at all, and a
-  **spent** pin is the page's memory of the run — there is no limit on how many of
-  those there are, so threading to them would lattice the whole page shut over a
-  long run, which is exactly what the pen's `keep` is bounded to prevent. Same tool
+  **spent** pin has finished holding and is only waiting to be pulled back out
+  (`Pin:wither`), so a thread strung to it would be a rail on a post already
+  coming out of the page. Same tool
   by identity on the run's copy, which excludes a staple (a drop like any other)
   and a pin a compass leg drove in (the SPINDLE).
 - `Game:strand` lays one thread: a `Stroke` off the fused row, `lassos` cleared
@@ -6813,7 +6813,10 @@ its own just before the depth sort. Both are explained under **The overprint
 pass**.
 
 `Game:draw`'s ink order is load-bearing and commented at each step: spent
-pins/staples (page memory, culled to the camera by `Game:eachSpent`) → lingering
+pins/staples (page memory, culled to the camera by `Game:eachSpent`; a spent pin
+stands `Pin:stays` -- its row's `life`, so it goes with the threads and pools
+strung off it, else 2s -- and is then pulled back out, lifting and dithering away
+over its last 0.35s, by `Pin:wither` from `Game:updateDrops`) → lingering
 marks → other marks → the arena box → the boss's puddles and the whistle's jacks → the worksheets
 (`Worksheet.draw`) → what a weapon has left
 lying on the page (`Loadout:drawGround`, the bomb's burning crater, the

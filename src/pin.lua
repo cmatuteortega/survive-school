@@ -23,21 +23,25 @@
 -- walk into afterwards -- the pin is spent the moment it arrives, and what is
 -- left on the page is a marker for how long the things around it stay still.
 --
--- And then it stays there, exactly as it went in. A pin is not a mark, it is an
--- object driven through the paper: paper does not let go of one and it does not
--- fade, because fading is what ink does and this is not ink. This is the one
--- thing in the game that accumulates -- everything else goes -- so a long run is
--- read back off the page afterwards as the places you were in trouble.
+-- And then it comes back out. Once its hold is over a pin stands in the page for
+-- a couple of seconds more and is pulled: it lifts off the paper the way it fell
+-- onto it, run backwards, and breaks up on the way (`Pin:wither`). The clock is
+-- the one its fused marks fade on -- a thread or a pool strung off a pin starts
+-- ageing the frame the pin stops holding and is gone `tool.life` later
+-- (Game:unstring) -- so the pin leaves the page with whatever it was holding up,
+-- rather than standing on after its rails have faded as a post with nothing on it.
+-- A pin with nothing strung off it keeps `STAND` instead, the same couple of
+-- seconds. A long run's page used to keep every pin it was ever given; it read as
+-- clutter long before it read as a record.
 --
--- Unless the page already has one where this one came down, in which case it
--- punches its crater and is not kept (`FOOTPRINT` below, Game:dropCrowded). That
--- is the same idea rather than an exception to it: what accumulates is the record
--- of where you were in trouble, and two pins inside each other record one spot
--- twice while reading as neither.
+-- A pin that came down where the page already has one punches its crater and is
+-- not kept at all (`FOOTPRINT` below, Game:dropCrowded): two pins inside each
+-- other record one spot twice while reading as neither.
 
 local Palette = require("src.palette")
 local Sprites = require("src.sprites")
 local pixelart = require("src.pixelart")
+local util = require("src.util")
 
 local Pin = {}
 Pin.__index = Pin
@@ -45,6 +49,9 @@ Pin.__index = Pin
 local FALL = 0.28   -- seconds from the tap to the landing
 local LIFT = 30     -- how far above the page it starts, in pixels
 local SHOCK = 0.18  -- how long the ring stays inked after the landing
+local STAND = 2     -- seconds a spent pin stays in the page when nothing was
+                    -- strung off it to time its going by
+local PULL = 0.35   -- the last stretch of that, spent coming back out
 local POINT = 2     -- slack, in pixels, on landing the point itself on a body:
                     -- the window is the enemy plus this, which through a
                     -- quarter-second fall is a shot you have to mean
@@ -66,8 +73,8 @@ Pin.FOOTPRINT = 5
 -- the point was in front of it the whole way -- and there is no landing either,
 -- so `land` is never called and no second crater is punched out of a page the rim
 -- has already swept. What is left is the half of this file that was always about
--- afterwards: a pin standing in the page for as long as it holds, and then for the
--- rest of the run.
+-- afterwards: a pin standing in the page for as long as it holds, and then for a
+-- couple of seconds more.
 --
 -- It also never shows the shock ring, which is the one thing that would have read
 -- `def.radius` -- the crater's width. A driven pin has no crater, so the fused
@@ -179,8 +186,8 @@ function Pin:land(game)
 end
 
 -- Returns false once it has finished holding. It is not thrown away then --
--- the game moves it to the spent pile and stops updating it -- so this is
--- "nothing about me will ever change again" rather than "remove me".
+-- the game moves it to the spent pile, where only `wither` is asked of it -- so
+-- this is "I hold nothing any more" rather than "remove me".
 function Pin:update(dt, game)
     if not self.landed then
         self.fall = self.fall - dt
@@ -198,6 +205,30 @@ function Pin:update(dt, game)
     self.age = self.age + dt
     self.shock = math.max(0, self.shock - dt)
     return self.age < self.def.life
+end
+
+-- How long a spent pin stays in the page, pull included. Off the row when the row
+-- strings (Game:dropOne stamps `tool` only then), because its threads and pools
+-- fade on that row's `life` from this same frame and the pin should go with them;
+-- never shorter than the pull itself, because the CRATER's rubber pool has a life
+-- of nothing and a pin still has to be seen coming out.
+function Pin:stays()
+    local life = self.tool and self.tool.life or STAND
+    return math.max(PULL, life)
+end
+
+-- The spent pile's clock (Game:updateDrops). Returns false once the pin is out of
+-- the paper and can be thrown away.
+function Pin:wither(dt)
+    self.gone = (self.gone or 0) + dt
+    return self.gone < self:stays()
+end
+
+-- How far through being pulled it is, 0 standing to 1 out.
+function Pin:pulled()
+    if not self.gone then return 0 end
+    local p = (self.gone - (self:stays() - PULL)) / PULL
+    return math.max(0, math.min(1, p))
 end
 
 -- The ring and the shadow belong to the page, so they are drawn with the ink
@@ -225,6 +256,13 @@ function Pin:drawMark()
         local out = math.floor((1 - self.shock / SHOCK) * 3)
         love.graphics.setColor(Palette.slate)
         pixelart.circleOutline(self.x, self.y, self.def.radius + out)
+    elseif self:pulled() > 0 then
+        -- The fall's dash, run backwards: it opens back up under the pin as the
+        -- point leaves the paper, and is gone with it.
+        local w = 1 + math.floor((1 - self:pulled()) * 4)
+        love.graphics.setColor(Palette.graphite)
+        love.graphics.rectangle("fill",
+            math.floor(self.x) - math.floor(w / 2), math.floor(self.y), w, 1)
     end
 end
 
@@ -239,11 +277,23 @@ function Pin:draw()
         y = self.y - LIFT * (1 - t * t)
     end
 
-    -- The same pin whatever it is doing. It does not fade as its hold runs out
-    -- and it does not fade afterwards: a mark on paper fades, and this is not a
-    -- mark -- it is a thing stuck through the page, and it looks the same on the
-    -- last frame of the run as it did going in. What the hold is doing is read
-    -- off the enemy instead, which stops moving and grows a blue shadow.
+    -- Pulled back out at the end of its stay: up off the page, squared like the
+    -- fall so it comes free slowly and then goes, and dropping out frame by frame as
+    -- it goes -- the dither every mark leaves by, a whole sprite at a time, since
+    -- there is no alpha to fade it with. Keyed on the pin's own spot as well as the
+    -- clock, so a row of pins pulled together does not blink in step.
+    local p = self:pulled()
+    if p > 0 then
+        y = y - math.floor(LIFT * 0.4 * p * p)
+        if util.hash01(math.floor(self.gone * 24), self.x + self.y * 0.37, 53) < p then
+            return
+        end
+    end
+
+    -- Until then it does not fade as its hold runs out: a mark on paper fades, and
+    -- this is not a mark -- it is a thing stuck through the page. What the hold is
+    -- doing is read off the enemy instead, which stops moving and grows a blue
+    -- shadow.
     love.graphics.setColor(1, 1, 1)
     Sprites.pin:draw(self.x, y)
 end
