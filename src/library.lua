@@ -956,6 +956,12 @@ function Library:furniture(x, y)
     return self:plateAt(x, y) ~= nil or self:backAt(x, y) or self:evoAt(x, y)
 end
 
+-- Something pressed or dragged rather than drawn on, for the cursor
+-- (Game:drawPointer): the furniture, or the book's own edges.
+function Library:hot(x, y)
+    return self.book:hot(x, y) or self:furniture(x, y)
+end
+
 function Library:mark(x, y)
     -- A finger turning a page is a hand on the paper rather than a nib on it, so
     -- it swallows its stamps the way the shelf and the footer do.

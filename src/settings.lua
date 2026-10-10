@@ -633,6 +633,13 @@ end
 -- It matters most here: a bar is dragged the width of the page and lays not one
 -- pixel of line, so a pen that sounded off the pointer instead of off the ink
 -- would swish all the way along a volume the player is trying to hear.
+-- Something pressed rather than drawn on, for the cursor (Game:drawPointer):
+-- everything `Settings:press` acts on, and a bar already in hand.
+function Settings:hot(x, y)
+    return self.dragging or self:backAt(x, y) or self:arrowAt(x, y)
+        or self:barAt(x, y) or self:headAt(x, y)
+end
+
 function Settings:mark(x, y)
     if self.dragging then return false end
     if self:barAt(x, y) or self:arrowAt(x, y) or self:backAt(x, y) then

@@ -5171,7 +5171,8 @@ end
 -- over a run included, it is the pencil: a menu is something you tick, and
 -- nothing a menu does is any tool's.
 --
--- The icon's point goes on the mouse rather than its middle (`pointerTip`).
+-- The icon's point goes on the mouse rather than its middle (`pointerTip`). And
+-- over anything pressed rather than drawn on it is a hand (`Game:pointerHot`).
 local tips = {}
 
 -- Where an icon touches the page: the bottom row of its drawing, if that row is
@@ -5200,9 +5201,43 @@ local function pointerTip(name)
     return tip
 end
 
+-- Whether a press at x, y would be a press -- a button, a tab, a bar, a leaf to
+-- turn -- rather than the start of a line. Asked of each screen in its own words
+-- (every `hot` is that screen's press handler with the acting taken out), so
+-- this is a list of who to ask and nothing about what any of them holds. A card
+-- answered by drawing across a box is drawn on, and keeps the pencil.
+function Game:pointerHot(x, y)
+    local state = self.state
+    if state == "intro" then return Intro:skipAt(self, x, y) end
+    if state == "menu" then return Menu:hot(self, x, y) end
+    if state == "timetable" then return Timetable:hot(x, y) end
+    if state == "library" then return Library:hot(x, y) end
+    if self.pages[state] and self.pages[state].hot then
+        return self.pages[state]:hot(x, y)
+    end
+    if state == "settings" then return Settings:hot(x, y) end
+    if state == "studio" then return Studio:hot(x, y) end
+    if state == "levelup" then return self.draft:perkAt(x, y) ~= nil end
+    if state == "playing" or state == "paused" then
+        if Hud.cornerAt(self, x, y) then return true end
+        if state == "paused" then return Hud.weaponAt(self, x, y) end
+        return Hud.selectorAt(self, x, y) ~= nil
+    end
+    return false
+end
+
 function Game:drawPointer()
     local mx, my = Input.hover()
     if not mx then return end
+
+    -- The coaching hand (src/coach.lua) over anything that is pressed rather
+    -- than drawn on: it is the game's own picture of a finger pressing, and its
+    -- origin is already the fingertip -- the topmost pixel of the drawing.
+    if self:pointerHot(mx, my) then
+        love.graphics.setColor(1, 1, 1)
+        Sprites.hand:draw(math.floor(mx), math.floor(my))
+        return
+    end
 
     local icon = "pencil"
     if self.state == "playing" and self.loadout then

@@ -500,6 +500,12 @@ function Studio:pointerDown(cx, cy)
     return false
 end
 
+-- What `Studio:pointerDown` would take, for the cursor (Game:drawPointer).
+function Studio:hot(x, y)
+    return self.phase == "drawing"
+        and (self:buttonAt(x, y) ~= nil or self:arrowAt(x, y) ~= nil)
+end
+
 --- drawing --------------------------------------------------------------------
 
 -- Answers whether the stamp became ink, which is what the pen's swish is fired

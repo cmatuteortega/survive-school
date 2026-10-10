@@ -756,6 +756,12 @@ function Canteen:furniture(x, y)
     return self:backAt(x, y) or self:boxAt(x, y) ~= nil
 end
 
+-- Something pressed or dragged rather than drawn on, for the cursor
+-- (Game:drawPointer): the furniture, or the book's own edges.
+function Canteen:hot(x, y)
+    return self.book:hot(x, y) or self:furniture(x, y)
+end
+
 function Canteen:mark(x, y)
     -- A finger turning a page is a hand on the paper rather than a nib on it, so
     -- it swallows its stamps the way every other piece of furniture does -- and

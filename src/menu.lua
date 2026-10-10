@@ -356,6 +356,12 @@ function Menu:shopAt(game, x, y)
     return Hud.buttonAt(bx, by, x, y)
 end
 
+-- Any of the margin's buttons, for the cursor (Game:drawPointer).
+function Menu:hot(game, x, y)
+    return self:settingsAt(game, x, y) or self:langAt(game, x, y)
+        or self:shopAt(game, x, y) or self:bossAt(game, x, y)
+end
+
 --- drawing on it -------------------------------------------------------------
 
 -- Ink that lands in a box is the answer and is counted there (see

@@ -527,6 +527,18 @@ function Book:letGo()
     self.home = not (self.p > 0.5 or self.speed * self.dir > FLICK)
 end
 
+-- Whether a press here would be a hand on the page rather than a pen on it, for
+-- the cursor (Game:drawPointer): a page already in hand, or the outer strip of a
+-- leaf, where `Book:grab` starts the turn on the spot. The rest of the leaf only
+-- becomes a turn once a stroke has gone sideways, and until then it is a page to
+-- draw on, so it keeps the pencil.
+function Book:hot(x, y)
+    if self:eating() then return true end
+    local lay = self.lay
+    if self.count < 2 or not lay or y < lay.top or y > lay.bottom then return false end
+    return lay.x + lay.w - x <= GRAB or x - lay.x <= GRAB
+end
+
 -- One call a frame, ahead of the screen's pen, so that the frame a stroke turns
 -- into a turn is a frame the pen lays nothing. `down`, `x` and `y` are the
 -- pointer as the screen already has it (past its own stale guard), and `blocked`

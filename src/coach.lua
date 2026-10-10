@@ -13,6 +13,9 @@
 -- language row's arrow (src/settings.lua). The one place in the book that is
 -- pressed rather than drawn on gets the one stroke that has no line in it.
 --
+-- And on a computer the hand is the mouse cursor over anything pressed rather
+-- than drawn on (Game:drawPointer) -- the same sprite, standing still.
+--
 -- **It never draws anything.** The line it lays is dashed, and it is dashed so
 -- that it cannot be mistaken for ink: a solid line would be a mark the page had
 -- made for you, and a box that a hint had half filled in would be a box the

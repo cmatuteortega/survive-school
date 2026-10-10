@@ -1390,6 +1390,16 @@ function Timetable:press(x, y)
     end
 end
 
+-- Something pressed rather than drawn on, for the cursor (Game:drawPointer):
+-- everything `Timetable:press` acts on, in the same order.
+function Timetable:hot(x, y)
+    if not self.lay then return false end
+    return self:backAt(x, y) or self:shopAt(x, y) or self:sideAt(x, y)
+        or self:courseAt(x, y) or self:tabAt(x, y)
+        or inRow(self.custom.boxes[1], self.lay.customX, x, y)
+        or (self:openHere() and inRow(self.go.boxes[1], self.lay.goX, x, y))
+end
+
 -- Returns what was answered ("go" or "custom") and the lesson it was answered
 -- about, on the frame the box has finished flashing, and nothing at all until
 -- then -- or "back" and the `answer` of whichever margin tab it was the moment one

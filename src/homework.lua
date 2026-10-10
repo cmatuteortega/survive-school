@@ -297,6 +297,12 @@ end
 -- A finger turning a page swallows its stamps for the same reason and answers
 -- the same way: it is a hand on the paper rather than a nib on it, and a swish
 -- fired for it would be the book saying a line was drawn where a page was turned.
+-- Something pressed or dragged rather than drawn on, for the cursor
+-- (Game:drawPointer): the furniture, or the book's own edges.
+function Homework:hot(x, y)
+    return self.book:hot(x, y) or self:furniture(x, y)
+end
+
 function Homework:mark(x, y)
     if self.book:eating() then return false end
     if self:furniture(x, y) then return false end
