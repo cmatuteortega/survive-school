@@ -17,13 +17,21 @@ Camera.tx, Camera.ty = 0, 0
 local SHAKE_TIME = 0.3
 local SHAKE_X = 46 -- rad/s: about 2.2 turns over the life of a knock
 local SHAKE_Y = 31 -- and about 1.5, so the two never line up twice
-Camera.shakeT, Camera.shakeMag = 0, 0
+Camera.shakeT, Camera.shakeMag, Camera.shakeLen = 0, 0, SHAKE_TIME
 
 -- Max rather than sum, so a hit inside a running knock restarts it at the
 -- larger of the two: stacked shakes make a screen you cannot play on.
-function Camera.knock(mag)
+--
+-- `time` stretches one knock to the length of something else -- the alarm
+-- clock rattles the page for as long as its bell rings (src/pickup.lua). A
+-- shorter knock landing inside a longer one lends it its magnitude and leaves
+-- its length alone, so a hit taken mid-ring does not cut the ring short.
+function Camera.knock(mag, time)
+    time = math.max(time or 0, SHAKE_TIME)
     Camera.shakeMag = math.max(Camera.shakeMag, mag)
-    Camera.shakeT = SHAKE_TIME
+    if time >= Camera.shakeT then
+        Camera.shakeT, Camera.shakeLen = time, time
+    end
 end
 
 -- Run beside Camera.follow, once a frame and outside the playing branch
@@ -35,8 +43,8 @@ end
 
 local function knocked()
     if Camera.shakeT <= 0 then return 0, 0 end
-    local a = Camera.shakeMag * (Camera.shakeT / SHAKE_TIME)
-    local e = SHAKE_TIME - Camera.shakeT
+    local a = Camera.shakeMag * (Camera.shakeT / Camera.shakeLen)
+    local e = Camera.shakeLen - Camera.shakeT
     return math.floor(a * math.cos(e * SHAKE_X) + 0.5),
            math.floor(a * math.sin(e * SHAKE_Y) + 0.5)
 end

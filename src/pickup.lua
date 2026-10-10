@@ -188,7 +188,9 @@ local TAKE = {
             end
         end
         game.particles:burst(x, y, 16, Palette.red)
-        Camera.knock(3)
+        -- The page rattles for as long as the bell does, not a hit's third of a
+        -- second: the knock is the ring felt.
+        Camera.knock(3, Sfx.duration("alarm"))
         Sfx.play("alarm")
     end,
     star = function(game, x, y)

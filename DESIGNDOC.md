@@ -447,7 +447,8 @@ sets `Game.stopped`, which `Pickup.tickStopped` counts down from
 half second climbing, then `note` at half pitch on the thaw. The alarm clock walks
 the horde backwards and `Game:killEnemy`s everything inside `Camera.bounds()`
 that is not a boss, a stand-in or arriving -- gems, splits and bulbs all as for
-any kill -- and plays `alarm`. The gold star adds one to `Loadout.stars` and
+any kill -- and plays `alarm`, knocking the page (3px) for the whole of the
+ring (`Camera.knock`'s `time`, off `Sfx.duration("alarm")`). The gold star adds one to `Loadout.stars` and
 rebuilds; `Loadout:rebuild` multiplies `stats.damage` by `1 + Pickup.STAR *
 stars` after the catalogue and before the tool multipliers, and the bookmark
 writes `stars`. Neither `stopped` nor the frozen enemies are bookmarked.
@@ -3944,7 +3945,10 @@ the player gets no number, only a bar in a corner they are not looking at. Being
 tougher therefore makes the same hit shake less, which is the right feel.
 
 `Camera.knock` **takes the larger** of the running and incoming magnitudes rather
-than summing — a screen that never settles is one you cannot play on. It is run
+than summing — a screen that never settles is one you cannot play on. An
+optional `time` lengthens one knock past `SHAKE_TIME` (the alarm clock's, for
+its ring); a shorter knock inside it raises the magnitude but keeps the longer
+clock running. It is run
 down by `Camera.settle(dt)`, called beside `Camera.follow` at the tail of
 `Game:update` and so outside the playing branch: a knock taken on the frame you
 died finishes falling, like the particles and the damage numbers. `Camera.set`
