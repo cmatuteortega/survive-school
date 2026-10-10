@@ -99,6 +99,7 @@ local Overprint = require("src.overprint")
 local Input = require("src.input")
 local Scribble = require("src.scribble")
 local Hud = require("src.hud")
+local Sprites = require("src.sprites")
 local Tools = require("src.tools")
 local Upgrades = require("src.upgrades")
 local Collection = require("src.collection")
@@ -224,16 +225,22 @@ local BOSS = "boss"
 -- (`bossMet`, `bossBeaten`), and the tally is written the
 -- moment a boss walks on and the moment one goes down for good.
 --
--- **The shelf is a column of names with a pip each**, the homework's pip, filled
--- red once that boss is beaten, rather than the catalogue's grid of icons: there
--- is no icon for a boss, and fourteen names in a column are fourteen rows of
--- lettering where fourteen plates would be fourteen rows of icons. It is cut to
--- the widest boss name in the book, so the column does not move as a name stops
--- being ???, and laid out on its own grid rather than on the catalogue's -- the
--- names are longer than any line's, and the catalogue's columns are not to be
--- widened by a page they are not on.
-local BOSS_BOX = 5                        -- the pip: the homework's, at its size
-local BOSS_ROW = Font.height + 3          -- one name to the next, down the column
+-- **The shelf is a row per lesson: its two bosses' icons and the lesson's name**
+-- -- the first boss, then the encore, then the subject they end -- so it reads
+-- the way every other shelf in this book reads, a picture and a word, with each
+-- icon (`Sprites.bosses`) the thing you press. A plate a boss, the catalogue's
+-- way, was fourteen rows of icons, and fourteen rows at the catalogue's pitch do
+-- not fit the verso of a landscape phone; seven rows of two do, with room over,
+-- and pair each boss with the one it shares a lesson with, which is the order
+-- the book sends them in anyway. The icon is the boss's silhouette until it is
+-- beaten -- graphite for a stranger, slate once met -- for the turntable's
+-- reason, and the one being read has a red line under it, red being what this
+-- shelf says "this one" in. The name is a target too and opens the lesson's
+-- first boss. The column is cut to the widest lesson name, and laid out on its
+-- own grid rather than the catalogue's, whose columns are not to be widened by
+-- a page they are not on.
+local BOSS_ROW = ICON + ROW_GAP           -- one lesson to the next, down the column
+local PAIR_GAP = 2                        -- a lesson's first boss to its encore
 local UNKNOWN = "???"
 
 -- What the entry says under the name. Held here for the reason every string on
@@ -270,6 +277,28 @@ end
 local function bossName(boss)
     local def = Enemy.types[boss.kind]
     return def.title or def.name
+end
+
+-- Where each boss on the roster sits on the shelf: which lesson's row, and first
+-- or second in it. Off `Subjects.bosses`, which already lists each lesson's boss
+-- and then its encore, so a row is a run of the roster with one subject -- and a
+-- lesson whose boss is shared with an earlier one (the roster lists a kind once)
+-- is a row of one. Built once: the roster is.
+local slots, rows
+
+local function bossRows()
+    if rows then return rows, slots end
+    slots, rows = {}, {}
+    for i, boss in ipairs(Subjects.bosses()) do
+        local row = rows[#rows]
+        if not row or row.subject ~= boss.subject then
+            row = { subject = boss.subject }
+            rows[#rows + 1] = row
+        end
+        row[#row + 1] = i
+        slots[i] = { row = #rows, col = #row }
+    end
+    return rows, slots
 end
 
 -- The lowest rung of the course ladder that sends a lesson's second boss, for
@@ -516,12 +545,12 @@ local function nameWidth()
     return w
 end
 
--- And the widest boss name, or ??? if that is wider, so the boss column is cut to
+-- And the widest lesson name on the bosses' shelf, so the boss column is cut to
 -- what it can ever say. Measured off the translation, like every width here.
 local function bossWidth()
-    local w = Font.width(UNKNOWN)
-    for _, boss in ipairs(Subjects.bosses()) do
-        w = math.max(w, Font.width(I18n.t(bossName(boss))))
+    local w = 0
+    for _, row in ipairs((bossRows())) do
+        w = math.max(w, Font.width(I18n.t(row.subject.name)))
     end
     return w
 end
@@ -602,15 +631,22 @@ end
 -- shelf -- so this depends on nothing but the number, which is what lets a shelf
 -- be drawn for a section that is not the one open.
 function Library:plateRect(lay, i, at)
-    -- The bosses' column: a pip and a name a row, and the whole row is the
-    -- target, so the rows touch and a press between two names lands on one.
+    -- The bosses' column: a lesson a row, an icon a boss. Each icon is a target
+    -- as deep as its row, so the rows touch and a press between two lands on
+    -- one; the first also carries the lesson's name (`also`), since a name is
+    -- what this screen's hint tells you to press.
     if self:bossPage(at) then
-        return {
-            x = lay.bossX,
-            y = lay.shelf + (i - 1) * BOSS_ROW,
-            w = lay.bossW,
-            h = BOSS_ROW,
-        }
+        local _, where = bossRows()
+        local slot = where[i]
+        local y = lay.shelf + (slot.row - 1) * BOSS_ROW - math.floor(ROW_GAP / 2)
+        local x = lay.bossX + (slot.col - 1) * (ICON + PAIR_GAP)
+        local plate = { x = x, y = y, w = ICON + PAIR_GAP, h = BOSS_ROW }
+        if slot.col == 1 then
+            local nameX = lay.bossX + 2 * ICON + PAIR_GAP + ICON_GAP
+            plate.also = { x = nameX - ICON_GAP, y = y,
+                           w = lay.bossX + lay.bossW - nameX + ICON_GAP, h = BOSS_ROW }
+        end
+        return plate
     end
 
     local col = (i - 1) % lay.cols
@@ -735,10 +771,10 @@ function Library:layout(game)
     -- fullest *catalogue* shelf keeps -- it is a different page, it is a shorter
     -- column, and what goes under it is a boss that wants all the height it can
     -- get.
-    lay.bossW = BOSS_BOX + ICON_GAP + bossWidth()
+    lay.bossW = 2 * ICON + PAIR_GAP + ICON_GAP + bossWidth()
     lay.bossX = versoX + EDGE + math.floor((availW - lay.bossW) / 2)
     lay.bossEntry = lay.two and y
-        or y + #Subjects.bosses() * BOSS_ROW - (BOSS_ROW - Font.height) + BLOCK_GAP
+        or y + #(bossRows()) * BOSS_ROW - ROW_GAP + BLOCK_GAP
 
     -- Where the entry has to stop. Read from the top there is room for the wordiest
     -- line in the book on every page the game is handed, so this is never reached;
@@ -893,10 +929,13 @@ function Library:evoAt(x, y)
         and y >= by - padY and y <= by + bh + padY
 end
 
+local function inside(r, x, y)
+    return r and x >= r.x and x < r.x + r.w and y >= r.y and y < r.y + r.h
+end
+
 function Library:plateAt(x, y)
     for i, plate in ipairs(self.plates or {}) do
-        if x >= plate.x and x < plate.x + plate.w
-            and y >= plate.y and y < plate.y + plate.h then
+        if inside(plate, x, y) or inside(plate.also, x, y) then
             return i
         end
     end
@@ -1240,28 +1279,45 @@ function Library:drawEntry(lay, at, here)
     if up then self:drawLine(lay, up) end
 end
 
--- The bosses' column: a pip and a name a row. The pip is the homework's
--- (src/homework.lua), filled red once that boss is beaten -- the same mark for the
--- same fact on the page that asks for it. The name is ??? until the boss has been
--- met, in graphite until it has been beaten and slate once it has (the shelf's own
--- pair of colours for open and shut), and red where you are reading, as on every
--- shelf.
+-- The bosses' column: a lesson a row, its bosses' icons and then its name. An
+-- icon is in its own colours once that boss is beaten and its silhouette until
+-- then -- slate once met, graphite while it is a stranger, the shelf's own pair
+-- of colours for open and shut -- and the one being read is underlined in red.
+-- The name is slate once either boss in it has been met, graphite until, and
+-- red while one of its bosses is the one being read, as on every shelf.
 function Library:drawBossShelf(lay, at, here)
-    for i, boss in ipairs(Subjects.bosses()) do
-        local plate = self:plateRect(lay, i, at)
-        local met = bossMet(boss.kind)
-        local beaten = bossBeaten(boss.kind)
-        local py = plate.y + math.floor((Font.height - BOSS_BOX) / 2)
+    local roster = Subjects.bosses()
+    for r, row in ipairs((bossRows())) do
+        local y = lay.shelf + (r - 1) * BOSS_ROW
+        local anyMet, reading = false, false
 
-        love.graphics.setColor(met and Palette.slate or Palette.graphite)
-        love.graphics.rectangle("fill", plate.x, py, BOSS_BOX, BOSS_BOX)
-        love.graphics.setColor(beaten and Palette.red or Palette.paper)
-        love.graphics.rectangle("fill", plate.x + 1, py + 1, BOSS_BOX - 2, BOSS_BOX - 2)
+        for col, i in ipairs(row) do
+            local kind = roster[i].kind
+            local met = bossMet(kind)
+            local x = lay.bossX + (col - 1) * (ICON + PAIR_GAP)
+            local sprite = Sprites.bosses[kind]
+            anyMet = anyMet or met
 
-        love.graphics.setColor(here and i == self.index and Palette.red
-            or (beaten and Palette.slate or Palette.graphite))
-        Font.print(met and I18n.t(bossName(boss)) or UNKNOWN,
-            plate.x + BOSS_BOX + ICON_GAP, plate.y)
+            if bossBeaten(kind) then
+                love.graphics.setColor(1, 1, 1)
+                sprite:draw(x + ICON / 2, y + ICON / 2)
+            else
+                love.graphics.setColor(met and Palette.slate or Palette.graphite)
+                sprite:drawMask(x + ICON / 2, y + ICON / 2)
+            end
+
+            if here and i == self.index then
+                reading = true
+                love.graphics.setColor(Palette.red)
+                love.graphics.rectangle("fill", x, y + ICON + 1, ICON, 1)
+            end
+        end
+
+        love.graphics.setColor(reading and Palette.red
+            or (anyMet and Palette.slate or Palette.graphite))
+        Font.print(I18n.t(row.subject.name),
+            lay.bossX + 2 * ICON + PAIR_GAP + ICON_GAP,
+            y + math.floor((ICON - Font.height) / 2))
     end
 end
 

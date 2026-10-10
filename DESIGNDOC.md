@@ -2839,6 +2839,16 @@ idea in Lua rather than in a shader: graphite dithered off a 4x4 comb, drawn
 gutter darkens the ruling and the paper under it together, which is the difference
 between a fold in a page and a grey stripe drawn on one.
 
+**The sheet is the whole canvas, not the safe area.** Every page draws its
+background edge to edge, under the notch and the gesture bar, so the halves under
+a turn and the sheet itself run out to the canvas's edges and top to bottom
+(`lay.vw`, `lay.vh`, `lay.sheetW`); only what is *printed* keeps to the safe area
+(`Book:leaf`). Cut to the safe area, a turn on a phone left the inset strips
+undrawn -- the cleared paper, a white frame that came and went with each turn. With
+uneven insets the crease is off the canvas's middle, so the sheet is bent at the
+longer half and the shorter half's columns past its edge are held to its edge
+column (plain ruled paper, whose rules run across).
+
 **Two canvases, and only while a leaf is moving.** `Book:draw(game, page)` calls
 the screen's `page(section)` straight onto the screen at rest, and into `bufA` and
 `bufB` mid-turn -- `Overprint.finish` puts its result back on whatever canvas was
@@ -3103,14 +3113,18 @@ shelf of lines: `build` leaves it an empty shelf (no upgrade has that `kind`) an
 listed once -- and is the one roster both this page and the homework's read, so the
 two cannot disagree about who is in the book.
 
-- **The shelf** is a column rather than a grid (`drawBossShelf`): the homework's
-  5px pip and a name, `BOSS_ROW` (`Font.height + 3`) apart, the whole row the press
-  target (`plateRect` with the section passed in). Its own width, `lay.bossW`, cut
-  to the widest boss title or `???` in the current language, and its own `lay.bossX`
-  -- the boss titles are longer than any line's name, and the catalogue's columns
-  are not to be widened by a page they are not on. Fourteen rows at eight pixels fit
-  the verso of the shortest landscape page with room to spare; fourteen at the
-  catalogue's fourteen would not.
+- **The shelf** is a row per lesson rather than a plate per boss (`drawBossShelf`,
+  rows off `bossRows`): the lesson's boss and encore as 11x11 icons
+  (`Sprites.bosses`, keyed by kind) `PAIR_GAP` apart, then the lesson's name,
+  `BOSS_ROW` (`ICON + ROW_GAP`) apart. An icon is in colour once that boss is beaten
+  and its mask until then -- slate once met, graphite before -- the one being read
+  underlined in red. Each icon is a press target as deep as its row (`plateRect`
+  with the section passed in); the first also carries the name as `plate.also`,
+  which `plateAt` checks. Its own width, `lay.bossW`, cut to the widest lesson name
+  in the current language, and its own `lay.bossX` -- the catalogue's columns are
+  not to be widened by a page they are not on. Seven rows at fourteen pixels fit the
+  verso of the shortest landscape page; fourteen plates at the catalogue's pitch
+  would not.
 - **The entry** (`drawBoss`) is the name at `NAME_SCALE` where it fits the block
   and at 1:1 where it does not (some titles are wider than a leaf at twice the
   size), the lesson's name, for an encore `AT %s OR HARDER` naming the lowest rung
@@ -6931,7 +6945,8 @@ and are all the same 11x11 glyph.
   three. A row that splits may name `split.blown` if what it leaves stops making
   sense scaled up; if it is "what happens when
   it dies", that is `Game:killEnemy` and nothing else.
-- **Boss:** a sprite in `Sprites.enemies` and a row in `Enemy.types` with `boss =
+- **Boss:** a sprite in `Sprites.enemies`, an 11x11 icon in `Sprites.bosses`
+  keyed by its kind (the library's boss shelf), and a row in `Enemy.types` with `boss =
   true`, a `title`, a `call`, a `last` and a `shut` (all through `I18n.t`, so a line each in
   the `ES` table and the four `src/lang/` files), a `wreck` row for how it comes
   apart and `arrive = true` unless its brain has an entrance of its own, named by a lesson's `boss` -- or its

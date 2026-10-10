@@ -3788,6 +3788,218 @@ function Sprites.load()
         }),
     }
 
+    -- The library's bosses' shelf (src/library.lua): one per boss, keyed by its
+    -- enemy kind, at the 11x11 every icon in the game is. Each is the body the
+    -- fight paints, cut down to the one thing about it that reads at eleven
+    -- pixels -- the eye's iris, the die's pips, the can's red bands -- in the
+    -- colours it bursts into when it goes down (`wreck` in src/enemy.lua), so the
+    -- icon and the burst agree about who it was. A boss the book has not beaten is
+    -- drawn as this sprite's silhouette, the turntable's own rule for the same
+    -- fact (src/turntable.lua).
+    Sprites.bosses = {
+        -- SCIENCE: the eye, iris and pupil square on, and two veins.
+        bosseye = pixelart.newSprite({
+            "...ooooo...",
+            ".oowwwwwoo.",
+            ".owrwwwwwo.",
+            "owwwbbbwwwo",
+            "owwbbbbbwwo",
+            "owwbbobbwro",
+            "owwbbbbbwwo",
+            "owwwbbbwwwo",
+            ".owwwwwrwo.",
+            ".oowwwwwoo.",
+            "...ooooo...",
+        }),
+        -- ... and its encore: a nucleus with two orbits through it and an
+        -- electron out on one of them.
+        atom = pixelart.newSprite({
+            ".....s.....",
+            "....s.s....",
+            "..sss.sss..",
+            ".b..s.s..s.",
+            "s...rbr...s",
+            "s...brb...s",
+            ".s..s.s..s.",
+            "..sss.sss..",
+            "....s.s....",
+            ".....s.....",
+            "...........",
+        }),
+        -- P.E.: the whistle on its red lanyard.
+        whistle = pixelart.newSprite({
+            "...........",
+            "rr.........",
+            "..r........",
+            "...ooo.....",
+            "..osggooooo",
+            ".osgwgsssso",
+            ".osggsoooo.",
+            ".osssso....",
+            "..oooo.....",
+            "...........",
+            "...........",
+        }),
+        -- ... and the body spray: a black can between two red bands, and its
+        -- nozzle going off.
+        deodorant = pixelart.newSprite({
+            "......r.r..",
+            ".....oo.r..",
+            "....ooo....",
+            "...ooooo...",
+            "...rrrrr...",
+            "...owwwo...",
+            "...owowo...",
+            "...owwwo...",
+            "...rrrrr...",
+            "...ooooo...",
+            "....ooo....",
+        }),
+        -- GRAMMAR: the dictionary standing, its pages along the top and a label
+        -- on the board.
+        dictionary = pixelart.newSprite({
+            "...........",
+            "..ooooooo..",
+            ".owwwwwwwo.",
+            ".ooooooooo.",
+            ".ossssssso.",
+            ".osoooooso.",
+            ".oswwwwwso.",
+            ".osoooooso.",
+            ".ossssssso.",
+            ".ooooooooo.",
+            "....r......",
+        }),
+        -- ... and the red pen, laid the way the pen's own icon lies.
+        redpen = pixelart.newSprite({
+            ".......ooo.",
+            "......orro.",
+            ".....orrro.",
+            "....orrro..",
+            "...orrro...",
+            "..orrro....",
+            "..orro.....",
+            ".oogo......",
+            ".ogo.......",
+            "or.........",
+            "...........",
+        }),
+        -- FINANCE: the stamp, handle up and the red rubber down.
+        stamp = pixelart.newSprite({
+            "...........",
+            "....ooo....",
+            "...osswo...",
+            "...ossso...",
+            "....oso....",
+            "....oso....",
+            "..ooooooo..",
+            ".ossssssso.",
+            ".ooooooooo.",
+            ".rrrrrrrrr.",
+            "...........",
+        }),
+        -- ... and the piggy bank, snout to the left and the slot on its back.
+        piggy = pixelart.newSprite({
+            "...........",
+            "...oo......",
+            "..okkooooo.",
+            ".okkkoookko",
+            "ookokkkkkko",
+            "okkkkkkkkko",
+            "ookkkkkkkko",
+            ".okkkkkkkko",
+            "..ooooooo..",
+            "..oo...oo..",
+            "...........",
+        }),
+        -- MUSIC: the metronome, a filled wedge where the tool's icon is an
+        -- outline, with its rod thrown over and the red weight on it.
+        metronome = pixelart.newSprite({
+            ".........o.",
+            "....ooo.o..",
+            "....oso.o..",
+            "...osssrr..",
+            "...osssrr..",
+            "..osssoso..",
+            "..osssoso..",
+            ".osssossso.",
+            ".osssossso.",
+            "ooooooooooo",
+            "...........",
+        }),
+        -- ... and the speaker, a blue cylinder of knit with its top on.
+        speaker = pixelart.newSprite({
+            "...........",
+            "..ooooooo..",
+            ".obbbbbbbo.",
+            ".ooooooooo.",
+            ".ocbcbcbco.",
+            ".obcbcbcbo.",
+            ".ocbcbcbco.",
+            ".obcbcbcbo.",
+            ".ooooooooo.",
+            "..ooooooo..",
+            "...........",
+        }),
+        -- MATHS: the die, three up and the one in the middle red.
+        die = pixelart.newSprite({
+            "...........",
+            "..ooooooo..",
+            ".owwwwwwwo.",
+            ".owowwwwwo.",
+            ".owwwwwwwo.",
+            ".owwwrwwwo.",
+            ".owwwwwwwo.",
+            ".owwwwwowo.",
+            ".owwwwwwwo.",
+            "..ooooooo..",
+            "...........",
+        }),
+        -- ... and the tesseract, a cube inside a cube with its corners joined.
+        tesseract = pixelart.newSprite({
+            "bbbbbbbbbbb",
+            "bb.......bb",
+            "b.b.....b.b",
+            "b..ooooo..b",
+            "b..o...o..b",
+            "b..o...o..b",
+            "b..o...o..b",
+            "b..ooooo..b",
+            "b.b.....b.b",
+            "bb.......bb",
+            "bbbbbbbbbbb",
+        }),
+        -- ART: the still life -- the cube, the cone and the sphere, side by side
+        -- and lit from the left.
+        stilllife = pixelart.newSprite({
+            "...........",
+            "...........",
+            ".....o.....",
+            ".....o.....",
+            "....owo....",
+            "....owo....",
+            "ooooowo.oo.",
+            "owwoowoowwo",
+            "owgoowgowgo",
+            "ooooooo.oo.",
+            "...........",
+        }),
+        -- ... and the marble, a bust coming up out of its block.
+        marble = pixelart.newSprite({
+            "....ooo....",
+            "...owwwo...",
+            "...owgwo...",
+            "...owwwo...",
+            "....owo....",
+            "..ooowooo..",
+            ".owwwwwwwo.",
+            ".ogggggggo.",
+            ".oggsgggso.",
+            ".ogggggggo.",
+            ".ooooooooo.",
+        }),
+    }
+
     Sprites.gem = pixelart.newSprite({
         "..b..",
         ".bcb.",

@@ -340,6 +340,15 @@ function Book:fit(game, count)
     lay.bottom = game.vh - ins.b
     lay.h = lay.bottom - lay.top
 
+    -- The paper, which is the whole canvas rather than the safe area: the
+    -- background every page draws runs out under the notch and the gesture bar,
+    -- so the sheet that turns has to be all of it too. Cut out of the safe area,
+    -- a turn left the strips outside it undrawn for the length of the turn -- on
+    -- a phone, a white frame round the page that came and went with every flick.
+    -- What is printed stays inside the safe area (`leaf`); what is bent is paper.
+    lay.vw = game.vw
+    lay.vh = game.vh
+
     lay.two = math.floor(lay.w / 2) >= MIN_LEAF
     if lay.two then
         lay.leafW = math.floor(lay.w / 2)
@@ -347,12 +356,19 @@ function Book:fit(game, count)
         lay.recto = lay.x + lay.leafW
         lay.crease = lay.recto
         lay.printW = lay.leafW - INNER - OUTER
+        -- The sheet hangs off the crease out to the canvas's edge, and the
+        -- two sides of it are only the same width when the insets are: a notch
+        -- on one side makes one sheet longer than the other. The turn is bent
+        -- at the longer, and the shorter runs its last column on out past its
+        -- edge (see `drawSheet`).
+        lay.sheetW = math.max(lay.crease, game.vw - lay.crease)
     else
         lay.leafW = lay.w
         lay.verso = lay.x
         lay.recto = lay.x
         lay.crease = nil
         lay.printW = lay.leafW - OUTER * 2
+        lay.sheetW = game.vw
     end
 
     self.lay = lay
@@ -593,8 +609,11 @@ function Book:drawCrease()
             local dens = near * near
             if math.abs(d + 0.5) < 1 then dens = 1 end
 
+            -- Top to bottom of the canvas rather than of the safe area: the
+            -- fold runs the length of the paper, and the paper runs under the
+            -- insets (see `fit`).
             local col = BAYER[x % 4 + 1]
-            for y = lay.top, lay.bottom - 1 do
+            for y = 0, lay.vh - 1 do
                 if (col[y % 4 + 1] + 0.5) / 16 < dens then
                     love.graphics.rectangle("fill", x, y, 1, 1)
                 end
@@ -606,8 +625,17 @@ end
 --- drawing -------------------------------------------------------------------
 
 -- One column of a source canvas, one whole pixel wide at a whole pixel position.
-local function column(src, sx, top, h, dx)
-    if sx < 0 or sx >= bufW then return end
+-- `clamp` holds a column asked for past the canvas's edge to the edge column
+-- rather than dropping it: the sheet does that on the shorter side of an uneven
+-- crease (see `fit`), and the edge of every page is plain ruled paper, whose rules
+-- run across -- so stretching it is invisible where a gap in the sheet would not
+-- be.
+local function column(src, sx, top, h, dx, clamp)
+    if clamp then
+        sx = math.min(bufW - 1, math.max(0, sx))
+    elseif sx < 0 or sx >= bufW then
+        return
+    end
     quad:setViewport(sx, top, 1, h, bufW, bufH)
     love.graphics.draw(src, quad, dx, top)
 end
@@ -629,8 +657,8 @@ end
 -- for.
 function Book:drawSheet(front, back)
     local lay = self.lay
-    local W = lay.leafW
-    local hinge = lay.two and lay.crease or lay.x
+    local W = lay.sheetW
+    local hinge = lay.two and lay.crease or 0
 
     -- The root angle, and how far the sheet bows away from it. The bow is
     -- greatest halfway round and nothing at either end, so a leaf lying flat --
@@ -702,9 +730,9 @@ function Book:drawSheet(front, back)
         -- lands the right way round when the leaf finally lies flat: `u` is a
         -- distance along the paper, and the paper is the same paper.
         if face >= 0 then
-            column(front, math.floor(hinge + side * u * W), lay.top, lay.h, dx)
+            column(front, math.floor(hinge + side * u * W), 0, lay.vh, dx, true)
         elseif back then
-            column(back, math.floor(hinge - side * u * W), lay.top, lay.h, dx)
+            column(back, math.floor(hinge - side * u * W), 0, lay.vh, dx, true)
         end
     end
 
@@ -774,11 +802,10 @@ function Book:draw(game, page)
         local under = fwd and bufB or bufA
         local sheet = fwd and bufA or bufB
 
-        love.graphics.setScissor(lay.x, lay.top, lay.w, lay.h)
         love.graphics.draw(under, 0, 0)
 
         local edge, side = self:drawSheet(sheet, nil)
-        shadow(under, edge + side, side, lay.top, lay.h)
+        shadow(under, edge + side, side, 0, lay.vh)
 
         love.graphics.setScissor()
         return
@@ -793,10 +820,13 @@ function Book:draw(game, page)
     local vs = fwd and bufA or bufB    -- whose verso shows under the sheet
     local rs = fwd and bufB or bufA    -- ... and whose recto
 
-    love.graphics.setScissor(lay.verso, lay.top, lay.leafW, lay.h)
+    --
+    -- Each half runs out to the canvas's edge and top to bottom of it, not just
+    -- across the leaf it prints on: see `fit`.
+    love.graphics.setScissor(0, 0, lay.crease, lay.vh)
     love.graphics.draw(vs, 0, 0)
 
-    love.graphics.setScissor(lay.recto, lay.top, lay.leafW, lay.h)
+    love.graphics.setScissor(lay.crease, 0, lay.vw - lay.crease, lay.vh)
     love.graphics.draw(rs, 0, 0)
 
     -- The sheet itself: the face you are leaving on the front of it and the face
@@ -804,16 +834,14 @@ function Book:draw(game, page)
     -- one's verso; back, this spread's verso and the previous one's recto. One
     -- sheet of paper with a page printed on each side of it, which is the fact
     -- this whole file is about.
-    love.graphics.setScissor(lay.x, lay.top, lay.w, lay.h)
+    love.graphics.setScissor()
     local edge, side = self:drawSheet(bufA, bufB)
 
     -- And the shade it throws, just past where it reaches, onto whichever leaf is
     -- lying there. Which leaf that is follows the sheet rather than the direction
     -- of travel: halfway through a turn the sheet crosses the crease, and from
     -- there on it is shading the page it is about to land on.
-    shadow(side < 0 and vs or rs, edge + side, side, lay.top, lay.h)
-
-    love.graphics.setScissor()
+    shadow(side < 0 and vs or rs, edge + side, side, 0, lay.vh)
 end
 
 return Spread
