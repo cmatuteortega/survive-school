@@ -31,14 +31,17 @@
 -- on the page that holds whatever crosses it. Nothing else about the tool changes,
 -- and the two endings below still end it.
 --
--- One upgrade takes the fastening back (`prise` on the block). The hold runs out
--- the way it always did and then the wire is torn out of the paper instead of
--- being left in it -- biting a second time as it comes, and leaving nothing
--- behind. It is the one level written against everything above: the tool stops
--- being a fastener that stays and becomes a fastener that is removed, twice, and
--- what it buys with that is the only hit in the game that cannot miss. What the
--- crown caught two seconds ago is standing exactly where it was, because the
--- crown is the thing that has been holding it there.
+-- When the hold runs out the wire comes back out of the paper (`Staple:prise`): a
+-- fifth of a second of it lifting off the page, and then nothing left behind. It
+-- used to stay for the rest of the run, and a page a long run had stapled read as
+-- clutter long before it read as a record of anything -- so now a staple leaves
+-- on the same couple of seconds a pushpin does.
+--
+-- One upgrade makes that tear a second hit (`prise` on the block): the wire bites
+-- again as it comes. That is what the level buys, and what it buys with it is the
+-- only hit in the game that cannot miss. What the crown caught two seconds ago is
+-- standing exactly where it was, because the crown is the thing that has been
+-- holding it there.
 --
 -- And one fusion takes the *clock* off that (`Staple:snag`, the SNAG in
 -- src/tools.lua). A rubber dragged across a stapled sheet catches the wire and
@@ -46,8 +49,10 @@
 -- row the tear is not something the hold runs out into, it is something a rub
 -- comes and does, whenever you decide to go and do it. Nothing about the tear
 -- itself changes except the one thing a hand pulling a staple out sideways
--- deserves: the crit is certain rather than rolled. The two seconds stop being
--- how long the fastening lasts and become how long you have to get back to it.
+-- deserves: the crit is certain rather than rolled -- and the tear bites whether
+-- or not the run bought `prise`, since a rub dragging wire through what it holds
+-- is a hit on its own account. The two seconds stop being how long the fastening
+-- lasts and become how long you have to get back to it.
 
 local Palette = require("src.palette")
 local pixelart = require("src.pixelart")
@@ -209,20 +214,19 @@ function Staple:catch(game)
     end
 end
 
--- Returns false once it has finished holding -- which is not the same as being
--- finished with. Like the pushpin it is driven through the paper rather than
--- drawn on it, and unless the run bought otherwise it never comes back out: the
--- game moves it to the spent pile and stops updating it, and it stays on the page
--- for the rest of the run.
+-- Returns false once it is out of the paper. Like the pushpin it is driven through
+-- the page rather than drawn on it, and like the pushpin it comes back out a
+-- couple of seconds later: the hold runs out, the wire tears free, and `lifted`
+-- tells Game:updateDrops not to keep it.
 --
 -- It bites on the frame it is placed. There is no fall to wait out, which is
 -- the whole feel of the tool: a stapler goes down and it is done.
 --
--- `prise` is the other ending, and it is bolted on after the hold rather than
--- written into it: the two seconds run exactly as they always did, and what
--- changes is what happens at the end of them. One more bite on the frame it comes
--- free, a fifth of a second of it lifting off the paper, and then `lifted` --
--- which is Game:updateDrops' word for a drop the page is not to keep.
+-- The tear is bolted on after the hold rather than written into it: the two
+-- seconds run exactly as they always did, and then a fifth of a second of it
+-- lifting off the paper, and then `lifted` -- which is Game:updateDrops' word for
+-- a drop the page is not to keep. `prise` adds one more bite on the frame it
+-- comes free, and changes nothing else about the tear.
 --
 -- The second bite is here rather than at the end of the lift, for the reason the
 -- first is on the frame it lands: the tear is the hit, and a hit that arrived
@@ -260,7 +264,6 @@ function Staple:update(dt, game)
     -- always in, because nothing has.
     if not self.prised then
         if self.age < self.def.life then return true end
-        if not self.def.prise then return false end
         self:prise(game, false)
     end
 
@@ -271,20 +274,22 @@ function Staple:update(dt, game)
     return false
 end
 
--- The wire coming out of the paper, and the bite it takes on the way.
+-- The wire coming out of the paper, and the bite it takes on the way when there is
+-- one to take.
 --
--- Two things start it and they differ in exactly one field. The hold running out
--- on a run that bought `prise` rolls the crit like any other bite; a rubber that
--- has caught the wire does not (`sure`, below). Everything else about the tear is
--- the same either way -- the same damage, the same fifth of a second of lifting,
--- the same nothing left behind -- because it is the same event, and which of the
--- two brought it on is not something the page should be able to tell.
+-- Two things start it. The hold running out tears every staple out, and bites only
+-- on a run that bought `prise`, rolling the crit like any other bite; a rubber that
+-- has caught the wire always bites, and does not roll (`sure`, below). Everything
+-- else about the tear is the same either way -- the same damage, the same fifth of
+-- a second of lifting, the same nothing left behind -- because it is the same
+-- event, and which of the two brought it on is not something the page should be
+-- able to tell.
 function Staple:prise(game, sure)
     self.prised = 0
     -- Tugged further the way it already leans, so the yank reads as a hand
     -- taking it out rather than as the staple straightening up on its way.
     self.yank = self.angle >= 0 and 1 or -1
-    self:bite(game, false, sure)
+    if sure or self.def.prise then self:bite(game, false, sure) end
 end
 
 -- A rubber has caught the wire (`snag` in src/tools.lua, `Game:snagDrops`): the
@@ -310,8 +315,7 @@ function Staple:snag(game)
 end
 
 -- How far off the page it is: the rise, and how far the yank has turned it. Zero
--- for every staple in a run that never took the level, and for every staple in
--- one that did until something starts pulling -- its hold running out, or a rub.
+-- until something starts pulling -- its hold running out, or a rub.
 function Staple:lift()
     if not self.prised then return 0, 0 end
 
@@ -341,8 +345,7 @@ end
 -- of what makes six pixels read as height: the wire rises off its own shadow and
 -- the shadow does not follow, so the gap between them is the tear. Both go on
 -- the same frame -- there is no hole in the paper afterwards, because a hole is
--- something the page would have to remember and a prised staple is the one thing
--- in this game that is taken back.
+-- something the page would have to remember.
 function Staple:drawMark()
     local hx, hy, lx, ly = self:span()
 
@@ -371,7 +374,7 @@ end
 -- not ink, it is wire through paper. What the hold is doing is read off the
 -- enemy instead, which stops moving and grows a blue shadow.
 --
--- Which is also why the tear is movement and nothing else (`prise`): the wire
+-- Which is also why the tear is movement and nothing else: the wire
 -- comes off the page whole, at full ink, leaning further as it goes, and then it
 -- is not there. A staple that dissolved on the way out would be a staple made of
 -- ink after all.

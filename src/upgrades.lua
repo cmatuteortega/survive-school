@@ -2121,13 +2121,10 @@ Upgrades.list = {
             -- promise -- a staple that killed on the way in tears out of an empty
             -- circle, and a fastener with nothing under it is worth nothing.
             --
-            -- What it costs is the page. A staple used to be the one drop that
-            -- stayed, and a run with this on it staples a page it does not get to
-            -- keep -- the spent pile stops filling with wire (Game:updateDrops),
-            -- so the record of where the trouble was is only ever pins from here
-            -- on. That is the trade, and it is deliberately a real one: the tool
-            -- goes from something that leaves a page behind it to something that
-            -- happens twice and is gone.
+            -- Every staple tears back out at the end of its hold whether or not
+            -- this is bought (Staple:prise); what the level adds is that the tear
+            -- bites. The tool goes from something that happens once and is gone
+            -- to something that happens twice and is gone.
             { text = "IT TEARS BACK OUT AND BITES AGAIN",
               apply = function(t) t.drop.prise = true end },
             -- The finale, and the one level in the catalogue that changes a

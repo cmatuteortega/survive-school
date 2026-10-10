@@ -703,10 +703,10 @@ function Game:reset()
     self.stroke = nil
     -- Everything that was tapped onto the page rather than drawn on it: pins
     -- and staples, in the order they were put there. `drops` is the ones still
-    -- holding something; `spent` is the ones that have finished and stay on the
-    -- paper for good -- everything but a staple the run bought the level to pull
-    -- back out again (`prise` in src/staple.lua), which reaches the end of its
-    -- hold and then leaves the page rather than joining it.
+    -- holding something; `spent` is the pins that have finished and stand in the
+    -- paper a couple of seconds more before they are pulled (`Pin:wither`). A
+    -- staple never joins it: it tears itself out at the end of its hold
+    -- (`Staple:prise`) and leaves the page rather than joining it.
     self.drops = {}
     self.spent = {}
     self.rulers = {}
@@ -3166,10 +3166,8 @@ end
 
 -- Is there already something driven into the page at this spot?
 --
--- A pin and a staple are the only two things that stay on the paper for good --
--- barring the one level that takes a staple back out of it (`prise` in
--- src/staple.lua) -- which is what the page's memory of a run is made of, and it
--- is also the one way this game can end up with a shape on screen that nobody
+-- A pin and a staple stay on the paper for a couple of seconds past the moment
+-- they land, which is short, but it is also the one way this game can end up with a shape on screen that nobody
 -- drew: tap the same
 -- spot twice, rake a seam back over itself, or let the SPINDLE nail two enemies
 -- standing shoulder to shoulder, and what is left is not two pins, it is a
@@ -3488,9 +3486,8 @@ end
 --
 -- Measured against the *wire* rather than against what the wire holds
 -- (`Staple.REACH`), so what comes out is what the rub actually went over. And
--- against the live list only: a spent staple is a drawing the page decided to
--- keep, it holds nothing, and nothing goes on updating it -- there is no tear for
--- it to animate and nothing for the tear to bite.
+-- against the live list only, which is where every staple is: one that has
+-- finished holding is already tearing itself out, and `Staple:snag` refuses it.
 --
 -- One clack per call however many come out at once, which is `Game:seamAlong`'s
 -- rule again: a rub that crosses three staples in one frame is one movement of a
@@ -3814,22 +3811,19 @@ function Game:stringThreads(pin)
 end
 
 -- A pin and a staple are the only two things in the game that are driven into
--- the paper rather than drawn on it, and they do not fade the way marks do. So
--- when one finishes holding what it caught it is not thrown away -- it joins the
--- page. A staple stays there for the rest of the run, a trail of wire that is a
--- record of where the trouble was; a pin stays a couple of seconds, long enough
--- for whatever was strung off it to fade, and is then pulled back out (the last
--- loop below, `Pin:wither`).
+-- the paper rather than drawn on it, and they do not fade the way marks do. A
+-- staple tears itself out at the end of its hold (`Staple:prise`); a pin, when it
+-- finishes holding, joins the spent pile and stands a couple of seconds more, long
+-- enough for whatever was strung off it to fade, and is then pulled back out (the
+-- last loop below, `Pin:wither`).
 --
 -- Two exceptions, and both are about the record rather than about the rule. A
 -- drop that came down where the page already has one is not kept, because two of
 -- them inside each other are not a record of anything -- they are a smudge, and
 -- it has already done everything it was paid to do by then (Game:dropCrowded).
 -- And a drop that says it has `lifted` took itself off the page on the way out:
--- the stapler's third level tears its wire back out of the paper for a second
--- bite (`prise` in src/staple.lua), and wire that has been pulled out is not a
--- record of where the trouble was, it is wire in a bin. That run's page keeps its
--- pins and forgets its staples, which is the trade the level is.
+-- every staple tears its wire back out of the paper (`Staple:prise`), and wire
+-- that has been pulled out is wire in a bin.
 function Game:updateDrops(dt)
     for i = #self.drops, 1, -1 do
         local d = self.drops[i]
@@ -3876,19 +3870,17 @@ function Game:updateDrops(dt)
         end
     end
 
-    -- And the spent pile, of which only pins ever leave: a few seconds after it
-    -- stops holding, on the clock its fused marks fade on, a pin is pulled back
-    -- out of the page (`Pin:wither`). A staple has no `wither` and stays.
+    -- And the spent pile: a few seconds after it stops holding, on the clock its
+    -- fused marks fade on, a pin is pulled back out of the page (`Pin:wither`).
     for i = #self.spent, 1, -1 do
         local d = self.spent[i]
         if d.wither and not d:wither(dt) then table.remove(self.spent, i) end
     end
 end
 
--- The spent marks in view. There is no limit on how many a run puts down and
--- none is wanted -- they are the page's memory of it -- so this is the one thing
--- that has to hold up: they are spread over far more paper than the camera can
--- show, and only the handful actually on screen is worth drawing.
+-- The spent pins in view. They only stand a couple of seconds now (`Pin:wither`),
+-- but a run that is tapping hard still leaves them spread over more paper than the
+-- camera can show, and only the handful actually on screen is worth drawing.
 --
 -- That cull is what makes keeping them free. A run's worth is 0.16ms a frame
 -- with it and would be several times that without, and the walk itself stays
@@ -5343,8 +5335,7 @@ function Game:draw()
     Overprint.beginInk()
     Camera.attach()
 
-    -- Spent pins and staples are the oldest thing on the page, and staples the
-    -- only thing on it that will still be there at the end of the run, so everything
+    -- Spent pins are the oldest thing on the page, so everything
     -- else is drawn over them -- including an eraser sweep, which wipes them the
     -- way it wipes the ruling. They go under the crowd too, unlike the ones
     -- still holding something: while a pin is working you need to see it through

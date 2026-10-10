@@ -15,7 +15,7 @@
 -- the page is not being able to see it. What walks back out is what tells you
 -- what happened -- anything that stood in the light too long keeps a grey ghost
 -- of its own outline for the rest of its life (Enemy:sunburn), so the page
--- remembers the burn the way it remembers a spent staple.
+-- remembers the burn.
 --
 -- Everything about it comes off the stat block the upgrade line built
 -- (src/upgrades.lua): how wide, how hard, how long it stays and how long it is

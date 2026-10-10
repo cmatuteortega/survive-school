@@ -4124,15 +4124,16 @@ and the two need not agree:
   rather than by the thing on the paper, so letting go of the drawing costs
   nothing. Ink is never refunded for it.
 
-  **One level buys that back**, and it is the stapler's third: `prise` on the block
-  makes the end of the hold a second event rather than a retirement. `Staple:update`
-  bites again on the frame the hold expires — same damage, same crit roll, no
-  freeze, since there is nothing left in the page to hold anything with — spends a
-  fifth of a second lifting the wire six pixels off the paper on a squared rise and
-  a widening lean, and then sets `lifted`, which is the word `Game:updateDrops`
-  reads to mean "do not keep this one". It is the only hit in the game that cannot
-  miss, because the thing it hits is the thing the staple has been holding still;
-  what it pays is the page, since that run's `spent` pile stops filling with wire.
+  **Every staple comes back out.** On the frame the hold expires `Staple:update`
+  calls `Staple:prise`, which spends a fifth of a second lifting the wire six pixels
+  off the paper on a squared rise and a widening lean, and then sets `lifted`, which
+  is the word `Game:updateDrops` reads to mean "do not keep this one" -- so no
+  staple ever reaches the `spent` pile. The stapler's third level, `prise` on the
+  block, makes that tear a second event: it bites again as it comes out — same
+  damage, same crit roll, no freeze, since there is nothing left in the page to
+  hold anything with. It is the only hit in the game that cannot miss, because the
+  thing it hits is the thing the staple has been holding still. A rub that catches
+  the wire (`Staple:snag`) bites with or without the level.
   The `prise` bite is written to reuse `def.damage` rather than carry a number of
   its own, so every scaling walk that already reaches a staple (`scaleDamage` on
   `drop`, a block's `wire` and `fasten`) reaches the second bite for free.
@@ -6813,7 +6814,7 @@ its own just before the depth sort. Both are explained under **The overprint
 pass**.
 
 `Game:draw`'s ink order is load-bearing and commented at each step: spent
-pins/staples (page memory, culled to the camera by `Game:eachSpent`; a spent pin
+pins (culled to the camera by `Game:eachSpent`; a spent pin
 stands `Pin:stays` -- its row's `life`, so it goes with the threads and pools
 strung off it, else 2s -- and is then pulled back out, lifting and dithering away
 over its last 0.35s, by `Pin:wither` from `Game:updateDrops`) → lingering

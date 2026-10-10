@@ -987,18 +987,16 @@ Tools.list = {
         -- hitting barely hurts and the circle is small enough to miss with.
         --
         -- Freeze and life are the same number on purpose, the way they are for
-        -- the pin -- life is only how long it is still worth updating, since a
-        -- staple never comes out of the paper and never fades. A page you have
-        -- worked over stays covered in them -- one deep, since one driven where
-        -- there is already one does its work and then leaves the drawing alone
-        -- (`FOOTPRINT` in src/staple.lua, Game:dropCrowded), so a seam raked
-        -- twice over the same ground reads as a seam and not as a stripe.
+        -- the pin -- life is how long the wire holds, and then it is torn back out
+        -- of the page (`Staple:prise`) and leaves nothing behind. While they are
+        -- in, they are one deep, since one driven where there is already one does
+        -- its work and then leaves the drawing alone (`FOOTPRINT` in
+        -- src/staple.lua, Game:dropCrowded), so a seam raked twice over the same
+        -- ground reads as a seam and not as a stripe.
         --
-        -- Which is the written tool, and its third level is the one place in the
-        -- game that argument is bought back: `prise` makes life the clock on a
-        -- fastening that is *undone* rather than one that simply stops being
-        -- watched, and the same two seconds end with the wire torn out of the page
-        -- for a second bite. A page worked over by that run stays clean.
+        -- Its third level is where the tear starts to count: `prise` makes it a
+        -- second bite, so the same two seconds end with a fastening that is
+        -- *undone* on whatever it was holding rather than one that simply lets go.
         --
         -- Two of the paragraphs above are the *written* tool rather than the
         -- finished one, and its line is where each is bought back. "Hitting
@@ -3082,9 +3080,8 @@ Tools.list = {
         -- And then it takes it back. `prise` is the stapler's third level and this
         -- is the row that shows it whole: thirty staples land in one press, hold the
         -- lane for two seconds, and come out of the paper together for a second 6 --
-        -- a straight line across the page that hits, waits, and hits again. Nothing
-        -- is left afterwards, which is the trade the level makes everywhere it is
-        -- taken: a seam is an event rather than a track.
+        -- a straight line across the page that hits, waits, and hits again: a seam
+        -- is an event rather than a track.
         snap = RULE,
         -- What the straight edge presses into the page as it comes down, one every
         -- twelve pixels of the line it landed on (Game:seamAlong) -- so a page
@@ -4548,9 +4545,8 @@ Tools.list = {
         -- to stand still; nothing about that had to be invented.
         --
         -- And the hold outlives the cut, which is the half worth reading twice.
-        -- The slit closes in a second and a half; the wire is in the page for good
-        -- (`prise` takes it back out two seconds later for a second 6, and after
-        -- that the staple is a drawing). So what a hinge leaves behind is a line
+        -- The slit closes in a second and a half; the wire is in the page for two
+        -- (and then tears out, for a second 6 once `prise` is bought). So what a hinge leaves behind is a line
         -- of fasteners across the paper with half the page gone on one side of it
         -- -- which is what the name is: a row of wire along the line a page comes
         -- apart on, and the page swinging away from it.

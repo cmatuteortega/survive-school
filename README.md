@@ -324,8 +324,8 @@ from the level before it, so a run's whole stat block is a pure function of the
 levels it reached. Hand back a list of lines and the levels on them and the build
 rebuilds itself exactly, weapons and all. **The page** is a dozen tables of live
 objects — the horde with each monster's walk offset and which way round a wall it
-committed to, every stroke and its chain of stamps, the spent pins and staples
-that stay on the paper for good, the puddles, the blades still travelling down a
+committed to, every stroke and its chain of stamps, the pins and staples
+still in the paper, the puddles, the blades still travelling down a
 cut — most of which mean nothing without the module that made them. Writing that
 down is a different project, and a save file that quietly handed back a *different*
 page from the one you closed would be worse than one that says up front it hands
@@ -8974,10 +8974,10 @@ bat walking out of it, which is about eleven pixels' worth of head start.
 And then it stays there, exactly as it went in — for a while. The pushpin and
 the stapler are the only two things in the game that are driven through the
 paper rather than drawn on it, and neither fades in place: fading is what ink
-does, and these are not ink. A staple never comes off the page, so a long run
-leaves a trail of wire behind it that reads back afterwards as the places you
-were in trouble. A pin used to as well, and a page of a long run's pins read as
-clutter long before it read as a record — so once its hold is over a pin stands
+does, and these are not ink. Both used to stay for the rest of the run, and a
+long run's page of them read as clutter long before it read as a record of where
+you were in trouble. A staple now tears itself out when its hold ends (see the
+stapler); a pin, once its hold is over a pin stands
 a couple of seconds more and is then pulled back out: it lifts off the paper the
 way it fell onto it, run backwards, and breaks up on the way up. The couple of
 seconds is the clock its fusions' marks fade on (the row's `life`, 2s for a
@@ -9003,11 +9003,11 @@ a sky-blue shadow, and that is what you are watching anyway.
 
 Spent ones drop under the crowd, where the working ones are drawn over it: while
 a pin is holding something you need to see it through the blob standing on it,
-and once it is spent it is just paper. A spent staple never changes again, so it
-costs no update at all; a spent pin costs one clock until it is pulled. Only the
-ones on screen are drawn.
+and once it is spent it is just paper. A spent pin costs one clock until it is
+pulled, and only the ones on screen are drawn.
 
-There is no limit on how many staples a run accumulates. The cull is what buys that: a
+Nothing caps how many are on the page at once; the clock and the cull are what
+keep that cheap. The cull is what buys that: a
 20-minute run of nonstop stapling is about 2000 marks and costs 0.16ms a frame,
 five times that costs 0.35ms, and the walk over the list only starts to show up
 around 50,000 — hours of continuous tapping. Drawing them all instead of just
@@ -9094,11 +9094,10 @@ lands on precisely what the first one failed to kill" — a staple that killed o
 the way in tears out of an empty circle, and a fastener with nothing under it is
 worth nothing at all.
 
-What it costs is the page. A staple used to be the one drop that stayed, and a
-run holding this level staples a page it does not get to keep: the spent pile
-stops filling with wire, and the record of where the trouble was is pins from
-there on. The tool stops being something that leaves a page behind it and becomes
-something that happens twice and is gone.
+Every staple tears back out of the page at the end of its hold whether or not
+the level is bought; what the level adds is the bite on the way out. The tool
+stops being something that happens once and is gone and becomes something that
+happens twice and is gone.
 
 **Hold and drag to run a seam of them.** The finale, and the one level in the
 catalogue that changes a *gesture*: tapped not drawn, ten separate decisions, a
@@ -9114,11 +9113,12 @@ A seam is still a line your hand has to walk, though, and it still has two ends.
 Both of those are what the stapler's fusion is for: see **What the hem is**.
 
 Freeze and life are the same number, the way they are for the pin — `life` is
-only how long the thing is still worth updating, since a staple never comes out
-of the paper and never fades. (Its third level is where that stops being true,
-and it is the only thing in the line that argues with this paragraph: there the
-same two seconds are the clock on a fastening that gets *undone*.) A page worked
-over with the stapler stays covered in them — one deep, since one driven where there is already one leaves the
+how long the wire holds, and when it is up the staple is torn back out of the
+page in a fifth of a second, lifting off its own shadow, and leaves nothing
+behind. (Its third level makes that tear a second bite: the same two seconds are
+then the clock on a fastening that gets *undone*.) A page stapled at used to stay
+covered in them for good, and read as clutter long before it read as a record.
+While they are in they are one deep, since one driven where there is already one leaves the
 drawing alone (see the pushpin), so a seam raked twice over the same ground
 reads as a seam and not as a stripe. Each one goes in
 flat, or leaning five to ten degrees one way or the other. That is not
@@ -9341,7 +9341,8 @@ looks like anyway: the opening, and the dark edge of it lifting. It fades like
 every other mark, down a ramp that is the page closing — open paper, then a
 graphite crease with nothing left open to cast an edge, then gone. A cut left
 there for good would be a page with the ruling permanently missing out of it,
-and the pushpin and the staple are the only two things allowed to stay.
+and the pushpin and the staple come back out of the paper after a couple of seconds
+themselves.
 
 It is also the one tool no lesson hands out, and that is not the pen's and the
 gluestick's reason: it is the only tool on the strip you have to be *told* how to
