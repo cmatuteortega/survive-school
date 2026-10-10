@@ -358,6 +358,11 @@ return {
     ["NO COINS"] = "PAS DE PIECES",
     ["BUY"] = "ACHAT",
     ["SELL"] = "VENTE",
+    ["BLOCKED!"] = "BLOQUE!",
+    ["OUT OF TUNE!"] = "DESACCORDE!",
+    ["WANDERED OFF!"] = "ENVOLES!",
+    ["PROFIT!"] = "BENEFICE!",
+    ["LOSS!"] = "PERTE!",
     ["GONE OVER IN RED PEN"] = "CORRIGE EN ROUGE",
     ["%s   %d KILLS"] = "%s   %d VAINCUS",
 

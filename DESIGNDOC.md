@@ -6646,6 +6646,12 @@ at `FULL` (0.9) or more is `closing`, which after `SETTLE` (0.8s) is `won`
 (`LIGHTS ON!`, a `clock` pickup under the board). A wire not being drawn wears
 off after `WIRE_LIFE` (6s, not while closing) and is rubbed out by any enemy
 within its radius + 1 of its points (`C:trodden`, through `Game:eachWithin`).
+Each wire also keeps `joins`: every net in the order the pen reached it, at
+`C:attach`'s point (the middle of that net's wire end if reached within
+`TERMINAL + TOUCH` of it, else the nearest point of that net's copper, else the
+pen's point). Won, every wire with two joins or more is drawn as straight
+segments between them (`straight`) and the rest are dropped, so a solved board
+shows its wires ruled copper to copper and not as the scribble.
 `Worksheet._kinds` exposes `KINDS` for a headless test harness.
 
 **Join the dots** (`J`, ART): a picture out of `PICTURES` by `DOT_SETS[course]`,
@@ -6678,12 +6684,23 @@ pickups in rows of five under the box (`SOLD!`) and the sheet is `done`. The
 clock running out is `MARKET CLOSED!` and fades, the stake (if any) gone. The
 box labels are `I18n.t("BUY")` / `("SELL")`, and each box is sized to its label.
 
-The notices are `THREE IN A ROW`, `CORRECT!`, `WRONG ANSWER` and `BRAVO!`
-(Spanish only: the other four fall through to the Italian), and P.E.'s
-`DODGE!`, `SAFE!`, `HOP!`, `FINISH!` and `OUT!`, the circuit's `LIGHTS ON!`,
-`SHORT CIRCUIT!` and `WRONG BULB!`, ART's `WELL DRAWN!`, `WRONG DOT!`,
-`HOLD STILL!`, `MASTERPIECE!` and `SMUDGED!`, and the market's `MARKET OPEN!`,
-`MARKET CLOSED!`, `BOUGHT!`, `SOLD!` and `NO COINS`, through `Game:say`.
+**Every sheet's verdict is shouted over it**, through the module's `shout(game,
+text, x, y)`: `Multikill:shout` puts the word in the multikill's list, drawn in
+`Font.bold` red on ink with its three-beat pop, held `SHOUT_LIFE` (1.6s) and
+falling at 0.4 of a multikill's pull so it settles near where it rose. It is
+outside the multikill's window and latch: it is not a kill count. The text is
+`I18n.t` then `Font.shout`, which folds Ñ Ä Ö Ü Ã Õ Ç to the bare letter and
+drops anything else outside the ASCII bold face (Spanish's opening ¡), so one
+translation serves the notice line and the shout. Shouted: tic-tac-toe's
+`THREE IN A ROW` / `BLOCKED!`; the boards' `CORRECT!` / `WRONG ANSWER`; Simon's
+`BRAVO!` / `OUT OF TUNE!`; the gym's `SAFE!`, `FINISH!` / `OUT!` (with the
+whistle, through `call(game, text, x, y)`); the circuit's `LIGHTS ON!` /
+`SHORT CIRCUIT!`, `WRONG BULB!`; the dots' `WELL DRAWN!` / `WANDERED OFF!`; the
+portrait's `MASTERPIECE!` / `SMUDGED!`; the market's `PROFIT!`, `LOSS!` or
+`SOLD!` (even) / `MARKET CLOSED!`. What a sheet says while under way stays on
+the notice line (`Game:say`): `DODGE!`, `HOP!`, `WRONG DOT!`, `HOLD STILL!`,
+`MARKET OPEN!`, `BOUGHT!`, `NO COINS`. `BRAVO!` has a Spanish line only: the
+other four fall through to the Italian.
 
 **Typesetting** is `Quiz.layout(s)`, returning `{ ops, w, top, bottom }`, and
 `Quiz.print(lay, x, y)`:

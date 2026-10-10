@@ -673,6 +673,15 @@ local ES = {
     ["NO COINS"] = "SIN MONEDAS",
     ["BUY"] = "COMPRA",
     ["SELL"] = "VENTA",
+    -- And the verdicts no notice said before they were shouted over the sheet
+    -- (src/multikill.lua's `shout`, which drops the opening marks: the bold
+    -- face has none): tic-tac-toe lost, Simon lost, the dots lost, and a trade
+    -- closed up or down.
+    ["BLOCKED!"] = "¡BLOQUEADO!",
+    ["OUT OF TUNE!"] = "¡DESAFINADO!",
+    ["WANDERED OFF!"] = "¡SE ESCAPARON!",
+    ["PROFIT!"] = "¡GANANCIA!",
+    ["LOSS!"] = "¡PERDIDA!",
     -- And the enraged one (Spawner:fury), which is the other line here that names
     -- a monster rather than a moment -- and the one that has to name a *pen*. A
     -- red-pen correction over the top of your work is the same thing in a Spanish

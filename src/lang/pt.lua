@@ -354,6 +354,11 @@ return {
     ["NO COINS"] = "SEM MOEDAS",
     ["BUY"] = "COMPRA",
     ["SELL"] = "VENDA",
+    ["BLOCKED!"] = "BLOQUEADO!",
+    ["OUT OF TUNE!"] = "DESAFINADO!",
+    ["WANDERED OFF!"] = "FUGIRAM!",
+    ["PROFIT!"] = "LUCRO!",
+    ["LOSS!"] = "PREJUIZO!",
     ["GONE OVER IN RED PEN"] = "CORRIGIDO EM VERMELHO",
     ["%s   %d KILLS"] = "%s   %d ABATES",
 

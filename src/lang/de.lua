@@ -356,6 +356,11 @@ return {
     ["NO COINS"] = "KEINE MÜNZEN",
     ["BUY"] = "KAUF",
     ["SELL"] = "VERKAUF",
+    ["BLOCKED!"] = "BLOCKIERT!",
+    ["OUT OF TUNE!"] = "VERSTIMMT!",
+    ["WANDERED OFF!"] = "ENTWISCHT!",
+    ["PROFIT!"] = "GEWINN!",
+    ["LOSS!"] = "VERLUST!",
     ["GONE OVER IN RED PEN"] = "ROT ANGESTRICHEN",
     ["%s   %d KILLS"] = "%s   %d SIEGE",
 

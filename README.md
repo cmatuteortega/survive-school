@@ -8359,6 +8359,14 @@ drawing somewhere other than at the crowd for a few seconds. So nothing here
 takes longer than that. The 3x5 face also rules out anything small: no word
 searches, no crosswords. `WORKSHEETS.md` keeps the longer list of ideas.
 
+Every sheet says how it went where you are looking: the verdict -- CORRECT!,
+BLOCKED!, LIGHTS ON!, SMUDGED!, PROFIT! -- is thrown up over the sheet in the
+same bold red face as a multikill's word, rather than on the notice line at the
+foot of the screen, which keeps what a sheet says while it is still under way
+(DODGE!, HOLD STILL!, MARKET OPEN!). A verdict read at the foot of the screen
+is a verdict read late, and the multikill's face is already the page's voice
+for "that worked".
+
 None of them reads handwriting. All are things the game already asks of your hands:
 
 - **Tic-tac-toe** is a game in progress: red O's, black X's, and one cell that
@@ -8557,7 +8565,9 @@ battery, a bulb or two and bare printed wire with gaps in it, one bulb ringed in
 red. **Draw a wire across a gap** and the board is worked out the way a physics
 book would -- a current through each bulb, a diode that only lets it one way --
 and the ringed bulbs must come on fully with nothing else lit. Hold that for a
-moment while the bulb warms up and a **wall clock** drops under the board.
+moment while the bulb warms up and a **wall clock** drops under the board, and
+the wires that closed it stay, ruled straight from copper to copper the way a
+circuit diagram draws them rather than as the scribble that made them.
 
 What makes it a puzzle and not a scribble is that **all the printed copper is
 bare**. Your wire joins everything it touches on the way, so a line dragged

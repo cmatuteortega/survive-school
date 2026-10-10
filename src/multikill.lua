@@ -40,6 +40,10 @@
 -- near: a wall's ink coming off nine seconds after it was drawn (`pop`,
 -- src/stroke.lua) lands with nothing open at all and is silently not
 -- counted, which is correct.
+--
+-- The same word has one other use: a worksheet's verdict (`shout`), which is
+-- the page saying how the sheet you stopped for went, in the voice it already
+-- uses for "that worked". It has nothing to do with the window above.
 
 local Palette = require("src.palette")
 local Font = require("src.font")
@@ -164,11 +168,30 @@ function Multikill:noteKill(x, y, subjectKey)
     }
 end
 
+-- The same word thrown up for something other than a gesture: a worksheet
+-- won or lost (src/worksheet.lua). Outside the window and the one-a-gesture
+-- latch on purpose -- it is not a kill count, it is the page telling you how
+-- the sheet you stopped for went -- and held a little longer than a multikill,
+-- since it is a sentence to read rather than a cheer to glance at.
+local SHOUT_LIFE = 1.6
+
+function Multikill:shout(text, x, y)
+    self.list[#self.list + 1] = {
+        text = text,
+        x = x, y = y,
+        dy = -RISE * 0.7,
+        -- Lighter, so over its longer life it rises and settles back about
+        -- where it began rather than dropping off the sheet it is about.
+        fall = FALL * 0.4,
+        life = SHOUT_LIFE, born = SHOUT_LIFE,
+    }
+end
+
 function Multikill:update(dt)
     for i = #self.list, 1, -1 do
         local n = self.list[i]
         n.y = n.y + n.dy * dt
-        n.dy = n.dy + FALL * dt
+        n.dy = n.dy + (n.fall or FALL) * dt
         n.life = n.life - dt
         if n.life <= 0 then table.remove(self.list, i) end
     end
@@ -193,7 +216,7 @@ function Multikill:draw()
     local face = Font.bold
     for _, n in ipairs(self.list) do
         local scale, hollow = beat(n)
-        local text = I18n.t(n.text)
+        local text = Font.shout(I18n.t(n.text))
         local x = math.floor(n.x - face:width(text, scale) / 2)
         local y = math.floor(n.y) - face:tall(scale)
 

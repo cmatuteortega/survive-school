@@ -637,6 +637,33 @@ function Font.clean(text)
     return (table.concat(out):gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
+-- A line cut down to what the bold faces can shout: they are ASCII and are
+-- walked a byte at a time (Bold:draw), so a translation's marks are folded to
+-- the bare letter under them and anything else outside the face -- the opening
+-- marks of a Spanish shout -- is dropped rather than drawn as a hole. What a
+-- worksheet announces (src/multikill.lua's `shout`) is a line already written
+-- for the 3x5 face, which has those marks, and this is what lets one
+-- translation serve both. Allocates, so it is for a shout, not a frame's text.
+local BARE = {
+    ["\195\145"] = "N", ["\195\132"] = "A", ["\195\150"] = "O", ["\195\156"] = "U",
+    ["\195\131"] = "A", ["\195\149"] = "O", ["\195\135"] = "C",
+}
+
+function Font.shout(text)
+    local out, i, len = {}, 1, #text
+    while i <= len do
+        local w = glyphLen(text, i)
+        local ch = text:sub(i, i + w - 1)
+        if w == 1 then
+            out[#out + 1] = ch:upper()
+        elseif BARE[ch] then
+            out[#out + 1] = BARE[ch]
+        end
+        i = i + w
+    end
+    return table.concat(out)
+end
+
 function Font.load()
     order = sortedKeys(GLYPHS)
     atlas = bake(GLYPHS, GW, GH, order, quads)

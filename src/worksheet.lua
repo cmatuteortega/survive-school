@@ -91,6 +91,19 @@ local function award(game, kind, x, y)
     game.particles:burst(x, y, 10, colour)
 end
 
+-- How a sheet tells you it is won or lost: the word thrown up over the sheet
+-- in the multikill's bold face (src/multikill.lua), red on ink, where your
+-- eyes already are -- the notice line at the foot of the screen is for what a
+-- sheet says while it is under way, and a verdict read down there is a verdict
+-- read late. Guarded, for a page without the multikill (a test harness).
+local function shout(game, text, x, y)
+    if game.multikill then
+        game.multikill:shout(text, x, y)
+    else
+        game:say(text)
+    end
+end
+
 -- Coarser than the pickups' 260 and sparser: a worksheet is an event you turn
 -- for, and a page tiled in them would be a page of homework.
 local CELL = 520
@@ -234,6 +247,7 @@ function T:commit(i, game)
         self.cells[self.gap] = "o"
         self.blocked = self.gap
         self.state = "lost"
+        shout(game, "BLOCKED!", self.x, self.y - HALF - 2)
         Sfx.play("stamp")
     end
 end
@@ -268,7 +282,7 @@ function T:update(dt, game, pen)
         local cy = self.y + HALF + 8
         game.pickups[#game.pickups + 1] = Pickup.new("coin", self.x, cy)
         game.particles:burst(self.x, cy, 10, Palette.blush)
-        game:say("THREE IN A ROW")
+        shout(game, "THREE IN A ROW", self.x, self.y - HALF - 2)
         Sfx.play("accept")
     end
 end
@@ -455,12 +469,12 @@ function Q:update(dt, game)
             -- board: a step away, so taking it is a thing you do and the
             -- question it paid for is not hidden under it.
             self.row.right(game, self.answers[on].x, self.y - 2)
-            game:say("CORRECT!")
+            shout(game, "CORRECT!", self.x, self.y - BOARD_UP - self.bh / 2 - 2)
             Sfx.play("accept")
         else
             self.row.wrong(game)
             game.particles:burst(self.answers[on].x, self.answers[on].y, 10, Palette.red)
-            game:say("WRONG ANSWER")
+            shout(game, "WRONG ANSWER", self.x, self.y - BOARD_UP - self.bh / 2 - 2)
             Sfx.play("stamp")
         end
     end
@@ -748,7 +762,7 @@ function S:step(i, game)
             -- thing you do (the boards' reason).
             local p = self.pads[i]
             award(game, "heart", p.x, p.y - 18)
-            game:say("BRAVO!")
+            shout(game, "BRAVO!", p.x, p.y - 24)
             Sfx.play("accept")
         end
     else
@@ -759,6 +773,8 @@ function S:step(i, game)
         if self.tries <= 0 then
             self.state = "fading"
             self.t = 0
+            local p = self.pads[i]
+            shout(game, "OUT OF TUNE!", p.x, p.y - 12)
         end
     end
 end
@@ -981,8 +997,10 @@ end
 
 -- What a sheet that is under way says when it starts and when it is over, and
 -- what every one of those moments sounds like.
-local function call(game, text)
-    game:say(text)
+-- A start is the notice line's; an end, given where it happened, is shouted
+-- there like every sheet's verdict.
+local function call(game, text, x, y)
+    if x then shout(game, text, x, y) else game:say(text) end
     Sfx.play("whistle")
 end
 
@@ -1072,11 +1090,11 @@ function D:finish(game, won)
     if won then
         self.state = "won"
         award(game, "diamond", self.x, self.y)
-        call(game, "SAFE!")
+        call(game, "SAFE!", self.x, self.y0 - 2)
     else
         self.state = "fading"
         self.t = 0
-        call(game, "OUT!")
+        call(game, "OUT!", game.player.x, game.player.y - 14)
     end
 end
 
@@ -1240,11 +1258,11 @@ function H:finish(game, won)
         local c = self.path[#self.path]
         local hx, hy = c.x + self.days.w / 2, c.y + self.days.h / 2
         award(game, "heart", hx, hy)
-        call(game, "FINISH!")
+        call(game, "FINISH!", hx, hy - 10)
     else
         self.state = "fading"
         self.t = 0
-        call(game, "OUT!")
+        call(game, "OUT!", game.player.x, game.player.y - 14)
     end
 end
 
@@ -1498,11 +1516,20 @@ function C.new(x, y, courseKey)
     end
     for _, e in ipairs(b.ends) do
         local ex, ey = c:at(e[1], e[2])
-        c.ends[#c.ends + 1] = { x = ex, y = ey }
+        c.ends[#c.ends + 1] = { x = ex, y = ey, nets = {} }
     end
     local bx, by = c:at(0, 3)
     local nx, ny = c:at(0, 5)
     c.battery = { px = bx, py = by, nx = nx, ny = ny, x = (bx + nx) / 2, y = (by + ny) / 2 }
+    -- Which copper each wire end is the end of, so a solved wire can be ruled
+    -- to it (C:attach).
+    for _, e in ipairs(c.ends) do
+        for _, sg in ipairs(c.segs) do
+            if util.distToSegment(e.x, e.y, sg.ax, sg.ay, sg.bx, sg.by) <= TOUCH then
+                e.nets[sg.net] = true
+            end
+        end
+    end
 
     c.ring = {}
     if b.pick then
@@ -1660,7 +1687,7 @@ function C:judge(game)
         game.particles:burst(bt.x, bt.y, 14, Palette.red)
         game.particles:burst(bt.x, bt.y, 6, Palette.ink)
         sting(game)
-        game:say("SHORT CIRCUIT!")
+        shout(game, "SHORT CIRCUIT!", bt.x + (self.mx and -20 or 20), bt.y - 10)
         Sfx.play("stamp")
         return
     end
@@ -1674,7 +1701,7 @@ function C:judge(game)
                 self.state, self.t = "fading", 0
                 self.popped = i
                 game.particles:burst(p.x, p.y, 10, Palette.red)
-                game:say("WRONG BULB!")
+                shout(game, "WRONG BULB!", p.x, p.y - BULB_R - 6)
                 Sfx.play("stamp")
                 return
             end
@@ -1689,6 +1716,30 @@ function C:judge(game)
 end
 
 -- The pen's wire as it is drawn: points a pixel apart, and every net touched.
+-- Where on the board a wire that reached `net` at (px, py) is fastened: the
+-- middle of that net's wire end if it was reached there, else the nearest
+-- point of that net's copper (every printed wire is level or upright, so the
+-- nearest point is a clamp), else -- a part's body, the battery's -- the point
+-- itself. What the solved board rules its straight wires between.
+function C:attach(net, px, py)
+    for _, e in ipairs(self.ends) do
+        if e.nets[net] and util.len(px - e.x, py - e.y) <= TERMINAL + TOUCH then
+            return e.x, e.y
+        end
+    end
+    local best, bx, by = TOUCH + 1
+    for _, sg in ipairs(self.segs) do
+        if sg.net == net then
+            local qx = util.clamp(px, math.min(sg.ax, sg.bx), math.max(sg.ax, sg.bx))
+            local qy = util.clamp(py, math.min(sg.ay, sg.by), math.max(sg.ay, sg.by))
+            local d = util.len(px - qx, py - qy)
+            if d < best then best, bx, by = d, qx, qy end
+        end
+    end
+    if bx then return bx, by end
+    return px, py
+end
+
 function C:trace(px, py)
     local w = self.drawing
     local fx, fy = math.floor(px), math.floor(py)
@@ -1696,8 +1747,8 @@ function C:trace(px, py)
     if not last or last.x ~= fx or last.y ~= fy then
         w.pts[#w.pts + 1] = { x = fx, y = fy }
     end
-    local before = 0
-    for _ in pairs(w.nets) do before = before + 1 end
+    local had = {}
+    for n in pairs(w.nets) do had[n] = true end
     self:netsAt(px, py, w.nets)
     for _, e in ipairs(self.ends) do
         if util.len(px - e.x, py - e.y) <= TERMINAL then
@@ -1706,9 +1757,20 @@ function C:trace(px, py)
             self:netsAt(e.x, e.y, w.nets)
         end
     end
-    local after = 0
-    for _ in pairs(w.nets) do after = after + 1 end
-    return after ~= before
+    -- Each net newly reached, in the order the pen reached it, and where.
+    local changed = false
+    for n in pairs(w.nets) do
+        if not had[n] then
+            changed = true
+            local ax, ay = self:attach(n, px, py)
+            ax, ay = math.floor(ax), math.floor(ay)
+            local j = w.joins[#w.joins]
+            if not j or j.x ~= ax or j.y ~= ay then
+                w.joins[#w.joins + 1] = { x = ax, y = ay }
+            end
+        end
+    end
+    return changed
 end
 
 -- A wire is rubbed out by anything walking over it.
@@ -1743,7 +1805,7 @@ function C:update(dt, game, pen)
         and math.abs(pen.y - self.y) <= self.hh
     if onBoard then
         if not self.drawing then
-            self.drawing = { pts = {}, nets = {}, age = 0 }
+            self.drawing = { pts = {}, nets = {}, joins = {}, age = 0 }
             self.wires[#self.wires + 1] = self.drawing
             self.penX, self.penY = nil, nil
         end
@@ -1785,12 +1847,20 @@ function C:update(dt, game, pen)
         self.t = self.t + dt
         if self.t >= SETTLE then
             self.state = "won"
-            self.wires, self.drawing = {}, nil
+            -- What closed it stays on the board, and stays as a wire would be
+            -- drawn on a circuit diagram: ruled straight from copper to
+            -- copper rather than as the scribble that made it. A wire that
+            -- joined nothing to anything goes.
+            self.drawing = nil
+            for k = #self.wires, 1, -1 do
+                local w = self.wires[k]
+                if #w.joins >= 2 then w.straight = w.joins else table.remove(self.wires, k) end
+            end
             -- The wall clock under the board, where taking it is a step away.
             local cx, cy = self.x, self.y + self.hh + 6
             game.pickups[#game.pickups + 1] = Pickup.new("clock", cx, cy)
             game.particles:burst(cx, cy, 10, Palette.slate)
-            game:say("LIGHTS ON!")
+            shout(game, "LIGHTS ON!", self.x, self.y - self.hh)
             Sfx.play("accept")
         end
     end
@@ -1935,12 +2005,23 @@ function C:draw()
         if p.kind == "bulb" then self:drawBulb(i, p) else self:drawDiode(p) end
     end
 
-    -- The wires you drew, in the pen's blue, going pale as they wear off.
+    -- The wires you drew, in the pen's blue, going pale as they wear off --
+    -- and once the board is solved, ruled straight between what they joined.
     for _, w in ipairs(self.wires) do
         local left = WIRE_LIFE - w.age
-        colour(self.state == "closing" and Palette.blue
+        colour((self.state == "closing" or self.state == "won") and Palette.blue
             or left > 1.5 and Palette.blue or Palette.sky)
-        for _, q in ipairs(w.pts) do dot(q.x, q.y) end
+        if w.straight then
+            for k = 1, #w.straight - 1 do
+                local a, b = w.straight[k], w.straight[k + 1]
+                local n = math.max(math.abs(b.x - a.x), math.abs(b.y - a.y), 1)
+                for t = 0, n do
+                    dot(a.x + (b.x - a.x) * t / n + 0.5, a.y + (b.y - a.y) * t / n + 0.5)
+                end
+            end
+        else
+            for _, q in ipairs(w.pts) do dot(q.x, q.y) end
+        end
     end
     fade = 0
 end
@@ -2057,7 +2138,7 @@ function J:touch(i, game)
             local p = Pickup.new("star", self.cx, self.cy)
             game.pickups[#game.pickups + 1] = p
             game.particles:burst(self.cx, self.cy, 10, Palette.red)
-            game:say("WELL DRAWN!")
+            shout(game, "WELL DRAWN!", self.cx, self.y - 4 * DOT_U - 4)
             Sfx.play("accept")
         end
         return
@@ -2071,6 +2152,7 @@ function J:touch(i, game)
     if self.tries <= 0 then
         self.state = "fading"
         self.t = 0
+        shout(game, "WANDERED OFF!", self.cx, self.y - 4 * DOT_U - 4)
     end
     return true
 end
@@ -2214,11 +2296,12 @@ function P:finish(game, won)
         self.state = "won"
         game.pickups[#game.pickups + 1] = Pickup.new("alarm", self.mx, self.my + 10)
         game.particles:burst(self.ex + self.cw / 2, self.ey + self.ch / 2, 10, Palette.red)
-        game:say("MASTERPIECE!")
+        shout(game, "MASTERPIECE!", self.ex + self.cw / 2, self.ey - 6)
         Sfx.play("accept")
     else
         self.state, self.t = "fading", 0
-        game:say("SMUDGED!")
+        self.leftAt = self.left
+        shout(game, "SMUDGED!", self.ex + self.cw / 2, self.ey - 6)
         Sfx.play("eraser")
     end
 end
@@ -2288,9 +2371,13 @@ function P:draw()
     -- the one being drawn in graphite as the pencil's point.
     local rows, s = self.rows, self.scale
     local w, h = #rows[1], #rows
+    -- All of it once won; as far as the clock has got while sitting; and a
+    -- smudged one fades from where it had got to, not from finished.
     local done = w * h
     if self.state == "open" then
         done = self.live and math.floor((1 - self.left / self.time) * w * h) or 0
+    elseif self.state == "fading" then
+        done = math.floor((1 - (self.leftAt or 0) / self.time) * w * h)
     end
     local n = 0
     for r = 1, h do
@@ -2430,7 +2517,7 @@ end
 function K:close(game, text)
     self.live = false
     self.state, self.t = "fading", 0
-    game:say(text)
+    shout(game, text, self.x, self.ct - 4)
     Sfx.play("stamp")
 end
 
@@ -2488,7 +2575,10 @@ function K:update(dt, game)
             game.pickups[#game.pickups + 1] = Pickup.new("coin", cx, cy)
         end
         game.particles:burst(self.sell.x, self.sell.y, 10, Palette.blush)
-        game:say("SOLD!")
+        -- The verdict is the trade's, said in a word: more back than went in,
+        -- less, or exactly what you paid.
+        shout(game, back > self.held and "PROFIT!" or back < self.held and "LOSS!"
+            or "SOLD!", self.x, self.ct - 4)
         Sfx.play(back > self.held and "accept" or "stamp")
     end
     self.wasBuy, self.wasSell = inBuy, inSell

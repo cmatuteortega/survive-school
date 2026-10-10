@@ -352,6 +352,11 @@ return {
     ["NO COINS"] = "NIENTE MONETE",
     ["BUY"] = "COMPRA",
     ["SELL"] = "VENDITA",
+    ["BLOCKED!"] = "BLOCCATO!",
+    ["OUT OF TUNE!"] = "STONATO!",
+    ["WANDERED OFF!"] = "SCAPPATI!",
+    ["PROFIT!"] = "GUADAGNO!",
+    ["LOSS!"] = "PERDITA!",
     ["GONE OVER IN RED PEN"] = "CORRETTO IN ROSSO",
     ["%s   %d KILLS"] = "%s   %d UCCISI",
 
