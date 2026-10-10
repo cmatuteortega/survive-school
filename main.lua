@@ -112,6 +112,10 @@ function love.load()
         Input.usingTouch = true
     else
         setWindowIcon()
+        -- The cursor is drawn into the canvas instead (Game:drawPointer): the
+        -- system's arrow is the one thing on screen at the wrong scale and in
+        -- colours off the palette.
+        love.mouse.setVisible(false)
     end
 
     fitToWindow()
@@ -167,6 +171,7 @@ function love.draw()
     love.graphics.setCanvas(canvas)
     love.graphics.clear(Palette.paper)
     Game:draw()
+    Game:drawPointer()
     love.graphics.setCanvas()
 
     -- Darkest ink under the canvas: a stale frame showing through a rounding

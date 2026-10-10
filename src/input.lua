@@ -264,6 +264,15 @@ function Input.releaseAll()
     Input.pointerDown = false
 end
 
+-- Where the mouse is, in canvas pixels, held or not: the pointer above only
+-- follows a pressed button, and the cursor drawn in its place
+-- (Game:drawPointer) has to follow a hovering one too. Nil on a touch screen,
+-- or while the mouse is outside the window, where there is no pointer to draw.
+function Input.hover()
+    if Input.usingTouch or not love.window.hasMouseFocus() then return nil end
+    return toCanvas(love.mouse.getPosition())
+end
+
 --- love callbacks ------------------------------------------------------------
 
 function Input.mousepressed(x, y, button)

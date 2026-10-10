@@ -5164,6 +5164,57 @@ local function byDepth(a, b)
     return a.y < b.y
 end
 
+-- The mouse cursor, drawn into the canvas over everything, so it is whole game
+-- pixels at the page's own scale like the rest of the screen. While a run is
+-- being played it is the tool the selector has picked -- the thing that will
+-- touch the page when the button goes down -- and everywhere else, the cards
+-- over a run included, it is the pencil: a menu is something you tick, and
+-- nothing a menu does is any tool's.
+--
+-- The icon's point goes on the mouse rather than its middle (`pointerTip`).
+local tips = {}
+
+-- Where an icon touches the page: the bottom row of its drawing, if that row is
+-- a point -- one or two pixels, the pencil's tip, the pin's, the compass's leg
+-- -- and its leftmost pixel, since the tools lying at 45 degrees lie with the
+-- point down and to the left. An icon that ends in a flat edge (the ruler, the
+-- stapler) has no point, and is held by its middle. Read off the art rather
+-- than written down per icon, so a new icon is pointed the day it is drawn.
+local function pointerTip(name)
+    local tip = tips[name]
+    if tip then return tip end
+
+    local sprite = Sprites.icons[name]
+    tip = { x = sprite.ox, y = sprite.oy }
+    local rows = sprite.rows
+    for y = #(rows or {}), 1, -1 do
+        local row = rows[y]
+        local first = row:find("[^.]")
+        if first then
+            local _, count = row:gsub("[^.]", "")
+            if count <= 2 then tip = { x = first - 1, y = y - 1 } end
+            break
+        end
+    end
+    tips[name] = tip
+    return tip
+end
+
+function Game:drawPointer()
+    local mx, my = Input.hover()
+    if not mx then return end
+
+    local icon = "pencil"
+    if self.state == "playing" and self.loadout then
+        local tool = self.loadout:tool(self.tool)
+        if tool and Sprites.icons[tool.icon] then icon = tool.icon end
+    end
+
+    local sprite, tip = Sprites.icons[icon], pointerTip(icon)
+    Hud.drawIcon(icon, math.floor(mx) - tip.x + sprite.ox,
+        math.floor(my) - tip.y + sprite.oy)
+end
+
 function Game:draw()
     if self.state == "intro" then
         Intro:draw(self)
