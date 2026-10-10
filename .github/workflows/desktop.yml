@@ -4,7 +4,7 @@
 # downloads one thing and runs it with no LÖVE installed. Same triggers as the
 # Android build: commits that only touch docs or the art/ drawing boards don't
 # build. Nothing is patched or compiled: each job is a download, a zip and a
-# copy, which is why it runs in a couple of minutes where the APK takes most of
+# copy (and an icon), which is why it runs in a couple of minutes where the APK takes most of
 # an hour.
 #
 # Outputs (workflow artifacts):
@@ -17,6 +17,11 @@
 #   - "Survive School (love)"     the bare game.love, for anyone with LÖVE 11.x.
 #   - tags v*: all four attached to the GitHub Release (the Android workflow
 #     attaches the APK to the same one).
+#
+# Icon: the cool S (Sprites.COOLS), ink on white, baked by desktop/icon.py
+# into the .exe (rcedit, on a Windows runner), the .app's icon.icns and the
+# AppImage's icon, so it follows the art like the Android launcher icon. The
+# window's own title-bar / taskbar icon is set at run time in main.lua.
 #
 # Signing: none. Windows SmartScreen asks once ("More info" → "Run anyway").
 # The .app is re-signed ad hoc, because putting game.love inside LÖVE's signed
@@ -60,29 +65,44 @@ env:
 
 jobs:
   windows:
-    runs-on: ubuntu-latest
+    # A Windows runner for rcedit, which writes the icon into the .exe.
+    runs-on: windows-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
+      - name: Icons
+        run: python desktop/icon.py "$RUNNER_TEMP/icons"
+
       # Nothing reads art/ at run time (art/bake.lua bakes it into src/sprites.lua).
       - name: Package game.love
-        run: zip -9 -r "$RUNNER_TEMP/game.love" main.lua conf.lua src -x '*.DS_Store'
+        run: 7z a -tzip -mx=9 "$RUNNER_TEMP/game.love" main.lua conf.lua src '-xr!.DS_Store' > /dev/null
 
       - name: Fuse with LÖVE for Windows
         run: |
-          cd "$RUNNER_TEMP"
+          cd "$(cygpath -u "$RUNNER_TEMP")"
           curl -sSLf -o love.zip "https://github.com/love2d/love/releases/download/$LOVE_VERSION/love-$LOVE_VERSION-win64.zip"
-          unzip -q love.zip
+          curl -sSLf -o rcedit.exe https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe
+          7z x love.zip > /dev/null
           src="love-$LOVE_VERSION-win64"
-          out="$RUNNER_TEMP/$APP_NAME"
+          # The icon and names go into love.exe first: rcedit rewrites the
+          # executable and would drop anything appended to it.
+          ./rcedit.exe "$src/love.exe" --set-icon icons/icon.ico \
+            --set-version-string ProductName "$APP_NAME" \
+            --set-version-string FileDescription "$APP_NAME" \
+            --set-version-string OriginalFilename "$APP_NAME.exe" \
+            --set-version-string InternalName "$APP_NAME"
+          out="$APP_NAME"
           mkdir -p "$out"
           # love.exe with the game appended is a fused game: it runs what it
           # carries instead of asking for one.
           cat "$src/love.exe" game.love > "$out/$APP_NAME.exe"
           cp "$src"/*.dll "$src/license.txt" "$out/"
           ls -l "$out"
-          echo "OUT=$out" >> "$GITHUB_ENV"
+          echo "OUT=$RUNNER_TEMP\\$out" >> "$GITHUB_ENV"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -102,6 +122,9 @@ jobs:
       - name: Package game.love
         run: zip -9 -r "$RUNNER_TEMP/game.love" main.lua conf.lua src -x '*.DS_Store'
 
+      - name: Icons
+        run: python3 desktop/icon.py "$RUNNER_TEMP/icons"
+
       - name: Build the app
         run: |
           version=$(git describe --tags --always | sed 's/^v//')
@@ -113,6 +136,13 @@ jobs:
           # A .love inside Resources is what LÖVE's Mac build runs fused.
           cp game.love "$app/Contents/Resources/"
           plist="$app/Contents/Info.plist"
+          # The cool S in place of LÖVE's heart. Assets.car carries the heart
+          # too, and current macOS reads it first by CFBundleIconName, so both
+          # go and the .icns is all that is left to read.
+          cp icons/icon.icns "$app/Contents/Resources/"
+          rm -f "$app/Contents/Resources/Assets.car" "$app/Contents/Resources/OS X AppIcon.icns"
+          plutil -replace CFBundleIconFile -string icon "$plist"
+          plutil -remove CFBundleIconName "$plist" || true
           plutil -replace CFBundleName -string "$APP_NAME" "$plist"
           plutil -replace CFBundleIdentifier -string "$MAC_BUNDLE_ID" "$plist"
           plutil -replace CFBundleShortVersionString -string "$version" "$plist"
@@ -143,6 +173,9 @@ jobs:
       - name: Package game.love
         run: zip -9 -r "$RUNNER_TEMP/game.love" main.lua conf.lua src -x '*.DS_Store'
 
+      - name: Icons
+        run: python3 desktop/icon.py "$RUNNER_TEMP/icons"
+
       - name: Build the AppImage
         env:
           # Runners have no FUSE; AppImages unpack themselves and run instead.
@@ -159,7 +192,12 @@ jobs:
           # commented out for exactly this.
           sed -i 's|^#FUSE_PATH="$APPDIR/my_game.love"|FUSE_PATH="$APPDIR/game.love"|' squashfs-root/AppRun
           grep -q '^FUSE_PATH="$APPDIR/game.love"' squashfs-root/AppRun || { echo "::error::AppRun FUSE_PATH line not found"; exit 1; }
-          sed -i "s/^Name=.*/Name=$APP_NAME/; s/^Comment=.*/Comment=A notebook survivors game/; s/^Categories=.*/Categories=Game;/; /^NoDisplay=/d; /^MimeType=/d" squashfs-root/love.desktop
+          sed -i "s/^Name=.*/Name=$APP_NAME/; s/^Comment=.*/Comment=A notebook survivors game/; s/^Categories=.*/Categories=Game;/; s/^Icon=.*/Icon=survive-school/; /^NoDisplay=/d; /^MimeType=/d" squashfs-root/love.desktop
+          # The cool S as the AppImage's icon (what file managers and
+          # AppImageLauncher show), in place of LÖVE's.
+          rm -f squashfs-root/love.svg squashfs-root/.DirIcon
+          cp icons/icon.png squashfs-root/survive-school.png
+          ln -s survive-school.png squashfs-root/.DirIcon
           out="$RUNNER_TEMP/$APP_NAME.AppImage"
           ./appimagetool squashfs-root "$out"
           ls -l "$out"

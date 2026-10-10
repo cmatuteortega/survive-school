@@ -23,6 +23,29 @@ local function isMobile()
     return os == "Android" or os == "iOS"
 end
 
+-- The title bar and taskbar show the cool S, ink on paper, as the launcher
+-- icons do (android/icon.py, desktop/icon.py). Set at run time because LÖVE's
+-- own window icon is otherwise its heart (or nothing, on Linux) whatever the
+-- packaged .exe or AppImage carries; built from the sprite, not a file, so it
+-- follows the art. A whole scale for the reason everything here is one.
+local function setWindowIcon()
+    local Sprites = require("src.sprites")
+    local rows, size, scale = Sprites.COOLS, 64, 3
+    local ox = math.floor((size - #rows[1] * scale) / 2)
+    local oy = math.floor((size - #rows * scale) / 2)
+    local paper, ink = Palette.paper, Palette.ink
+    local icon = love.image.newImageData(size, size)
+    icon:mapPixel(function(x, y)
+        local gx, gy = math.floor((x - ox) / scale), math.floor((y - oy) / scale)
+        local row = rows[gy + 1]
+        if x >= ox and y >= oy and row and gx < #row and row:sub(gx + 1, gx + 1) ~= "." then
+            return ink[1], ink[2], ink[3], 1
+        end
+        return paper[1], paper[2], paper[3], 1
+    end)
+    love.window.setIcon(icon)
+end
+
 -- Notches, punch-holes and gesture bars. Reported in window units, wanted in
 -- canvas pixels, as a margin off each edge for the HUD to keep clear of.
 local function safeInsets()
@@ -87,6 +110,8 @@ function love.load()
         love.window.setFullscreen(true, "desktop")
         -- No mouse or keyboard on a phone: show the stick from the first frame.
         Input.usingTouch = true
+    else
+        setWindowIcon()
     end
 
     fitToWindow()

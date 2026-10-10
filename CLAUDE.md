@@ -78,7 +78,8 @@ The desktop builds come from `.github/workflows/desktop.yml` (same triggers,
 plus a Release job on `v*` tags): `game.love` fused onto the stock LÖVE 11.5
 runtimes -- a Windows folder with `Survive School.exe`, a macOS `Survive
 School.app` (re-signed ad hoc, not notarised), a Linux `Survive School.AppImage`,
-and the bare `game.love`. Nothing is compiled or patched, and fused builds keep
+and the bare `game.love`, each with the cool S baked in as its icon by
+`desktop/icon.py`. Nothing is compiled or patched, and fused builds keep
 their saves under `notebook-survivors/` directly rather than inside `LOVE/`.
 
 The Android APK is built by `.github/workflows/android.yml` (any push that is not
