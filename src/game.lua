@@ -5680,7 +5680,10 @@ function Game:keypressed(key)
         return
     end
 
-    if key == "p" then
+    -- Esc as well as P: it is the key a computer player reaches for to stop a
+    -- game, and it used to close the program outright, run and all. Leaving is
+    -- the window's close button or the title's NO now.
+    if key == "p" or key == "escape" then
         self:togglePause()
         return
     end

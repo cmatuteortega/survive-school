@@ -63,7 +63,7 @@ Requires [LÖVE 11.x](https://love2d.org).
 | Buy any of the four | click the box on its row in the canteen, or `1` / `2` / `3` / `4` | tap the box on its row |
 | Answer the game over card | scribble in a box, or `1` / `2` | scribble in a box |
 
-`F11` or `alt+enter` toggles fullscreen, `Esc` quits.
+`F11` or `alt+enter` toggles fullscreen, `Esc` (or `P`) pauses a run.
 
 The stick is drawn in a bottom corner, but it is not pinned there: press
 anywhere in that corner and the ring jumps under your thumb, so you never have
@@ -336,7 +336,7 @@ wins: if the run is still in memory you get it whole, and the bookmark is only w
 is left once the program has gone.
 
 Three things worth knowing about when it is written. It is written when you close
-the program — `Esc`, the window's close button, or `NO` on the title screen — and
+the program — the window's close button, or `NO` on the title screen — and
 also the moment you quit from the pause card, since that is the point you have said
 you are done for now, and whenever the window loses focus or is hidden. And it is
 written every five seconds of play, because the endings that matter most on a phone

@@ -184,9 +184,7 @@ function love.draw()
 end
 
 function love.keypressed(key)
-    if key == "escape" then
-        love.event.quit()
-    elseif key == "f11" or (key == "return" and love.keyboard.isDown("lalt", "ralt")) then
+    if key == "f11" or (key == "return" and love.keyboard.isDown("lalt", "ralt")) then
         love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
         fitToWindow()
     else
@@ -198,7 +196,7 @@ function love.wheelmoved(_, dy)
     Game:wheelmoved(dy)
 end
 
--- Esc, the close button and the title screen's NO all land here: the last
+-- The close button and the title screen's NO both land here: the last
 -- chance to leave a bookmark (src/bookmark.lua). A force quit or crash misses
 -- it, and gets the one Game:keepBookmark wrote a few seconds before instead.
 function love.quit()

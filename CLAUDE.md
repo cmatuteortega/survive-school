@@ -107,7 +107,7 @@ desktop both are inert; with the dev row showing a mock store and a stand-in ad
 answer instead.
 
 The game opens fullscreen on a computer too (`conf.lua`); `F11` / `alt+enter`
-toggles back to a window, `Esc` quits. Save state lives in
+toggles back to a window, `Esc` (or `P`) pauses a run. Save state lives in
 `~/Library/Application Support/LOVE/notebook-survivors/`: `options.txt`,
 `bookmark.txt`, `records.txt`, `tally.txt`, `course.txt`, `iap.txt` (what the
 shop has sold -- `full_game`, `everything` -- kept by love-iap), and one `.txt` per drawn design (`hero-*.txt`,

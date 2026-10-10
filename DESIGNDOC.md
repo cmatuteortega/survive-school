@@ -29,7 +29,7 @@ zip -r game.love main.lua conf.lua src
 
 `au.love` in the root is a previously built archive, not a source file.
 
-`F11`/`alt+enter` toggles fullscreen, `Esc` quits. Everything the player has drawn
+`F11`/`alt+enter` toggles fullscreen, `Esc` (or `P`) pauses a run. Everything the player has drawn
 lives in `~/Library/Application Support/LOVE/notebook-survivors/` —
 `hero-shootman.txt`, `hero-swordsman.txt`, `hero-starman.txt` and
 `hero-skateman.txt` (one hero per character, built off `Characters.list`),
