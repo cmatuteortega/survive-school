@@ -2705,6 +2705,14 @@ and activity by `dlsym`, load their class through the activity's class loader
 answer into a tab-separated line on a queue that Lua drains once a frame through
 LuaJIT's FFI. Nothing calls back into Lua from another thread.
 
+**On iOS** the store is love-iap's StoreKit 2 bridge (`LoveIap.swift`, at the
+same pin, compiled into the app by `ios/configure.rb` in `.github/workflows/ios.yml`)
+and `ffi.C` finds its six functions in the executable, which is why that script
+sets `-export_dynamic` and non-global stripping and the workflow checks the six
+symbols are still there. The products need creating in App Store Connect under the
+same ids. There is no ads bridge on iOS: `Ads` connects only on Android, so both
+offers stay as inert there as on a desktop.
+
 **`src/store.lua`** is the game's words about the store. Two ids:
 `full_game` (`Store.FULL`) and `everything` (`Store.EVERYTHING`), the second only
 `Store.canBuy` while `Store.full()`. love-iap keeps what is owned in `iap.txt` and

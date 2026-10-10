@@ -98,6 +98,21 @@ consent). The AdMob app id and rewarded unit come from the `ADMOB_APP_ID` /
 desktop both are inert; with the dev row showing a mock store and a stand-in ad
 answer instead.
 
+The iOS app is built by `.github/workflows/ios.yml` on a macOS runner, triggered
+like the APK. It builds LÖVE's own Xcode project (`platform/xcode` in the love
+tree) at `LOVE_REF` -- the love commit the pinned love-android carries, so both
+phones run one engine; bump the two together -- with love-apple-dependencies
+pinned beside it. `ios/configure.rb` (the `xcodeproj` gem) puts `game.love` in
+the bundle, compiles love-iap's `LoveIap.swift` at `LOVE_IAP_REF` (the same pin
+as Android's) with the symbol settings `ffi.C` needs, and sets the identity;
+`ios/appicon.py` bakes the 1024px icon out of `Sprites.COOLS`. Every run gives
+`Survive School (unsigned).ipa`, for sideloading tools that re-sign it; with
+`IOS_CERTIFICATE_P12_BASE64` / `IOS_CERTIFICATE_PASSWORD` /
+`IOS_PROVISIONING_PROFILE_BASE64` set it also exports an App Store-signed
+`.ipa`, and with the `APP_STORE_CONNECT_KEY_ID` / `_ISSUER_ID` / `_KEY_P8`
+secrets uploads it to TestFlight. There is no ads bridge on iOS (`src/ads.lua`
+stays inert), and the SCREEN row only reaches Android: iOS turns freely.
+
 `F11` / `alt+enter` toggles fullscreen, `Esc` quits. Save state lives in
 `~/Library/Application Support/LOVE/notebook-survivors/`: `options.txt`,
 `bookmark.txt`, `records.txt`, `tally.txt`, `course.txt`, `iap.txt` (what the
