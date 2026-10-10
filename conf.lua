@@ -13,6 +13,12 @@ function love.conf(t)
     t.window.minwidth = 320
     t.window.minheight = 180
     t.window.resizable = true
+    -- Opens over the whole screen on a computer as on a phone; F11 / alt+enter
+    -- (main.lua) drops back to the 1280x720 window above. "desktop" keeps the
+    -- screen's own resolution: a mode change would make the zoom pick (main.lua)
+    -- off a size the monitor is merely pretending to be.
+    t.window.fullscreen = true
+    t.window.fullscreentype = "desktop"
     t.window.vsync = 1
 
     -- No DPI scaling: a game pixel must land on a whole number of screen pixels
