@@ -10540,7 +10540,7 @@ them, so an enemy asks what is nearby with a single table lookup. A soak with
 
 ## Not built yet
 
-No audio. What you are carrying is only visible while the run is held — during
+What you are carrying is only visible while the run is held — during
 play the name of an upgrade flashes along the bottom of the page as it is taken
 and that is the last you see of it. There are twelve passive weapons (the shot, the sword, the stars,
 the m birds, the rocket, the sun, the cool S, the laser beam, the bomb, the
