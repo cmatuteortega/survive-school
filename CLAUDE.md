@@ -103,8 +103,11 @@ The same workflow adds the two monetisation bridges to love-android's
 and rewarded ads through `android/ads.sh` (`android/love-ads`: AdMob + UMP
 consent). The AdMob app id and rewarded unit come from the `ADMOB_APP_ID` /
 `ADMOB_REWARDED_ID` repo variables and default to Google's test ones. On a
-desktop both are inert; with the dev row showing a mock store and a stand-in ad
-answer instead.
+desktop both are inert, and there is no shop at all: the game is sold whole, so
+`Store.sold` is false off Android/iOS, `Store.full()` is always true, and the
+padlock, the full game card and the canteen's `SHOP` section are gone (the ladder
+and quests still apply; no ads, so no offers). With the dev row showing a
+stand-in ad answers on a desktop.
 
 The game opens fullscreen on a computer too (`conf.lua`); `F11` / `alt+enter`
 toggles back to a window, `Esc` (or `P`) pauses a run. Save state lives in

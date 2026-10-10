@@ -3306,6 +3306,17 @@ The price is the store's own string in the player's own currency, printed as it
 came; nothing is written down here, and until the store has answered the section
 says `THE SHOP IS CLOSED` and has no boxes.
 
+### On a computer, the game is the purchase
+
+All of the above is the phone's. On a computer the game is bought whole, up front,
+from whoever sells the download, so there is nothing in it left to sell: no
+padlock, no full game card, no `SHOP` section in the canteen, and the book is the
+full game from its first launch. It is the full game and not the whole book — the
+ladder still opens the pages and the quests still open the lines, because those
+are the game, and the whole book only ever sold a way round them. There are no ads
+on a computer either, and so no offers: the two boxes are an ad's, and handing
+them out free would make the computer's run a different, easier one.
+
 ## Levelling up
 
 Every level holds the run and lays three cards on the page, each with a

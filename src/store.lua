@@ -25,10 +25,19 @@
 -- Prices are read from the store and never written down. Until it has answered
 -- a row has no price and no box, and the counter says the shop is closed.
 --
--- With the dev row showing (src/dev.lua) and no real store, love-iap's own mock
--- answers instead -- every product at a dollar, every purchase landing at once --
--- so the counter can be played through on a desktop. What the mock "sells" is
--- kept in the same file; delete `iap.txt` to hand it back.
+-- **Only a phone has a shop** (`Store.sold`). On a computer the game is bought
+-- whole, before it is ever opened, from whoever sells the download: there is
+-- nothing left to buy inside it, so the store is never started, the book is the
+-- full game from its first launch, and the padlock, the full game's card and the
+-- canteen's SHOP section are not on the page at all. It is the full game and not
+-- THE WHOLE BOOK -- the ladder and the quests still open the pages and the lines,
+-- because they are the game and not a paywall; the whole book only ever sold a
+-- way round them. No ads either: there is no SDK off a phone (src/ads.lua), and
+-- `noAds` stays false so the two offers are not handed out free in their place.
+--
+-- On a phone with the dev row showing (src/dev.lua) and no real store, love-iap's
+-- own mock answers instead -- every product at a dollar, every purchase landing at
+-- once. What the mock "sells" is kept in `iap.txt`; delete it to hand it back.
 
 local iap = require("src.iap")
 local Font = require("src.font")
@@ -42,15 +51,22 @@ Store.FULL = "full_game"
 Store.EVERYTHING = "everything"
 Store.ids = { Store.FULL, Store.EVERYTHING }
 
+-- Whether this build sells anything: a phone's. Read once at load, before any
+-- screen lays itself out round the shop (src/canteen.lua's sections).
+local system = love.system.getOS()
+Store.sold = system == "Android" or system == "iOS"
+
 -- Ids with a purchase sheet open or a payment still clearing: no box on the row
 -- until the store has said how it ended.
 Store.pending = {}
 
 function Store.start()
+    Store.pending = {}
+    if not Store.sold then return end
+
     local products = {}
     for _, id in ipairs(Store.ids) do products[#products + 1] = { id = id } end
 
-    Store.pending = {}
     iap.init({
         products = products,
         mock = Dev.showing(),
@@ -65,12 +81,12 @@ function Store.start()
 end
 
 function Store.update()
-    iap.update()
+    if Store.sold then iap.update() end
 end
 
 -- Whether a real (or mock) store is answering.
 function Store.available()
-    return iap.available()
+    return Store.sold and iap.available()
 end
 
 -- Owned outright. THE WHOLE BOOK is only ever sold on top of the full game, but
@@ -84,9 +100,9 @@ end
 
 -- Whether the book is the full game: every page on the ladder and every quest
 -- live (src/collection.lua asks). Without it the book is SCIENCE and the lines
--- nobody has to earn.
+-- nobody has to earn. Always, off a phone: the download was the purchase.
 function Store.full()
-    return Store.owns(Store.FULL)
+    return not Store.sold or Store.owns(Store.FULL)
 end
 
 -- Whether THE WHOLE BOOK is bought: every page and line open outright

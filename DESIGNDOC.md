@@ -2779,10 +2779,20 @@ The card's `YES` calls `Store.buy(Store.FULL)` and waits on `Store.pending`; it
 answers `"back"` once bought, on `NO`, or on a payment left pending, and the
 timetable is re-entered so its tabs re-ask which pages open.
 
-**Off a phone** there is no bridge and both modules are inert; with the dev row
-showing (`Dev.showing()` at load) love-iap's mock store and a stand-in ad answer
-instead, so every card can be played through on a desktop. Delete `iap.txt` to
-hand back what the mock sold.
+**Off a phone nothing is sold** (README **On a computer, the game is the
+purchase**). `Store.sold` is read off `love.system.getOS()` at load -- Android or
+iOS -- and while it is false `Store.start` never starts love-iap,
+`Store.available()` is false, and `Store.full()` is true, so the padlock
+(`Menu:shopAt`, `Timetable`'s `lay.shopX`, the `B` key) is never drawn or pressed
+and the full game card is unreachable. `SHOP` is only appended to the canteen's
+`SECTIONS` when `Store.sold` -- `SHOP` is nil otherwise, and `build`, `stock` and
+`eachRow` skip it -- so the book is four sections and `book:fit` measures four.
+`Store.everything()` and `Store.noAds()` stay false: the ladder and the quests
+still open the pages and lines, and with no ad SDK `Ads.ready()` is false, so
+neither offer is made. With the dev row showing (`Dev.showing()` at load) a
+stand-in ad still answers on a desktop, so the two offers can be played through;
+love-iap's mock store answers only on a phone with no real store. Delete
+`iap.txt` to hand back what the mock sold.
 
 ### The book
 

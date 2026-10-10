@@ -210,16 +210,22 @@ local SECTIONS = {
 -- function because it is about whichever of the two products the first row is
 -- selling: what the full game is for a book without it, and what THE WHOLE BOOK
 -- leaves alone for one with it.
-SECTIONS[#SECTIONS + 1] = {
-    name = "SHOP",
-    note = function()
-        if Store.full() then return "HOMEWORK STILL HAS TO BE EARNED" end
-        return "SCIENCE IS ALWAYS FREE"
-    end,
-    keys = "CLICK A BOX OR PRESS 1 2 3",
-    store = true,
-}
-local SHOP = #SECTIONS
+--
+-- Only where something is sold (`Store.sold`): on a computer the game was bought
+-- whole before it was opened, and the book is four sections and nil `SHOP`.
+local SHOP
+if Store.sold then
+    SECTIONS[#SECTIONS + 1] = {
+        name = "SHOP",
+        note = function()
+            if Store.full() then return "HOMEWORK STILL HAS TO BE EARNED" end
+            return "SCIENCE IS ALWAYS FREE"
+        end,
+        keys = "CLICK A BOX OR PRESS 1 2 3",
+        store = true,
+    }
+    SHOP = #SECTIONS
+end
 
 -- What the figure says on a money row that is not a price.
 local OWNED, WAIT = "OWNED", "..."
@@ -329,6 +335,7 @@ local function build()
 
     -- The shop: whichever product is next (`stock`), and the two rows that sell
     -- nothing.
+    if not SHOP then return end
     local book = counters[SHOP]
     book[1] = FULL_ROW
     book[2] = {
@@ -347,6 +354,7 @@ end
 -- a frame or a minute after the box is filled -- and the row should turn into the
 -- next thing as it does.
 local function stock()
+    if not SHOP then return end
     counters[SHOP][1] = Store.full() and BOOK_ROW or FULL_ROW
 end
 
@@ -441,7 +449,7 @@ local function eachRow(fn)
     end
     -- And whichever of the shop's two products is not on the counter this frame,
     -- so the columns are cut to both and nothing moves when one becomes the other.
-    fn(counters[SHOP][1] == FULL_ROW and BOOK_ROW or FULL_ROW)
+    if SHOP then fn(counters[SHOP][1] == FULL_ROW and BOOK_ROW or FULL_ROW) end
 end
 
 local function nameWidth()

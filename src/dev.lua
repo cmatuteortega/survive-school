@@ -12,10 +12,11 @@
 -- on it pays `Dev.GIFT` into the purse, which is the dev way to the courses and
 -- the counter: they are bought, so the unlocks row cannot open them.
 --
--- It also decides, once at load, whether the shop and the ads get desktop
--- stand-ins (src/store.lua, src/ads.lua): love-iap's mock store and an ad that
--- pays after a second, so the shop and both ad offers can be played through
--- without a phone. On a phone the real bridges win regardless.
+-- It also decides, once at load, whether the ads get a desktop stand-in
+-- (src/ads.lua): an ad that pays after a second, so both ad offers can be played
+-- through without a phone. A computer has no shop at all (`Store.sold`), so
+-- love-iap's mock store (src/store.lua) only stands in on a phone with no real
+-- store. Where the real bridges are there, they win regardless.
 --
 -- TAKING IT OUT AT LAUNCH is three calls, two guards and a file: the last row
 -- of `ROWS` in src/settings.lua, the `Dev.opened` calls in `Collection.has`,
