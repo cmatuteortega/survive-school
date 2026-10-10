@@ -6843,6 +6843,17 @@ cards can be filled in `Palette.paper` and read as opaque paper lying on the
 page. The damage numbers go down there too, between the pass and the HUD — over
 the page, under the readouts.
 
+Last of all, over every screen and not only the run, the mouse cursor
+(`Game:drawPointer`, called from `love.draw` straight after `Game:draw`). The
+system cursor is hidden on a computer (`main.lua`) and an icon drawn into the
+canvas in its place, so it is whole game pixels in the palette like everything
+else: the selected tool's icon while the run is `playing`, and the pencil on
+every other screen, the cards over a run included. The icon's point sits on the
+mouse -- its bottom row if that row is one or two pixels, leftmost of them, read
+off the art -- and an icon ending in a flat edge is held by its middle. Nothing
+is drawn on a touch screen or while the mouse is outside the window
+(`Input.hover`).
+
 ### The coaching hand
 
 `src/coach.lua` is the tutorial: a pointing hand (`Sprites.hand`, origin on the
