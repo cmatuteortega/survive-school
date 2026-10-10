@@ -65,9 +65,39 @@ local Sprites = require("src.sprites")
 local Font = require("src.font")
 local I18n = require("src.i18n")
 local Purse = require("src.purse")
+local Tally = require("src.tally")
 local util = require("src.util")
 
 local Worksheet = {}
+
+-- What each sheet is called, which is only ever read off the page: the
+-- homework's WORKSHEETS sections name a row by it (src/challenges.lua). `same`
+-- marks the one sheet dealt the same at every class -- tic-tac-toe takes no
+-- course -- whose homework is therefore one rung rather than one per class.
+-- A new kind in `KINDS` owes a row here.
+Worksheet.titles = {
+    tictactoe = { name = "TIC-TAC-TOE", same = true },
+    quiz = { name = "POP QUIZ" },
+    sequence = { name = "SEQUENCE" },
+    science = { name = "LAB" },
+    finance = { name = "TILL" },
+    music = { name = "STAVE" },
+    simon = { name = "SIMON SAYS" },
+    dodgeball = { name = "DODGEBALL" },
+    hopscotch = { name = "HOPSCOTCH" },
+    circuit = { name = "CIRCUIT" },
+    dots = { name = "JOIN THE DOTS" },
+    portrait = { name = "PORTRAIT" },
+    stocks = { name = "MARKET" },
+    hangman = { name = "HANGMAN" },
+}
+
+-- A sheet won, told to the book at the class the run is sat at. One call at
+-- each sheet's moment of winning -- and only winning: the market's is a trade
+-- closed for more than went in, not any trade closed.
+local function solved(game, kind)
+    Tally.solve(kind, game.course and game.course.index or 1)
+end
 
 -- What a sheet that pays a heart or a diamond actually pays, and the colour it
 -- bursts in. Below a master's it is what the sheet says; at the top two rungs
@@ -285,6 +315,7 @@ function T:update(dt, game, pen)
     self.t = (self.t or 0) + dt
     if self.state == "crossing" and self.t >= CROSS_TIME + LINE_TIME then
         self.state = "won"
+        solved(game, self.kind)
         -- Under the grid rather than on it, so the line it paid for stays read.
         local cy = self.y + HALF + 8
         game.pickups[#game.pickups + 1] = Pickup.new("coin", self.x, cy)
@@ -472,6 +503,7 @@ function Q:update(dt, game)
         self.state = "done"
         self.chosen = on
         if on == self.quiz.right then
+            solved(game, self.kind)
             -- Just above the answer you are standing on, between it and the
             -- board: a step away, so taking it is a thing you do and the
             -- question it paid for is not hidden under it.
@@ -765,6 +797,7 @@ function S:step(i, game)
         self.pos = self.pos + 1
         if self.pos > #self.tune then
             self.state = "won"
+            solved(game, self.kind)
             -- A step above the last note rather than on it, so taking it is a
             -- thing you do (the boards' reason).
             local p = self.pads[i]
@@ -1096,6 +1129,7 @@ function D:finish(game, won)
     self:land(true)
     if won then
         self.state = "won"
+        solved(game, self.kind)
         award(game, "diamond", self.x, self.y)
         call(game, "SAFE!", self.x, self.y0 - 2, Palette.blue)
     else
@@ -1262,6 +1296,7 @@ function H:finish(game, won)
     self.live = false
     if won then
         self.state = "won"
+        solved(game, self.kind)
         local c = self.path[#self.path]
         local hx, hy = c.x + self.days.w / 2, c.y + self.days.h / 2
         award(game, "heart", hx, hy)
@@ -1854,6 +1889,7 @@ function C:update(dt, game, pen)
         self.t = self.t + dt
         if self.t >= SETTLE then
             self.state = "won"
+            solved(game, self.kind)
             -- What closed it stays on the board, and stays as a wire would be
             -- drawn on a circuit diagram: ruled straight from copper to
             -- copper rather than as the scribble that made it. A wire that
@@ -2141,6 +2177,7 @@ function J:touch(i, game)
         Sfx.play("note", 2 ^ ((RISE[i] or RISE[#RISE]) / 12))
         if i == #self.dots then
             self.state = "won"
+            solved(game, self.kind)
             self.t = 0
             local p = Pickup.new("star", self.cx, self.cy)
             game.pickups[#game.pickups + 1] = p
@@ -2301,6 +2338,7 @@ function P:finish(game, won)
     self.live = false
     if won then
         self.state = "won"
+        solved(game, self.kind)
         game.pickups[#game.pickups + 1] = Pickup.new("alarm", self.mx, self.my + 10)
         game.particles:burst(self.ex + self.cw / 2, self.ey + self.ch / 2, 10, Palette.red)
         shout(game, "MASTERPIECE!", self.ex + self.cw / 2, self.ey - 6, Palette.blue)
@@ -2582,6 +2620,7 @@ function K:update(dt, game)
             game.pickups[#game.pickups + 1] = Pickup.new("coin", cx, cy)
         end
         game.particles:burst(self.sell.x, self.sell.y, 10, Palette.blush)
+        if back > self.held then solved(game, self.kind) end
         -- The verdict is the trade's, said in a word: more back than went in,
         -- less, or exactly what you paid.
         shout(game, back > self.held and "PROFIT!" or back < self.held and "LOSS!"
@@ -2770,6 +2809,7 @@ function G:give(i, game)
         end
         if done then
             self.state = "won"
+            solved(game, self.kind)
             -- Over the word it paid for, between it and the letters, like the
             -- boards' prize: a step away rather than under your feet.
             award(game, "diamond", self.x + WORD_AT, self.y - 6)

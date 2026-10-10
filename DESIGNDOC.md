@@ -997,6 +997,18 @@ test (`Game.bossTest`) writes neither. Beaten implies met (`Tally.metOf`), and
 kept before these existed -- with one beating. On disk they are `beat <kind> <n>`
 or `met <kind>` lines beside the rest.
 
+**And the worksheets, the same way.** `Tally.sheets[kind]` is the hardest class
+each kind of worksheet has been solved at -- a course's `index`, 1 for a high
+school -- for the homework's `WORKSHEETS` and `MORE WORKSHEETS`. A maximum, not a
+count: the homework asks whether a sheet has been done and at what class, and one
+solved at a doctorate is every easier one solved too (`Records.beatAt`'s "at that
+class or harder"). `Tally.solve(kind, index)` is called by `solved` in
+`src/worksheet.lua` at each sheet's moment of winning -- and only winning: the
+market's is a trade closed at a `PROFIT!`, not any trade -- and writes only when
+it raises the mark. On disk, `sheet <kind> <index>`. The kind is not checked
+against `KINDS` on load (this file does not load the worksheets); a kind nothing
+prints is a line nobody asks about.
+
 One row rather than two, and the seven pixels that buys are worth knowing about
 before anything else is added to `statRows`: every row of that block is
 `Font.height` plus `LINE_GAP`, and seven pixels is the kind of margin
@@ -3466,7 +3478,7 @@ ladder pointing at the same doors, and the first thing it would cost is the
 library's promise that a shelf is the whole of what there is to open. A challenge
 pays in the only currency a checklist has: the box goes red.
 
-**Six sections, one to a spread** (see **The book**). On two leaves the ten rows
+**Eight sections, one to a spread** (see **The book**). On two leaves the ten rows
 are split down the crease, five and five -- down the middle rather than filled to
 the foot of the verso and spilled, because five and five reads as a spread and
 nine and one reads as a page that ran out -- and a finger drag turns to the next
@@ -3495,7 +3507,7 @@ is how many numbers are in `want`. `Challenges.tier` is the first unmet rung,
 rung's figure at its widest, which is what the column is cut to, so clearing a
 rung never moves the list.
 
-**Six sections, one to a spread**, turned by dragging the page or left/right on the
+**Eight sections, one to a spread**, turned by dragging the page or left/right on the
 keyboard (`Homework:step`), with the section's name as the page's heading in place
 of `HOMEWORK`. The list is going to keep growing
 and a page is a page: ten rows a section fits the shortest window this game is
@@ -3531,9 +3543,22 @@ handed with seven to spare, forty in a column would not.
   off `fuses` rather than `needs`. Named by the tool alone because the section
   under the arrows already says EVOLUTIONS, which is also what keeps the name
   column narrow enough for a phone held upright.
+- **WORKSHEETS** and **MORE WORKSHEETS** -- one row per kind of sheet any
+  lesson's `worksheets` mix prints, named off `Worksheet.titles`: tic-tac-toe
+  first and once, then each lesson's own in `Subjects.list` order (the mix's
+  keys sorted, since a mix is a map). Tic-tac-toe is dealt the same at every
+  class (`same` on its title), so it asks for one solved, `want = { 1 }`. Every
+  other sheet climbs the course, so its row has a rung per row of `Course.list`
+  -- `want` is the courses' indices and `have` is `Tally.sheetOf`, the hardest
+  class solved at -- asking `SOLVE ONE AT <class>` for the lowest still
+  standing. One row with four pips rather than TERM's four rows, because here a
+  harder class *is* more of the same thing: one sheet, dealt harder. Its figure
+  is pips fallen over pips (`how = "rungs"` in `Challenges.meter`), since `2/3`
+  would read as a sum. Two sections for the bosses' reason, cut at a lesson's
+  edge so a lesson's pair never straddles the turn of the page.
 
-**Everything on all six is derived.** A new monster, boss, lesson, course, tool,
-fusion or drawing board brings its own row and there is no list to keep in step --
+**Everything on all eight is derived.** A new monster, boss, lesson, course, tool,
+fusion, drawing board or worksheet brings its own row and there is no list to keep in step --
 which matters more here than anywhere, since homework out of step with the game
 would be the book asking for something that does not exist. Adding one that is
 *not* derived is a row in the section it belongs to: a `name`, a `want` ladder, a
@@ -3542,7 +3567,7 @@ string. Every `name` is a phrase too, including the one-word ones, so `I18n.say`
 draws them all and the screen knows one way of writing a name.
 
 **Measured across every section, never across the one showing.** `columns()`
-walks all six for the widest name, the widest demand at *any* rung, the widest
+walks all eight for the widest name, the widest demand at *any* rung, the widest
 meter and the longest ladder, so no column moves as the page is turned or as a
 row is finished. That is the library's rule and it matters here for the library's
 reason: this is a screen you read by running your eye down it. In English the
@@ -7005,7 +7030,9 @@ and are all the same 11x11 glyph.
 - **Worksheet:** a constructor in `KINDS` in `src/worksheet.lua` and an object
   with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`, and
   its weight in a subject's `worksheets` row (rows without one get
-  `DEFAULT_MIX`). A sheet with a clock of its own gives `live` and `clock()`
+  `DEFAULT_MIX`), a row in `Worksheet.titles` (its name on the homework, and
+  `same` if it does not get harder up the course), and a `solved(game,
+  self.kind)` where it is won, which is what the homework counts. A sheet with a clock of its own gives `live` and `clock()`
   and the HUD shows it. A board answered by standing is a row in `BOARDS` (`book`,
   `right`, `wrong`); its `KINDS` constructor comes for free. A new question is
   a generator in its rung's list in `src/quiz.lua`, a new book is four rung lists

@@ -40,8 +40,8 @@
 -- the four collections), and it needs no special case anywhere: what makes a row
 -- long is how many numbers are in `want`.
 --
--- **Six sections, one to a spread the page is dragged across**, because this list
--- is going to keep growing and a page is a page:
+-- **Eight sections, one to a spread the page is dragged across**, because this
+-- list is going to keep growing and a page is a page:
 --
 -- - **BESTIARY** -- one body count per row of `Enemy.types`. Per monster and not
 --   one number over all of them, because a single ALL KILLS challenge is one
@@ -60,10 +60,13 @@
 --   library's own word for them, on the library's own terms: forty-five fusions
 --   as forty-five rows would be four pages of homework, and ten rows of nine is
 --   the same fact said in the order you actually fill it.
+-- - **WORKSHEETS** and **MORE WORKSHEETS** -- one row per kind of sheet a lesson
+--   prints, asking for it solved, and for every sheet that gets harder up the
+--   course, solved at each class: one pip per rung of the ladder.
 --
--- **Everything on all six is derived.** A new monster, a new boss, a new
--- lesson, a new rung of the course ladder, a new tool, a new fusion and a new
--- drawing board each bring their own row and there is no list here to keep in step -- which is the
+-- **Everything on all eight is derived.** A new monster, a new boss, a new
+-- lesson, a new rung of the course ladder, a new tool, a new fusion, a new
+-- drawing board and a new worksheet each bring their own row and there is no list here to keep in step -- which is the
 -- rule the whole extending section of CLAUDE.md is written along, and it matters
 -- more here than anywhere: a homework list that fell out of step with the game
 -- would be the book asking for something that does not exist.
@@ -81,6 +84,7 @@ local Collection = require("src.collection")
 local Records = require("src.records")
 local Tally = require("src.tally")
 local Design = require("src.design")
+local Worksheet = require("src.worksheet")
 
 local Challenges = {}
 
@@ -372,9 +376,87 @@ local function evolutions()
     return rows
 end
 
+--- the worksheets -------------------------------------------------------------
+
+-- One row per kind of sheet the book prints, asking for it solved -- and for a
+-- sheet that climbs the course (all but tic-tac-toe: every other constructor
+-- takes the course's key and deals a harder one up the ladder), solved at each
+-- class. Those are one row with a rung per class rather than four rows, which
+-- is TERM's choice made the other way round and for TERM's own reason: there
+-- the four courses ask for the whole timetable four times over, here they ask
+-- for one sheet a little harder each time, and a harder pop quiz *is* more of
+-- the same thing.
+--
+-- So `have` is the hardest class it has been solved at (`Tally.sheetOf`) and
+-- the rungs are the courses' own indices: a sheet solved at a doctorate fills
+-- every pip on its row, as `Records.beatAt` counts a lesson beaten at a harder
+-- class as beaten at every easier one. Its figure is how many pips have fallen
+-- rather than `have` against the rung, since 2/3 would read as a sum when it
+-- is two classes of four (`how = "rungs"`).
+local function sheetRow(kind)
+    local title = Worksheet.titles[kind]
+    local row = {
+        name = phrase(title and title.name or kind),
+        have = function() return Tally.sheetOf(kind) end,
+    }
+    if title and title.same then
+        row.want = { 1 }
+        row.ask = function() return phrase("SOLVE ONE") end
+    else
+        row.want, row.how = {}, "rungs"
+        for i, course in ipairs(Course.list) do row.want[i] = course.index end
+        row.ask = function(want)
+            return phrase("SOLVE ONE AT %s", Course.list[want].name)
+        end
+    end
+    return row
+end
+
+-- Read off the lessons' own `worksheets` mixes (src/subjects.lua), in the
+-- timetable's order, so a new sheet arrives on its homework the day a lesson
+-- prints it and a sheet nothing prints is not asked for. Tic-tac-toe, which
+-- every page prints, comes first and once; each lesson's own follow in the
+-- mix's key order, since a mix is a map and the page must not move.
+--
+-- And cut into two sections at a lesson's edge, for the bosses' reason:
+-- fourteen three-line rows overrun a landscape spread and seven do not. The
+-- first takes whole lessons until the next would carry it past half, so a
+-- lesson's pair is never torn across the turn of a page.
+local function worksheets()
+    local lessons, seen, total = {}, {}, 0
+    local function take(kind, into)
+        if seen[kind] then return end
+        seen[kind] = true
+        into[#into + 1] = sheetRow(kind)
+        total = total + 1
+    end
+
+    local first = {}
+    take("tictactoe", first)
+    lessons[1] = first
+    for _, subject in ipairs(Subjects.list) do
+        local kinds = {}
+        for kind in pairs(subject.worksheets or {}) do kinds[#kinds + 1] = kind end
+        table.sort(kinds)
+        local rows = {}
+        for _, kind in ipairs(kinds) do take(kind, rows) end
+        if #rows > 0 then lessons[#lessons + 1] = rows end
+    end
+
+    local halves, half = { {}, {} }, math.ceil(total / 2)
+    local into = halves[1]
+    for _, rows in ipairs(lessons) do
+        if into == halves[1] and #into > 0 and #into + #rows > half then
+            into = halves[2]
+        end
+        for _, row in ipairs(rows) do into[#into + 1] = row end
+    end
+    return halves[1], halves[2]
+end
+
 --- the list -------------------------------------------------------------------
 
--- Built once, on the first ask: every one of the four is read off a catalogue that
+-- Built once, on the first ask: every one of them is read off a catalogue that
 -- is the same table for every run the program plays. What is *not* built once is
 -- how far along any of them is -- that is a question about the registers, and the
 -- registers change between one opening of this page and the next.
@@ -382,6 +464,7 @@ local sections
 
 function Challenges.sections()
     if not sections then
+        local sheets, moreSheets = worksheets()
         sections = {
             { name = "BESTIARY", rows = bestiary() },
             { name = "TERM", rows = term() },
@@ -389,6 +472,8 @@ function Challenges.sections()
             { name = "ENCORES", rows = bosses(true) },
             { name = "COLLECTION", rows = collection() },
             { name = "EVOLUTIONS", rows = evolutions() },
+            { name = "WORKSHEETS", rows = sheets },
+            { name = "MORE WORKSHEETS", rows = moreSheets },
         }
     end
     return sections
@@ -478,6 +563,9 @@ end
 function Challenges.meter(row)
     local _, want = Challenges.tier(row)
     if not want then return nil end
+    if row.how == "rungs" then
+        return meterText(Challenges.done(row), #row.want)
+    end
     return meterText(Challenges.have(row), want, row.how)
 end
 

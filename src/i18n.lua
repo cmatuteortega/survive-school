@@ -350,6 +350,26 @@ local ES = {
     ["OPEN EVERY ONE"] = "ABRELOS TODOS",
     ["DRAW EVERY ONE YOURSELF"] = "DIBUJALOS TODOS TU",
 
+    -- the worksheets on the homework page
+    ["WORKSHEETS"] = "FICHAS",
+    ["MORE WORKSHEETS"] = "MAS FICHAS",
+    ["SOLVE ONE"] = "RESUELVE UNA",
+    ["SOLVE ONE AT %s"] = "RESUELVE UNA EN %s",
+    ["TIC-TAC-TOE"] = "TRES EN RAYA",
+    ["POP QUIZ"] = "EXAMEN SORPRESA",
+    ["SEQUENCE"] = "SERIE",
+    ["LAB"] = "LABORATORIO",
+    ["TILL"] = "CAJA",
+    ["STAVE"] = "PENTAGRAMA",
+    ["SIMON SAYS"] = "SIMON DICE",
+    ["DODGEBALL"] = "BALON PRISIONERO",
+    ["HOPSCOTCH"] = "RAYUELA",
+    ["CIRCUIT"] = "CIRCUITO",
+    ["JOIN THE DOTS"] = "UNE LOS PUNTOS",
+    ["PORTRAIT"] = "RETRATO",
+    ["MARKET"] = "BOLSA",
+    ["HANGMAN"] = "AHORCADO",
+
     --- the canteen, and the three things it sells ----------------------------
 
     -- What the purse is short of rather than what the page is: there is a figure

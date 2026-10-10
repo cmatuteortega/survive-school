@@ -144,6 +144,26 @@ return {
     ["OPEN EVERY ONE"] = "ÖFFNE ALLE",
     ["DRAW EVERY ONE YOURSELF"] = "ZEICHNE ALLE SELBST",
 
+    -- the worksheets on the homework page
+    ["WORKSHEETS"] = "BLÄTTER",
+    ["MORE WORKSHEETS"] = "MEHR BLÄTTER",
+    ["SOLVE ONE"] = "LÖSE EINES",
+    ["SOLVE ONE AT %s"] = "LÖSE EINES (%s)",
+    ["TIC-TAC-TOE"] = "TIC-TAC-TOE",
+    ["POP QUIZ"] = "KURZTEST",
+    ["SEQUENCE"] = "ZAHLENFOLGE",
+    ["LAB"] = "LABOR",
+    ["TILL"] = "KASSE",
+    ["STAVE"] = "NOTENLINIEN",
+    ["SIMON SAYS"] = "SIMON SAGT",
+    ["DODGEBALL"] = "VÖLKERBALL",
+    ["HOPSCOTCH"] = "HÜPFKÄSTCHEN",
+    ["CIRCUIT"] = "STROMKREIS",
+    ["JOIN THE DOTS"] = "PUNKTEBILD",
+    ["PORTRAIT"] = "PORTRÄT",
+    ["MARKET"] = "BÖRSE",
+    ["HANGMAN"] = "GALGENMÄNNCHEN",
+
     --- the canteen, and the three things it sells ----------------------------
 
     ["NOTHING TO BUY YET"] = "NOCH NICHTS ZU KAUFEN",

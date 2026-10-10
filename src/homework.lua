@@ -19,7 +19,7 @@
 -- however long the ladder, because three rows saying BLOB with different numbers
 -- on them is a list you cannot run your eye down.
 --
--- **And six sections, one to a spread** (src/spread.lua), for the reason the
+-- **And eight sections, one to a spread** (src/spread.lua), for the reason the
 -- canteen has its own: this list is going to keep growing and a page is
 -- a page. Ten rows a section is comfortable on the shortest window this game is
 -- ever handed; forty in a column would not be. Where the window is wide enough

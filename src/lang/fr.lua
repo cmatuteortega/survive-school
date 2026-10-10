@@ -147,6 +147,26 @@ return {
     ["OPEN EVERY ONE"] = "OUVRE-LES TOUS",
     ["DRAW EVERY ONE YOURSELF"] = "DESSINE-LES TOUS TOI-MEME",
 
+    -- the worksheets on the homework page
+    ["WORKSHEETS"] = "FICHES",
+    ["MORE WORKSHEETS"] = "AUTRES FICHES",
+    ["SOLVE ONE"] = "RESOUS-EN UNE",
+    ["SOLVE ONE AT %s"] = "RESOUS-EN UNE (%s)",
+    ["TIC-TAC-TOE"] = "MORPION",
+    ["POP QUIZ"] = "INTERRO",
+    ["SEQUENCE"] = "SUITE",
+    ["LAB"] = "LABO",
+    ["TILL"] = "CAISSE",
+    ["STAVE"] = "PORTEE",
+    ["SIMON SAYS"] = "JACQUES A DIT",
+    ["DODGEBALL"] = "BALLE AU CAMP",
+    ["HOPSCOTCH"] = "MARELLE",
+    ["CIRCUIT"] = "CIRCUIT",
+    ["JOIN THE DOTS"] = "RELIE LES POINTS",
+    ["PORTRAIT"] = "PORTRAIT",
+    ["MARKET"] = "BOURSE",
+    ["HANGMAN"] = "PENDU",
+
     --- the canteen, and the three things it sells ----------------------------
 
     ["NOTHING TO BUY YET"] = "RIEN A ACHETER",

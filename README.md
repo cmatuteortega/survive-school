@@ -2027,7 +2027,7 @@ then says the same *sentence* — go and kill a great many of these — instead 
 same number, and fifty thousand of the slowest thing in the game is not a demand
 anybody would ever have written on purpose.
 
-**Six sections, one to a spread** (see **Turning the page**), because this list is
+**Eight sections, one to a spread** (see **Turning the page**), because this list is
 going to keep growing and a page is a page. On two leaves the ten rows are split
 down the crease, five and five — down the middle rather than filled to the foot of
 the left page and spilled, because five and five reads as a spread and nine and one
@@ -2056,6 +2056,19 @@ sections rather than one because fourteen rows do not fit down a spread and seve
 do, and the split is the one the game already makes: the encores are only sent at a
 master's or harder, so the second page is the one a book that has never sat one
 leaves empty.
+
+`WORKSHEETS` and `MORE WORKSHEETS` are one row per kind of sheet the lessons
+print, asking for it solved. Tic-tac-toe is the same game at every class, so it
+asks once. Every other sheet is dealt harder up the course — a longer tune, a
+smaller pit, a question out of a harder book — so its row has a pip per class and
+asks for one solved at each, the lowest still standing first. One row of four
+pips rather than four rows, which is the course rows in `TERM` decided the other
+way round, and for the reason that makes them separate: beating the whole
+timetable at a doctorate is not more of beating it at high school, but a
+doctorate's pop quiz *is* more of a high school's. A sheet solved at a harder
+class counts for every easier one, the way a lesson beaten does; and the market
+counts only a trade closed at a profit, since a sheet that can be lost by
+finishing it is only solved by winning it.
 
 Every one of those is *derived*. A new monster brings its own row and prices its
 own three rungs; so does a new boss, a new lesson, a new course, a new tool, a new fusion and a

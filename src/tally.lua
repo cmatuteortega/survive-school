@@ -17,8 +17,9 @@
 -- best page can only ever ask you to have a better one.
 --
 -- **Three things are counted and they are the three a run finishes holding** (and
--- a fourth that is not banked at all -- which bosses the book has met and beaten,
--- see `Tally.met`):
+-- two that are not banked at all -- which bosses the book has met and beaten,
+-- see `Tally.met`, and the hardest class each worksheet has been solved at, see
+-- `Tally.sheets`):
 --
 -- - `kills[kind]` -- one body count per row of `Enemy.types`, because a homework
 --   list that asked for fifty thousand of *anything* would be one challenge with
@@ -81,6 +82,17 @@ Tally.time = 0
 Tally.met = {}
 Tally.beat = {}
 
+-- And the worksheets: for each kind (src/worksheet.lua's `KINDS`), the hardest
+-- class the book has solved one at -- a course's `index`, 1 for a high school.
+-- A maximum rather than a count, the register's kind of number in this file of
+-- sums, because what the homework asks of a sheet is that it has been done and
+-- at what class (src/challenges.lua), and a doctorate's sheet solved is every
+-- easier one solved too: `Records.beatAt`'s "at that class or harder". Written
+-- the moment a sheet is won, like a boss going down, for the same reason --
+-- one sheet, one verdict, one door -- and a sheet won on a run walked out of
+-- has still been won.
+Tally.sheets = {}
+
 -- Bumped whenever any of the above changes, for `Records.stamp`'s reason exactly:
 -- the homework page asks this file the same question once per row per frame, and
 -- the answers are worth holding on to between the times nothing happened.
@@ -99,6 +111,20 @@ end
 
 function Tally.metOf(kind)
     return Tally.met[kind] == true or Tally.beatOf(kind) > 0
+end
+
+function Tally.sheetOf(kind)
+    return Tally.sheets[kind] or 0
+end
+
+-- A worksheet won (Worksheet.solved), at the course the run is sat at. Written
+-- only when it raises the mark, since solving the same sheet at the same class
+-- again is not news.
+function Tally.solve(kind, index)
+    if index <= Tally.sheetOf(kind) then return end
+    Tally.sheets[kind] = index
+    Tally.stamp = Tally.stamp + 1
+    Tally.save()
 end
 
 -- A boss walking on (Spawner:sendBoss). Written only the first time, since the
@@ -140,6 +166,13 @@ function Tally.save()
         elseif Tally.met[kind] then
             lines[#lines + 1] = ("met %s"):format(kind)
         end
+    end
+    -- Sorted for the reason the kinds above are.
+    local sheets = {}
+    for kind in pairs(Tally.sheets) do sheets[#sheets + 1] = kind end
+    table.sort(sheets)
+    for _, kind in ipairs(sheets) do
+        lines[#lines + 1] = ("sheet %s %d"):format(kind, Tally.sheets[kind])
     end
     lines[#lines + 1] = ("bosses %d"):format(Tally.bosses)
     lines[#lines + 1] = ("time %.1f"):format(Tally.time)
@@ -193,6 +226,7 @@ function Tally.load()
     Tally.kills = {}
     Tally.met = {}
     Tally.beat = {}
+    Tally.sheets = {}
     Tally.bosses = 0
     Tally.time = 0
     Tally.stamp = Tally.stamp + 1
@@ -204,6 +238,9 @@ function Tally.load()
         local kind, n = line:match("^kill%s+(%S+)%s+(%d+)$")
         local beaten, times = line:match("^beat%s+(%S+)%s+(%d+)$")
         local met = line:match("^met%s+(%S+)$")
+        -- Not checked against the worksheets' own list, which this file does not
+        -- load: a kind nothing prints any more is a line nobody asks about.
+        local sheet, at = line:match("^sheet%s+(%w+)%s+(%d+)$")
         if kind and Enemy.types[kind] then
             Tally.kills[kind] = tonumber(n)
         elseif beaten and Enemy.types[beaten] then
@@ -211,6 +248,8 @@ function Tally.load()
             Tally.met[beaten] = true
         elseif met and Enemy.types[met] then
             Tally.met[met] = true
+        elseif sheet then
+            Tally.sheets[sheet] = tonumber(at)
         else
             local bosses = line:match("^bosses%s+(%d+)$")
             local time = line:match("^time%s+([%d%.]+)$")

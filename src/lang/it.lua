@@ -141,6 +141,26 @@ return {
     ["OPEN EVERY ONE"] = "APRILI TUTTI",
     ["DRAW EVERY ONE YOURSELF"] = "DISEGNALI TUTTI TU",
 
+    -- the worksheets on the homework page
+    ["WORKSHEETS"] = "SCHEDE",
+    ["MORE WORKSHEETS"] = "ALTRE SCHEDE",
+    ["SOLVE ONE"] = "RISOLVINE UNA",
+    ["SOLVE ONE AT %s"] = "RISOLVINE UNA (%s)",
+    ["TIC-TAC-TOE"] = "TRIS",
+    ["POP QUIZ"] = "QUIZ",
+    ["SEQUENCE"] = "SEQUENZA",
+    ["LAB"] = "LABORATORIO",
+    ["TILL"] = "CASSA",
+    ["STAVE"] = "PENTAGRAMMA",
+    ["SIMON SAYS"] = "SIMON DICE",
+    ["DODGEBALL"] = "PALLA AVVELENATA",
+    ["HOPSCOTCH"] = "CAMPANA",
+    ["CIRCUIT"] = "CIRCUITO",
+    ["JOIN THE DOTS"] = "UNISCI I PUNTINI",
+    ["PORTRAIT"] = "RITRATTO",
+    ["MARKET"] = "BORSA",
+    ["HANGMAN"] = "IMPICCATO",
+
     --- the canteen, and the three things it sells ----------------------------
 
     ["NOTHING TO BUY YET"] = "ANCORA NIENTE DA COMPRARE",
