@@ -782,9 +782,8 @@ local ES = {
     ["NEW"] = "NUEVO",
     ["MAX"] = "TOPE",
     ["SCRIBBLE THE BOX UNDER A CARD"] = "GARABATEA LA CASILLA DE UNA CARTA",
-    -- Kept for the tap route the draft still carries behind a flag
-    -- (`TAP_CARDS`, src/levelup.lua), which is a line it would say again.
-    ["TAP A CARD OR SCRIBBLE ITS BOX"] = "TOCA UNA CARTA O SU CASILLA",
+    -- Said with a mouse, which may click a card (`tapsCards`, src/levelup.lua).
+    ["CLICK A CARD OR SCRIBBLE ITS BOX"] = "PULSA UNA CARTA O SU CASILLA",
     ["OR PRESS 1 2 3"] = "O PULSA 1 2 3",
 
     --- the game over card ---------------------------------------------------

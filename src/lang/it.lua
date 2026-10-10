@@ -428,7 +428,7 @@ return {
     ["NEW"] = "NUOVO",
     ["MAX"] = "MAX",
     ["SCRIBBLE THE BOX UNDER A CARD"] = "SCARABOCCHIA SOTTO UNA CARTA",
-    ["TAP A CARD OR SCRIBBLE ITS BOX"] = "TOCCA UNA CARTA O IL RIQUADRO",
+    ["CLICK A CARD OR SCRIBBLE ITS BOX"] = "CLICCA UNA CARTA O IL RIQUADRO",
     ["OR PRESS 1 2 3"] = "O PREMI 1 2 3",
 
     --- the game over card ---------------------------------------------------

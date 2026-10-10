@@ -17,12 +17,14 @@
 -- the slide is stale when it ends, so the first thing the draft ever reads is a
 -- press that began after the cards were there to be pressed.
 --
--- The same worry is why a card is no longer a target. Tapping one used to fill
--- its box for you; that meant one dab of a finger that was mid-stroke when the
--- level landed could spend a level, on a target a third of the page across. The
--- route is flagged off rather than deleted (`TAP_CARDS`) -- it is the right
--- gesture on a screen you arrive at deliberately -- and what is left is a box you
--- scribble in, which is what every other question in this game is.
+-- The same worry is why, under a finger, a card is no longer a target. Tapping
+-- one used to fill its box for you; that meant one dab of a finger that was
+-- mid-stroke when the level landed could spend a level, on a target a third of
+-- the page across, and what is left on a touch screen is a box you scribble in,
+-- which is what every other question in this game is. A mouse is another matter
+-- (`tapsCards`): a click is aimed, the cursor is on the screen where you can see
+-- it, and a button held through the slide is stale like any other press -- so on
+-- a computer clicking a card, or its box, answers it.
 --
 -- The cards are the one thing in this game drawn on paper rather than in ink:
 -- they are laid *on* the page, they cover the run frozen underneath, and the
@@ -104,10 +106,14 @@ local CONFIRM = 0.34      -- the circled card flashing before the pick takes hol
 local SLIDE_IN = 0.22
 local SLIDE_OUT = 0.14
 
--- Whether tapping a card fills its box for you -- see the note at the top of the
--- file. Off, and kept rather than cut: the gesture is right for a screen that is
--- not interrupting anything, and this one may one day not be.
-local TAP_CARDS = false
+-- Whether clicking a card fills its box for you -- see the note at the top of
+-- the file. With a mouse, yes: a click is aimed and seen, and the dab of a finger
+-- still mid-stroke that this guards against is a touch screen's accident. Read
+-- every time rather than once, since `Input.usingTouch` is whichever was used
+-- last.
+local function tapsCards()
+    return not Input.usingTouch
+end
 
 -- The bought buttons in the bottom corner. The box is the tool selector's
 -- (`Hud.SEL_SIZE`), since what stands in it is a tool-sized drawing; what belongs
@@ -468,12 +474,12 @@ end
 -- The press edge. A button, which is furniture: it lies over the page and is
 -- pressed rather than answered.
 --
--- And, behind `TAP_CARDS`, a card. The tap drew the scribble into the card's box
--- rather than jumping past it, exactly as the keyboard does, so a tapped card was
--- still answered the only way anything here is answered -- but a card is a third
--- of the page across, and a finger that was mid-stroke when the level landed
--- could spend a level on one by accident. Off, and the flag is the note saying
--- what would come back if the draft ever stopped interrupting a fight.
+-- And, behind `tapsCards`, a card or the box under it. The click draws the
+-- scribble into the card's box rather than jumping past it, exactly as the
+-- keyboard does, so a clicked card is still answered the only way anything here
+-- is answered. Never under a finger: a card is a third of the page across, and a
+-- finger that was mid-stroke when the level landed could spend a level on one by
+-- accident.
 function LevelUp:tap(x, y)
     local btn = self:perkAt(x, y)
     if btn then
@@ -481,12 +487,15 @@ function LevelUp:tap(x, y)
         return
     end
 
-    if not TAP_CARDS then return end
+    if not tapsCards() then return end
 
     for _, card in ipairs(self.cards) do
-        if x >= card.x and x < card.x + card.w
-            and y >= card.y and y < card.y + card.h then
-            self.choice:autoFill(card.box)
+        local box = card.box
+        if (x >= card.x and x < card.x + card.w
+                and y >= card.y and y < card.y + card.h)
+            or (x >= box.x and x < box.x + box.w
+                and y >= box.y and y < box.y + box.h) then
+            self.choice:autoFill(box)
             return
         end
     end
@@ -563,7 +572,7 @@ function LevelUp:update(dt, game)
     end
 
     -- The keyboard draws the scribble rather than jumping past it (and so does a
-    -- tap on a card, where `TAP_CARDS` allows one), and there is no pen to lift,
+    -- click on a card, where `tapsCards` allows one), and there is no pen to lift,
     -- so that answer stands as soon as the box fills.
     local filled = self.choice:update(dt)
     if filled then
@@ -634,10 +643,10 @@ function LevelUp:prompt()
     -- player gets of why scribbling a box is about to do the opposite of what it
     -- did last time, and it is worth the whole line.
     if self.expelling then return "SCRIBBLE THE LINE TO THROW OUT" end
-    -- Which of these is true is `TAP_CARDS`'s to say, so the line and the gesture
+    -- Which of these is true is `tapsCards`'s to say, so the line and the gesture
     -- cannot drift apart: a hint that offers a tap the screen has stopped taking
     -- is worse than no hint at all.
-    if TAP_CARDS then return "TAP A CARD OR SCRIBBLE ITS BOX" end
+    if tapsCards() then return "CLICK A CARD OR SCRIBBLE ITS BOX" end
     return "SCRIBBLE THE BOX UNDER A CARD"
 end
 

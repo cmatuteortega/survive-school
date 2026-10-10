@@ -514,12 +514,12 @@ All of those screens ask their question by making you draw the answer, and
 that shared mechanic lives in `src/scribble.lua`: **a box you scribble in**
 (`Scribble.newChoice`), coverage counted on a 2px grid inside the border. The
 draft's three answers are the same boxes, one placed under each card
-(`Choice:place`), and a box is now the *only* way to answer it: tapping the card
-itself used to fill its box the way the keyboard shortcut does
-(`Choice:autoFill`), and that route is flagged off (`TAP_CARDS` in
-`src/levelup.lua`) rather than deleted. A draft interrupts a fight, so a finger
-already mid-stroke could spend a level on a target a third of the page across --
-see **The draft arrives and leaves**.
+(`Choice:place`), and under a finger a box is the *only* way to answer it.
+With a mouse, clicking the card (or its box) fills the box the way the keyboard
+shortcut does (`Choice:autoFill`), gated by `tapsCards` in `src/levelup.lua`.
+It is off on touch because a draft interrupts a fight, so a finger already
+mid-stroke could spend a level on a target a third of the page across -- see
+**The draft arrives and leaves**; a click is aimed at a cursor you can see.
 
 A box is *armed* while drawn in and only *answers* on release, warms its
 border slate → blue → red through `Scribble.boxColor`, has a keyboard route
@@ -4376,7 +4376,8 @@ a finger is on the page laying tool strokes.
   re-taken on every frame of the slide -- so a press that begins mid-slide has to
   be lifted too, and the first thing the draft ever reads is a press made at cards
   that were already there.
-- **A card is not a target** (`TAP_CARDS`, above).
+- **A card is not a target under a finger** (`tapsCards`, above); with a
+  mouse a click on one answers it.
 
 `leaving` is entered from `confirm` (a box was answered) and straight off the
 press edge for REROLL and SKIP, which have no box to flash. All four answers reach

@@ -430,7 +430,7 @@ return {
     ["NEW"] = "NOVO",
     ["MAX"] = "MAX",
     ["SCRIBBLE THE BOX UNDER A CARD"] = "RABISQUE A CAIXA DE UMA CARTA",
-    ["TAP A CARD OR SCRIBBLE ITS BOX"] = "TOQUE UMA CARTA OU SUA CAIXA",
+    ["CLICK A CARD OR SCRIBBLE ITS BOX"] = "CLIQUE UMA CARTA OU SUA CAIXA",
     ["OR PRESS 1 2 3"] = "OU TECLE 1 2 3",
 
     --- the game over card ---------------------------------------------------

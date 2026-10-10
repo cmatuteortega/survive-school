@@ -434,7 +434,7 @@ return {
     ["NEW"] = "NOUVEAU",
     ["MAX"] = "MAX",
     ["SCRIBBLE THE BOX UNDER A CARD"] = "GRIFFONNE LA CASE D'UNE CARTE",
-    ["TAP A CARD OR SCRIBBLE ITS BOX"] = "TOUCHE UNE CARTE OU SA CASE",
+    ["CLICK A CARD OR SCRIBBLE ITS BOX"] = "CLIQUE UNE CARTE OU SA CASE",
     ["OR PRESS 1 2 3"] = "OU TAPE 1 2 3",
 
     --- the game over card ---------------------------------------------------

@@ -433,7 +433,7 @@ return {
     ["NEW"] = "NEU",
     ["MAX"] = "MAX",
     ["SCRIBBLE THE BOX UNDER A CARD"] = "KRITZLE DAS FELD EINER KARTE",
-    ["TAP A CARD OR SCRIBBLE ITS BOX"] = "TIPPE EINE KARTE ODER IHR FELD",
+    ["CLICK A CARD OR SCRIBBLE ITS BOX"] = "KLICK EINE KARTE ODER IHR FELD",
     ["OR PRESS 1 2 3"] = "ODER 1 2 3",
 
     --- the game over card ---------------------------------------------------

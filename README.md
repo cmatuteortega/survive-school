@@ -3347,14 +3347,15 @@ flashing — the answer leaves on the card it was written on. Which is what make
 a reroll read as one deal of cards replacing another rather than as three cards
 quietly changing what they say.
 
-The same worry is why **a card is not a target any more**. Tapping one used to
-draw the scribble into its box for you, exactly as the number keys do, and that
-was a lovely gesture on a screen you walked into deliberately — but a card is a
-third of the page across, and one dab of a finger that was mid-stroke could
-spend a level on it. What is left is the box, which cannot be answered by a dab:
-it measures ground covered, and six cells of it. The tap is still in the code
-behind a flag, because the day the draft stops interrupting a fight it is the
-right gesture again.
+The same worry is why, on a touch screen, **a card is not a target any more**.
+Tapping one used to draw the scribble into its box for you, exactly as the
+number keys do, and that was a lovely gesture on a screen you walked into
+deliberately — but a card is a third of the page across, and one dab of a finger
+that was mid-stroke could spend a level on it. What is left is the box, which
+cannot be answered by a dab: it measures ground covered, and six cells of it.
+A mouse keeps the gesture: a click is aimed at a cursor you can see, and a button
+held down through the slide is stale like any press, so on a computer clicking a
+card (or its box) draws the scribble in for you.
 
 One card is not paper. A tool line's first level hands you the tool itself and
 spends one of the four places on the strip, and it is the only pick in the
