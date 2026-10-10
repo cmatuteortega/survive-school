@@ -74,6 +74,13 @@ zip -r game.love main.lua conf.lua src art
 
 `au.love` in the root is a previously built archive, not a source file.
 
+The desktop builds come from `.github/workflows/desktop.yml` (same triggers,
+plus a Release job on `v*` tags): `game.love` fused onto the stock LÖVE 11.5
+runtimes -- a Windows folder with `Survive School.exe`, a macOS `Survive
+School.app` (re-signed ad hoc, not notarised), a Linux `Survive School.AppImage`,
+and the bare `game.love`. Nothing is compiled or patched, and fused builds keep
+their saves under `notebook-survivors/` directly rather than inside `LOVE/`.
+
 The Android APK is built by `.github/workflows/android.yml` (any push that is not
 docs or `art/`, `v*` tags as Releases, or by hand), in the same shape as
 auto-chest's and demomino's: it embeds `main.lua conf.lua src` in love-android
