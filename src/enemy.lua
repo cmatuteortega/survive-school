@@ -292,6 +292,19 @@ Enemy.types = {
     -- move something is the worst possible way to learn a rule.
     grin = { name = "GRIN", sprite = "grin", hp = 34, speed = 11, radius = 7, damage = 16, xp = 8, shadow = 13,
              knock = 0.25, hold = 0.45 },
+    -- The hanged man: never spawned, only let down. GRAMMAR's hangman
+    -- (src/worksheet.lua) lost on its third wrong letter climbs off the gallows
+    -- as this, and killing it is the sheet's consolation prize -- so it is one
+    -- fight with a face, not a crowd. It charges like the wad because a man
+    -- off a rope comes *at* you, and 30hp at 28 speed is between a skull and a
+    -- grin: a stop to answer for, never a run ended by a spelling mistake.
+    --
+    -- No `name`, and that is deliberate: a name is a line of homework
+    -- (src/challenges.lua), and a body count of a thing only a lost worksheet
+    -- makes would be a row of the book asking you to fail on purpose.
+    stickman = { sprite = "stickman", hp = 30, speed = 28, radius = 5, damage = 10, xp = 5, shadow = 7,
+                 charge = { range = 90, every = 2.6, wind = 0.5, speed = 150,
+                            time = 0.4, rest = 0.8 } },
     eye   = { name = "EYE", sprite = "eye",   hp = 14, speed = 9,  radius = 6, damage = 10, xp = 4, shadow = 9,
               shot = { range = 100, every = 2.4, speed = 40, damage = 8 } },
     -- The bloodshot eye is the same body with the pupil gone red, and it is the

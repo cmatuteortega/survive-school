@@ -8346,8 +8346,8 @@ SCIENCE, FINANCE and MUSIC each set a board of their own -- the **lab**, the
 **till** and the **stave** -- and MUSIC sets **Simon says** besides. P.E. sets
 two sheets made of its own calendar boxes, the **dodgeball pit** and
 **hopscotch**. SCIENCE adds the **circuit**, FINANCE the **market**, and ART
-sets **join the dots** and the **portrait**. GRAMMAR is the one lesson still
-printing only tic-tac-toe. They sit
+sets **join the dots** and the **portrait**. GRAMMAR sets **hangman**, the one
+sheet with a word on it. They sit
 at fixed spots
 the way the fixed pickups do: a pure function of where they are and the run's
 seed, found by walking, and solved once each per run.
@@ -8635,6 +8635,40 @@ coins read backwards. The stake is 3 coins at HIGH SCHOOL up to 6 at PHD, the
 chart gets jumpier and quicker up the course, and at PHD it crashes once
 somewhere after the middle, so only a quick seller beats it. A run with no coins
 at all cannot buy, and is told so.
+
+**Hangman** (GRAMMAR) is a gallows and a word with three of its letters left
+out, and under them six to eight letters ruled out on the page: the three it is
+missing and the rest decoys. **Stand on a letter** the boards' way, until the
+ring round it has drawn. A right one is written into its gap in blue; a wrong
+one is struck out in red and draws a piece of the man on the gallows -- his
+head, then his body and arms, then his legs. All three gaps filled is
+**SOLVED!** and a **diamond** over the word (a diamond or a star at MASTERS and
+PHD, like every board's). The third wrong letter is **HANGED!**: the missing
+letters are written in red, the man swings for a moment, and then he **climbs
+down** -- the stick figure you watched being drawn comes off the rope as a
+monster of his own, ink with red eyes, that walks at you and charges like the
+wad. Kill him and he drops a **heart** where he fell (**CUT DOWN!**); walk far
+enough away that the page forgets him and he is gone with nothing paid.
+
+The heart is the point of the second half. A wrong answer here does not send
+the minute's giant, it sends *the man you drew*, which is the playground game's
+threat carried out -- and he is a fight with a prize at the end of it, so a lost
+word is a second chance rather than only a bill. But the prize is a heart and
+never the word's diamond, and it is put down as itself rather than through the
+course's upgrade, so a master's lost word pays a heart while the solved one pays
+a diamond or a star: a consolation that paid what solving did would be a sheet
+you could fail on purpose. Three wrong letters rather than the playground's six
+limbs because there are only ever five decoys and the horde is already the
+clock. The gaps are only ever letters that appear once in the word, so a gap is
+never answered by reading the same letter elsewhere in it.
+
+It is the one sheet in the book that had to be written six times. Every other
+sheet is notation; a word is a word, so there is a list per language
+(`src/quiz.lua`) of things said in a classroom -- PENCIL, PIZARRA, WÖRTERBUCH,
+CAHIER, QUADERNO, LIÇÃO -- spelt in the capitals the 3x5 face draws, and the
+sheet reads whatever language the book is set to when it is printed. It climbs
+by the word's length (five or six letters at HIGH SCHOOL, nine to twelve at PHD)
+and by the decoys (three, then four, then five).
 
 ## On a phone
 

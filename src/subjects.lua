@@ -404,6 +404,11 @@ Subjects.list = {
         -- subject with a real weight on all three of the marching shapes.
         drills = { every = 46, of = { line = 3, pincer = 3, side = 2, ring = 1,
                                       grid = 1 } },
+        -- Hangman: a word with three letters out, stood for, and the man on
+        -- the gallows climbing down after you when it goes wrong. The one
+        -- sheet of its own so far, so it takes both shares a lesson's pair
+        -- would and tic-tac-toe keeps the fifth it has everywhere.
+        worksheets = { hangman = 4, tictactoe = 1 },
     },
     {
         key = "finance",

@@ -1197,7 +1197,7 @@ every landscape page the game is realistically handed, including the notched
 
 `Enemy.types` in `src/enemy.lua` is the whole bestiary and `TABLE` in
 `src/spawner.lua` is when each of it turns up. Nine kinds walk on over a cycle's
-ten minutes, plus one that is never spawned and two that only arrive at the end:
+ten minutes, plus two that are never spawned and two that only arrive at the end:
 
 | kind | at | weight | hp / speed / dmg | what it is |
 | --- | --- | --- | --- | --- |
@@ -1206,6 +1206,7 @@ ten minutes, plus one that is never spawned and two that only arrive at the end:
 | `wad` | 120 | 4 | 6 / 18 / 10 | charges (`charge`) |
 | `blot` | 200 | 3 | 11 / 16 / 8 | splits into three (`split`) |
 | `drop` | — | — | 2 / 30 / 4 | what a blot splits into |
+| `stickman` | — | — | 30 / 28 / 10 | a lost hangman's man, climbed down; charges (`charge`). No `name`, so no homework row; not in `art/`, so no page reskins him |
 | `skull` | 280 | 3 | 12 / 15 / 12 | the wall |
 | `bulb` | 360 | 3 | 8 / 26 / 5 | bursts when killed (`burst`) |
 | `eye` | 420 | 2 | 14 / 9 / 10 | shoots (`shot`) |
@@ -6498,9 +6499,10 @@ because the worksheet requires `src/pickup.lua` to pay out.
 (`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS, `{ music = 2, simon = 2,
 tictactoe = 1 }` on MUSIC, `{ science = 2, circuit = 2, tictactoe = 1 }` on
 SCIENCE, `{ finance = 2, stocks = 2, tictactoe = 1 }` on FINANCE,
-`{ dodgeball = 2, hopscotch = 2, tictactoe = 1 }` on P.E. and `{ dots = 2,
-portrait = 2, tictactoe = 1 }` on ART), with `{ tictactoe = 1 }` for every row
-that carries none (GRAMMAR, today). A new kind is a constructor in `KINDS` plus an object
+`{ dodgeball = 2, hopscotch = 2, tictactoe = 1 }` on P.E., `{ dots = 2,
+portrait = 2, tictactoe = 1 }` on ART and `{ hangman = 4, tictactoe = 1 }` on
+GRAMMAR), with `{ tictactoe = 1 }` for every row that carries none (none,
+today). A new kind is a constructor in `KINDS` plus an object
 with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`. A
 sheet may also carry `covers(x, y, pad)` (a footprint that is not its box),
 `live` (under way: updated wherever the player is, not only within `ACTIVE`)
@@ -6684,6 +6686,30 @@ pickups in rows of five under the box (`SOLD!`) and the sheet is `done`. The
 clock running out is `MARKET CLOSED!` and fades, the stake (if any) gone. The
 box labels are `I18n.t("BUY")` / `("SELL")`, and each box is sized to its label.
 
+**Hangman** (`G`, GRAMMAR): `Quiz.hangman(course, I18n.lang)` returns `chars`
+(the word's UTF-8 letters), `gaps` (a set of `GAPS` = 3 positions, only ever
+letters appearing once in the word, so no gap is answered by reading and no
+letter fills two) and `choices` (the three gap letters plus `DECOYS[course]`,
+3/4/5/5, drawn from `COMMON` minus the word's letters, shuffled). The word comes
+from `WORDS[lang]` (falling back to `en`), filtered to `LENGTH[course]` (5-6,
+6-7, 7-9, 9-12 letters) and widened a letter each way until something fits.
+`Quiz._words` exposes the lists for a harness. The sheet is a gallows at
+`GALLOWS` (-40px) off the middle, the word centred `WORD_AT` (16px) right of it
+at `PITCH` (6px) a letter on a slate line each, and the choices as pads
+(`PAD_RX` x `PAD_RY`, 8 x 6) in one row, or two staggered rows when more than
+four, `PADS_DOWN` and `PAD_ROW` below. A pad is stood on with the boards'
+`HOLD`/`DRAIN` and is skipped once `given`. A right one fills its gap (drawn
+blue, `tick`); all three is `won` (`SOLVED!`, `award(game, "diamond")` over the
+word, `accept`). A wrong one is struck red (`stamp`) and draws the next piece
+of the man (`misses`: head, body and arms, legs); `MISSES` (3) is `hanging`
+(`HANGED!`, the missing letters in red, the man red and swinging) for
+`LET_DOWN` (0.8s), then `game:spawnEnemy("stickman", mx, my)` where he hung,
+and the sheet is `loose` and `live` until that enemy is `gone`. If it was
+`killed` (set by `Game:killEnemy`, which a despawn at range never sets) it pays
+a plain `heart` pickup where he fell -- not through `award`, so the course never
+raises the consolation to the solve's prize -- and shouts `CUT DOWN!`. Either
+way the sheet then fades (`HANG_FADE`) and is `gone`.
+
 **Every sheet's verdict is shouted over it**, through the module's `shout(game,
 text, x, y)`: `Multikill:shout` puts the word in the multikill's list, drawn in
 `Font.bold` on an ink ring with its three-beat pop -- filled blue for a sheet
@@ -6697,7 +6723,8 @@ translation serves the notice line and the shout. Shouted: tic-tac-toe's
 `THREE IN A ROW` / `BLOCKED!`; the boards' `CORRECT!` / `WRONG ANSWER`; Simon's
 `BRAVO!` / `OUT OF TUNE!`; the gym's `SAFE!`, `FINISH!` / `OUT!` (with the
 whistle, through `call(game, text, x, y)`); the circuit's `LIGHTS ON!` /
-`SHORT CIRCUIT!`, `WRONG BULB!`; the dots' `WELL DRAWN!` / `WANDERED OFF!`; the
+`SHORT CIRCUIT!`, `WRONG BULB!`; hangman's `SOLVED!` / `HANGED!` and
+`CUT DOWN!` over the man killed; the dots' `WELL DRAWN!` / `WANDERED OFF!`; the
 portrait's `MASTERPIECE!` / `SMUDGED!`; the market's `PROFIT!`, `LOSS!` or
 `SOLD!` (even) / `MARKET CLOSED!`. What a sheet says while under way stays on
 the notice line (`Game:say`): `DODGE!`, `HOP!`, `WRONG DOT!`, `HOLD STILL!`,
@@ -6989,7 +7016,10 @@ and are all the same 11x11 glyph.
   notes (`NOTE_SHAPES`) are. A new circuit is a board in `BOARDS_C` under its
   course (wires, parts, ends, ring or pick; check it is winnable and that its
   intended wires pass clear of other copper), and a new picture to join is a row
-  in `PICTURES` and its name in `DOT_SETS`.
+  in `PICTURES` and its name in `DOT_SETS`. A hangman word is a string in its
+  language's list in `WORDS` (`src/quiz.lua`): capitals the 3x5 face draws, at
+  least three letters that appear once, and something said in a classroom; a
+  new language wants a list there or it plays the English one.
   Anything it says goes through `Game:say`, so it needs a line in `src/i18n.lua`
   and the four `src/lang/` files. Questions are notation and need none.
 - **Pickup:** a row in `KINDS` (its weight in the scatter and the fixed layer;
@@ -7488,7 +7518,9 @@ and are all the same 11x11 glyph.
   required into `DICT`. The settings stepper steps the list, so another language
   costs it nothing -- but check the new words against the 3x5 face first: a letter
   it has no glyph for draws as a blank the width of a letter, and a mark that
-  changes the word needs a glyph in `src/font.lua`.
+  changes the word needs a glyph in `src/font.lua`. And a list of words for
+  GRAMMAR's hangman under its key in `WORDS` (`src/quiz.lua`), or that sheet
+  plays in English.
 
 ## Style
 

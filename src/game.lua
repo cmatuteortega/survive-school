@@ -2026,6 +2026,10 @@ function Game:killEnemy(index)
     -- over the enemy it marked (src/storm.lua), and dropping out of the horde is
     -- not something a walk of the list can tell it about afterwards.
     e.gone = true
+    -- And gone *this* way, rather than left behind at range: the hangman's
+    -- stickman pays for being killed and not for being outrun
+    -- (src/worksheet.lua).
+    e.killed = true
     table.remove(self.enemies, index)
 
     -- What it leaves behind, both of which are read here and nowhere else --

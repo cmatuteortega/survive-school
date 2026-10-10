@@ -18,7 +18,8 @@
 -- run of numbers with the next one missing (**sequences**, below). SCIENCE,
 -- FINANCE and MUSIC set one each out of books of their own (**the other
 -- lessons' boards**, below), on the same four rungs and the same rule about
--- wrong answers.
+-- wrong answers. GRAMMAR's hangman is the one sheet asked in words, and its
+-- word lists live here too (**hangman**, below), one per language.
 --
 -- The typesetting is a handful of marks on top of the 3x5 face (src/font.lua):
 -- `^` raises the next glyph or `{group}`, `_` lowers it, an integral or a sigma
@@ -1082,6 +1083,147 @@ function Quiz.new(courseKey, book)
     end
     return { q = "2 + 2 = ?", answers = { "4", "5", "22" }, right = 1 }
 end
+
+--- hangman ----------------------------------------------------------------------
+
+-- GRAMMAR's sheet (src/worksheet.lua): a word with three of its letters left
+-- out, and a handful of letters to stand on. The one book here that has to be
+-- written six times, because a word is the one thing notation cannot say -- so
+-- it is a list per language, keyed like `I18n.langs`, and every word on it is
+-- something said in a classroom, spelt in the capitals the 3x5 face draws:
+-- the marks that make another word kept (LIÇÃO, WÖRTER, ENSEÑAR), the
+-- accents that only sit on the same word left off, as everywhere else.
+--
+-- How hard it is lives in the word's length: a first-year's is five or six
+-- letters, so three gaps leave half of it showing, and a doctor's is nine to
+-- twelve, which is a long word to recognise off its bones. And in the letters
+-- that are not in it (`DECOYS`), which climb from three to five: more ground
+-- to stand on is more ways to be wrong.
+local WORDS = {
+    en = {
+        "PAPER", "CLASS", "CHALK", "RULER", "BOARD", "NOTES", "PENCIL", "SUBJECT",
+        "SCHOOL", "LESSON", "MARKER", "GRADES", "BINDER", "TEACHER", "LIBRARY",
+        "STUDENT", "HISTORY", "SCIENCE", "LECTURE", "NOTEBOOK", "SENTENCE",
+        "ALPHABET", "LANGUAGE", "SPELLING", "HOMEWORK", "EXERCISE", "COMPOSITION",
+        "CLASSROOM", "DICTIONARY", "VOCABULARY", "CALCULATOR",
+        "PUNCTUATION",
+    },
+    es = {
+        "PAPEL", "CLASE", "REGLA", "LIBRO", "NOTAS", "LAPIZ", "ALUMNO", "EXAMEN",
+        "COLEGIO", "ESCUELA", "LECCION", "MAESTRO", "PIZARRA", "DEBERES",
+        "MOCHILA", "PALABRA", "ENSEÑAR", "CUADERNO", "ALFABETO", "PROFESOR",
+        "HISTORIA", "GRAMATICA", "BIBLIOTECA", "ORTOGRAFIA", "ESTUDIANTE",
+        "DICCIONARIO", "VOCABULARIO", "CALCULADORA",
+    },
+    de = {
+        "TAFEL", "PAUSE", "NOTEN", "FEDER", "KREIDE", "LINEAL", "SCHULE",
+        "KLASSE", "STUNDE", "RANZEN", "WÖRTER", "FÜLLER", "SCHÜLER", "AUFGABE",
+        "SPRACHE", "SATZBAU", "ZEUGNIS", "PRÜFUNG", "ALPHABET", "GRAMMATIK",
+        "BLEISTIFT", "SCHULHEFT", "WÖRTERBUCH", "BIBLIOTHEK", "GESCHICHTE",
+        "HAUSAUFGABE", "RADIERGUMMI",
+    },
+    fr = {
+        "CRAIE", "REGLE", "LIVRE", "STYLO", "ECOLE", "LEÇON", "GOMME", "CLASSE",
+        "CAHIER", "CRAYON", "EXAMEN", "PHRASE", "DEVOIRS", "TABLEAU", "TROUSSE",
+        "CARTABLE", "ALPHABET", "HISTOIRE", "GRAMMAIRE", "MAITRESSE",
+        "PROFESSEUR", "RECREATION", "VOCABULAIRE", "ORTHOGRAPHE", "CONJUGAISON",
+    },
+    it = {
+        "GESSO", "LIBRO", "PENNA", "GOMMA", "ZAINO", "ESAME", "CLASSE", "SCUOLA",
+        "ALUNNO", "PAROLA", "STORIA", "LEZIONE", "COMPITI", "MAESTRA", "LAVAGNA",
+        "RIGHELLO", "QUADERNO", "ALFABETO", "ASTUCCIO", "GRAMMATICA",
+        "DIZIONARIO", "BIBLIOTECA", "ORTOGRAFIA", "INTERVALLO", "SOTTOLINEARE",
+        "VOCABOLARIO",
+    },
+    pt = {
+        "LIVRO", "REGUA", "LAPIS", "ALUNO", "PROVA", "LIÇÃO", "CLASSE", "CANETA",
+        "ESCOLA", "QUADRO", "ESTOJO", "CADERNO", "MOCHILA", "PALAVRA", "RECREIO",
+        "REDAÇÃO", "ALFABETO", "HISTORIA", "BORRACHA", "PROFESSOR", "GRAMATICA",
+        "EXERCICIO", "DICIONARIO", "BIBLIOTECA", "ORTOGRAFIA", "VOCABULARIO",
+    },
+}
+
+-- Letters long, by course, and how many letters on the page are not in it.
+local LENGTH = { school = { 5, 6 }, bachelor = { 6, 7 }, masters = { 7, 9 }, phd = { 9, 12 } }
+local DECOYS = { school = 3, bachelor = 4, masters = 5, phd = 5 }
+local GAPS = 3
+
+-- Where the wrong letters come from: the common ones, so a decoy is a letter
+-- that could have been there. A word's own letters are never dealt as one.
+local COMMON = "EAOISRNTLCDUMPBGVFHKYZW"
+
+-- A word as a list of its letters, a UTF-8 character each (the Ñ, the Ü).
+local function letters(word)
+    local out = {}
+    for ch in word:gmatch("[%z\1-\127\194-\244][\128-\191]*") do out[#out + 1] = ch end
+    return out
+end
+
+-- The letters that appear once in it, which are the only ones a gap may be:
+-- a gap whose letter also stood written elsewhere in the word would be
+-- answered by reading, and one letter filling two gaps would be two answers
+-- for one stand.
+local function once(chars)
+    local n = {}
+    for _, ch in ipairs(chars) do n[ch] = (n[ch] or 0) + 1 end
+    local out = {}
+    for i, ch in ipairs(chars) do
+        if n[ch] == 1 then out[#out + 1] = i end
+    end
+    return out
+end
+
+-- One word for the course in the language being read: `chars` (its letters),
+-- `gaps` (the three positions left out, a set) and `choices` (the letters to
+-- stand on, the right three among the decoys, shuffled). The length window is
+-- widened a letter each way until a word fits, so a short list never comes back
+-- empty.
+function Quiz.hangman(courseKey, lang)
+    local list = WORDS[lang] or WORDS.en
+    local span = LENGTH[courseKey] or LENGTH.school
+    local pool
+    for widen = 0, 12 do
+        pool = {}
+        for _, w in ipairs(list) do
+            local chars = letters(w)
+            if #chars >= span[1] - widen and #chars <= span[2] + widen
+                and #once(chars) >= GAPS then
+                pool[#pool + 1] = chars
+            end
+        end
+        if #pool > 0 then break end
+    end
+
+    local chars = pick(pool)
+    local free = once(chars)
+    for i = #free, 2, -1 do
+        local j = R(1, i)
+        free[i], free[j] = free[j], free[i]
+    end
+    local gaps, choices, used = {}, {}, {}
+    for k = 1, GAPS do
+        gaps[free[k]] = true
+        choices[#choices + 1] = chars[free[k]]
+    end
+    for _, ch in ipairs(chars) do used[ch] = true end
+
+    local decoys = {}
+    for k = 1, #COMMON do
+        local ch = COMMON:sub(k, k)
+        if not used[ch] then decoys[#decoys + 1] = ch end
+    end
+    for _ = 1, math.min(DECOYS[courseKey] or DECOYS.school, #decoys) do
+        choices[#choices + 1] = table.remove(decoys, R(1, #decoys))
+    end
+    for i = #choices, 2, -1 do
+        local j = R(1, i)
+        choices[i], choices[j] = choices[j], choices[i]
+    end
+    return { chars = chars, gaps = gaps, choices = choices }
+end
+
+-- For a test harness to check every list against the face and the gaps.
+Quiz._words = WORDS
 
 --- typesetting ------------------------------------------------------------------
 

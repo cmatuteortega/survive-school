@@ -14,8 +14,8 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
 Every lesson prints tic-tac-toe, and on top of that each one should have **two
 sheets nobody else has** -- ideally answered two different ways, so a lesson's
 pair is two kinds of puzzle rather than one puzzle with two question books.
-MATHS, MUSIC, P.E., SCIENCE, FINANCE and ART are done; GRAMMAR is the one
-left.
+MATHS, MUSIC, P.E., SCIENCE, FINANCE and ART are done; GRAMMAR has one of
+its two.
 
 | Lesson | Its first | Its second | Left | Pick next (machine) |
 | --- | --- | --- | --- | --- |
@@ -23,13 +23,15 @@ left.
 | **MUSIC** | Stave (stand) | Simon says (walk in order) | -- done | -- |
 | **SCIENCE** | Lab (stand) | Circuit (draw a wire) | -- done | -- |
 | **FINANCE** | Till (stand) | Market (stand, against a clock, with real coins) | -- done | -- |
-| **GRAMMAR** | -- | -- | two | **Close the brackets** (stand, a `quiz.lua` book) and **line up the class** (kill lettered monsters in their boxes, in order) are the current ideas |
+| **GRAMMAR** | Hangman (stand, a word list per language) | -- | one | **Close the brackets** (stand, a `quiz.lua` book) or **line up the class** (kill lettered monsters in their boxes, in order) |
 | **ART** | Join the dots (touch in order) | Portrait (stand still) | -- done | -- |
 | **P.E.** | Dodgeball pit (stay in a box) | Hopscotch (walk in order, against a clock) | -- done | -- |
 
-That is two sheets to go, both GRAMMAR's. Close the brackets is the cheapest
+That is one sheet to go, GRAMMAR's second. Close the brackets is the cheapest
 thing left in the book -- a new book of rungs in `src/quiz.lua` and a row in
-`BOARDS` -- since the face already draws `( ) [ ] { } ¿ ? ¡ !`.
+`BOARDS` -- since the face already draws `( ) [ ] { } ¿ ? ¡ !`; line up the
+class would make the pair two different machines, which hangman (also stood on)
+and close the brackets would not.
 
 ## Rules every worksheet keeps
 
@@ -175,13 +177,25 @@ clock counts down in red under the run's.
       and don't move** while your hero is painted onto the canvas (6s at HIGH
       SCHOOL up to 9s at PHD); hits don't spoil it, walking off smudges it and
       it fades. Done is an **alarm clock** at your feet.
+- [x] **Hangman** (GRAMMAR). A gallows, a word with **three letters left
+      out**, and the missing three among decoys ruled out on the page under it
+      (3 at HIGH SCHOOL, 4 at BACHELOR, 5 at MASTERS and PHD). **Stand on a
+      letter** the boards' way: right is written into its gap, wrong is struck
+      out and draws a piece of the man -- head, body and arms, legs. The word
+      done is a **diamond** (`SOLVED!`). The third wrong letter is `HANGED!`,
+      and the man **climbs down as a monster** of his own (`stickman`, a charger
+      between a skull and a grin) and comes for you; kill him for a **heart**
+      where he fell (`CUT DOWN!`) -- a step down from the solve's prize, and
+      kept there at every course. The words are school words in each of the
+      six languages, 5-6 letters long at HIGH SCHOOL up to 9-12 at PHD, and a
+      gap is only ever a letter that appears once in the word.
 - [x] **Market** (FINANCE). A price chart drawing itself against a clock over
       BUY and SELL boxes. **Step into BUY** to stake real coins (the run's, then
       the purse's: 3 to 6 by course) at the chart's price, **step into SELL**
       to get them back as coins at the price then. Still holding at the close
       is the stake lost. Jumpier and quicker up the course; a crash at PHD.
 
-### What the built thirteen pay
+### What the built fourteen pay
 
 | Board | Where | Right | Wrong | Stakes |
 | --- | --- | --- | --- | --- |
@@ -198,13 +212,14 @@ clock counts down in red under the run's.
 | Join the dots | ART | a gold star | three wrong dots and they wander off | none: a lost prize |
 | Portrait | ART | an alarm clock | walking off smudges it away | none: a lost prize |
 | Market | FINANCE | the stake back at the selling price, as coins | sold low is fewer back; the close while holding is the stake gone | the purse, both ways |
+| Hangman | GRAMMAR | a diamond | the hanged man climbs down and comes for you; killed, a heart | power, against a fight with a smaller prize |
 
 On MATHS the page prints them 2 quiz : 2 sequence : 1 tic-tac-toe, on MUSIC
 2 stave : 2 Simon : 1 tic-tac-toe, on SCIENCE 2 lab : 2 circuit : 1
 tic-tac-toe, on FINANCE 2 till : 2 market : 1 tic-tac-toe, on P.E. 2 dodgeball
 : 2 hopscotch : 1 tic-tac-toe, and on ART 2 join the dots : 2 portrait : 1
-tic-tac-toe (the `worksheets` rows in `src/subjects.lua`). GRAMMAR prints only
-tic-tac-toe until it has a puzzle of its own.
+tic-tac-toe, and on GRAMMAR 4 hangman : 1 tic-tac-toe (the `worksheets` rows
+in `src/subjects.lua`).
 
 ## Ideas, by lesson
 
@@ -215,7 +230,7 @@ tic-tac-toe until it has a puzzle of its own.
 | **SCIENCE** | ~~Lab board~~ -- built | Stand on the answer | A giant |
 | **FINANCE** | ~~Till board~~ -- built | Stand on the answer | A giant |
 | **MUSIC** | ~~Stave board~~ -- built | Stand on the answer | 20 HP |
-| **GRAMMAR** | **Hangman**: blanks on the page, letters scattered as pickups | Collect letters; a wrong one adds a limb | Hanged: the hanged man climbs down as a champion |
+| **GRAMMAR** | ~~Hangman~~ -- built, with the letters stood on rather than collected | Stand on a letter; a wrong one adds a piece of the man | Hanged: the man climbs down as a monster, a heart if killed |
 | **ART** | ~~Join the dots~~ -- built (not "dot to dot" -- that is a fusion's name) | Pen through the dots in order | Three wrong dots: they wander off |
 | **ART** (alt) | **Trace the shape**: a dashed star or heart traced within a tolerance | Pencil | -- |
 | **MUSIC** | ~~Simon says~~ -- built: a bell plays a tune on four notes | Walk them back in order | Three wrong notes and the sheet fades (the sting and the fury were dropped: a wrong note is already sour, and the stave charges health) |
@@ -248,8 +263,8 @@ tic-tac-toe grid), **walk through places in order** (Simon, hopscotch),
 | **P.E.** | ~~Dodgeball circle~~ -- built as the pit: the class is thrown, not balls | Stand | Stay inside it while monsters are thrown | A hit or a step out |
 | **FINANCE** | **Balance the ledger**: a column with one cell missing | Stand on an answer | Stand on the figure that makes it sum (a PAID stamp to finish) | A giant |
 
-Hangman's idea above is still the most expensive one; close the brackets gives
-GRAMMAR a board of its own without a word list. (The backwards-letter idea once
+Hangman, the most expensive idea, is built; close the brackets would give
+GRAMMAR a second sheet without another word list. (The backwards-letter idea once
 called "red pen" would want another name now: that is GRAMMAR's second boss.)
 
 ### More MATHS boards (the stand-on-an-answer board makes each one a row)
@@ -293,8 +308,9 @@ called "red pen" would want another name now: that is GRAMMAR's second boss.)
 
 ## Costs to remember
 
-- **Hangman is word lists in six languages**, short, and only in what the 3x5
-  face can draw. The most expensive idea per unit of fun. Sums, mazes, circuits
+- **Hangman is word lists in six languages** (`WORDS` in `src/quiz.lua`),
+  short, and only in what the 3x5 face can draw. It shipped anyway, and every
+  word added is six words. Sums, mazes, circuits
   and Simon need no translation beyond a title, and nor did the lab, the till
   or the stave: units, formulae, prices and notes are notation.
 - **Placement**: fixed spots (findable, worth exploring for) rather than a timed

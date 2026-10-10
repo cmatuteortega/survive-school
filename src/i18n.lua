@@ -678,6 +678,12 @@ local ES = {
     -- face has none): tic-tac-toe lost, Simon lost, the dots lost, and a trade
     -- closed up or down.
     ["BLOCKED!"] = "¡BLOQUEADO!",
+    -- GRAMMAR's hangman: the word got, the man hanged, and the man put down
+    -- once he has climbed off the rope. DERRIBADO, knocked down, because
+    -- DESCOLGADO (taken down off a hook) is the rope and not the fight.
+    ["SOLVED!"] = "¡RESUELTO!",
+    ["HANGED!"] = "¡AHORCADO!",
+    ["CUT DOWN!"] = "¡DERRIBADO!",
     ["OUT OF TUNE!"] = "¡DESAFINADO!",
     ["WANDERED OFF!"] = "¡SE ESCAPARON!",
     ["PROFIT!"] = "¡GANANCIA!",

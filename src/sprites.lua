@@ -1018,6 +1018,28 @@ function Sprites.load()
             "..owowowowowo.",
             "..oooooooooo..",
         }),
+        -- The hanged man (`stickman` in Enemy.types): the figure the hangman
+        -- drew on the gallows (src/worksheet.lua), off the rope and coming for
+        -- you. Drawn the way the sheet drew him -- a ring for a head and single
+        -- strokes for the rest, in ink -- so the thing that climbs down is the
+        -- thing you watched being drawn, with two red eyes and the noose's
+        -- knot still at his neck to say where he came from.
+        stickman = pixelart.newSprite({
+            "...ooo...",
+            "..owwwo..",
+            "..orwro..",
+            "..owwwo..",
+            "...ooo...",
+            "....r....",
+            ".ooooooo.",
+            "o...o...o",
+            "....o....",
+            "....o....",
+            "...o.o...",
+            "..o...o..",
+            ".o.....o.",
+            "oo.....oo",
+        }),
     }
 
     -- What the crowd looks like on one particular page.

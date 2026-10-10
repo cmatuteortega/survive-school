@@ -34,6 +34,10 @@
 --   not move while your portrait is painted, for an alarm clock at your feet.
 -- - **The market**, on FINANCE. A price chart against a clock and a BUY and a
 --   SELL box: real coins in, and out again at whatever the price is then.
+-- - **Hangman**, on GRAMMAR. A word with three letters out and more letters
+--   than it needs to stand on, the boards' way. Three right is a diamond; three
+--   wrong hangs the man on the gallows, who climbs down and comes for you, and
+--   is a heart if you put him down.
 --
 -- They are placed the way the fixed pickups are (src/pickup.lua): a pure
 -- function of the cell and the run's seed, one in a fraction of a coarser
@@ -2664,6 +2668,288 @@ function K:draw()
     fade = 0
 end
 
+--- hangman -----------------------------------------------------------------------
+
+-- GRAMMAR's sheet. A gallows, a word with three of its letters left out, and a
+-- few more letters ruled out on the page under it than the word wants -- the
+-- three it is missing among some it is not (src/quiz.lua, Quiz.hangman). It is
+-- answered the boards' way, standing on a letter until the ring round it has
+-- drawn: a right one is written into its gap, a wrong one is struck out and
+-- draws a piece of the man on the gallows. Three right is the word, and a
+-- diamond (the boards' top prize, through `award`).
+--
+-- Three wrong is the whole man, and then he climbs down: the figure drawn on
+-- the rope comes off it as a monster of his own (`stickman` in Enemy.types)
+-- and comes for you. That is the price and the second chance at once -- kill
+-- him and he leaves a heart where he fell. A heart and never the prize the
+-- word was worth, and put down as itself rather than through `award`, which
+-- would make it a diamond again at a master's: the consolation has to stay a
+-- step down or it is not one, and a sheet you could fail on purpose for the
+-- same pay would be a sheet with no question on it.
+--
+-- Three wrong rather than the six limbs of the playground game, because there
+-- are only five decoys at most and the horde is the clock: a head, a body with
+-- its arms, and the legs.
+
+local G = {}
+G.__index = G
+
+local PITCH = 6           -- one letter of the word: three of glyph, gaps either side
+local PAD_GAP = 22        -- between letters to stand on
+local PAD_RX, PAD_RY = 8, 6
+local PADS_DOWN = 12      -- the first row of letters below the sheet's middle
+local PAD_ROW = 18        -- and the second below that
+local MISSES = 3          -- wrong letters before he is hanged
+local LET_DOWN = 0.8      -- seconds he swings there before he climbs down
+local HANG_FADE = 1.2
+local GALLOWS = -40       -- the post's foot, off the sheet's middle
+local WORD_AT = 16        -- the word's middle, off the sheet's middle
+
+function G.new(x, y, courseKey, lang)
+    local word = Quiz.hangman(courseKey, lang)
+    local g = setmetatable({
+        kind = "hangman",
+        x = x, y = y,
+        chars = word.chars, gaps = word.gaps,
+        filled = {},
+        pads = {},
+        misses = 0,
+        state = "open",
+        gx = x + GALLOWS,
+        seed = util.hash01(x, y, 11) * 1000,
+    }, G)
+    -- Where the man hangs: what is drawn there, and where he climbs down from.
+    g.mx, g.my = g.gx + 14, y - 15
+
+    -- The letters in a row, or two rows staggered by half a gap once there are
+    -- more than four, so a sheet never spans more than four of them.
+    local n = #word.choices
+    local top = n <= 4 and n or math.ceil(n / 2)
+    for i, ch in ipairs(word.choices) do
+        local row, k, m = 0, i - 1, top
+        if i > top then row, k, m = 1, i - 1 - top, n - top end
+        g.pads[i] = {
+            ch = ch,
+            x = x + (k - (m - 1) / 2) * PAD_GAP,
+            y = y + PADS_DOWN + row * PAD_ROW,
+            hold = 0,
+        }
+    end
+
+    g.wx = math.floor(x + WORD_AT - (#g.chars * PITCH - 1) / 2)
+    local right = math.max(g.wx + #g.chars * PITCH, x + (top - 1) / 2 * PAD_GAP + PAD_RX)
+    g.hw = math.max(x - (g.gx - 12), right - x) + 2
+    g.hh = PADS_DOWN + PAD_ROW + PAD_RY + 2
+    return g
+end
+
+function G:standingOn(px, py)
+    for i, p in ipairs(self.pads) do
+        if not p.given then
+            local dx, dy = (px - p.x) / PAD_RX, (py - p.y) / PAD_RY
+            if dx * dx + dy * dy <= 1 then return i end
+        end
+    end
+end
+
+function G:give(i, game)
+    local p = self.pads[i]
+    p.given = true
+    for k, ch in ipairs(self.chars) do
+        if self.gaps[k] and ch == p.ch then
+            self.filled[k] = true
+            p.right = true
+        end
+    end
+
+    local top = self.y - 30
+    if p.right then
+        local done = true
+        for k in pairs(self.gaps) do
+            if not self.filled[k] then done = false end
+        end
+        if done then
+            self.state = "won"
+            -- Over the word it paid for, between it and the letters, like the
+            -- boards' prize: a step away rather than under your feet.
+            award(game, "diamond", self.x + WORD_AT, self.y - 6)
+            shout(game, "SOLVED!", self.x, top, Palette.blue)
+            Sfx.play("accept")
+        else
+            Sfx.play("tick")
+        end
+        return
+    end
+
+    self.misses = self.misses + 1
+    game.particles:burst(p.x, p.y, 8, Palette.red)
+    Sfx.play("stamp")
+    if self.misses >= MISSES then
+        self.state, self.t = "hanging", 0
+        shout(game, "HANGED!", self.x, top, Palette.red)
+    end
+end
+
+function G:update(dt, game)
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= HANG_FADE then self.state = "gone" end
+        return
+    end
+
+    if self.state == "hanging" then
+        self.t = self.t + dt
+        if self.t >= LET_DOWN then
+            -- Off the rope and onto the page, where he was drawn. Live from
+            -- here, so the sheet hears about him wherever the fight goes.
+            self.man = game:spawnEnemy("stickman", self.mx, self.my)
+            self.state, self.live = "loose", true
+            game.particles:burst(self.mx, self.my, 8, Palette.ink)
+            Sfx.play("eraser")
+        end
+        return
+    end
+
+    if self.state == "loose" then
+        local man = self.man
+        if not man.gone then return end
+        self.live = false
+        -- Killed, a heart where he fell; outrun and forgotten by the page
+        -- (Game:updateEnemies' despawn), nothing. Either way the sheet goes.
+        if man.killed then
+            game.pickups[#game.pickups + 1] = Pickup.new("heart", man.x, man.y)
+            game.particles:burst(man.x, man.y, 10, Palette.red)
+            shout(game, "CUT DOWN!", man.x, man.y - 14, Palette.blue)
+            Sfx.play("accept")
+        end
+        self.state, self.t = "fading", 0
+        return
+    end
+
+    if self.state ~= "open" then return end
+
+    local on = self:standingOn(game.player.x, game.player.y)
+    for i, p in ipairs(self.pads) do
+        if i == on then
+            p.hold = p.hold + dt / HOLD
+        else
+            p.hold = math.max(0, p.hold - dt * DRAIN / HOLD)
+        end
+    end
+    if on and self.pads[on].hold >= 1 then self:give(on, game) end
+end
+
+-- The boards' ring (`ring` above), squashed to an answer's ellipse and plotted
+-- through the fade.
+local function oval(cx, cy, rx, ry, p, dotted)
+    local n = math.floor(2 * math.pi * math.max(rx, ry) * 1.5)
+    for k = 0, math.floor(n * util.clamp(p, 0, 1)) - 1 do
+        if not dotted or k % 4 == 0 then
+            local a = -math.pi / 2 + 2 * math.pi * k / n
+            local c, s = math.cos(a), math.sin(a)
+            dot(cx + c * rx + 0.5, cy + s * ry + 0.5)
+            if not dotted then dot(cx + c * (rx + 1) + 0.5, cy + s * (ry + 1) + 0.5) end
+        end
+    end
+end
+
+-- A stroke a pixel wide, through the fade: the man is drawn in these.
+local function stroke(ax, ay, bx, by)
+    local n = math.max(math.abs(bx - ax), math.abs(by - ay))
+    for k = 0, n do dot(ax + (bx - ax) * k / n + 0.5, ay + (by - ay) * k / n + 0.5) end
+end
+
+-- One letter of the face, through the fade's colour (the face is an atlas, so
+-- it steps down the ramp but does not drop out a pixel at a time).
+local function letter(ch, x, y)
+    if fade < 1 then Font.print(ch, x, y) end
+end
+
+function G:drawMan(x, y, parts)
+    -- Swinging, a pixel either way, while he is about to come down.
+    if self.state == "hanging" then
+        x = x + (math.floor(self.t * 12) % 2 == 0 and -1 or 1)
+    end
+    if parts >= 1 then
+        for k = 0, 15 do
+            local a = 2 * math.pi * k / 16
+            dot(x + math.cos(a) * 3 + 0.5, y - 6 + math.sin(a) * 3 + 0.5)
+        end
+    end
+    if parts >= 2 then
+        stroke(x, y - 2, x, y + 4)
+        stroke(x - 3, y, x + 3, y)
+    end
+    if parts >= 3 then
+        stroke(x, y + 4, x - 3, y + 8)
+        stroke(x, y + 4, x + 3, y + 8)
+    end
+end
+
+function G:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / HANG_FADE, 0, 1) or 0
+    fadeSeed = self.seed
+
+    -- The gallows: a foot, a post, a beam and the rope.
+    local gx, y = self.gx, self.y
+    colour(Palette.slate)
+    rect(gx - 10, y + 2, 20, 1)
+    rect(gx - 6, y - 28, 1, 30)
+    rect(gx - 6, y - 28, 21, 1)
+    stroke(gx - 5, y - 23, gx, y - 27)
+    rect(self.mx, y - 27, 1, 3)
+
+    -- The man, as far as the wrong letters have drawn him, until he is down.
+    if self.state ~= "loose" and self.state ~= "fading" then
+        colour(self.state == "hanging" and Palette.red or Palette.ink)
+        self:drawMan(self.mx, self.my, self.misses)
+    end
+
+    -- The word: every letter on its line, the gaps empty until stood for --
+    -- yours written in blue, and once he is hanged the ones you missed in red.
+    for k, ch in ipairs(self.chars) do
+        local sx = self.wx + (k - 1) * PITCH
+        colour(Palette.slate)
+        rect(sx, y - 15, 5, 1)
+        if not self.gaps[k] then
+            colour(Palette.ink)
+            letter(ch, sx + 1, y - 22)
+        elseif self.filled[k] then
+            colour(Palette.blue)
+            letter(ch, sx + 1, y - 22)
+        elseif self.misses >= MISSES then
+            colour(Palette.red)
+            letter(ch, sx + 1, y - 22)
+        end
+    end
+
+    -- The letters to stand on, the boards' way: a dotted ring where to stand
+    -- and a blue one drawing while you do; given, ringed blue if it was in the
+    -- word and red and struck out if it was not.
+    for _, p in ipairs(self.pads) do
+        local spent = p.given or self.state ~= "open"
+        colour(spent and not p.given and Palette.graphite or Palette.ink)
+        letter(p.ch, p.x - 1, p.y - 2)
+        if p.right then
+            colour(Palette.blue)
+            oval(p.x, p.y, PAD_RX, PAD_RY, 1)
+        elseif p.given then
+            colour(Palette.red)
+            oval(p.x, p.y, PAD_RX, PAD_RY, 1)
+            stroke(p.x - 4, p.y + 3, p.x + 4, p.y - 3)
+        elseif not spent then
+            colour(Palette.graphite)
+            oval(p.x, p.y, PAD_RX, PAD_RY, 1, true)
+            if p.hold > 0 then
+                colour(Palette.blue)
+                oval(p.x, p.y, PAD_RX, PAD_RY, p.hold)
+            end
+        end
+    end
+    fade = 0
+end
+
 --- the page ------------------------------------------------------------------------
 
 local KINDS = {
@@ -2678,6 +2964,8 @@ local KINDS = {
     dots = function(x, y, game) return J.new(x, y, game.course.key) end,
     portrait = function(x, y, game) return P.new(x, y, game.course.key) end,
     stocks = function(x, y, game) return K.new(x, y, game.course.key) end,
+    -- In the language the book is being read in: the one sheet with words.
+    hangman = function(x, y, game) return G.new(x, y, game.course.key, I18n.lang) end,
 }
 -- For a test harness to build one kind directly, and for nothing in the game.
 Worksheet._kinds = KINDS
