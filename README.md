@@ -8361,7 +8361,9 @@ searches, no crosswords. `WORKSHEETS.md` keeps the longer list of ideas.
 
 Every sheet says how it went where you are looking: the verdict -- CORRECT!,
 BLOCKED!, LIGHTS ON!, SMUDGED!, PROFIT! -- is thrown up over the sheet in the
-same bold red face as a multikill's word, rather than on the notice line at the
+same bold face as a multikill's word -- blue when the sheet is won and red when
+it is lost, the colours the boards already circle a right answer and strike out
+a wrong one in -- rather than on the notice line at the
 foot of the screen, which keeps what a sheet says while it is still under way
 (DODGE!, HOLD STILL!, MARKET OPEN!). A verdict read at the foot of the screen
 is a verdict read late, and the multikill's face is already the page's voice

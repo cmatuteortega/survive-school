@@ -175,9 +175,12 @@ end
 -- since it is a sentence to read rather than a cheer to glance at.
 local SHOUT_LIFE = 1.6
 
-function Multikill:shout(text, x, y)
+-- `colour` is the word's fill (the ring is ink either way): a worksheet says
+-- which way it went in it. Red, a multikill's own, when it is left out.
+function Multikill:shout(text, x, y, colour)
     self.list[#self.list + 1] = {
         text = text,
+        colour = colour,
         x = x, y = y,
         dy = -RISE * 0.7,
         -- Lighter, so over its longer life it rises and settles back about
@@ -228,7 +231,7 @@ function Multikill:draw()
         face:printRing(text, x, y, scale)
 
         if not hollow then
-            love.graphics.setColor(Palette.red)
+            love.graphics.setColor(n.colour or Palette.red)
             face:print(text, x, y, scale)
         end
     end

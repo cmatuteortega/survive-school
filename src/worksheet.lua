@@ -95,10 +95,13 @@ end
 -- in the multikill's bold face (src/multikill.lua), red on ink, where your
 -- eyes already are -- the notice line at the foot of the screen is for what a
 -- sheet says while it is under way, and a verdict read down there is a verdict
--- read late. Guarded, for a page without the multikill (a test harness).
-local function shout(game, text, x, y)
+-- read late. In the book's own two colours for right and wrong: blue, the
+-- ring round a right answer, for a sheet won, and red, the line through a
+-- wrong one, for a sheet lost. Guarded, for a page without the multikill (a
+-- test harness).
+local function shout(game, text, x, y, colour)
     if game.multikill then
-        game.multikill:shout(text, x, y)
+        game.multikill:shout(text, x, y, colour)
     else
         game:say(text)
     end
@@ -247,7 +250,7 @@ function T:commit(i, game)
         self.cells[self.gap] = "o"
         self.blocked = self.gap
         self.state = "lost"
-        shout(game, "BLOCKED!", self.x, self.y - HALF - 2)
+        shout(game, "BLOCKED!", self.x, self.y - HALF - 2, Palette.red)
         Sfx.play("stamp")
     end
 end
@@ -282,7 +285,7 @@ function T:update(dt, game, pen)
         local cy = self.y + HALF + 8
         game.pickups[#game.pickups + 1] = Pickup.new("coin", self.x, cy)
         game.particles:burst(self.x, cy, 10, Palette.blush)
-        shout(game, "THREE IN A ROW", self.x, self.y - HALF - 2)
+        shout(game, "THREE IN A ROW", self.x, self.y - HALF - 2, Palette.blue)
         Sfx.play("accept")
     end
 end
@@ -469,12 +472,12 @@ function Q:update(dt, game)
             -- board: a step away, so taking it is a thing you do and the
             -- question it paid for is not hidden under it.
             self.row.right(game, self.answers[on].x, self.y - 2)
-            shout(game, "CORRECT!", self.x, self.y - BOARD_UP - self.bh / 2 - 2)
+            shout(game, "CORRECT!", self.x, self.y - BOARD_UP - self.bh / 2 - 2, Palette.blue)
             Sfx.play("accept")
         else
             self.row.wrong(game)
             game.particles:burst(self.answers[on].x, self.answers[on].y, 10, Palette.red)
-            shout(game, "WRONG ANSWER", self.x, self.y - BOARD_UP - self.bh / 2 - 2)
+            shout(game, "WRONG ANSWER", self.x, self.y - BOARD_UP - self.bh / 2 - 2, Palette.red)
             Sfx.play("stamp")
         end
     end
@@ -762,7 +765,7 @@ function S:step(i, game)
             -- thing you do (the boards' reason).
             local p = self.pads[i]
             award(game, "heart", p.x, p.y - 18)
-            shout(game, "BRAVO!", p.x, p.y - 24)
+            shout(game, "BRAVO!", p.x, p.y - 24, Palette.blue)
             Sfx.play("accept")
         end
     else
@@ -774,7 +777,7 @@ function S:step(i, game)
             self.state = "fading"
             self.t = 0
             local p = self.pads[i]
-            shout(game, "OUT OF TUNE!", p.x, p.y - 12)
+            shout(game, "OUT OF TUNE!", p.x, p.y - 12, Palette.red)
         end
     end
 end
@@ -999,8 +1002,8 @@ end
 -- what every one of those moments sounds like.
 -- A start is the notice line's; an end, given where it happened, is shouted
 -- there like every sheet's verdict.
-local function call(game, text, x, y)
-    if x then shout(game, text, x, y) else game:say(text) end
+local function call(game, text, x, y, colour)
+    if x then shout(game, text, x, y, colour) else game:say(text) end
     Sfx.play("whistle")
 end
 
@@ -1090,11 +1093,11 @@ function D:finish(game, won)
     if won then
         self.state = "won"
         award(game, "diamond", self.x, self.y)
-        call(game, "SAFE!", self.x, self.y0 - 2)
+        call(game, "SAFE!", self.x, self.y0 - 2, Palette.blue)
     else
         self.state = "fading"
         self.t = 0
-        call(game, "OUT!", game.player.x, game.player.y - 14)
+        call(game, "OUT!", game.player.x, game.player.y - 14, Palette.red)
     end
 end
 
@@ -1258,11 +1261,11 @@ function H:finish(game, won)
         local c = self.path[#self.path]
         local hx, hy = c.x + self.days.w / 2, c.y + self.days.h / 2
         award(game, "heart", hx, hy)
-        call(game, "FINISH!", hx, hy - 10)
+        call(game, "FINISH!", hx, hy - 10, Palette.blue)
     else
         self.state = "fading"
         self.t = 0
-        call(game, "OUT!", game.player.x, game.player.y - 14)
+        call(game, "OUT!", game.player.x, game.player.y - 14, Palette.red)
     end
 end
 
@@ -1687,7 +1690,7 @@ function C:judge(game)
         game.particles:burst(bt.x, bt.y, 14, Palette.red)
         game.particles:burst(bt.x, bt.y, 6, Palette.ink)
         sting(game)
-        shout(game, "SHORT CIRCUIT!", bt.x + (self.mx and -20 or 20), bt.y - 10)
+        shout(game, "SHORT CIRCUIT!", bt.x + (self.mx and -20 or 20), bt.y - 10, Palette.red)
         Sfx.play("stamp")
         return
     end
@@ -1701,7 +1704,7 @@ function C:judge(game)
                 self.state, self.t = "fading", 0
                 self.popped = i
                 game.particles:burst(p.x, p.y, 10, Palette.red)
-                shout(game, "WRONG BULB!", p.x, p.y - BULB_R - 6)
+                shout(game, "WRONG BULB!", p.x, p.y - BULB_R - 6, Palette.red)
                 Sfx.play("stamp")
                 return
             end
@@ -1860,7 +1863,7 @@ function C:update(dt, game, pen)
             local cx, cy = self.x, self.y + self.hh + 6
             game.pickups[#game.pickups + 1] = Pickup.new("clock", cx, cy)
             game.particles:burst(cx, cy, 10, Palette.slate)
-            shout(game, "LIGHTS ON!", self.x, self.y - self.hh)
+            shout(game, "LIGHTS ON!", self.x, self.y - self.hh, Palette.blue)
             Sfx.play("accept")
         end
     end
@@ -2138,7 +2141,7 @@ function J:touch(i, game)
             local p = Pickup.new("star", self.cx, self.cy)
             game.pickups[#game.pickups + 1] = p
             game.particles:burst(self.cx, self.cy, 10, Palette.red)
-            shout(game, "WELL DRAWN!", self.cx, self.y - 4 * DOT_U - 4)
+            shout(game, "WELL DRAWN!", self.cx, self.y - 4 * DOT_U - 4, Palette.blue)
             Sfx.play("accept")
         end
         return
@@ -2152,7 +2155,7 @@ function J:touch(i, game)
     if self.tries <= 0 then
         self.state = "fading"
         self.t = 0
-        shout(game, "WANDERED OFF!", self.cx, self.y - 4 * DOT_U - 4)
+        shout(game, "WANDERED OFF!", self.cx, self.y - 4 * DOT_U - 4, Palette.red)
     end
     return true
 end
@@ -2296,12 +2299,12 @@ function P:finish(game, won)
         self.state = "won"
         game.pickups[#game.pickups + 1] = Pickup.new("alarm", self.mx, self.my + 10)
         game.particles:burst(self.ex + self.cw / 2, self.ey + self.ch / 2, 10, Palette.red)
-        shout(game, "MASTERPIECE!", self.ex + self.cw / 2, self.ey - 6)
+        shout(game, "MASTERPIECE!", self.ex + self.cw / 2, self.ey - 6, Palette.blue)
         Sfx.play("accept")
     else
         self.state, self.t = "fading", 0
         self.leftAt = self.left
-        shout(game, "SMUDGED!", self.ex + self.cw / 2, self.ey - 6)
+        shout(game, "SMUDGED!", self.ex + self.cw / 2, self.ey - 6, Palette.red)
         Sfx.play("eraser")
     end
 end
@@ -2517,7 +2520,7 @@ end
 function K:close(game, text)
     self.live = false
     self.state, self.t = "fading", 0
-    shout(game, text, self.x, self.ct - 4)
+    shout(game, text, self.x, self.ct - 4, Palette.red)
     Sfx.play("stamp")
 end
 
@@ -2578,7 +2581,8 @@ function K:update(dt, game)
         -- The verdict is the trade's, said in a word: more back than went in,
         -- less, or exactly what you paid.
         shout(game, back > self.held and "PROFIT!" or back < self.held and "LOSS!"
-            or "SOLD!", self.x, self.ct - 4)
+            or "SOLD!", self.x, self.ct - 4,
+            back < self.held and Palette.red or Palette.blue)
         Sfx.play(back > self.held and "accept" or "stamp")
     end
     self.wasBuy, self.wasSell = inBuy, inSell

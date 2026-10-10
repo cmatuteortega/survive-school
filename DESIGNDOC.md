@@ -6686,7 +6686,9 @@ box labels are `I18n.t("BUY")` / `("SELL")`, and each box is sized to its label.
 
 **Every sheet's verdict is shouted over it**, through the module's `shout(game,
 text, x, y)`: `Multikill:shout` puts the word in the multikill's list, drawn in
-`Font.bold` red on ink with its three-beat pop, held `SHOUT_LIFE` (1.6s) and
+`Font.bold` on an ink ring with its three-beat pop -- filled blue for a sheet
+won and red for one lost (the market's even sale is blue, its loss red), the
+book's colours for a right and a wrong answer -- held `SHOUT_LIFE` (1.6s) and
 falling at 0.4 of a multikill's pull so it settles near where it rose. It is
 outside the multikill's window and latch: it is not a kill count. The text is
 `I18n.t` then `Font.shout`, which folds Ñ Ä Ö Ü Ã Õ Ç to the bare letter and
