@@ -343,8 +343,9 @@ Subjects.list = {
         -- -- and the ring is the only other thing it has to say.
         drills = { every = 60, of = { line = 4, ring = 2, side = 1 } },
         -- The lab's board (src/quiz.lua's science book): formulae, units and
-        -- equations to balance, a diamond against a giant.
-        worksheets = { science = 2, tictactoe = 1 },
+        -- equations to balance, a diamond against a giant; and the circuit, a
+        -- wire drawn across bare copper to light the ringed bulb.
+        worksheets = { science = 2, circuit = 2, tictactoe = 1 },
     },
     {
         key = "pe",
@@ -425,8 +426,9 @@ Subjects.list = {
         drills = { every = 44, of = { grid = 4, line = 3, side = 1,
                                       pincer = 1 } },
         -- The till's board: discounts, interest and present values, paid in
-        -- coins that outlive the run.
-        worksheets = { finance = 2, tictactoe = 1 },
+        -- coins that outlive the run; and the market, a chart to buy low and
+        -- sell high on with coins of your own.
+        worksheets = { finance = 2, stocks = 2, tictactoe = 1 },
     },
     {
         key = "music",
@@ -507,6 +509,9 @@ Subjects.list = {
         -- any of the five is a page that asks whether it answers all of them.
         drills = { every = 34, of = { line = 2, ring = 2, side = 2, pincer = 2,
                                       grid = 2 } },
+        -- Join the dots, drawn with care, and the portrait, sat for without
+        -- moving: the two things an art class asks of a hand and of a model.
+        worksheets = { dots = 2, portrait = 2, tictactoe = 1 },
     },
 }
 

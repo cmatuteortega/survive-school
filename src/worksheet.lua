@@ -25,6 +25,15 @@
 --   inside for a diamond; a hit or a step out and the sheet fades away.
 -- - **Hopscotch**, on P.E. too: a numbered path of day boxes to step along in
 --   order against a clock, for a heart; a wrong box or the clock and it fades.
+-- - **The circuit**, on SCIENCE. A battery, bulbs and bare printed wire with
+--   gaps in it: draw a wire across so the ringed bulbs light, without shorting
+--   the battery or lighting another, for a wall clock.
+-- - **Join the dots**, on ART. Numbered dots touched with the pen in order
+--   make a picture, for a gold star; out of order three times and they wander.
+-- - **The portrait**, on ART too. Stand on the chalk cross by the easel and do
+--   not move while your portrait is painted, for an alarm clock at your feet.
+-- - **The market**, on FINANCE. A price chart against a clock and a BUY and a
+--   SELL box: real coins in, and out again at whatever the price is then.
 --
 -- They are placed the way the fixed pickups are (src/pickup.lua): a pure
 -- function of the cell and the run's seed, one in a fraction of a coarser
@@ -36,9 +45,10 @@
 --
 -- Nothing here reads handwriting. A cross is *ground covered* inside a cell,
 -- on a 2px grid, the rule src/scribble.lua answers every question in the book
--- by; an answer is a place you stand, or a row of places walked in order. All
--- three are things the game already asks you to do with your hands, so a
--- worksheet is a new question, not a new control.
+-- by; an answer is a place you stand, a row of places walked in order, or the
+-- copper and the dots a line drawn across the sheet touched. All four are
+-- things the game already asks you to do with your hands, so a worksheet is a
+-- new question, not a new control.
 
 local Palette = require("src.palette")
 local Pickup = require("src.pickup")
@@ -49,6 +59,8 @@ local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
 local Sprites = require("src.sprites")
 local Font = require("src.font")
+local I18n = require("src.i18n")
+local Purse = require("src.purse")
 local util = require("src.util")
 
 local Worksheet = {}
@@ -1318,6 +1330,1246 @@ function H:draw()
     fade = 0
 end
 
+--- the circuit ---------------------------------------------------------------------
+
+-- SCIENCE's second sheet, and the first answered by drawing a *line* rather
+-- than scribbling a cell or standing on a place: a circuit printed on the page
+-- with gaps in its wire, a battery, a bulb or two and one bulb ringed in red.
+-- Draw a wire across a gap and the circuit is worked out the way a physics
+-- book would -- currents through the bulbs, a diode that only lets current one
+-- way -- and the ringed bulbs have to come on, fully, with nothing else lit.
+--
+-- What makes it a puzzle rather than a scribble is that **every printed wire
+-- is bare**. The wire you draw joins every piece of copper it touches on its
+-- way, so a line dragged carelessly across the board joins the wrong things:
+--
+-- - **Short circuit.** Your wire joins the battery's two sides with nothing in
+--   between (the return wire runs a stub up into the board for exactly this).
+--   The battery sparks, it costs the sequence's twenty, and the sheet fades.
+-- - **Wrong bulb.** Any bulb without the ring comes on, even dimly: it pops
+--   and the sheet fades.
+-- - **Rubbed out.** A wire that closes the circuit has to stay whole for a
+--   moment while the bulb warms up, and a monster walking over it rubs it out.
+--   A drawn wire that did nothing also wears off after a few seconds, which is
+--   the way to take back a try that was harmless but wrong.
+--
+-- It climbs the course by what has to be understood rather than by speed: one
+-- gap at a first-year's, two bulbs and the right one to pick at a bachelor's,
+-- a diode that has to be wired the right way round at a master's, and two
+-- bulbs that must both be fully lit -- in parallel, since in series they share
+-- the battery and only glow -- at a doctorate. Right is a wall clock.
+local C = {}
+C.__index = C
+
+local CU = 8              -- one step of the board's grid, in page pixels
+local TOUCH = 2.5         -- how near the pen must come to copper to join it
+local TERMINAL = 4        -- a wire end's open circle, a little more forgiving
+local BULB_R = 5
+local FULL = 0.9          -- of a bulb across the whole battery: lit
+local GLOW = 0.1          -- and above this it is on, if only dimly
+local SETTLE = 0.8        -- seconds a closed circuit must stay whole to count
+local WIRE_LIFE = 6       -- seconds a drawn wire that did nothing lasts
+local CIRCUIT_FADE = 1.2
+
+-- The boards, in grid steps. `wires` are polylines of one net each (the first
+-- entry the net); `parts` sit between two grid points (`bulb` and `diode`, a
+-- diode's first end its anode); `ends` are the open circles where a gap is.
+-- The battery always sits between (0, 3), its + side, and (0, 5). `ring`
+-- lists the bulbs that must light, or `pick` says one of them is rolled.
+-- Every board is dealt mirrored either way at random, so the layouts are
+-- learnable as circuits and not as pictures.
+local BOARDS_C = {
+    school = {
+        { -- the gap in the top wire, and the return wire's stub reaching up
+            w = 12, h = 8,
+            wires = { { "p", 0, 3, 0, 0, 5, 0 }, { "a", 8, 0, 12, 0, 12, 3 },
+                      { "n", 12, 5, 12, 8, 0, 8, 0, 5 }, { "n", 6, 8, 6, 3 } },
+            parts = { { "bulb", 12, 3, 12, 5, "a", "n" } },
+            ends = { { 5, 0 }, { 8, 0 }, { 6, 3 } },
+            ring = { 1 },
+        },
+        { -- the gap down the far side, the stub reaching across the middle
+            w = 12, h = 8,
+            wires = { { "p", 0, 3, 0, 0, 12, 0, 12, 2 }, { "a", 12, 5, 12, 8, 7, 8 },
+                      { "n", 5, 8, 0, 8, 0, 5 }, { "n", 3, 8, 3, 4, 8, 4 } },
+            parts = { { "bulb", 7, 8, 5, 8, "a", "n" } },
+            ends = { { 12, 2 }, { 12, 5 }, { 8, 4 } },
+            ring = { 1 },
+        },
+    },
+    bachelor = {
+        { -- one wire end, two bulbs it could feed
+            w = 12, h = 8,
+            wires = { { "p", 0, 3, 0, 0, 4, 0 }, { "a", 7, 0, 12, 0, 12, 2 },
+                      { "b", 4, 3, 7, 3, 7, 4 }, { "n", 12, 4, 12, 8 },
+                      { "n", 7, 6, 7, 8 }, { "n", 12, 8, 0, 8, 0, 5 } },
+            parts = { { "bulb", 12, 2, 12, 4, "a", "n" }, { "bulb", 7, 4, 7, 6, "b", "n" } },
+            ends = { { 4, 0 }, { 7, 0 }, { 4, 3 } },
+            pick = true,
+        },
+        { -- the same choice with the return wire's stub between the two
+            w = 12, h = 8,
+            wires = { { "p", 0, 3, 0, 0, 5, 0 }, { "a", 8, 0, 12, 0, 12, 2 },
+                      { "b", 5, 3, 5, 4 }, { "n", 12, 4, 12, 8 },
+                      { "n", 5, 6, 5, 8 }, { "n", 12, 8, 0, 8, 0, 5 },
+                      { "n", 9, 8, 9, 4 } },
+            parts = { { "bulb", 12, 2, 12, 4, "a", "n" }, { "bulb", 5, 4, 5, 6, "b", "n" } },
+            ends = { { 5, 0 }, { 8, 0 }, { 5, 3 }, { 9, 4 } },
+            pick = true,
+        },
+    },
+    masters = {
+        { -- two ways to the bulb, each through a diode; one of them is backwards
+            w = 12, h = 9,
+            wires = { { "p", 0, 3, 0, 0, 3, 0 }, { "a", 6, 0, 8, 0 },
+                      { "c", 10, 0, 12, 0, 12, 5 }, { "b", 3, 3, 3, 4, 6, 4 },
+                      { "c", 8, 4, 12, 4 }, { "n", 12, 7, 12, 9, 0, 9, 0, 5 },
+                      { "n", 6, 9, 6, 7 } },
+            parts = { { "diode", 8, 0, 10, 0, "a", "c" }, { "diode", 6, 4, 8, 4, "b", "c" },
+                      { "bulb", 12, 5, 12, 7, "c", "n" } },
+            ends = { { 3, 0 }, { 6, 0 }, { 3, 3 }, { 6, 7 } },
+            ring = { 3 },
+            flip = { 1, 2 }, -- one of these diodes is dealt backwards
+        },
+    },
+    phd = {
+        -- Two bulbs to be lit fully, and the obvious two wires put them one
+        -- after the other, where they share the battery and only glow. Side by
+        -- side takes three: each bulb's near end to +, and the first's far end
+        -- to the return wire.
+        {
+            w = 12, h = 10,
+            wires = { { "p", 0, 3, 0, 0, 3, 0 }, { "p", 3, 0, 3, 3, 9, 3 },
+                      { "a", 6, 0, 7, 0 }, { "m", 9, 0, 10, 0 },
+                      { "d", 12, 1, 12, 3 }, { "n", 12, 5, 12, 10, 0, 10, 0, 5 },
+                      { "n", 11, 10, 11, 7 } },
+            parts = { { "bulb", 7, 0, 9, 0, "a", "m" }, { "bulb", 12, 3, 12, 5, "d", "n" } },
+            ends = { { 3, 0 }, { 6, 0 }, { 10, 0 }, { 12, 1 }, { 9, 3 }, { 11, 7 } },
+            ring = { 1, 2 },
+        },
+    },
+}
+-- And a master's board now and then, the way every book's doctorate asks.
+BOARDS_C.phd[2] = BOARDS_C.masters[1]
+-- The page point of a grid point, mirrored as dealt.
+function C:at(gx, gy)
+    if self.mx then gx = self.gw - gx end
+    if self.my then gy = self.gh - gy end
+    return self.x0 + gx * CU, self.y0 + gy * CU
+end
+
+function C.new(x, y, courseKey)
+    local list = BOARDS_C[courseKey] or BOARDS_C.school
+    local b = list[love.math.random(#list)]
+    local c = setmetatable({
+        kind = "circuit",
+        x = x, y = y,
+        gw = b.w, gh = b.h,
+        x0 = math.floor(x - b.w * CU / 2), y0 = math.floor(y - b.h * CU / 2),
+        mx = love.math.random() < 0.5, my = love.math.random() < 0.5,
+        hw = b.w * CU / 2 + BULB_R + 7, hh = b.h * CU / 2 + BULB_R + 7,
+        segs = {}, parts = {}, ends = {},
+        wires = {},
+        state = "open",
+        seed = util.hash01(x, y, 7) * 1000,
+    }, C)
+
+    for _, w in ipairs(b.wires) do
+        for k = 2, #w - 3, 2 do
+            local ax, ay = c:at(w[k], w[k + 1])
+            local bx, by = c:at(w[k + 2], w[k + 3])
+            c.segs[#c.segs + 1] = { net = w[1], ax = ax, ay = ay, bx = bx, by = by }
+        end
+    end
+    local flipped = b.flip and b.flip[love.math.random(#b.flip)]
+    for i, p in ipairs(b.parts) do
+        local ax, ay = c:at(p[2], p[3])
+        local bx, by = c:at(p[4], p[5])
+        local na, nb = p[6], p[7]
+        local part = { kind = p[1], ax = ax, ay = ay, bx = bx, by = by,
+            x = (ax + bx) / 2, y = (ay + by) / 2, a = na, b = nb, lit = 0 }
+        -- A diode dealt backwards points the other way along the same wire,
+        -- which is all the drawing has to say and all the solver reads.
+        if i == flipped then
+            part.ax, part.ay, part.bx, part.by = bx, by, ax, ay
+            part.a, part.b = nb, na
+        end
+        c.parts[i] = part
+    end
+    for _, e in ipairs(b.ends) do
+        local ex, ey = c:at(e[1], e[2])
+        c.ends[#c.ends + 1] = { x = ex, y = ey }
+    end
+    local bx, by = c:at(0, 3)
+    local nx, ny = c:at(0, 5)
+    c.battery = { px = bx, py = by, nx = nx, ny = ny, x = (bx + nx) / 2, y = (by + ny) / 2 }
+
+    c.ring = {}
+    if b.pick then
+        local bulbs = {}
+        for i, p in ipairs(c.parts) do
+            if p.kind == "bulb" then bulbs[#bulbs + 1] = i end
+        end
+        c.ring[bulbs[love.math.random(#bulbs)]] = true
+    else
+        for _, i in ipairs(b.ring) do c.ring[i] = true end
+    end
+    return c
+end
+
+-- Every net a page point touches: copper within TOUCH, a wire end's circle,
+-- the battery's body (both sides: drawing over it is the shortest short) and a
+-- part's body (both its ends: drawn over, it is bypassed).
+function C:netsAt(px, py, into)
+    for _, s in ipairs(self.segs) do
+        if util.distToSegment(px, py, s.ax, s.ay, s.bx, s.by) <= TOUCH then
+            into[s.net] = true
+        end
+    end
+    for _, p in ipairs(self.parts) do
+        local r = p.kind == "bulb" and BULB_R + 1 or 4
+        if util.len(px - p.x, py - p.y) <= r then
+            into[p.a], into[p.b] = true, true
+        end
+    end
+    local bt = self.battery
+    if math.abs(px - bt.x) <= 5 and math.abs(py - bt.y) <= 5 then
+        into.p, into.n = true, true
+    end
+end
+
+-- Solve the circuit as it stands: union the nets every drawn wire joins, then
+-- put the battery's + at 1 and its - at 0 and find every other node's voltage
+-- (each bulb a resistance of 1, a forward diode a very small one, a reversed
+-- diode none at all) by Gaussian elimination -- the board has at most half a
+-- dozen nodes. A node joined to nothing gets a whisper of a path to 0 so the
+-- matrix is never singular, and since a bulb's brightness is read off its
+-- current that whisper never lights one. Returns "short", or each part's
+-- current in `lit`.
+local function find(root, n)
+    while root[n] ~= n do n = root[n] end
+    return n
+end
+
+function C:solve()
+    local root = { p = "p", n = "n" }
+    local function add(n) if not root[n] then root[n] = n end end
+    for _, p in ipairs(self.parts) do add(p.a); add(p.b) end
+    for _, w in ipairs(self.wires) do
+        local first
+        for n in pairs(w.nets) do
+            add(n)
+            if first then root[find(root, n)] = find(root, first) else first = n end
+        end
+    end
+    local P, N = find(root, "p"), find(root, "n")
+    if P == N then return "short" end
+
+    -- The unknowns: every node that is neither side of the battery.
+    local index, nodes = {}, {}
+    for n in pairs(root) do
+        local r = find(root, n)
+        if r ~= P and r ~= N and not index[r] then
+            nodes[#nodes + 1] = r
+            index[r] = #nodes
+        end
+    end
+    table.sort(nodes)
+    for i, r in ipairs(nodes) do index[r] = i end
+
+    local on = {}
+    for i, p in ipairs(self.parts) do on[i] = true end
+    local volts
+    for _ = 1, 4 do
+        local m = #nodes
+        local A, B = {}, {}
+        for i = 1, m do
+            A[i] = {}
+            for j = 1, m do A[i][j] = 0 end
+            A[i][i] = 1e-6
+            B[i] = 0
+        end
+        local function v(r) return r == P and 1 or r == N and 0 or nil end
+        for i, p in ipairs(self.parts) do
+            local g = p.kind == "bulb" and 1 or (on[i] and 100 or 0)
+            local ra, rb = find(root, p.a), find(root, p.b)
+            if g > 0 and ra ~= rb then
+                local ia, ib = index[ra], index[rb]
+                if ia then A[ia][ia] = A[ia][ia] + g end
+                if ib then A[ib][ib] = A[ib][ib] + g end
+                if ia and ib then
+                    A[ia][ib] = A[ia][ib] - g
+                    A[ib][ia] = A[ib][ia] - g
+                end
+                if ia and not ib then B[ia] = B[ia] + g * v(rb) end
+                if ib and not ia then B[ib] = B[ib] + g * v(ra) end
+            end
+        end
+        -- Elimination with partial pivoting; m is tiny.
+        for col = 1, m do
+            local best = col
+            for r = col + 1, m do
+                if math.abs(A[r][col]) > math.abs(A[best][col]) then best = r end
+            end
+            A[col], A[best] = A[best], A[col]
+            B[col], B[best] = B[best], B[col]
+            for r = col + 1, m do
+                local f = A[r][col] / A[col][col]
+                if f ~= 0 then
+                    for k = col, m do A[r][k] = A[r][k] - f * A[col][k] end
+                    B[r] = B[r] - f * B[col]
+                end
+            end
+        end
+        local x = {}
+        for r = m, 1, -1 do
+            local s = B[r]
+            for k = r + 1, m do s = s - A[r][k] * x[k] end
+            x[r] = s / A[r][r]
+        end
+        volts = function(r) return v(r) or x[index[r]] end
+
+        -- A diode conducting backwards is switched off and one that is off but
+        -- pushed forwards is switched on, and the board solved again.
+        local changed = false
+        for i, p in ipairs(self.parts) do
+            if p.kind == "diode" then
+                local d = volts(find(root, p.a)) - volts(find(root, p.b))
+                local want = d > 1e-4
+                if want ~= on[i] then on[i] = want; changed = true end
+            end
+        end
+        if not changed then break end
+    end
+
+    local lit = {}
+    for i, p in ipairs(self.parts) do
+        lit[i] = p.kind == "bulb"
+            and math.abs(volts(find(root, p.a)) - volts(find(root, p.b))) or 0
+    end
+    return lit
+end
+
+-- What the board says now, and what follows from it.
+function C:judge(game)
+    local lit = self:solve()
+    if lit == "short" then
+        self.state, self.t = "fading", 0
+        self.sparks = 0.6
+        local bt = self.battery
+        game.particles:burst(bt.x, bt.y, 14, Palette.red)
+        game.particles:burst(bt.x, bt.y, 6, Palette.ink)
+        sting(game)
+        game:say("SHORT CIRCUIT!")
+        Sfx.play("stamp")
+        return
+    end
+    local all = true
+    for i, p in ipairs(self.parts) do
+        p.lit = lit[i]
+        if p.kind == "bulb" then
+            if self.ring[i] then
+                if lit[i] < FULL then all = false end
+            elseif lit[i] > GLOW then
+                self.state, self.t = "fading", 0
+                self.popped = i
+                game.particles:burst(p.x, p.y, 10, Palette.red)
+                game:say("WRONG BULB!")
+                Sfx.play("stamp")
+                return
+            end
+        end
+    end
+    if all and self.state == "open" then
+        self.state, self.t = "closing", 0
+        Sfx.play("tick")
+    elseif not all and self.state == "closing" then
+        self.state = "open"
+    end
+end
+
+-- The pen's wire as it is drawn: points a pixel apart, and every net touched.
+function C:trace(px, py)
+    local w = self.drawing
+    local fx, fy = math.floor(px), math.floor(py)
+    local last = w.pts[#w.pts]
+    if not last or last.x ~= fx or last.y ~= fy then
+        w.pts[#w.pts + 1] = { x = fx, y = fy }
+    end
+    local before = 0
+    for _ in pairs(w.nets) do before = before + 1 end
+    self:netsAt(px, py, w.nets)
+    for _, e in ipairs(self.ends) do
+        if util.len(px - e.x, py - e.y) <= TERMINAL then
+            -- A wire end joins whatever its copper does; the circle only
+            -- widens the target.
+            self:netsAt(e.x, e.y, w.nets)
+        end
+    end
+    local after = 0
+    for _ in pairs(w.nets) do after = after + 1 end
+    return after ~= before
+end
+
+-- A wire is rubbed out by anything walking over it.
+function C:trodden(w, game)
+    local hit = false
+    game:eachWithin(self.x, self.y, math.max(self.hw, self.hh) + 6, function(e)
+        local r = (e.radius or 4) + 1
+        for k = 1, #w.pts, 2 do
+            local q = w.pts[k]
+            if math.abs(q.x - e.x) <= r and math.abs(q.y - e.y) <= r then
+                hit = true
+                return true
+            end
+        end
+    end)
+    return hit
+end
+
+function C:update(dt, game, pen)
+    if self.sparks then self.sparks = math.max(0, self.sparks - dt) end
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= CIRCUIT_FADE then self.state = "gone" end
+        return
+    end
+    if self.state == "won" then return end
+
+    local changed = false
+
+    -- The pen on the board draws a wire; off it, or lifted, the wire is done.
+    local onBoard = pen and math.abs(pen.x - self.x) <= self.hw
+        and math.abs(pen.y - self.y) <= self.hh
+    if onBoard then
+        if not self.drawing then
+            self.drawing = { pts = {}, nets = {}, age = 0 }
+            self.wires[#self.wires + 1] = self.drawing
+            self.penX, self.penY = nil, nil
+        end
+        local x0, y0 = self.penX or pen.x, self.penY or pen.y
+        local dx, dy = pen.x - x0, pen.y - y0
+        local steps = math.max(1, math.ceil(util.len(dx, dy)))
+        for s = 0, steps do
+            if self:trace(x0 + dx * s / steps, y0 + dy * s / steps) then
+                changed = true
+            end
+        end
+        self.penX, self.penY = pen.x, pen.y
+    elseif self.drawing then
+        self.drawing = nil
+        self.penX, self.penY = nil, nil
+    end
+
+    -- Wires wear off, and are rubbed out by feet. The one being drawn is held.
+    for k = #self.wires, 1, -1 do
+        local w = self.wires[k]
+        if w ~= self.drawing then
+            w.age = w.age + dt
+            local closing = self.state == "closing"
+            if (not closing and w.age >= WIRE_LIFE) or self:trodden(w, game) then
+                if w.age < WIRE_LIFE then
+                    local q = w.pts[math.ceil(#w.pts / 2)]
+                    if q then game.particles:burst(q.x, q.y, 4, Palette.blue) end
+                end
+                table.remove(self.wires, k)
+                changed = true
+            end
+        end
+    end
+
+    if changed then self:judge(game) end
+    if self.state == "fading" then return end
+
+    if self.state == "closing" then
+        self.t = self.t + dt
+        if self.t >= SETTLE then
+            self.state = "won"
+            self.wires, self.drawing = {}, nil
+            -- The wall clock under the board, where taking it is a step away.
+            local cx, cy = self.x, self.y + self.hh + 6
+            game.pickups[#game.pickups + 1] = Pickup.new("clock", cx, cy)
+            game.particles:burst(cx, cy, 10, Palette.slate)
+            game:say("LIGHTS ON!")
+            Sfx.play("accept")
+        end
+    end
+end
+
+-- The board's symbols, a pixel at a time through the fade helpers (`rect`,
+-- `dot`), so a lost board fades the way Simon's does.
+local function hline(x0, x1, y)
+    if x1 < x0 then x0, x1 = x1, x0 end
+    rect(x0, y, x1 - x0 + 1, 1)
+end
+
+local function vline(x, y0, y1)
+    if y1 < y0 then y0, y1 = y1, y0 end
+    rect(x, y0, 1, y1 - y0 + 1)
+end
+
+local function circle(cx, cy, r, step)
+    local n = math.floor(2 * math.pi * r * 1.5)
+    for k = 0, n - 1, step or 1 do
+        local a = 2 * math.pi * k / n
+        dot(cx + math.cos(a) * r + 0.5, cy + math.sin(a) * r + 0.5)
+    end
+end
+
+function C:drawBulb(i, p)
+    local cx, cy = math.floor(p.x), math.floor(p.y)
+    local vertical = p.ax == p.bx
+    -- The leads, from the grid points to the glass.
+    colour(Palette.ink)
+    if vertical then
+        vline(cx, math.min(p.ay, p.by), cy - BULB_R)
+        vline(cx, cy + BULB_R, math.max(p.ay, p.by))
+    else
+        hline(math.min(p.ax, p.bx), cx - BULB_R, cy)
+        hline(cx + BULB_R, math.max(p.ax, p.bx), cy)
+    end
+
+    local popped = self.popped == i
+    local on = not popped and p.lit or 0
+    if on > GLOW then
+        -- Lit: the glass filled, and at full brightness rays round it.
+        colour(Palette.blush)
+        for yy = -BULB_R + 1, BULB_R - 1 do
+            for xx = -BULB_R + 1, BULB_R - 1 do
+                if xx * xx + yy * yy < (BULB_R - 0.5) ^ 2
+                    and (on >= FULL or (xx + yy) % 2 == 0) then
+                    dot(cx + xx, cy + yy)
+                end
+            end
+        end
+        if on >= FULL then
+            colour(Palette.red)
+            for k = 0, 7 do
+                local a = k * math.pi / 4 + math.pi / 8
+                local c, s = math.cos(a), math.sin(a)
+                dot(cx + c * (BULB_R + 2) + 0.5, cy + s * (BULB_R + 2) + 0.5)
+                dot(cx + c * (BULB_R + 3) + 0.5, cy + s * (BULB_R + 3) + 0.5)
+            end
+        end
+    end
+    colour(popped and Palette.red or Palette.ink)
+    circle(cx, cy, BULB_R)
+    -- The filament's cross.
+    for k = -2, 2 do
+        if not popped or k % 2 == 0 then
+            dot(cx + k, cy + k)
+            dot(cx + k, cy - k)
+        end
+    end
+    if self.ring[i] and self.state ~= "won" then
+        colour(Palette.red)
+        circle(cx, cy, BULB_R + 5, 3)
+    end
+end
+
+-- A diode: a triangle pointing the way current may go, and the bar it meets.
+function C:drawDiode(p)
+    local cx, cy = math.floor(p.x), math.floor(p.y)
+    local ux, uy = util.normalize(p.bx - p.ax, p.by - p.ay)
+    colour(Palette.ink)
+    -- Leads, anode side to the triangle's base and the bar to the cathode side.
+    if uy == 0 then
+        hline(math.floor(p.ax), cx - 3 * ux, cy)
+        hline(cx + 3 * ux, math.floor(p.bx), cy)
+    else
+        vline(cx, math.floor(p.ay), cy - 3 * uy)
+        vline(cx, cy + 3 * uy, math.floor(p.by))
+    end
+    for k = 0, 5 do
+        local h = 3 - math.floor(k / 2)
+        for s = -h, h do
+            local along = -3 + k
+            if uy == 0 then dot(cx + along * ux, cy + s) else dot(cx + s, cy + along * uy) end
+        end
+    end
+    for s = -3, 3 do
+        if uy == 0 then dot(cx + 3 * ux, cy + s) else dot(cx + s, cy + 3 * uy) end
+    end
+end
+
+function C:drawBattery()
+    local bt = self.battery
+    local cx = math.floor(bt.x)
+    local dir = bt.ny > bt.py and 1 or -1
+    local cy = math.floor(bt.y)
+    colour(Palette.ink)
+    vline(cx, math.floor(bt.py), cy - 2 * dir)
+    vline(cx, cy + 2 * dir, math.floor(bt.ny))
+    -- The long plate on the + side, the short thick one on the -.
+    rect(cx - 4, cy - 2 * dir, 9, 1)
+    rect(cx - 2, cy + 1 * dir, 5, 2)
+    colour(Palette.red)
+    local sx = cx + (self.mx and -9 or 6)
+    rect(sx, cy - 5 * dir - 1, 3, 1)
+    rect(sx + 1, cy - 5 * dir - 2, 1, 3)
+    if self.sparks and self.sparks > 0 then
+        for k = 1, 6 do
+            local a = util.hash01(k, math.floor(self.sparks * 20), self.seed) * math.pi * 2
+            dot(cx + math.cos(a) * 7, cy + math.sin(a) * 7)
+        end
+    end
+end
+
+function C:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / CIRCUIT_FADE, 0, 1) or 0
+    fadeSeed = self.seed
+
+    colour(Palette.ink)
+    for _, s in ipairs(self.segs) do
+        if s.ay == s.by then hline(s.ax, s.bx, s.ay) else vline(s.ax, s.ay, s.by) end
+    end
+    for _, e in ipairs(self.ends) do
+        colour(Palette.paper)
+        rect(e.x - 1, e.y - 1, 3, 3)
+        colour(Palette.ink)
+        circle(e.x, e.y, 2)
+    end
+    self:drawBattery()
+    for i, p in ipairs(self.parts) do
+        if p.kind == "bulb" then self:drawBulb(i, p) else self:drawDiode(p) end
+    end
+
+    -- The wires you drew, in the pen's blue, going pale as they wear off.
+    for _, w in ipairs(self.wires) do
+        local left = WIRE_LIFE - w.age
+        colour(self.state == "closing" and Palette.blue
+            or left > 1.5 and Palette.blue or Palette.sky)
+        for _, q in ipairs(w.pts) do dot(q.x, q.y) end
+    end
+    fade = 0
+end
+
+--- join the dots -------------------------------------------------------------------
+
+-- ART's first sheet: numbered dots that make a picture once they are joined in
+-- order. Touch them with the pen one after another -- a line drawn through
+-- them, or a tap on each, whichever the horde leaves room for -- and the sheet
+-- rules the line in behind you. Touch one out of order and every line comes
+-- off and you start again from the first; the third time, the dots wander off
+-- the page. Finished, the outline is closed and the picture pays a gold star.
+--
+-- It climbs by count -- six or seven dots at a first-year's, then eight or
+-- nine, then ten or more -- and at a doctorate by what the numbers say: they
+-- still rise along the outline but skip as they go (3, 5, 9, 10...), so the
+-- next dot is the next number *up*, which has to be looked for.
+local J = {}
+J.__index = J
+
+local DOT_U = 11        -- one step of a picture's grid, in page pixels
+local DOT_TOUCH = 5     -- how near the pen must come to a dot to touch it
+local DOT_TRIES = 3
+local DOT_FLASH = 0.45
+local DOT_FADE = 1.4
+local WANDER = 14       -- how far the dots drift as they go
+-- Semitones off the note's G, a step up the pentatonic per dot joined.
+local RISE = { -12, -10, -8, -5, -3, 0, 2, 4, 7, 9, 12, 14 }
+
+-- Each picture is its outline's corners in order, on a grid ten across and
+-- eight down, and closes back on its first.
+local PICTURES = {
+    fish = { { 10, 4 }, { 7, 1 }, { 3, 2 }, { 0, 0 }, { 0, 8 }, { 3, 6 }, { 7, 7 } },
+    arrow = { { 0, 3 }, { 6, 3 }, { 6, 0 }, { 10, 4 }, { 6, 8 }, { 6, 5 }, { 0, 5 } },
+    bolt = { { 4, 0 }, { 9, 0 }, { 6, 3 }, { 9, 3 }, { 1, 8 }, { 4, 4 }, { 1, 4 } },
+    sail = { { 5, 0 }, { 8, 5 }, { 10, 5 }, { 8, 8 }, { 2, 8 }, { 0, 5 }, { 2, 5 } },
+    heart = { { 5, 2 }, { 7, 0 }, { 9, 1 }, { 10, 3 }, { 5, 8 }, { 0, 3 }, { 1, 1 }, { 3, 0 } },
+    cat = { { 1, 8 }, { 0, 4 }, { 1, 0 }, { 4, 2 }, { 6, 2 }, { 9, 0 }, { 10, 4 }, { 9, 8 } },
+    house = { { 1, 8 }, { 1, 4 }, { 5, 0 }, { 9, 4 }, { 9, 8 }, { 6, 8 }, { 6, 5 }, { 4, 5 }, { 4, 8 } },
+    crown = { { 0, 8 }, { 0, 2 }, { 2, 5 }, { 3, 1 }, { 5, 4 }, { 7, 1 }, { 8, 5 }, { 10, 2 }, { 10, 8 } },
+    star = { { 5, 0 }, { 6, 3 }, { 10, 3 }, { 7, 5 }, { 8, 8 }, { 5, 6 }, { 2, 8 }, { 3, 5 }, { 0, 3 }, { 4, 3 } },
+    tree = { { 5, 0 }, { 8, 3 }, { 6, 3 }, { 9, 6 }, { 6, 6 }, { 6, 8 }, { 4, 8 }, { 4, 6 }, { 1, 6 }, { 4, 3 }, { 2, 3 } },
+    rocket = { { 5, 0 }, { 7, 2 }, { 7, 6 }, { 9, 8 }, { 6, 7 }, { 4, 7 }, { 1, 8 }, { 3, 6 }, { 3, 2 } },
+}
+
+local DOT_SETS = {
+    school = { "fish", "arrow", "bolt", "sail" },
+    bachelor = { "heart", "cat", "house", "crown", "rocket" },
+    masters = { "star", "tree", "house", "crown", "rocket" },
+    phd = { "star", "tree", "house", "crown", "rocket", "heart", "cat" },
+}
+
+function J.new(x, y, courseKey)
+    local set = DOT_SETS[courseKey] or DOT_SETS.school
+    local pic = PICTURES[set[love.math.random(#set)]]
+    local flip = love.math.random() < 0.5
+    local x0, y0 = math.floor(x - 5 * DOT_U), math.floor(y - 4 * DOT_U)
+    local dots, sx, sy = {}, 0, 0
+    -- Mirrored half the time, and started at any corner, so a picture seen
+    -- twice is not the same walk twice.
+    local start = love.math.random(#pic) - 1
+    for k = 1, #pic do
+        local c = pic[(k - 1 + start) % #pic + 1]
+        local gx = flip and 10 - c[1] or c[1]
+        dots[k] = { x = x0 + gx * DOT_U, y = y0 + c[2] * DOT_U }
+        sx, sy = sx + dots[k].x, sy + dots[k].y
+    end
+    local cx, cy = sx / #dots, sy / #dots
+
+    -- The numbers: one, two, three -- or at a doctorate a climb with gaps in it.
+    local n = 0
+    for k, d in ipairs(dots) do
+        n = courseKey == "phd" and n + love.math.random(1, 4) or k
+        d.label = tostring(n)
+        -- Beside the dot, on the side away from the middle of the picture.
+        local ux, uy = util.normalize(d.x - cx, d.y - cy)
+        d.lx = math.floor(d.x + ux * 6 - Font.width(d.label) / 2 + 0.5)
+        d.ly = math.floor(d.y + uy * 6 - Font.height / 2 + 0.5)
+        d.wx, d.wy = ux, uy
+    end
+
+    return setmetatable({
+        kind = "dots",
+        x = x, y = y, cx = cx, cy = cy,
+        hw = 5 * DOT_U + 10, hh = 4 * DOT_U + 10,
+        dots = dots,
+        joined = 0,
+        tries = DOT_TRIES,
+        state = "open",
+        seed = util.hash01(x, y, 8) * 1000,
+    }, J)
+end
+
+function J:dotAt(px, py)
+    local best, bestD
+    for i, d in ipairs(self.dots) do
+        local dd = util.len(px - d.x, py - d.y)
+        if dd <= DOT_TOUCH and (not bestD or dd < bestD) then best, bestD = i, dd end
+    end
+    return best
+end
+
+-- Arriving on dot `i` with the pen.
+function J:touch(i, game)
+    if i <= self.joined then return end -- passing back over the picture is free
+    if i == self.joined + 1 then
+        self.joined = i
+        -- Up a step of the pentatonic with every dot, so a picture being
+        -- joined is heard rising and never sounds a wrong note on the way.
+        Sfx.play("note", 2 ^ ((RISE[i] or RISE[#RISE]) / 12))
+        if i == #self.dots then
+            self.state = "won"
+            self.t = 0
+            local p = Pickup.new("star", self.cx, self.cy)
+            game.pickups[#game.pickups + 1] = p
+            game.particles:burst(self.cx, self.cy, 10, Palette.red)
+            game:say("WELL DRAWN!")
+            Sfx.play("accept")
+        end
+        return
+    end
+    -- Out of order: the lines come off and it starts again from the first.
+    self.flash, self.flashT = i, DOT_FLASH
+    self.joined = 0
+    self.tries = self.tries - 1
+    game:say("WRONG DOT!")
+    Sfx.play("stamp")
+    if self.tries <= 0 then
+        self.state = "fading"
+        self.t = 0
+    end
+    return true
+end
+
+function J:update(dt, game, pen)
+    if self.flashT then
+        self.flashT = self.flashT - dt
+        if self.flashT <= 0 then self.flash, self.flashT = nil, nil end
+    end
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= DOT_FADE then self.state = "gone" end
+        return
+    end
+    if self.state ~= "open" then return end
+
+    if not pen then
+        self.penX, self.penY, self.on = nil, nil, nil
+        return
+    end
+    local x0, y0 = self.penX or pen.x, self.penY or pen.y
+    local dx, dy = pen.x - x0, pen.y - y0
+    local steps = math.max(1, math.ceil(util.len(dx, dy)))
+    for s = 0, steps do
+        -- A dot is touched as the pen arrives on it, not while it rests there.
+        local i = self:dotAt(x0 + dx * s / steps, y0 + dy * s / steps)
+        if i and i ~= self.on then
+            self.on = i
+            if self:touch(i, game) or self.state ~= "open" then break end
+        elseif not i then
+            self.on = nil
+        end
+    end
+    self.penX, self.penY = pen.x, pen.y
+end
+
+function J:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / DOT_FADE, 0, 1) or 0
+    fadeSeed = self.seed
+    local drift = fade * WANDER
+
+    -- The lines joined so far, ruled straight, and the outline closed once done.
+    colour(Palette.ink)
+    local n = self.state == "won" and #self.dots or self.joined
+    for k = 1, n - 1 do
+        local a, b = self.dots[k], self.dots[k + 1]
+        pixelart.line(a.x, a.y, b.x, b.y)
+    end
+    if self.state == "won" then
+        local a, b = self.dots[#self.dots], self.dots[1]
+        pixelart.line(a.x, a.y, b.x, b.y)
+    end
+
+    for i, d in ipairs(self.dots) do
+        local x = d.x + d.wx * drift * (0.5 + util.hash01(i, 1, self.seed))
+        local y = d.y + d.wy * drift * (0.5 + util.hash01(i, 2, self.seed))
+        local wrong = self.flash == i
+        colour(wrong and Palette.red or i <= self.joined and Palette.blue or Palette.ink)
+        rect(x - 1, y - 1, 2, 2)
+        if wrong then
+            colour(Palette.red)
+            scribble(x, y, DOT_TOUCH, 1)
+        end
+        if self.state ~= "won" and fade < 0.6 then
+            colour(i <= self.joined and Palette.blue or Palette.slate)
+            Font.print(d.label, d.lx + (x - d.x), d.ly + (y - d.y))
+        end
+    end
+
+    -- Tries left, as tally strokes in the corner; a spent one goes red.
+    if self.state ~= "won" then
+        local tx, ty = math.floor(self.x + 5 * DOT_U + 4), math.floor(self.y - 4 * DOT_U - 2)
+        for k = 1, DOT_TRIES do
+            colour(k <= DOT_TRIES - self.tries and Palette.red or Palette.slate)
+            rect(tx + k * 3, ty, 1, 5)
+        end
+    end
+    fade = 0
+end
+
+--- the portrait ----------------------------------------------------------------------
+
+-- ART's second sheet, and the opposite of the first: join the dots is moving
+-- with care, this is not moving at all. An easel and a chalk cross on the floor
+-- beside it. Step onto the cross and the portrait starts -- yours, drawn off the
+-- hero you play as (`Sprites.player`, whatever the studio has made of it), a
+-- row at a time onto the easel's canvas -- and you have to sit for it: walk off
+-- the cross before it is finished and it smears, and the sheet fades.
+--
+-- The dodgeball pit's drill turned inside out. You may draw, and every tool
+-- goes on fighting for you, and being hit does not spoil it -- only walking
+-- does -- so the horde walks straight up to a hero who has promised not to step
+-- aside, and the question is whether what you carry holds them off for the
+-- sitting. Finished, the alarm clock drops at your feet: the crowd that
+-- gathered round a sitter is exactly the crowd it was made for.
+local P = {}
+P.__index = P
+
+local SIT = { school = 6, bachelor = 7, masters = 8, phd = 9 }
+local MARK_R = 7          -- the chalk circle: inside it is sitting
+local MARK_IN = 4         -- and this near its middle starts the sitting
+local EASEL_GAP = 34      -- from the easel's middle to the cross
+local PORTRAIT_FADE = 1.2
+local SIT_STROKE = 0.45   -- how often a brush is heard while it paints
+
+-- The hero, whoever is being played: the rows the studio's drawing was compiled
+-- from, or a stick man if a sprite somehow has none.
+local function heroRows()
+    local s = Sprites.player
+    return s and s.rows or Sprites.STICKMAN
+end
+
+function P.new(x, y, courseKey)
+    local rows = heroRows()
+    local w, h = #rows[1], #rows
+    local scale = (w <= 16 and h <= 20) and 2 or 1
+    local cw, ch = w * scale + 4, h * scale + 4 -- the canvas, a margin round it
+    local ex = math.floor(x - EASEL_GAP / 2 - cw / 2)
+    local ey = math.floor(y - ch / 2 - 6)
+    return setmetatable({
+        kind = "portrait",
+        x = x, y = y,
+        hw = EASEL_GAP / 2 + cw / 2 + MARK_R + 4, hh = ch / 2 + 16,
+        rows = rows, scale = scale,
+        ex = ex, ey = ey, cw = cw, ch = ch,
+        mx = math.floor(x + EASEL_GAP / 2 + cw / 2 - 4), my = math.floor(y + 4),
+        time = SIT[courseKey] or SIT.school,
+        state = "open",
+        seed = util.hash01(x, y, 9) * 1000,
+    }, P)
+end
+
+function P:sitting(px, py, r)
+    return util.len(px - self.mx, py - self.my) <= r
+end
+
+function P:finish(game, won)
+    self.live = false
+    if won then
+        self.state = "won"
+        game.pickups[#game.pickups + 1] = Pickup.new("alarm", self.mx, self.my + 10)
+        game.particles:burst(self.ex + self.cw / 2, self.ey + self.ch / 2, 10, Palette.red)
+        game:say("MASTERPIECE!")
+        Sfx.play("accept")
+    else
+        self.state, self.t = "fading", 0
+        game:say("SMUDGED!")
+        Sfx.play("eraser")
+    end
+end
+
+function P:update(dt, game)
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= PORTRAIT_FADE then self.state = "gone" end
+        return
+    end
+    if self.state ~= "open" then return end
+
+    local p = game.player
+    if not self.live then
+        if self:sitting(p.x, p.y, MARK_IN) then
+            self.live = true
+            self.left = self.time
+            self.brush = 0
+            game:say("HOLD STILL!")
+            Sfx.play("tick")
+        end
+        return
+    end
+
+    if not self:sitting(p.x, p.y, MARK_R) then
+        self:finish(game, false)
+        return
+    end
+    self.left = self.left - dt
+    self.brush = self.brush - dt
+    if self.brush <= 0 then
+        self.brush = SIT_STROKE
+        Sfx.play("brush" .. love.math.random(6))
+    end
+    if self.left <= 0 then self:finish(game, true) end
+end
+
+function P:clock()
+    return self.live and self.left
+end
+
+function P:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / PORTRAIT_FADE, 0, 1) or 0
+    fadeSeed = self.seed
+
+    local ex, ey, cw, ch = self.ex, self.ey, self.cw, self.ch
+    -- The easel: three legs and the ledge the canvas stands on.
+    colour(Palette.slate)
+    local mid = ex + math.floor(cw / 2)
+    for k = 0, 9 do
+        dot(ex + 3 - math.floor(k / 3), ey + ch + k)
+        dot(ex + cw - 4 + math.floor(k / 3), ey + ch + k)
+        dot(mid, ey + ch + k)
+    end
+    rect(ex - 2, ey + ch, cw + 4, 1)
+    rect(mid, ey - 3, 1, 3)
+
+    -- The canvas.
+    colour(Palette.ink)
+    rect(ex, ey, cw, 1)
+    rect(ex, ey + ch - 1, cw, 1)
+    rect(ex, ey, 1, ch)
+    rect(ex + cw - 1, ey, 1, ch)
+
+    -- The portrait, as far as it has got: the hero's pixels in reading order,
+    -- the one being drawn in graphite as the pencil's point.
+    local rows, s = self.rows, self.scale
+    local w, h = #rows[1], #rows
+    local done = w * h
+    if self.state == "open" then
+        done = self.live and math.floor((1 - self.left / self.time) * w * h) or 0
+    end
+    local n = 0
+    for r = 1, h do
+        local row = rows[r]
+        for c = 1, w do
+            n = n + 1
+            if n > done then break end
+            local ch_ = row:sub(c, c)
+            if ch_ ~= "." and Palette.key[ch_] then
+                colour(n == done and self.live and Palette.graphite or Palette.key[ch_])
+                rect(ex + 2 + (c - 1) * s, ey + 2 + (r - 1) * s, s, s)
+            end
+        end
+        if n > done then break end
+    end
+
+    -- The chalk cross and the circle round it: where to sit.
+    if self.state ~= "won" then
+        colour(self.live and Palette.red or Palette.slate)
+        for k = -2, 2 do
+            dot(self.mx + k, self.my + k)
+            dot(self.mx + k, self.my - k)
+        end
+        scribble(self.mx, self.my, MARK_R, 1, true)
+    end
+    fade = 0
+end
+
+--- the market ------------------------------------------------------------------------
+
+-- FINANCE's second sheet, and the one in the book played with real money. A
+-- price chart ruled on the page over a BUY box and a SELL box. Walk onto the
+-- sheet and the market opens: the price draws itself left to right against a
+-- clock. Step into BUY and you put coins in -- the ones this run has picked up
+-- first, then the purse's own -- at the price on the chart; step into SELL and
+-- they come back out at the price then, as coins on the page. Buy low and sell
+-- high and you walk off with more than you put in; sell low and you walk off
+-- with less; still holding when the chart reaches its edge and the stake is
+-- gone. One trade a sheet.
+--
+-- That is the whole of its price and its prize, which is why it pays nothing
+-- else and sends nothing: a stake is already a gamble, and it is the one sheet
+-- whose loss outlives the run the way the till's coins do. It climbs the
+-- course by the stake and by the chart: a first-year's wanders gently and
+-- slowly, and up the ladder it gets jumpier and quicker, and at a doctorate it
+-- crashes once somewhere after the middle -- and only a quick seller beats it.
+local K = {}
+K.__index = K
+
+local CHART_W, CHART_H = 120, 44
+local CHART_UP = 26        -- the chart's middle, above the sheet's
+local BOX_DOWN = 20        -- the boxes' middles, below it
+local BOX_APART = 36       -- each box's middle off the sheet's middle line
+local BOX_H = 18
+local POINTS = 49          -- prices on the chart, one every CHART_W / 48 px
+local LO, HI = 20, 99      -- what a price can be
+local STAKE = { school = 3, bachelor = 4, masters = 5, phd = 6 }
+local OPEN_FOR = { school = 16, bachelor = 14, masters = 12, phd = 12 }
+local SWING = { school = 4, bachelor = 6, masters = 8, phd = 9 }
+local MARKET_FADE = 1.2
+
+-- The day's prices, dealt when the sheet is printed: a walk that leans back
+-- towards the middle so it never sits on a rail for long, and at a doctorate
+-- one crash, a third off over three steps, after the middle.
+local function market(courseKey)
+    local swing = SWING[courseKey] or SWING.school
+    local p = love.math.random(40, 65)
+    local prices = { p }
+    local crash = courseKey == "phd" and love.math.random(26, 38) or nil
+    for i = 2, POINTS do
+        local pull = (60 - p) * 0.06
+        p = p + pull + (love.math.random() * 2 - 1) * swing
+        if crash and i >= crash and i < crash + 3 then p = p * 0.86 end
+        p = util.clamp(p, LO, HI)
+        prices[i] = p
+    end
+    return prices
+end
+
+function K.new(x, y, courseKey)
+    local buyW = math.max(36, Font.width(I18n.t("BUY")) + 10)
+    local sellW = math.max(36, Font.width(I18n.t("SELL")) + 10)
+    local k = setmetatable({
+        kind = "stocks",
+        x = x, y = y,
+        hw = math.max(CHART_W / 2 + 6, BOX_APART + math.max(buyW, sellW) / 2 + 2),
+        hh = CHART_UP + CHART_H / 2 + 8,
+        prices = market(courseKey),
+        stake = STAKE[courseKey] or STAKE.school,
+        time = OPEN_FOR[courseKey] or OPEN_FOR.school,
+        cl = math.floor(x - CHART_W / 2), ct = math.floor(y - CHART_UP - CHART_H / 2),
+        buy = { x = x - BOX_APART, y = y + BOX_DOWN, w = buyW, label = "BUY" },
+        sell = { x = x + BOX_APART, y = y + BOX_DOWN, w = sellW, label = "SELL" },
+        state = "open",
+        seed = util.hash01(x, y, 10) * 1000,
+    }, K)
+    k.hh = math.max(k.hh, BOX_DOWN + BOX_H / 2 + 12)
+    -- The chart is scaled to the day's own range and a little over, so a quiet
+    -- first-year's market still fills its height and a move reads as a move;
+    -- the price printed at the line's head is what says how much it is.
+    local lo, hi = math.huge, -math.huge
+    for _, v in ipairs(k.prices) do lo, hi = math.min(lo, v), math.max(hi, v) end
+    local pad = math.max(4, (hi - lo) * 0.1)
+    k.lo, k.hi = lo - pad, hi + pad
+    return k
+end
+
+function K:within(box, px, py)
+    return math.abs(px - box.x) <= box.w / 2 - 1 and math.abs(py - box.y) <= BOX_H / 2 - 1
+end
+
+-- How far along the chart is, in prices, and the price there.
+function K:at()
+    local f = util.clamp(1 - (self.left or self.time) / self.time, 0, 1) * (POINTS - 1) + 1
+    local i = math.floor(f)
+    local a, b = self.prices[i], self.prices[math.min(POINTS, i + 1)]
+    return f, a + (b - a) * (f - i)
+end
+
+function K:px(f) return self.cl + (f - 1) * CHART_W / (POINTS - 1) end
+function K:py(p)
+    return self.ct + CHART_H - 1 - (p - self.lo) / (self.hi - self.lo) * (CHART_H - 2)
+end
+
+-- Coins to the stake, off the run's first and the purse's after; how many
+-- were found, which may be fewer than asked for or none at all.
+function K:fund(game)
+    local want = self.stake
+    local fromRun = math.min(want, game.banked or 0)
+    local fromPurse = math.min(want - fromRun, Purse.total or 0)
+    if fromRun + fromPurse <= 0 then return 0 end
+    if fromPurse > 0 and not Purse.spend(fromPurse) then fromPurse = 0 end
+    game.banked = (game.banked or 0) - fromRun
+    return fromRun + fromPurse
+end
+
+function K:close(game, text)
+    self.live = false
+    self.state, self.t = "fading", 0
+    game:say(text)
+    Sfx.play("stamp")
+end
+
+function K:update(dt, game)
+    if self.state == "fading" then
+        self.t = self.t + dt
+        if self.t >= MARKET_FADE then self.state = "gone" end
+        return
+    end
+    if self.state ~= "open" then return end
+
+    local p = game.player
+    if not self.live then
+        if math.abs(p.x - self.x) <= self.hw and math.abs(p.y - self.y) <= self.hh then
+            self.live = true
+            self.left = self.time
+            game:say("MARKET OPEN!")
+            Sfx.play("tick")
+        end
+        return
+    end
+
+    self.left = self.left - dt
+    if self.left <= 0 then
+        self.left = 0
+        -- Still holding is the stake gone; never having bought is nothing lost.
+        self:close(game, "MARKET CLOSED!")
+        return
+    end
+
+    local f, price = self:at()
+    local inBuy, inSell = self:within(self.buy, p.x, p.y), self:within(self.sell, p.x, p.y)
+    if inBuy and not self.wasBuy and not self.held then
+        local coins = self:fund(game)
+        if coins > 0 then
+            self.held, self.boughtAt, self.boughtF = coins, price, f
+            game.particles:burst(self.buy.x, self.buy.y, 6, Palette.blush)
+            game:say("BOUGHT!")
+            Sfx.play("item")
+        elseif not self.broke then
+            self.broke = true
+            game:say("NO COINS")
+            Sfx.play("stamp")
+        end
+    elseif inSell and not self.wasSell and self.held then
+        local back = math.floor(self.held * price / self.boughtAt + 0.5)
+        self.soldAt, self.soldF = price, f
+        self.live = false
+        self.state = "done"
+        -- Paid out as coins on the page under the box, in rows of five, to be
+        -- walked over -- the till's way, so the money is seen to come back.
+        for c = 0, back - 1 do
+            local cx = self.sell.x + ((c % 5) - 2) * 8
+            local cy = self.sell.y + BOX_H / 2 + 6 + math.floor(c / 5) * 8
+            game.pickups[#game.pickups + 1] = Pickup.new("coin", cx, cy)
+        end
+        game.particles:burst(self.sell.x, self.sell.y, 10, Palette.blush)
+        game:say("SOLD!")
+        Sfx.play(back > self.held and "accept" or "stamp")
+    end
+    self.wasBuy, self.wasSell = inBuy, inSell
+end
+
+function K:clock()
+    return self.live and self.left
+end
+
+function K:drawBox(box, lit)
+    local l, t = math.floor(box.x - box.w / 2), math.floor(box.y - BOX_H / 2)
+    colour(lit and Palette.blue or Palette.slate)
+    rect(l, t, box.w, 1)
+    rect(l, t + BOX_H - 1, box.w, 1)
+    rect(l, t, 1, BOX_H)
+    rect(l + box.w - 1, t, 1, BOX_H)
+    if fade < 0.6 then
+        love.graphics.setColor(lit and Palette.blue or Palette.ink)
+        Font.printCentered(I18n.t(box.label), box.x, t + math.floor((BOX_H - Font.height) / 2))
+    end
+end
+
+function K:draw()
+    if self.state == "gone" then return end
+    fade = self.state == "fading" and util.clamp(self.t / MARKET_FADE, 0, 1) or 0
+    fadeSeed = self.seed
+
+    -- The chart's axes, and a tick along the bottom every quarter of the day.
+    local cl, ct = self.cl, self.ct
+    colour(Palette.slate)
+    rect(cl - 1, ct, 1, CHART_H)
+    rect(cl - 1, ct + CHART_H, CHART_W + 2, 1)
+    for q = 1, 4 do rect(cl + q * CHART_W / 4, ct + CHART_H + 1, 1, 2) end
+
+    -- What was paid, ruled across the chart dotted, so above it is profit.
+    if self.boughtAt then
+        colour(Palette.graphite)
+        local by = math.floor(self:py(self.boughtAt))
+        for xx = cl, cl + CHART_W - 1, 3 do dot(xx, by) end
+    end
+
+    -- The price so far: blue while it is above what you paid, red below.
+    local upto = self.live and self:at()
+        or self.soldF or (self.state == "fading" and POINTS) or 1
+    local last
+    for i = 1, math.floor(upto) do
+        local x, y = self:px(i), self:py(self.prices[i])
+        if last then
+            local above = not self.boughtAt or self.prices[i] >= self.boughtAt
+            colour((self.boughtF and i > self.boughtF and not above) and Palette.red
+                or Palette.ink)
+            if fade == 0 then pixelart.line(last.x, last.y, x, y) end
+        end
+        last = { x = x, y = y }
+    end
+    if self.live or self.soldF then
+        local f, price = self:at()
+        if self.soldF then f, price = self.soldF, self.soldAt end
+        local x, y = self:px(f), self:py(price)
+        if last and fade == 0 then
+            colour(Palette.ink)
+            pixelart.line(last.x, last.y, x, y)
+        end
+        -- The price now, at the head of the line, in the corner above it.
+        love.graphics.setColor(Palette.ink)
+        Font.printRight(tostring(math.floor(price + 0.5)), cl + CHART_W, ct - Font.height - 2)
+        colour(Palette.red)
+        rect(x - 1, y - 1, 3, 3)
+    end
+    if self.boughtF then
+        colour(Palette.blue)
+        rect(self:px(self.boughtF) - 1, self:py(self.boughtAt) - 1, 3, 3)
+    end
+
+    if self.state ~= "done" then
+        self:drawBox(self.buy, self.held ~= nil)
+        self:drawBox(self.sell, false)
+    end
+    fade = 0
+end
+
 --- the page ------------------------------------------------------------------------
 
 local KINDS = {
@@ -1328,7 +2580,13 @@ local KINDS = {
     dodgeball = function(x, y, game) return D.new(x, y, game.course.key, daysOf(game)) end,
     -- Back empty, like Simon, when no path was dealt; the cell is spent anyway.
     hopscotch = function(x, y, game) return H.new(x, y, game.course.key, daysOf(game)) end,
+    circuit = function(x, y, game) return C.new(x, y, game.course.key) end,
+    dots = function(x, y, game) return J.new(x, y, game.course.key) end,
+    portrait = function(x, y, game) return P.new(x, y, game.course.key) end,
+    stocks = function(x, y, game) return K.new(x, y, game.course.key) end,
 }
+-- For a test harness to build one kind directly, and for nothing in the game.
+Worksheet._kinds = KINDS
 for kind in pairs(BOARDS) do
     KINDS[kind] = function(x, y, game) return Q.new(x, y, game.course.key, kind) end
 end

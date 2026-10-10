@@ -652,6 +652,27 @@ local ES = {
     ["OUT!"] = "¡ELIMINADO!",
     ["HOP!"] = "¡SALTA!",
     ["FINISH!"] = "¡META!",
+    -- SCIENCE's circuit: the ringed bulbs on, a wire across the battery, a bulb
+    -- that should have stayed off.
+    ["LIGHTS ON!"] = "¡SE HIZO LA LUZ!",
+    ["SHORT CIRCUIT!"] = "¡CORTOCIRCUITO!",
+    ["WRONG BULB!"] = "¡BOMBILLA EQUIVOCADA!",
+    -- ART's two: join the dots, and the portrait you sit for. EMBORRONADO is
+    -- what a drawing a sleeve went through has become.
+    ["WELL DRAWN!"] = "¡BIEN DIBUJADO!",
+    ["WRONG DOT!"] = "¡PUNTO EQUIVOCADO!",
+    ["HOLD STILL!"] = "¡NO TE MUEVAS!",
+    ["MASTERPIECE!"] = "¡OBRA MAESTRA!",
+    ["SMUDGED!"] = "¡EMBORRONADO!",
+    -- FINANCE's market. LA BOLSA is the stock exchange, which is what opens
+    -- and shuts; the two boxes are what a ticket says, a noun each.
+    ["MARKET OPEN!"] = "¡ABRE LA BOLSA!",
+    ["MARKET CLOSED!"] = "¡CIERRA LA BOLSA!",
+    ["BOUGHT!"] = "¡COMPRADO!",
+    ["SOLD!"] = "¡VENDIDO!",
+    ["NO COINS"] = "SIN MONEDAS",
+    ["BUY"] = "COMPRA",
+    ["SELL"] = "VENTA",
     -- And the enraged one (Spawner:fury), which is the other line here that names
     -- a monster rather than a moment -- and the one that has to name a *pen*. A
     -- red-pen correction over the top of your work is the same thing in a Spanish

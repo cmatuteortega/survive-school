@@ -14,23 +14,22 @@ It belongs to `ROADMAP.md`'s **Stage hazards / gimmicks**: lessons that differ i
 Every lesson prints tic-tac-toe, and on top of that each one should have **two
 sheets nobody else has** -- ideally answered two different ways, so a lesson's
 pair is two kinds of puzzle rather than one puzzle with two question books.
-MATHS, MUSIC and P.E. are done; the rest is the list below.
+MATHS, MUSIC, P.E., SCIENCE, FINANCE and ART are done; GRAMMAR is the one
+left.
 
 | Lesson | Its first | Its second | Left | Pick next (machine) |
 | --- | --- | --- | --- | --- |
 | **MATHS** | Pop quiz (stand) | Sequence (stand) | -- done | -- |
 | **MUSIC** | Stave (stand) | Simon says (walk in order) | -- done | -- |
-| **SCIENCE** | Lab (stand) | -- | one | **Close the circuit** (draw a pen line); memory pairs or bounce the beam as spares |
-| **FINANCE** | Till (stand) | -- | one | **Exact change** (collect coins to a sum); balance the ledger is another stand-on board, so second choice |
-| **GRAMMAR** | -- | -- | two | **Red pen** (scribble the backwards letter) and **alphabet run** (walk in order, Simon's machine) |
-| **ART** | -- | -- | two | **Join the dots** (draw through in order) and **symmetry** (scribble the mirror half) |
+| **SCIENCE** | Lab (stand) | Circuit (draw a wire) | -- done | -- |
+| **FINANCE** | Till (stand) | Market (stand, against a clock, with real coins) | -- done | -- |
+| **GRAMMAR** | -- | -- | two | **Close the brackets** (stand, a `quiz.lua` book) and **line up the class** (kill lettered monsters in their boxes, in order) are the current ideas |
+| **ART** | Join the dots (touch in order) | Portrait (stand still) | -- done | -- |
 | **P.E.** | Dodgeball pit (stay in a box) | Hopscotch (walk in order, against a clock) | -- done | -- |
 
-That is five sheets to go. The cheapest are the ones on a built machine:
-alphabet run reuses Simon's and hopscotch's walk-in-order idea, and red pen and
-symmetry reuse tic-tac-toe's scribbled cells. The draw-a-line machine (close the
-circuit, join the dots) is the one not built yet, and it would serve two
-lessons at once.
+That is two sheets to go, both GRAMMAR's. Close the brackets is the cheapest
+thing left in the book -- a new book of rungs in `src/quiz.lua` and a row in
+`BOARDS` -- since the face already draws `( ) [ ] { } ¿ ? ¡ !`.
 
 ## Rules every worksheet keeps
 
@@ -155,7 +154,34 @@ lessons at once.
 Both P.E. sheets start and finish on the whistle, and while one is under way its
 clock counts down in red under the run's.
 
-### What the built nine pay
+- [x] **Circuit** (SCIENCE). A battery, bulbs and bare printed wire with gaps,
+      one bulb ringed in red. **Draw a wire across a gap**; everything the line
+      touches is joined, and the board is solved like a physics book's (bulbs
+      by current, diodes one way). The ringed bulbs fully lit and nothing else,
+      held for a moment, is a **wall clock**. Joining the battery's two sides is
+      a **short** (twenty off the bar, the sheet fades); lighting an unringed
+      bulb even dimly **pops** it (the sheet fades); a monster walking over the
+      wire while it warms up rubs it out; a wire that did nothing wears off in
+      six seconds. HIGH SCHOOL is one gap and a stub of the return wire to
+      avoid, BACHELOR two bulbs off one wire end, MASTERS two routes through
+      diodes with one backwards, PHD two bulbs to be lit **in parallel** (in
+      series they only glow) and the master's board now and then.
+- [x] **Join the dots** (ART). Numbered dots making a picture, **touched with
+      the pen in order** (a drawn line or taps); the sheet rules the lines in.
+      Out of order takes every line off; the third time the dots wander off.
+      Done is a **gold star**. 6-7 dots at HIGH SCHOOL, 8-9 at BACHELOR, 9-11 at
+      MASTERS; at PHD the numbers skip as they climb.
+- [x] **Portrait** (ART). An easel and a chalk cross. **Stand on the cross
+      and don't move** while your hero is painted onto the canvas (6s at HIGH
+      SCHOOL up to 9s at PHD); hits don't spoil it, walking off smudges it and
+      it fades. Done is an **alarm clock** at your feet.
+- [x] **Market** (FINANCE). A price chart drawing itself against a clock over
+      BUY and SELL boxes. **Step into BUY** to stake real coins (the run's, then
+      the purse's: 3 to 6 by course) at the chart's price, **step into SELL**
+      to get them back as coins at the price then. Still holding at the close
+      is the stake lost. Jumpier and quicker up the course; a crash at PHD.
+
+### What the built thirteen pay
 
 | Board | Where | Right | Wrong | Stakes |
 | --- | --- | --- | --- | --- |
@@ -168,12 +194,17 @@ clock counts down in red under the run's.
 | Simon | MUSIC | a heart | three wrong notes fade the sheet away | none: a lost prize |
 | Dodgeball pit | P.E. | a diamond | a hit or a step out fades it away | none: a lost prize |
 | Hopscotch | P.E. | a heart | a wrong box or the clock fades it away | none: a lost prize |
+| Circuit | SCIENCE | a wall clock | a short is 20 HP and a fade; a wrong bulb is a fade | health, against a lost prize |
+| Join the dots | ART | a gold star | three wrong dots and they wander off | none: a lost prize |
+| Portrait | ART | an alarm clock | walking off smudges it away | none: a lost prize |
+| Market | FINANCE | the stake back at the selling price, as coins | sold low is fewer back; the close while holding is the stake gone | the purse, both ways |
 
 On MATHS the page prints them 2 quiz : 2 sequence : 1 tic-tac-toe, on MUSIC
-2 stave : 2 Simon : 1 tic-tac-toe, and on SCIENCE and FINANCE 2 of their board :
-1 tic-tac-toe, on P.E. 2 dodgeball : 2 hopscotch : 1 tic-tac-toe (the
-`worksheets` rows in `src/subjects.lua`). GRAMMAR and ART print only
-tic-tac-toe until they have a puzzle of their own.
+2 stave : 2 Simon : 1 tic-tac-toe, on SCIENCE 2 lab : 2 circuit : 1
+tic-tac-toe, on FINANCE 2 till : 2 market : 1 tic-tac-toe, on P.E. 2 dodgeball
+: 2 hopscotch : 1 tic-tac-toe, and on ART 2 join the dots : 2 portrait : 1
+tic-tac-toe (the `worksheets` rows in `src/subjects.lua`). GRAMMAR prints only
+tic-tac-toe until it has a puzzle of its own.
 
 ## Ideas, by lesson
 
@@ -185,10 +216,10 @@ tic-tac-toe until they have a puzzle of their own.
 | **FINANCE** | ~~Till board~~ -- built | Stand on the answer | A giant |
 | **MUSIC** | ~~Stave board~~ -- built | Stand on the answer | 20 HP |
 | **GRAMMAR** | **Hangman**: blanks on the page, letters scattered as pickups | Collect letters; a wrong one adds a limb | Hanged: the hanged man climbs down as a champion |
-| **ART** | **Join the dots** (not "dot to dot" -- that is a fusion's name): numbered dots, drawn through in order, reveal a picture | Pencil through the dots in order | The dots wander off |
+| **ART** | ~~Join the dots~~ -- built (not "dot to dot" -- that is a fusion's name) | Pen through the dots in order | Three wrong dots: they wander off |
 | **ART** (alt) | **Trace the shape**: a dashed star or heart traced within a tolerance | Pencil | -- |
 | **MUSIC** | ~~Simon says~~ -- built: a bell plays a tune on four notes | Walk them back in order | Three wrong notes and the sheet fades (the sting and the fury were dropped: a wrong note is already sour, and the stave charges health) |
-| **SCIENCE** | **Close the circuit**: battery and bulb with a gap in the wire | A **pen** line across the gap -- pen lines are walls already (`src/walls.lua`) | -- |
+| **SCIENCE** | ~~Close the circuit~~ -- built, with bare copper, shorts, wrong bulbs, diodes and parallel bulbs so a careless line can lose | A line traced across the gap (any tool) | A short (20 HP) or a wrong bulb: the sheet fades |
 | **SCIENCE** (alt) | **Memory pairs**: six face-down cards | Scribble two to flip them | Cards reshuffle |
 | **FINANCE** | **Exact change**: a price tag, coins scattered round it | Collect exactly that amount | Overpay and the change is lost |
 | **P.E.** | ~~Hopscotch~~ -- built: a path of day boxes | Step on them in order against a clock | A wrong box or the clock: the sheet fades |
@@ -198,15 +229,18 @@ tic-tac-toe until they have a puzzle of their own.
 
 ### More ideas, by which machine they reuse
 
-The three built machines decide how cheap an idea is: **stand on an answer**
-(the quiz board -- a new board is rows in `src/quiz.lua`), **scribble a cell**
-(the tic-tac-toe grid), and **walk through places in order** (Simon -- a pen
-line through the page is still an idea).
+The built machines decide how cheap an idea is: **stand on an answer** (the
+quiz board -- a new board is rows in `src/quiz.lua`), **scribble a cell** (the
+tic-tac-toe grid), **walk through places in order** (Simon, hopscotch),
+**stand still or stay inside** against a clock (the pit, the portrait), and
+**trace a line** over the sheet (the circuit's wire, join the dots).
 
 | Lesson | Puzzle | Machine | How you answer | Fail state |
 | --- | --- | --- | --- | --- |
 | **GRAMMAR** | **Red pen**: a row of letters with one printed backwards (Ǝ, ꓘ) | Scribble a cell | Scribble the wrong one out | A giant |
 | **GRAMMAR** | **Alphabet run**: letters scattered on the page | Walk | Walk through them in alphabetical order | The letters reshuffle |
+| **GRAMMAR** | **Close the brackets**: `( [ { _` and three closers; `¿ _`; at PHD the one mark that does not match | Stand on an answer | Stand on the closer | A giant |
+| **GRAMMAR** | **Line up the class**: chalk boxes lettered A B C D; nearby monsters wear letters | Kill | Kill each lettered monster while it stands in its own box, in order | The letters move on; the third time it fades |
 | **ART** | **Symmetry**: half of a 4x4 pixel picture filled | Scribble a cell | Scribble in the mirror half | The page smudges the picture |
 | **ART** | **Colour mixing**: a target swatch and ink pots, the overprint lookup as the puzzle | Scribble a cell | Scribble the two pots that overprint to the target | -- (check first that the overprint pairs read as mixes) |
 | **SCIENCE** | **Bounce the beam**: a lamp, a target, and a mirror you draw | Draw | A pen line as the mirror (the laser beam and pen walls exist) | -- |
@@ -214,8 +248,9 @@ line through the page is still an idea).
 | **P.E.** | ~~Dodgeball circle~~ -- built as the pit: the class is thrown, not balls | Stand | Stay inside it while monsters are thrown | A hit or a step out |
 | **FINANCE** | **Balance the ledger**: a column with one cell missing | Stand on an answer | Stand on the figure that makes it sum (a PAID stamp to finish) | A giant |
 
-Hangman's idea above is still the most expensive one; the red pen gives
-GRAMMAR a board of its own without a word list.
+Hangman's idea above is still the most expensive one; close the brackets gives
+GRAMMAR a board of its own without a word list. (The backwards-letter idea once
+called "red pen" would want another name now: that is GRAMMAR's second boss.)
 
 ### More MATHS boards (the stand-on-an-answer board makes each one a row)
 
@@ -241,10 +276,12 @@ GRAMMAR a board of its own without a word list.
 ## Rewards, from least to most disruptive
 
 - **The pickups that already exist** -- heart, ink, diamond (a whole level), and
-  the coin (`banked`, one into the purse). The built seven use the coin, the
-  diamond and the heart -- the sequence was the first to charge health for a
-  wrong answer rather than sending something, and the till the first to pay
-  more than one coin.
+  the coin (`banked`, one into the purse), and the wall clock, alarm clock and
+  gold star. The first nine sheets used the coin, the diamond and the heart --
+  the sequence was the first to charge health for a wrong answer rather than
+  sending something, and the till the first to pay more than one coin. The
+  circuit pays the wall clock, join the dots the gold star and the portrait the
+  alarm clock; the market is the first to take coins as well as pay them.
 - **Coins paid straight into the purse** as a run term -- this touches
   `Game:runWorth`, and README argues for every payout term, so it would want its
   own paragraph.

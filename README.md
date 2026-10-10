@@ -8345,7 +8345,9 @@ has **tic-tac-toe**, MATHS also sets a **pop quiz** and a **sequence**, and
 SCIENCE, FINANCE and MUSIC each set a board of their own -- the **lab**, the
 **till** and the **stave** -- and MUSIC sets **Simon says** besides. P.E. sets
 two sheets made of its own calendar boxes, the **dodgeball pit** and
-**hopscotch**. They sit
+**hopscotch**. SCIENCE adds the **circuit**, FINANCE the **market**, and ART
+sets **join the dots** and the **portrait**. GRAMMAR is the one lesson still
+printing only tic-tac-toe. They sit
 at fixed spots
 the way the fixed pickups do: a pure function of where they are and the run's
 seed, found by walking, and solved once each per run.
@@ -8549,6 +8551,78 @@ The pit pays the quiz's diamond because it costs what a wrong answer there
 costs -- trouble you could not have walked away from -- and hopscotch pays
 Simon's heart because it is Simon's machine, walking places in order, with a
 clock instead of a tune.
+
+**The circuit** (SCIENCE) is the first sheet answered by drawing a *line*: a
+battery, a bulb or two and bare printed wire with gaps in it, one bulb ringed in
+red. **Draw a wire across a gap** and the board is worked out the way a physics
+book would -- a current through each bulb, a diode that only lets it one way --
+and the ringed bulbs must come on fully with nothing else lit. Hold that for a
+moment while the bulb warms up and a **wall clock** drops under the board.
+
+What makes it a puzzle and not a scribble is that **all the printed copper is
+bare**. Your wire joins everything it touches on the way, so a line dragged
+carelessly across the board joins the wrong things:
+
+- **Short circuit**: the battery's two sides joined with nothing between them
+  (the return wire runs a stub up into the board to tempt you). The battery
+  sparks, it costs the sequence's twenty, and the sheet fades.
+- **Wrong bulb**: any bulb without the ring comes on, even dimly. It pops and
+  the sheet fades.
+- **Rubbed out**: a monster walking over your wire while the bulb warms up
+  breaks it, and you draw it again. A wire that did nothing wears off after a
+  few seconds, which is how a harmless wrong try is taken back.
+
+It climbs the course by what has to be understood rather than by speed: one gap
+at HIGH SCHOOL; two bulbs and one end of wire that could feed either at
+BACHELOR; two ways to the bulb at MASTERS, each through a diode, one of them
+backwards; and at PHD two bulbs that must both be fully lit. The two wires
+anybody draws first put those one after the other, where they share the battery
+and only glow, and side by side takes a third (PHD also sets the master's board
+now and then, the way every book's doctorate does). The wire is whatever the
+pointer traces over the board, whatever tool is in hand, for tic-tac-toe's
+reason: the question is where you drew, not with what. It pays the wall clock
+because the sheet asks you to stop and draw with the crowd coming, and the clock
+is the thing that stops the crowd.
+
+**Join the dots** (ART) is numbered dots that make a picture once joined in
+order: a fish, a sail, a heart, a house, a star, a tree. **Touch them with the
+pen in order** -- a line through them or a tap on each, whichever the horde
+leaves room for -- and the sheet rules the line in behind you. A dot out of
+order takes every line off and starts you again; the third time, the dots
+wander off the page. Finished, the outline closes and a **gold star** drops in
+the middle. It climbs by count (six or seven dots, then eight or nine, then ten
+or eleven), and at PHD the numbers still climb along the outline but skip
+(3, 5, 9, 10...), so the next dot is the next number *up*, which has to be
+looked for. Every picture is laid so the straight line between two dots in turn
+passes well clear of every other dot, and is dealt mirrored and started at any
+corner, so the same picture twice is not the same walk twice.
+
+**The portrait** (ART) is the dodgeball pit turned inside out. An easel and a
+chalk cross on the floor beside it. **Step onto the cross** and your portrait
+starts -- the hero you play as, whatever the studio has made of them, painted a
+pixel at a time onto the canvas against a clock in red (6 seconds at HIGH SCHOOL
+up to 9 at PHD) -- and you must not move. Being hit does not spoil it; **walking
+off the cross does**, and the canvas smears and fades. Every tool goes on
+fighting, so the horde walks straight up to a hero who has promised not to step
+aside, and the question is whether what you carry holds them off for the
+sitting. Finished, an **alarm clock** drops at your feet: the crowd that
+gathered round a sitter is exactly the crowd an alarm clock is for. Join the
+dots is moving with care and the portrait is not moving at all, which are the
+two things an art class asks of a hand and of a model.
+
+**The market** (FINANCE) is played with real money. A price chart over a
+**BUY** box and a **SELL** box. Walk onto the sheet and the market opens: the
+price draws itself left to right against a clock. **Step into BUY** and coins go
+in -- this run's first, then the purse's own -- at the price on the chart; **step
+into SELL** and they come back out at the price then, as coins on the page. Buy
+low and sell high and you walk off with more than you put in; sell low and you
+walk off with fewer; still holding when the chart reaches its edge and the stake
+is gone. One trade a sheet, and nothing else paid or sent: a stake is already a
+gamble, and this is the one sheet whose *loss* outlives the run, the till's
+coins read backwards. The stake is 3 coins at HIGH SCHOOL up to 6 at PHD, the
+chart gets jumpier and quicker up the course, and at PHD it crashes once
+somewhere after the middle, so only a quick seller beats it. A run with no coins
+at all cannot buy, and is told so.
 
 ## On a phone
 

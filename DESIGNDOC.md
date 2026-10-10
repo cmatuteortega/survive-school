@@ -6496,9 +6496,11 @@ because the worksheet requires `src/pickup.lua` to pay out.
 
 **What a page prints** is the subject row's `worksheets` weights
 (`{ quiz = 2, sequence = 2, tictactoe = 1 }` on MATHS, `{ music = 2, simon = 2,
-tictactoe = 1 }` on MUSIC, `{ science = 2, tictactoe = 1 }` and the like on
-SCIENCE and FINANCE, `{ dodgeball = 2, hopscotch = 2, tictactoe = 1 }` on P.E.), with
-`{ tictactoe = 1 }` for every row that carries none. A new kind is a constructor in `KINDS` plus an object
+tictactoe = 1 }` on MUSIC, `{ science = 2, circuit = 2, tictactoe = 1 }` on
+SCIENCE, `{ finance = 2, stocks = 2, tictactoe = 1 }` on FINANCE,
+`{ dodgeball = 2, hopscotch = 2, tictactoe = 1 }` on P.E. and `{ dots = 2,
+portrait = 2, tictactoe = 1 }` on ART), with `{ tictactoe = 1 }` for every row
+that carries none (GRAMMAR, today). A new kind is a constructor in `KINDS` plus an object
 with `kind`, `x`, `y`, `hw`, `hh`, `update(dt, game, pen)` and `draw()`. A
 sheet may also carry `covers(x, y, pad)` (a footprint that is not its box),
 `live` (under way: updated wherever the player is, not only within `ACTIVE`)
@@ -6621,10 +6623,67 @@ does, and nothing else.
   `OUT!`. Boxes are chalked 1px inside the ruling, slate ahead and blue once
   hopped, numbered in the face.
 
+**The circuit** (`C`, SCIENCE): a board from `BOARDS_C[course]` (the PHD list
+also carries the MASTERS board), in `CU` (8px) grid steps, dealt mirrored either
+way (`mx`, `my`, read by `C:at`). A board is `wires` (axis-aligned polylines of
+one net each), `parts` (`bulb` or `diode` between two grid points, a diode's
+first net its anode; `flip` lists diodes one of which is dealt reversed),
+`ends` (open circles where a gap is) and `ring` (bulbs that must light) or
+`pick` (one bulb rolled). The battery always sits between (0, 3), net `p`, and
+(0, 5), net `n`. While the pen is inside the sheet's box it traces a wire
+(`C:trace`, a pixel at a time between frames): points, and every net within
+`TOUCH` (2.5px) of it via `C:netsAt` -- copper, a wire end's `TERMINAL` (4px)
+circle, a part's body (both its nets: drawn over, it is bypassed) and the
+battery's body (both sides). Lifting or leaving ends the wire. Whenever the set
+of nets changes, `C:judge` runs `C:solve`: union the nets each wire joins;
+`p` and `n` together is `"short"`; otherwise nodal analysis with `p` at 1 and
+`n` at 0, a bulb a conductance of 1, a conducting diode 100 and a reversed one
+0 (re-solved until each diode's state agrees with its voltage, at most four
+times), and a 1e-6 leak to 0 on every node so a floating one is never singular.
+A bulb's brightness is its current. A short sparks, `sting`s and fades; a bulb
+outside `ring` above `GLOW` (0.1) pops (`popped`) and fades; every ringed bulb
+at `FULL` (0.9) or more is `closing`, which after `SETTLE` (0.8s) is `won`
+(`LIGHTS ON!`, a `clock` pickup under the board). A wire not being drawn wears
+off after `WIRE_LIFE` (6s, not while closing) and is rubbed out by any enemy
+within its radius + 1 of its points (`C:trodden`, through `Game:eachWithin`).
+`Worksheet._kinds` exposes `KINDS` for a headless test harness.
+
+**Join the dots** (`J`, ART): a picture out of `PICTURES` by `DOT_SETS[course]`,
+its corners on a 10 x 8 grid of `DOT_U` (11px), mirrored half the time and
+started at a random corner. Labels are 1, 2, 3... or at PHD a climb of 1-4 a
+step. The pen arriving within `DOT_TOUCH` (5px) of a dot (edge-triggered,
+`self.on`) touches it: a joined dot is free, the next one is joined (a `note`
+up the `RISE` pentatonic), any other is a mistake (`WRONG DOT!`, `joined` back
+to 0, one of `DOT_TRIES` spent; none left is `fading`, the dots drifting
+`WANDER` px outward). The last pays a `star` pickup at the picture's middle
+(`WELL DRAWN!`). Every picture keeps each straight join at least ~14px from
+every other dot.
+
+**The portrait** (`P`, ART): an easel whose canvas is `Sprites.player.rows`
+(the studio's hero) at scale 2 plus a 2px margin, and a chalk cross `EASEL_GAP`
+to its right. The player's centre within `MARK_IN` (4px) of the cross starts it
+(`HOLD STILL!`, `live`, clock `SIT[course]`, 6 to 9s, a brush swish every
+`SIT_STROKE`); leaving `MARK_R` (7px) is `SMUDGED!` and fades; the clock running
+out is `MASTERPIECE!` and an `alarm` pickup at the cross. The portrait is drawn
+in reading order as far as the clock has got, the current pixel in graphite.
+
+**The market** (`K`, FINANCE): `market(course)` deals `POINTS` (49) prices in
+`LO`..`HI` (20..99), a walk of `SWING[course]` leaning back to 60, with a crash
+(x0.86 for three steps) after the middle at PHD. The player's centre inside the
+sheet's box opens it (`MARKET OPEN!`, `live`, clock `OPEN_FOR[course]`). Entering
+the BUY box (edge) calls `K:fund`: up to `STAKE[course]` coins, from
+`game.banked` first and then `Purse.spend`; none at all says `NO COINS` once.
+Entering SELL while holding pays `floor(held x price / bought + 0.5)` `coin`
+pickups in rows of five under the box (`SOLD!`) and the sheet is `done`. The
+clock running out is `MARKET CLOSED!` and fades, the stake (if any) gone. The
+box labels are `I18n.t("BUY")` / `("SELL")`, and each box is sized to its label.
+
 The notices are `THREE IN A ROW`, `CORRECT!`, `WRONG ANSWER` and `BRAVO!`
 (Spanish only: the other four fall through to the Italian), and P.E.'s
-`DODGE!`, `SAFE!`, `HOP!`, `FINISH!` and `OUT!`, through
-`Game:say`.
+`DODGE!`, `SAFE!`, `HOP!`, `FINISH!` and `OUT!`, the circuit's `LIGHTS ON!`,
+`SHORT CIRCUIT!` and `WRONG BULB!`, ART's `WELL DRAWN!`, `WRONG DOT!`,
+`HOLD STILL!`, `MASTERPIECE!` and `SMUDGED!`, and the market's `MARKET OPEN!`,
+`MARKET CLOSED!`, `BOUGHT!`, `SOLD!` and `NO COINS`, through `Game:say`.
 
 **Typesetting** is `Quiz.layout(s)`, returning `{ ops, w, top, bottom }`, and
 `Quiz.print(lay, x, y)`:
@@ -6908,7 +6967,10 @@ and are all the same 11x11 glyph.
   is a row in every book (`Quiz.byCourse`, `Quiz.sequences`, `Quiz.science`,
   `Quiz.finance`, `Quiz.music`). A mark the board must draw that the 3x5 face
   cannot hold is rectangles in `Quiz.layout`, as the integral, the root and the
-  notes (`NOTE_SHAPES`) are.
+  notes (`NOTE_SHAPES`) are. A new circuit is a board in `BOARDS_C` under its
+  course (wires, parts, ends, ring or pick; check it is winnable and that its
+  intended wires pass clear of other copper), and a new picture to join is a row
+  in `PICTURES` and its name in `DOT_SETS`.
   Anything it says goes through `Game:say`, so it needs a line in `src/i18n.lua`
   and the four `src/lang/` files. Questions are notation and need none.
 - **Pickup:** a row in `KINDS` (its weight in the scatter and the fixed layer;

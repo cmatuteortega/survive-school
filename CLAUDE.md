@@ -187,9 +187,10 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   `trinket` (the pickups' bodies -- heart, ink drop, diamond, coin, wall clock,
   alarm clock and gold star -- as
   small solids painted a pixel at a time, turning over their shadows, each
-  heading painted once and kept; none bigger than the hero), `worksheet` (the puzzles printed on the page -- tic-tac-toe, and MATHS's pop
-  quiz and sequence -- placed like the fixed pickups; `WORKSHEETS.md` is the
-  idea list), `quiz` (the pop quiz's questions and the sequences by course, and
+  heading painted once and kept; none bigger than the hero), `worksheet` (the puzzles printed on the page -- tic-tac-toe everywhere, and
+  two of each lesson's own but GRAMMAR's: boards to stand on, Simon, the pit,
+  hopscotch, the circuit, join the dots, the portrait and the market -- placed
+  like the fixed pickups; `WORKSHEETS.md` is the idea list), `quiz` (the pop quiz's questions and the sequences by course, and
   the typesetting that sets them in the 3x5 face),
   `store` (what is sold for money, over `iap`, love-iap's vendored file), `ads`
   (the two rewarded-ad offers),
