@@ -109,6 +109,13 @@ padlock, the full game card and the canteen's `SHOP` section are gone (the ladde
 and quests still apply; no ads, so no offers). With the dev row showing a
 stand-in ad answers on a desktop.
 
+Short-form video (TikTok / Reels / Shorts) is shot by the game itself:
+`love . --capture montage` (`src/capture.lua`, dev only, needs `ffmpeg`;
+headless as `SDL_AUDIODRIVER=dummy xvfb-run -a love . --capture montage`) plays
+a scripted reel on a fixed 30fps clock and writes an upright 1080x1920 MP4 with
+its sound mixed in to `capture/` (gitignored). `DESIGNDOC.md`'s **Filming it**
+has how; a new reel is a row in its `REELS`.
+
 The game opens fullscreen on a computer too (`conf.lua`); `F11` / `alt+enter`
 toggles back to a window, `Esc` (or `P`) pauses a run. Save state lives in
 `~/Library/Application Support/LOVE/notebook-survivors/`: `options.txt`,

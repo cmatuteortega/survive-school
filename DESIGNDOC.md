@@ -69,6 +69,25 @@ looping file, `src/music/ost.mp3`, started once in `Game:load` and never stopped
 it is what the book sounds like while it is open rather than a run's, a screen's or
 a lesson's, so the settings bar is the only thing that touches it again.
 
+### Filming it
+
+`love . --capture montage [outdir]` (`src/capture.lua`, dev only) shoots a reel
+of scripted shots and writes an upright 1080x1920 MP4 for TikTok, Reels and
+Shorts to `capture/<reel>.mp4` (gitignored). It needs `ffmpeg` on the path, and
+runs headless as well: `SDL_AUDIODRIVER=dummy xvfb-run -a love . --capture montage`.
+The window is opened at 360x640, which `main.lua`'s fit makes a 180x320 canvas,
+and each frame of the *canvas* is piped to ffmpeg raw and blown up six times with
+nearest filtering, so the video is the game's own pixels. The clock is fixed at
+30 frames a second whatever the machine manages (and `love.timer.getTime` is
+pointed at it), each shot reseeds the random numbers, and every shot is a dev
+boss test (`Dev.boss`) under a save identity of its own, so a reel is the same
+reel each time and the real book is never touched. A bot walks round the boss
+and scribbles across it with the lesson's tool; the hero is topped up and gets
+no drafts. The sound is mixed rather than recorded: every `Sfx.play` that
+sounded is logged with its pitch and laid over silence off the same scaled
+samples (`Sfx.sample`), with the track underneath at the default level
+(`Sfx.levels`), then loudness-normalised. A new reel is a row in `REELS`.
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.

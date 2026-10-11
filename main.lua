@@ -6,6 +6,7 @@
 -- stretched, so a phone may turn (src/orient.lua) and screens lay themselves
 -- out against `Game.vw/vh`.
 
+local Capture = require("src.capture")
 local Game = require("src.game")
 local Input = require("src.input")
 local Orient = require("src.orient")
@@ -101,7 +102,11 @@ local function fitToWindow()
     Game:setSafeInsets(l, t, r, b)
 end
 
-function love.load()
+function love.load(args)
+    -- A dev take (src/capture.lua) opens its own upright window and save, so
+    -- before anything is sized or read.
+    Capture.parse(args)
+
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.graphics.setLineStyle("rough")
 
@@ -125,6 +130,8 @@ function love.load()
     -- and here because turning the phone is a window call; the turn comes back
     -- a frame or two later as an ordinary resize.
     Orient.apply()
+
+    if Capture.on then Capture.start(Game) end
 end
 
 function love.resize()
@@ -163,6 +170,10 @@ function love.visible(visible)
 end
 
 function love.update(dt)
+    if Capture.on then
+        dt = Capture.dt()
+        Capture.update()
+    end
     -- Clamp so a hitched frame can't teleport anything through a collision.
     Game:update(math.min(dt, 1 / 30))
 end
@@ -172,6 +183,7 @@ function love.draw()
     love.graphics.clear(Palette.paper)
     Game:draw()
     Game:drawPointer()
+    if Capture.on then Capture.frame(canvas) end
     love.graphics.setCanvas()
 
     -- Darkest ink under the canvas: a stale frame showing through a rounding

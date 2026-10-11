@@ -9,3 +9,6 @@ __MACOSX/
 # The bake scripts' bytecode cache (art/*.py import art/raytrace.py), which
 # Python writes beside them on every run.
 __pycache__/
+
+# Dev captures (src/capture.lua): finished clips, not source.
+capture/

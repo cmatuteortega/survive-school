@@ -196,6 +196,9 @@ local function loadOne(name, def)
 
     sounds[name] = {
         base = base,
+        -- Kept for the dev capture (src/capture.lua), which mixes a clip's sound
+        -- itself off the same scaled samples rather than recording a device.
+        data = data,
         duration = data:getDuration(),
         loop = def.loop,
         gap = def.gap,
@@ -344,6 +347,17 @@ function Sfx.play(name, pitch)
     v:setVolume(level())
     v:play()
     return v
+end
+
+-- The scaled samples a sound plays, and the file and level the track does: what
+-- src/capture.lua needs to mix a clip's audio exactly as it would have sounded.
+function Sfx.sample(name)
+    local sound = sounds[name]
+    return sound and sound.data
+end
+
+function Sfx.levels()
+    return level(), musicLevel(), MUSIC
 end
 
 function Sfx.duration(name)
