@@ -180,7 +180,12 @@ end
 -- arrivals off the spawner (`Spawner:dropAt`), just aimed: what kind, how big
 -- and whether a champion are the minute's own.
 local FEED_EVERY = 0.16
-local FEED_SPREAD = 46   -- how far along either edge from the corner they come in
+-- How far along either edge from the corner they come in: some under the disc
+-- and some past its rim. The disc is solid (src/sun.lua) and hides whatever is
+-- under it, so a burn is seen at the rim -- the numbers coming off it -- and in
+-- what walks out of the light scorched; the ones fed past the rim are the ones
+-- seen burning on their way in.
+local FEED_SPREAD = 80
 
 local function feed(game, s, corner)
     s.fed = (s.fed or 0) - DT
@@ -343,7 +348,7 @@ local function sunReel()
     -- a few seconds of it, wide, as what the corner becomes.
     local function sunShot(spec)
         return {
-            kind = "run", warm = 2.5, rec = spec.rec, corner = spec.corner,
+            kind = "run", warm = 4, rec = spec.rec, corner = spec.corner,
             lead = spec.lead,
             setup = function(game)
                 runShot(game, spec.subject)
@@ -352,16 +357,19 @@ local function sunReel()
             end,
             direct = function(game, t, s)
                 sunUp(game, t, s)
-                if t > -1 then feed(game, s, s.corner) end
+                -- From the start of the unseen warm, with the sun already up:
+                -- crossing the disc takes a slow thing longer than a clip, so
+                -- the stream has to be under way before the camera rolls.
+                feed(game, s, s.corner)
             end,
             zoom = spec.zoom,
             aim = sunAim(spec.corner),
         }
     end
 
-    shots[#shots + 1] = sunShot({ level = 1, corner = 4, rec = 2.4, lead = 1.2,
+    shots[#shots + 1] = sunShot({ level = 1, corner = 4, rec = 2.4, lead = 3.5,
         zoom = ZOOM, subject = "science" })
-    shots[#shots + 1] = sunShot({ level = 1, corner = 3, rec = 2.4, lead = 1.2,
+    shots[#shots + 1] = sunShot({ level = 1, corner = 3, rec = 2.4, lead = 3.5,
         zoom = ZOOM, subject = "art" })
     shots[#shots + 1] = sunShot({ level = #Upgrades.byId.sun.levels, corner = 3,
         rec = 4, lead = 0.9, subject = "music" })
