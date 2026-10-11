@@ -75,7 +75,7 @@ local MUTED = { brush1 = true, brush2 = true, brush3 = true,
 -- topped up every frame, so he is hit all the time and the hurt would be a
 -- second drone under the burn. A boss reel keeps it -- there a hit is the boss
 -- landing one, which is half of what is being shown.
-local REEL_MUTED = { sun = { hurt = true } }
+local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -384,9 +384,267 @@ local function sunReel()
     return shots
 end
 
+-- The cool S, told the sun's way (DESIGNDOC.md's "A weapon or tool highlight"),
+-- with the one change its line forces: nothing in the book holds the S back
+-- (it has no row in `Collection.gates`), so there is no hole in the library to
+-- open, and the first shot is the entry walked to and shown as it is rather
+-- than an UNLOCKED! the game never says.
+--
+-- The board is drawn the sun's way too, off the baked art (Sprites.COOLS), but
+-- not in runs along a row: the S is six thin diagonals, so a row of it is mostly
+-- single cells and the face's run-by-run strokes would spend six seconds on it.
+-- It is traced instead, cell to touching cell, in the order a hand goes round
+-- it, and each cell is put down as a dab -- pen down for a frame, up for a frame
+-- -- rather than dragged to the next. Dragged, a step along an up-right or
+-- down-left diagonal passes over the corner the two cells share, and the board
+-- reads that corner as the cell beside them (Studio:cellAt floors both axes), so
+-- a dragged S comes out with a stair in every other line. The cursor is not drawn
+-- (`Input.hover`), so a dab is only ever seen as the cell appearing.
+local function trace(art)
+    local ink, left = {}, 0
+    for y, row in ipairs(art) do
+        for x = 1, #row do
+            local tool = TOOL_OF[row:sub(x, x)]
+            if tool then
+                ink[y * 64 + x] = tool
+                left = left + 1
+            end
+        end
+    end
+    local function free(x, y) return ink[y * 64 + x] end
+    local function degree(x, y)
+        local n = 0
+        for dy = -1, 1 do
+            for dx = -1, 1 do
+                if (dx ~= 0 or dy ~= 0) and free(x + dx, y + dy) then n = n + 1 end
+            end
+        end
+        return n
+    end
+
+    local cells = {}
+    while left > 0 do
+        -- Start each line at an end of it where there is one (the S's two
+        -- points are), the topmost first, so it is drawn from the top down.
+        local sx, sy, best
+        for y = 1, #art do
+            for x = 1, #art[y] do
+                if free(x, y) then
+                    local d = degree(x, y)
+                    if not best or d < best then sx, sy, best = x, y, d end
+                end
+            end
+        end
+        local x, y, hx, hy = sx, sy, 0, 1
+        while x do
+            cells[#cells + 1] = { x, y, tool = free(x, y) }
+            ink[y * 64 + x] = nil
+            left = left - 1
+            -- On to the touching cell nearest straight on, so the hand keeps
+            -- going through the crossing rather than turning off at it.
+            local nx, ny, score
+            for dy = -1, 1 do
+                for dx = -1, 1 do
+                    if (dx ~= 0 or dy ~= 0) and free(x + dx, y + dy) then
+                        local s = dx * hx + dy * hy
+                        if not score or s > score then nx, ny, score = x + dx, y + dy, s end
+                    end
+                end
+            end
+            if nx then hx, hy = nx - x, ny - y end
+            x, y = nx, ny
+        end
+    end
+    return cells
+end
+
+local COOLS = trace(Sprites.COOLS)
+local DAB = 2 * DT      -- one cell of the S: a frame down, a frame up
+
+-- The S, drawn: where to dab `t` seconds in, whether the pen is down, the tool,
+-- and whether the drawing is finished.
+local function coolsAt(t)
+    local lay = Studio.lay
+    if not lay or t < 0 then return nil end
+    local i = math.floor(t / DAB) + 1
+    local cell = COOLS[i]
+    if not cell then return nil, nil, nil, true end
+    if t - (i - 1) * DAB >= DT then return nil, nil, cell.tool end
+    return lay.bx + (cell[1] - 0.5) * lay.zoom, lay.board + (cell[2] - 0.5) * lay.zoom,
+        cell.tool
+end
+
+-- One S sent across the shot rather than whenever the clock next sends one, so
+-- every clip has it crossing on camera: `back` pixels behind the hero along
+-- `angle` (radians, screen-wise: 0 is from the left, pi/2 from the top), heading
+-- straight through where he stands, and the weapon's own clock held so it is the
+-- only one up. Sent through `launch`, so its damage and bounces are the level's.
+local function sendS(game, angle, back)
+    local cools = game.loadout.live.cools
+    cools.live = {}
+    cools:launch(game)
+    local s = cools.live[1]
+    s.dx, s.dy = math.cos(angle), math.sin(angle)
+    s.x = game.player.x - s.dx * back
+    s.y = game.player.y - s.dy * back
+    s.arrived = false
+    cools.cool = math.huge
+end
+
+-- The lesson's horde, fed in along the line the S is coming down, ahead of it
+-- and either side of the hero, so the crowd it cuts is on camera with it. Real
+-- arrivals off the spawner (`Spawner:dropAt`), as the sun's are.
+local function feedLine(game, s, angle)
+    s.fed = (s.fed or 0) - DT
+    if s.fed > 0 then return end
+    s.fed = FEED_EVERY
+    local dx, dy = math.cos(angle), math.sin(angle)
+    local along = (love.math.random() * 2 - 1) * 90
+    local off = (love.math.random() * 2 - 1) * 24
+    game.spawner:dropAt(game, game.player.x + dx * along - dy * off,
+        game.player.y + dy * along + dx * off)
+end
+
+-- Where to look in a cool S shot filmed close: between the S and the hero,
+-- weighted to the S, so it is followed in, through him and out the other side.
+local function coolsAim(game)
+    local left, top = Camera.steady()
+    local p = game.player
+    local s = game.loadout.live.cools and game.loadout.live.cools.live[1]
+    if not s then return p.x - left, p.y - top end
+    return s.x * 0.6 + p.x * 0.4 - left, s.y * 0.6 + p.y * 0.4 - top
+end
+
+local function coolsReel()
+    local shots = {}
+
+    -- The entry on the weapons page, walked to and shown in full. Turned once
+    -- the book has been laid out, and walked down a line at a time.
+    shots[#shots + 1] = {
+        kind = "library", warm = 0.1, rec = 3.4,
+        hook = { "DRAW", "THE COOL S" }, hookY = 226,
+        setup = function(game)
+            Dev.boss = false
+            Dev.unlocks = "none"
+            game:toLibrary()
+        end,
+        direct = function(game, t, s)
+            local at, want = Library:find("cools")
+            s.turned = s.turned or 0
+            if t > 0.25 and s.turned < at - 1 and t - (s.turnAt or 0) > 0.3 then
+                s.turned, s.turnAt = s.turned + 1, t
+                Library:step(1)
+            end
+            if s.turned == at - 1 and t > 0.9 and Library.index < want
+                and t - (s.walked or 0) > 0.16 then
+                s.walked = t
+                Library:keypressed("down")
+            end
+        end,
+    }
+
+    -- Dealt, drawn and sent, in one take: the draft lands on the run, the S's
+    -- card is circled, the board comes up blank and the S is drawn back onto it,
+    -- and the run comes back with the first one floating in down the page,
+    -- through the hero and the crowd round him -- where the camera punches in.
+    local FIRST = math.pi / 2   -- from the top: down the long side of the frame
+    shots[#shots + 1] = {
+        kind = "run", warm = 2.5, rec = 11,
+        setup = function(game) runShot(game) end,
+        direct = function(game, t, s)
+            if t > 0.3 and not s.dealt then
+                s.dealt = true
+                game.player.pending = 1
+                game.state = "levelup"
+                Sfx.play("levelup_enter")
+                game:holdRun()
+                game.draft:open(game, { Upgrades.byId.star, Upgrades.byId.cools,
+                    Upgrades.byId.rocket })
+            end
+            if game.state == "levelup" then
+                if t > 1.4 and not s.picked then
+                    s.picked = true
+                    game.draft:keypressed("2")
+                end
+            elseif game.state == "studio" then
+                if not s.board then
+                    -- A blank board, so the S is drawn rather than edited.
+                    s.board = t
+                    local d = Design.by.cools
+                    for y = 1, d.h do
+                        for x = 1, d.w do d.grid[y][x] = Design.BLANK end
+                    end
+                    d:apply()
+                end
+                local x, y, tool, done = coolsAt(t - s.board - 0.6)
+                if tool and tool ~= s.tool then
+                    s.tool = tool
+                    Studio:keypressed(tool)
+                end
+                Input.pointerDown = x ~= nil
+                if x then Input.pointerX, Input.pointerY = x, y end
+                if done and not s.ok then
+                    s.ok = true
+                    Studio:keypressed("return")
+                end
+            elseif s.ok then
+                Input.pointerDown = false
+                if not s.back then
+                    s.back = t
+                    sendS(game, FIRST, 190)
+                end
+                feedLine(game, s, FIRST)
+                if t - s.back > 0.9 then s.say = "IT CUTS A LINE THROUGH YOU" end
+            end
+        end,
+        zoom = function(game, t, s)
+            return s.back and t - s.back > 0.9 and ZOOM or 1
+        end,
+        aim = coolsAim,
+    }
+
+    -- Then the S at the level it was dealt at, cutting the crowd on other pages
+    -- and down other lines, close and with nothing written over it: already on
+    -- its way when the camera rolls (`lead`), so the clip opens with it coming.
+    -- The levels between are the run's to find -- only the last is shown, wide,
+    -- the one S that never leaves the page.
+    local function coolsShot(spec)
+        return {
+            kind = "run", warm = 3, rec = spec.rec,
+            setup = function(game)
+                runShot(game, spec.subject)
+                for _ = 1, spec.level do game.loadout:take("cools", game) end
+                game.player:applyStats()
+            end,
+            direct = function(game, t, s)
+                if spec.angle then
+                    if t >= -spec.lead and not s.sent then
+                        s.sent = true
+                        sendS(game, spec.angle, spec.back)
+                    end
+                    feedLine(game, s, spec.angle)
+                end
+            end,
+            zoom = spec.zoom,
+            aim = spec.zoom and coolsAim or nil,
+        }
+    end
+
+    shots[#shots + 1] = coolsShot({ level = 1, angle = -math.pi * 0.62, back = 150,
+        lead = 0.6, rec = 2.4, zoom = ZOOM, subject = "science" })
+    shots[#shots + 1] = coolsShot({ level = 1, angle = math.pi * 0.4, back = 150,
+        lead = 0.6, rec = 2.4, zoom = ZOOM, subject = "art" })
+    shots[#shots + 1] = coolsShot({ level = #Upgrades.byId.cools.levels,
+        angle = -0.45, back = 0, lead = 2.5, rec = 2.4, subject = "music" })
+
+    shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
+    return shots
+end
+
 local REELS = {
     montage = bossMontage,
     sun = sunReel,
+    cools = coolsReel,
 }
 
 --- the clock -----------------------------------------------------------------

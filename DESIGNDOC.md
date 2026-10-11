@@ -147,6 +147,20 @@ A new highlight is a reel function beside `sunReel` and a row in `REELS` (and
 Expect a take to run a few minutes in a cloud session; check a contact sheet of
 frames (`ffmpeg -vf fps=2,tile=...`) before handing a cut over.
 
+`./capture.sh cools` is the second, the cool S, and shows the two places a line
+can differ from the sun's. Nothing gates the S (it has no row in
+`Collection.gates`), so its first shot is the entry walked to and shown, with the
+hook "DRAW" / "THE COOL S" and no UNLOCKED!, which would be a lie. And its art is
+six thin diagonals rather than rows of runs, so the board is drawn by `trace`:
+the cells in the order a hand goes round the S, each put down as a dab (a frame
+down, a frame up) rather than dragged. A drag along an up-right or down-left
+diagonal crosses the corner two cells share, which `Studio:cellAt` reads as the
+cell beside them, so the drawn S would come out with stairs in it. Use `trace`
+for any design that is mostly diagonals. Each clip sends its own S down a chosen
+line through the hero (`sendS`, through `launch` so it carries the level's
+numbers, with the weapon's clock held). The crowd is fed along that line
+(`feedLine`), and the close shots follow the S in (`coolsAim`).
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.
