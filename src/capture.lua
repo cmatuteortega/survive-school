@@ -531,6 +531,49 @@ local function walkTo(game, x, y)
     return dx * k, dy * k
 end
 
+-- The sheets are dealt at a master's (the page's course is read by each
+-- sheet's constructor, src/worksheet.lua): the harder board is the better
+-- picture -- a diode to wire the right way round, a question past school --
+-- while the horde round them stays the first year's.
+local SHEET_COURSE = "masters"
+
+-- A sheet's prize, given its moment: found on the page the frame it drops, then
+-- the camera cuts in close on it (`PRIZE_LOOK` later) and the hero walks over
+-- and takes it (`PRIZE_WALK` later) -- a prize taken the instant it lands is a
+-- prize nobody saw.
+local PRIZE_LOOK, PRIZE_WALK = 0.45, 1.2
+
+local function prizeWatch(game, s, t, kind)
+    if s.prize then return end
+    for i = #game.pickups, 1, -1 do
+        local k = game.pickups[i]
+        if k.kind == kind and not k.dead then
+            s.prize, s.prizeT = k, t
+            return
+        end
+    end
+end
+
+local function prizeMove(game, s, t)
+    if s.prizeT and t - s.prizeT > PRIZE_WALK then return walkTo(game, s.prize.x, s.prize.y) end
+end
+
+local function prizeZoom(game, t, s)
+    return s.prizeT and t - s.prizeT > PRIZE_LOOK and ZOOM or 1
+end
+
+-- Between the prize and the hero, weighted to the prize: it is the subject, and
+-- he is walking in to it.
+local function prizeAim(sheet)
+    return function(game)
+        local left, top = Camera.steady()
+        local k, p = sheet.prize, game.player
+        if not k then return p.x - left, p.y - top end
+        return k.x * 0.7 + p.x * 0.3 - left, k.y * 0.7 + p.y * 0.3 - top
+    end
+end
+
+
 -- Playing: the hero walking a long slow curve through the page, the whole class
 -- coming at him from every side, and the pencil out among them. Filmed close and
 -- following the hero; the crowd is already there when the camera rolls.
@@ -558,11 +601,13 @@ end
 
 -- The LAB board, the crowd still coming: the hero goes and stands on the right
 -- answer while the hand keeps the nearest of them off him.
-local function labShot(subject, kind)
-    return {
-        kind = "run", warm = 1.5, rec = 5,
+local function labShot(subject, kind, prize)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = 6.2, zoom = prizeZoom,
         setup = function(game)
             lessonRun(game, subject)
+            game.course = Course.get(SHEET_COURSE)
             local p = game.player
             local q = Worksheet._kinds[kind](p.x, p.y - 52, game)
             game.worksheets[#game.worksheets + 1] = q
@@ -575,45 +620,70 @@ local function labShot(subject, kind)
                 local a = q.answers[q.quiz.right]
                 return walkTo(game, a.x, a.y)
             end
-            -- And on to the prize it dropped.
-            return walkTo(game, q.answers[q.chosen].x, q.y - 2)
+            -- Stood on the answer while the prize is looked at, then over to it.
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
         end,
         direct = function(game, t, s)
             game.ink = game.loadout.stats.inkMax
             crowd(game, s, 0.4, 12)
             if t > -0.6 then hunt(game, s, t + 0.6, 50) end
+            if game.lab.state ~= "open" then prizeWatch(game, s, t, prize) end
         end,
     }
+    sheet.aim = prizeAim(sheet)
+    return sheet
 end
 
 -- The circuit, the crowd kept below it: the hand drags a wire across the gap,
 -- from the battery's side to the bulb's, and the ringed bulb comes on.
 local function circuitShot(subject)
-    return {
-        kind = "run", warm = 1.5, rec = 4.4,
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = 5, zoom = prizeZoom,
         setup = function(game)
             lessonRun(game, subject)
+            game.course = Course.get(SHEET_COURSE)
             local p = game.player
-            local c = Worksheet._kinds.circuit(p.x, p.y - 58, game)
+            -- High enough that the clock it drops under itself lands out of
+            -- the hero's reach, to be walked to.
+            local c = Worksheet._kinds.circuit(p.x, p.y - 80, game)
             game.worksheets[#game.worksheets + 1] = c
             game.lab = c
         end,
-        move = function() return 0, 0 end,
+        move = function(game, t)
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
         direct = function(game, t, s)
             game.ink = game.loadout.stats.inkMax
             crowd(game, s, 0.45, 10, true)
+            if game.lab.state == "won" then prizeWatch(game, s, t, "clock") end
             if t < 0.2 then
                 hunt(game, s, t + 1.5, 40)
                 return
             end
             local c, p = game.lab, game.player
             if not s.path then
-                -- The gap is the one between the battery's + wire and the
-                -- wire on to the bulb; the third end is the stub that shorts.
+                -- From the battery's + wire to a wire on towards the ringed
+                -- bulb: `a`, or `b` where there is one, whichever does not
+                -- end on a diode's cathode -- the one dealt backwards (a
+                -- master's board) passes nothing. The stub on the return
+                -- wire is the short, and never touched.
+                local backwards = {}
+                for _, part in ipairs(c.parts) do
+                    if part.kind == "diode" then backwards[part.b] = true end
+                end
                 local from, to
                 for _, e in ipairs(c.ends) do
                     if e.nets.p then from = e end
-                    if e.nets.a then to = e end
+                end
+                for _, net in ipairs({ "a", "b" }) do
+                    for _, e in ipairs(c.ends) do
+                        if not to and e.nets[net] and not backwards[net] then to = e end
+                    end
                 end
                 local left, top = Camera.steady()
                 s.path = { { (hoverX or 120) + left, (hoverY or 200) + top },
@@ -630,6 +700,8 @@ local function circuitShot(subject)
             point(x, y, down)
         end,
     }
+    sheet.aim = prizeAim(sheet)
+    return sheet
 end
 
 -- A boss, cut to: its landing, or a move it is forced into once it is in the
@@ -693,7 +765,7 @@ local REELS = {
     montage = bossMontage,
     sun = sunReel,
     science = lessonReel("science", {
-        function(key) return labShot(key, "science") end,
+        function(key) return labShot(key, "science", "diamond") end,
         circuitShot,
     }, { eyeWeeps, atomSplits }),
 }

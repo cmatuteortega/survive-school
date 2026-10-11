@@ -151,7 +151,8 @@ curve through the page with the whole class coming at him (`crowd`, every kind
 called in by name round the hero, just outside what the close shot shows) and
 the pencil out among them (`hunt`: a zigzag across the nearest, lifted, the
 next); then each worksheet answered with the crowd still coming (`labShot`,
-`circuitShot`); then fast uncaptioned cuts (`bossCut`) -- the first boss
+`circuitShot`), dealt at a master's (`SHEET_COURSE`) for the harder board, its
+prize looked at close before the hero walks over and takes it (`prizeWatch`); then fast uncaptioned cuts (`bossCut`) -- the first boss
 landing, the same boss forced into its signature move (the eye's weep), the
 encore landing, the encore's (the atom's fission) -- and the card. The hero is
 under `truce` (nothing lands, nothing blinks), the minute's own horde and sheets
