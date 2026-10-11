@@ -79,7 +79,9 @@ local MUTED = { brush1 = true, brush2 = true, brush3 = true,
 -- second drone under the burn. A boss reel keeps it -- there a hit is the boss
 -- landing one, which is half of what is being shown.
 local REEL_MUTED = { sun = { hurt = true }, science = { hurt = true },
-                     music = { hurt = true }, maths = { hurt = true } }
+                     music = { hurt = true }, maths = { hurt = true },
+                     art = { hurt = true }, finance = { hurt = true },
+                     grammar = { hurt = true }, pe = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -399,7 +401,8 @@ end
 -- hand does -- the scribble, the wire, the answer it points at -- goes through
 -- `point`, so the cursor is always where the pen is and glides between strokes
 -- rather than jumping, which is what a feed is shown: where and how you write.
-local REEL_CURSOR = { science = true, music = true, maths = true }
+local REEL_CURSOR = { science = true, music = true, maths = true,
+                      art = true, finance = true, grammar = true, pe = true }
 
 -- The bot's hand: where the pointer is (page pixels, turned into the canvas's
 -- here) and whether it is down. The cursor eases after it while it is lifted.
@@ -476,17 +479,20 @@ end
 -- One gesture per kind of tool (src/compass.lua lists the four): a brush is
 -- dragged across in a zigzag; a pin is tapped, and lands where it was tapped; a
 -- compass's needle goes in beside the prey and its leg is dragged out to it, so
--- the circle it swings on release runs through the prey.
+-- the circle it swings on release runs through the prey; a ruler is pressed and
+-- held on the prey, which aims it through the hero, and let go.
 local GESTURES = {
     brush = { every = 0.95, down = 0.5 },
     drop = { every = 0.5, down = 0.1 },
     sweep = { every = 1.25, down = 0.4 },
+    snap = { every = 1.0, down = 0.35 },
 }
 
 local function gestureOf(game)
     local tool = game.loadout:tool(game.tool)
     if tool and tool.sweep then return "sweep" end
     if tool and tool.drop then return "drop" end
+    if tool and tool.snap then return "snap" end
     return "brush"
 end
 
@@ -524,8 +530,8 @@ local function hunt(game, s, t, near, boss)
         return
     end
 
-    if kind == "drop" then
-        -- Over it, and tapped.
+    if kind == "drop" or kind == "snap" then
+        -- Over it, and tapped -- or, a ruler, held there while it aims.
         point(e.x, e.y, burst < g.down)
         return
     end
@@ -559,7 +565,10 @@ end
 -- also carries.
 local function lessonTool(game)
     for i, slot in ipairs(game.loadout.equipped) do
-        if slot.tool and slot.tool.icon == game.subject.tool then game.tool = i end
+        local t = slot.tool
+        if t and (t.icon == game.subject.tool or t.name:lower() == game.subject.tool) then
+            game.tool = i
+        end
     end
 end
 
@@ -848,6 +857,332 @@ local function circuitShot(subject, fail)
     return sheet
 end
 
+-- Where a sheet's words go up, for a shot that cuts in on them.
+local function failAim(at)
+    return function(game)
+        local left, top = Camera.steady()
+        local x, y = at(game)
+        return x - left, y - top
+    end
+end
+
+local function failZoom(game, t, s)
+    return s.failT and t - s.failT > 0.25 and ZOOM or 1
+end
+
+-- Join the dots, at a master's: the hand goes to the first dot and draws one
+-- line through the rest in order, and the sheet rules the picture in behind it.
+local function dotsShot(subject)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = 7.4, zoom = prizeZoom,
+        setup = function(game)
+            lessonRun(game, subject)
+            game.course = Course.get(SHEET_COURSE)
+            local p = game.player
+            local j = Worksheet._kinds.dots(p.x, p.y - 66, game)
+            game.worksheets[#game.worksheets + 1] = j
+            game.lab = j
+        end,
+        move = function(game, t)
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, 0.45, 10, true)
+            local j, p = game.lab, game.player
+            if j.state == "open" or (s.path and not s.path.done) then
+                if not s.path then
+                    s.path = { { p.x + 30, p.y + 20 }, { wait = 0.2 },
+                        { j.dots[1].x, j.dots[1].y, speed = 150 }, { wait = 0.1, down = true } }
+                    for k = 2, #j.dots do
+                        s.path[#s.path + 1] = { j.dots[k].x, j.dots[k].y, down = true, speed = 95 }
+                    end
+                    s.path[#s.path + 1] = { wait = 0.1, down = true }
+                end
+                local x, y, down, done = along(s.path, t)
+                s.path.done = done
+                point(x, y, down)
+            elseif t > -0.6 then
+                hunt(game, s, t, 40)
+            end
+            if j.state == "won" then prizeWatch(game, s, t) end
+        end,
+    }
+    sheet.aim = prizeAim(sheet)
+    return sheet
+end
+
+-- The portrait: the hero walks onto the chalk cross and sits, the hand keeping
+-- the crowd off him while it is painted. Its sitting cut short once it has
+-- started -- a master's eight seconds is a long time on a feed. With `fail`, he
+-- gets up half way through and the camera cuts in on SMUDGED!.
+local SIT_SHOWN = 2.8
+
+local function portraitShot(subject, fail)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = fail and 4.6 or 6.6,
+        zoom = fail and failZoom or prizeZoom,
+        setup = function(game)
+            lessonRun(game, subject)
+            game.course = Course.get(SHEET_COURSE)
+            local p = game.player
+            local pr = Worksheet._kinds.portrait(p.x - 16, p.y - 46, game)
+            game.worksheets[#game.worksheets + 1] = pr
+            game.lab = pr
+        end,
+        move = function(game, t, s)
+            local pr = game.lab
+            if pr.state == "open" and not pr.live then return walkTo(game, pr.mx, pr.my) end
+            if pr.live then
+                if fail and s.sat and t - s.sat > 1.1 then return 1, 0.3 end
+                return 0, 0
+            end
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, 0.4, 12)
+            local pr = game.lab
+            if pr.live and not s.sat then
+                s.sat = t
+                pr.left = math.min(pr.left, SIT_SHOWN)
+            end
+            if t > -0.6 then hunt(game, s, t + 0.6, 45) end
+            if pr.state == "fading" then s.failT = s.failT or t end
+            if pr.state == "won" then prizeWatch(game, s, t) end
+        end,
+    }
+    sheet.aim = fail and failAim(function(game)
+        local pr = game.lab
+        return pr.ex + pr.cw / 2, pr.ey - 4
+    end) or prizeAim(sheet)
+    return sheet
+end
+
+-- The market: the hero walks onto the sheet to open it, waits beside BUY and
+-- steps in near the day's low, then waits beside SELL and steps in at a high
+-- after it -- picked off the chart the sheet was dealt, so it is a trade that
+-- pays -- and the coins it pays out are looked at and walked over. He is given
+-- a stake to play with: a reel's run has picked nothing up.
+local function marketShot(subject)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = 9, zoom = prizeZoom,
+        setup = function(game)
+            lessonRun(game, subject)
+            game.course = Course.get(SHEET_COURSE)
+            game.banked = 20
+            local p = game.player
+            local k = Worksheet._kinds.stocks(p.x, p.y - 50, game)
+            game.worksheets[#game.worksheets + 1] = k
+            game.lab = k
+            local lo, hi
+            for i = 3, 10 do
+                if not lo or k.prices[i] < k.prices[lo] then lo = i end
+            end
+            for i = lo + 4, lo + 14 do
+                if not hi or k.prices[i] > k.prices[hi] then hi = i end
+            end
+            sheet.buyAt, sheet.sellAt = lo, hi
+        end,
+        move = function(game, t, s)
+            local k = game.lab
+            if k.state == "open" then
+                local f = k.live and k:at() or 0
+                local b, sl = k.buy, k.sell
+                if not k.held then
+                    if f >= sheet.buyAt then return walkTo(game, b.x, b.y) end
+                    return walkTo(game, b.x + b.w / 2 + 6, b.y)
+                end
+                if f >= sheet.sellAt then return walkTo(game, sl.x, sl.y) end
+                return walkTo(game, sl.x - sl.w / 2 - 6, sl.y)
+            end
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, 0.5, 10, true)
+            if t > -0.6 then hunt(game, s, t + 0.6, 40) end
+            if game.lab.state == "done" then prizeWatch(game, s, t) end
+        end,
+    }
+    sheet.aim = prizeAim(sheet)
+    return sheet
+end
+
+-- Hangman: the hero stands on the word's three missing letters, nearest first,
+-- for SOLVED! and the diamond. With `fail`, on three that are not in it: the man
+-- is drawn a piece a letter, the camera cuts in on HANGED!, and he climbs down.
+local function hangmanShot(subject, fail)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = fail and 7.6 or 8,
+        zoom = fail and failZoom or prizeZoom,
+        setup = function(game)
+            lessonRun(game, subject)
+            game.course = Course.get(SHEET_COURSE)
+            local p = game.player
+            local g = Worksheet._kinds.hangman(p.x, p.y - 50, game)
+            game.worksheets[#game.worksheets + 1] = g
+            game.lab = g
+            local missing = {}
+            for k, ch in ipairs(g.chars) do
+                if g.gaps[k] then missing[ch] = true end
+            end
+            sheet.want = {}
+            for i, pad in ipairs(g.pads) do
+                if (missing[pad.ch] and true or false) ~= (fail and true or false) then
+                    sheet.want[#sheet.want + 1] = i
+                end
+            end
+        end,
+        move = function(game, t)
+            local g = game.lab
+            if t < 0.4 then return 0, 0 end
+            if g.state == "open" then
+                -- The nearest letter still wanted.
+                local p, best, bd = game.player
+                for _, i in ipairs(sheet.want) do
+                    local pad = g.pads[i]
+                    if not pad.given then
+                        local d = util.len(pad.x - p.x, pad.y - p.y)
+                        if not bd or d < bd then best, bd = pad, d end
+                    end
+                end
+                if best then return walkTo(game, best.x, best.y) end
+                return 0, 0
+            end
+            if fail then return 0, 0 end
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, 0.5, 10, true)
+            local g = game.lab
+            if t > -0.6 then hunt(game, s, t + 0.6, 40) end
+            if g.state == "hanging" then s.failT = s.failT or t end
+            if g.state == "won" then prizeWatch(game, s, t) end
+        end,
+    }
+    sheet.aim = fail and failAim(function(game)
+        local g = game.lab
+        return g.x - 14, g.y - 24
+    end) or prizeAim(sheet)
+    return sheet
+end
+
+-- The dodgeball pit: the hero walks in, the whistle goes and the class is
+-- thrown at him; he dodges, the hand fastening what it can. Its clock cut short
+-- once it has started (a master's fifteen seconds). Lasted, SAFE! and the
+-- diamond; with `fail`, he steps over the line and the camera cuts in on OUT!.
+local PIT_SHOWN = 3.2
+
+local function dodgeShot(subject, fail)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = fail and 4.4 or 7,
+        zoom = fail and failZoom or prizeZoom,
+        setup = function(game)
+            lessonRun(game, subject)
+            game.course = Course.get(SHEET_COURSE)
+            local p = game.player
+            local d = Worksheet._kinds.dodgeball(p.x, p.y - 64, game)
+            game.worksheets[#game.worksheets + 1] = d
+            game.lab = d
+        end,
+        move = function(game, t, s)
+            local d, p = game.lab, game.player
+            if d.state == "open" and not d.live then return walkTo(game, d.x, d.y + 16) end
+            if d.live then
+                if fail and s.live and t - s.live > 1.3 then return 0, 1 end
+                -- Side to side across the pit: dodging, not standing.
+                local a = (t - (s.live or t)) * 2.2
+                return walkTo(game, d.x + math.sin(a) * 26, d.y + 16)
+            end
+            if fail then return 0, 0 end
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            local d = game.lab
+            if d.live and not s.live then
+                s.live = t
+                d.left = math.min(d.left, PIT_SHOWN)
+            end
+            if t > -0.6 then hunt(game, s, t + 0.6, 50) end
+            if d.state == "fading" then
+                s.failT = s.failT or t
+                s.outX, s.outY = s.outX or game.player.x, s.outY or game.player.y
+            end
+            if d.state == "won" then prizeWatch(game, s, t) end
+        end,
+    }
+    sheet.aim = fail and failAim(function(game)
+        local s, p = sheet, game.player
+        return s.outX or p.x, (s.outY or p.y) - 14
+    end) or prizeAim(sheet)
+    return sheet
+end
+
+-- Hopscotch: the first boxes of a path (a feed has no time for the whole
+-- walk), hopped in order from the flag to FINISH! and the heart.
+local HOPS = 7
+
+local function hopShot(subject)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = 7.6, zoom = prizeZoom,
+        setup = function(game)
+            lessonRun(game, subject)
+            game.course = Course.get("school")
+            local p = game.player
+            local h
+            for k = 0, 20 do
+                h = Worksheet._kinds.hopscotch(p.x + k * 3, p.y - 60, game)
+                if h then break end
+            end
+            -- Cut down to its first boxes: the rest of the walk is not printed.
+            for k = #h.path, HOPS + 1, -1 do
+                local c = table.remove(h.path, k)
+                h.index[c.i * 65536 + c.j] = nil
+            end
+            game.worksheets[#game.worksheets + 1] = h
+            game.lab = h
+        end,
+        move = function(game, t)
+            local h = game.lab
+            local dd = h.days
+            if h.state == "open" then
+                local c = h.path[(h.reached or 0) + 1]
+                if c then return walkTo(game, c.x + dd.w / 2, c.y + (dd.h + dd.rule) / 2) end
+            end
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, 0.5, 8, true)
+            if t > -0.6 then hunt(game, s, t + 0.6, 40) end
+            if game.lab.state == "won" then prizeWatch(game, s, t) end
+        end,
+    }
+    sheet.aim = prizeAim(sheet)
+    return sheet
+end
+
 -- A boss, cut to: its landing, or a move it is forced into once it is in the
 -- box with the hero (`force`, called every frame until it says it is done). No
 -- caption -- the game's own call is the caption.
@@ -962,6 +1297,25 @@ local REELS = {
     }, { { warm = 2.5, rec = 2.6, enter = 1.1 },
          { warm = 4, rec = 2.6, force = forceMove(function(b, game, e)
              b:foldStart(game, e, e.tesseract) end, 0.6) } }),
+    art = lessonReel("art", {
+        dotsShot,
+        portraitShot,
+        function(key) return portraitShot(key, true) end,
+    }, { { warm = 3.5, rec = 2.4 }, { warm = 3.5, rec = 2.4 } }),
+    finance = lessonReel("finance", {
+        function(key) return labShot(key, "finance") end,
+        marketShot,
+        function(key) return labShot(key, "finance", nil, true) end,
+    }, { { warm = 3.5, rec = 2.4 }, { warm = 3.5, rec = 2.4 } }),
+    grammar = lessonReel("language", {
+        hangmanShot,
+        function(key) return hangmanShot(key, true) end,
+    }, { { warm = 3.5, rec = 2.4 }, { warm = 3.5, rec = 2.4 } }),
+    pe = lessonReel("pe", {
+        dodgeShot,
+        hopShot,
+        function(key) return dodgeShot(key, true) end,
+    }, { { warm = 3.5, rec = 2.4 }, { warm = 3.5, rec = 2.4 } }),
 }
 
 --- the clock -----------------------------------------------------------------
