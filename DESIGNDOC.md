@@ -152,7 +152,9 @@ called in by name round the hero, just outside what the close shot shows) and
 the pencil out among them (`hunt`: a zigzag across the nearest, lifted, the
 next); then each worksheet answered with the crowd still coming (`labShot`,
 `circuitShot`), dealt at a master's (`SHEET_COURSE`) for the harder board, its
-prize looked at close before the hero walks over and takes it (`prizeWatch`); then fast uncaptioned cuts (`bossCut`) -- the first boss
+prize looked at close before the hero walks over and takes it (`prizeWatch`),
+and one board got wrong first (`circuitShot(key, true)`: a wire into the return
+stub, the camera cut in on SHORT CIRCUIT! as the sheet fades); then fast uncaptioned cuts (`bossCut`) -- the first boss
 landing, the same boss forced into its signature move (the eye's weep), the
 encore landing, the encore's (the atom's fission) -- and the card. The hero is
 under `truce` (nothing lands, nothing blinks), the minute's own horde and sheets

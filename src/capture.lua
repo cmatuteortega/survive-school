@@ -638,10 +638,17 @@ end
 
 -- The circuit, the crowd kept below it: the hand drags a wire across the gap,
 -- from the battery's side to the bulb's, and the ringed bulb comes on.
-local function circuitShot(subject)
+-- With `fail`, the same board got wrong: the hand runs its wire from the
+-- battery's + side into the return wire's stub, the battery sparks, and the
+-- camera cuts in on SHORT CIRCUIT! as the sheet fades -- what a careless line
+-- across bare copper costs, shown once before the board is got right.
+local function circuitShot(subject, fail)
     local sheet
     sheet = {
-        kind = "run", warm = 1.5, rec = 5, zoom = prizeZoom,
+        kind = "run", warm = 1.5, rec = fail and 3.4 or 5,
+        zoom = fail and function(game, t, s)
+            return s.failT and t - s.failT > 0.25 and ZOOM or 1
+        end or prizeZoom,
         setup = function(game)
             lessonRun(game, subject)
             game.course = Course.get(SHEET_COURSE)
@@ -661,6 +668,7 @@ local function circuitShot(subject)
             game.ink = game.loadout.stats.inkMax
             crowd(game, s, 0.45, 10, true)
             if game.lab.state == "won" then prizeWatch(game, s, t, "clock") end
+            if game.lab.state == "fading" and not s.failT then s.failT = t end
             if t < 0.2 then
                 hunt(game, s, t + 1.5, 40)
                 return
@@ -680,7 +688,7 @@ local function circuitShot(subject)
                 for _, e in ipairs(c.ends) do
                     if e.nets.p then from = e end
                 end
-                for _, net in ipairs({ "a", "b" }) do
+                for _, net in ipairs(fail and { "n" } or { "a", "b" }) do
                     for _, e in ipairs(c.ends) do
                         if not to and e.nets[net] and not backwards[net] then to = e end
                     end
@@ -701,6 +709,16 @@ local function circuitShot(subject)
         end,
     }
     sheet.aim = prizeAim(sheet)
+    if fail then
+        -- On the battery and the words thrown up beside it
+        -- (src/worksheet.lua's C:judge).
+        sheet.aim = function(game)
+            local left, top = Camera.steady()
+            local c = game.lab
+            local bt = c.battery
+            return bt.x + (c.mx and -20 or 20) - left, bt.y - 4 - top
+        end
+    end
     return sheet
 end
 
@@ -766,6 +784,7 @@ local REELS = {
     sun = sunReel,
     science = lessonReel("science", {
         function(key) return labShot(key, "science", "diamond") end,
+        function(key) return circuitShot(key, true) end,
         circuitShot,
     }, { eyeWeeps, atomSplits }),
 }
