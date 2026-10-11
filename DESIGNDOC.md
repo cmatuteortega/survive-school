@@ -169,7 +169,18 @@ dealt at school so the tune is three notes) and a wrong STAVE answer; MATHS's
 the pop quiz, the sequence and a wrong quiz answer (`labShot(..., true)`, cut in
 on WRONG ANSWER). Their moves are the metronome's sweep (cued a whole bar early,
 for its count-in), the speaker's drop, the die's own throw and the tesseract's
-fold (`forceMove`). `REEL_CURSOR` draws the cursor and keeps the brush's sound (the hand draws in
+fold (`forceMove`). `./capture.sh art`, `finance`, `grammar` and `pe` follow:
+ART's join the dots (one line through the dots in order), the portrait (sat on
+the cross, its sitting cut short) and a portrait got up from (SMUDGED!);
+FINANCE's till, the market (bought near the chart's low and sold at a high
+after it, off the prices it was dealt, with a stake handed over) and a wrong till
+answer; GRAMMAR's hangman solved and hangman HANGED!; P.E.'s dodgeball pit
+(its clock cut short and thrown at twice as often), the first boxes of a
+hopscotch, and a pit stepped out of (OUT!). Their bosses play their own moves.
+The ruler is pressed and held on the prey (`snap`). Every sheet shot ends on its
+moment (`wrapUp`): a beat after the last of a prize is walked over -- a payout of
+several taken one after another -- or a second and a bit after a failure's words.
+`REEL_CURSOR` draws the cursor and keeps the brush's sound (the hand draws in
 bursts here, so it is a gesture and not a drone), and every bot hand goes
 through `point`, so the cursor is on the pen and eases between strokes; a
 scripted hand is a list of nodes walked by `along`.
