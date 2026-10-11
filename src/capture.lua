@@ -71,6 +71,12 @@ local ZOOM = 2          -- how much closer a boss shot is filmed (see `lens`)
 local MUTED = { brush1 = true, brush2 = true, brush3 = true,
                 brush4 = true, brush5 = true, brush6 = true }
 
+-- And a reel's own, on top: the sun's crowd is fed straight at a hero who is
+-- topped up every frame, so he is hit all the time and the hurt would be a
+-- second drone under the burn. A boss reel keeps it -- there a hit is the boss
+-- landing one, which is half of what is being shown.
+local REEL_MUTED = { sun = { hurt = true } }
+
 --- the reels -----------------------------------------------------------------
 
 -- Every boss in the book, each dropped onto its own page: the red ring
@@ -372,7 +378,7 @@ local function sunReel()
     shots[#shots + 1] = sunShot({ level = 1, corner = 3, rec = 2.4, lead = 3.5,
         zoom = ZOOM, subject = "art" })
     shots[#shots + 1] = sunShot({ level = #Upgrades.byId.sun.levels, corner = 3,
-        rec = 4, lead = 0.9, subject = "music" })
+        rec = 2.4, lead = 0.9, subject = "music" })
 
     shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
     return shots
@@ -428,7 +434,8 @@ local function mix(seconds, level)
     local out = ffi.new("float[?]", frames * 2)
 
     for _, ev in ipairs(events) do
-        local data = not MUTED[ev.name] and Sfx.sample(ev.name)
+        local quiet = MUTED[ev.name] or (REEL_MUTED[Capture.reel] or {})[ev.name]
+        local data = not quiet and Sfx.sample(ev.name)
         if data then
             local channels = data:getChannelCount()
             local count = data:getSampleCount()
