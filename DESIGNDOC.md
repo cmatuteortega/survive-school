@@ -95,6 +95,16 @@ time, and a swish under every frame is a drone) with its pitch and laid over sil
 samples (`Sfx.sample`), with the track underneath at the default level
 (`Sfx.levels`), then loudness-normalised. A new reel is a row in `REELS`.
 
+`./capture.sh sun` is the other reel, and the shape for a weapon's highlight: the
+library's hole for the sun and what it asks, the book opening it, the draft dealing
+it, its face drawn on a blank board by the bot, the sun rising over a corner with
+the lens punching in, then one shot per later level with the card's own words. Its
+shots are ordinary runs rather than boss tests (`runShot`: minute four for a crowd,
+marked as a test so they bank nothing), and a shot may carry a `setup`, a `direct`
+called every frame with the shot's clock, a `zoom` that is a function of that clock,
+and an `aim` of its own. A take that errors prints it and exits rather than standing
+on LÖVE's error screen.
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.

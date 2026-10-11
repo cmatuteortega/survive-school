@@ -163,7 +163,7 @@ end
 -- layout, so the bot draws on whatever size of board the studio picked.
 local function faceAt(t)
     local lay = Studio.lay
-    if not lay then return nil end
+    if not lay or t < 0 then return nil end
     for _, stroke in ipairs(FACE) do
         local span = (#stroke - 1) * FACE_STEP
         if t < span + FACE_LIFT then
@@ -252,7 +252,6 @@ local function sunReel()
                     d:apply()
                 end
                 local x, y, tool, done = faceAt(t - s.board - 0.6)
-                if t - s.board < 0.6 then tool = nil end
                 if tool and tool ~= s.tool then
                     s.tool = tool
                     Studio:keypressed(tool)
@@ -505,6 +504,7 @@ end
 local function begin(i)
     index, shot, shotT = i, shots[i], 0
     if not shot then return end
+    print(string.format("capture: shot %d/%d", i, #shots))
 
     love.math.setRandomSeed(1000 + i)
     bot.t, bot.seed = 0, i * 0.77
