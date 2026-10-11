@@ -145,16 +145,21 @@ The sun reel is the one signed off, and the template for the rest. What it settl
 #### A lesson teaser
 
 `./capture.sh science` is the first of one teaser per lesson (`lessonReel`, a
-row in `REELS` with the lesson's own worksheet shots): about 25s of the class
-walking into a three-by-three one kind at a time, each named as it sits, then
-scribbled out row by row in one line (`classShot`); the lesson's worksheets
-answered (`labShot`, `circuitShot`); 2.6s of each of its two bosses; the card.
-These are played with the mouse: `REEL_CURSOR` draws the cursor, and every bot
-hand goes through `point`, so it is always on the pen and eases between strokes
-rather than jumping; a scripted hand is a list of nodes walked by `along`. The
-shots are `quiet` (no horde, no sheets but the shot's), the hero is walked by a
-shot's `move`, and the class cannot be hurt until the pencil reaches them, then
-falls to one touch. Another lesson is a `lessonReel` row with its own sheet shots.
+row in `REELS` with the lesson's worksheet shots and its two bosses' moves),
+about 26s, and it is play rather than a slideshow: the hero walking a slow
+curve through the page with the whole class coming at him (`crowd`, every kind
+called in by name round the hero, just outside what the close shot shows) and
+the pencil out among them (`hunt`: a zigzag across the nearest, lifted, the
+next); then each worksheet answered with the crowd still coming (`labShot`,
+`circuitShot`); then fast uncaptioned cuts (`bossCut`) -- the first boss
+landing, the same boss forced into its signature move (the eye's weep), the
+encore landing, the encore's (the atom's fission) -- and the card. The hero is
+under `truce` (nothing lands, nothing blinks), the minute's own horde and sheets
+are off, and a diamond banks no level. These reels are played with the mouse:
+`REEL_CURSOR` draws the cursor and keeps the brush's sound (the hand draws in
+bursts here, so it is a gesture and not a drone), and every bot hand goes
+through `point`, so the cursor is on the pen and eases between strokes; a
+scripted hand is a list of nodes walked by `along`.
 
 A new highlight is a reel function beside `sunReel` and a row in `REELS` (and
 `REEL_MUTED`), reusing `runShot`, `feed`, `faceStrokes` and a `sunAim`-style aim.
