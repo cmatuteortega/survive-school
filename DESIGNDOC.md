@@ -163,10 +163,24 @@ dropped onto the line just ahead of the S (`feedLine`, every 0.05s, never on
 the hero), and the close shots ride the S at zoom 3 (`CLOSE`, `coolsAim`): it
 is the hero's size, so at the boss's zoom 2 the pile coming apart and its
 numbers are a few pixels each. The hero is put under
-the truce the eye's fall uses (`coolsRun`, `Player:hurt`). A crowd always on him
+the truce the eye's fall uses (`safeRun`, `Player:hurt`). A crowd always on him
 otherwise knocks the page and flashes him every frame, and a shaking frame is
 one the weapon can't be followed across. Prefer this to muting `hurt` alone on
 the next highlight.
+
+`./capture.sh storm` is the third, and the closest to the sun's: the storm is
+gated, so it opens on the real unlock. Its bolt is thick runs of cells, so its
+board is drawn in rows (`faceStrokes(Sprites.LIGHTNING)`, `faceAt(t, BOLT)`).
+A storm parks over one enemy picked at random from the whole page, which on
+camera is a straggler. So each strike is staged instead. A crowd is dropped
+round a point off the hero (`pile`), only in the second or so before the bolt,
+since a crowd fed for a whole take is a lump. A cloud is sent through `launch`
+(`sendCloud`), started close enough to strike about a second into the clip,
+and marked on the thickest part of the crowd (`densest`). If the hero's own
+weapon kills that mark first, the cloud picks again from the same crowd
+instead of crossing the page. The close shots, at zoom 3 like the S, hold on
+where the bolt fell once it has (`stormAim`). The finale is the last level
+wide: two clouds that stay, and the zap passed along the crowd.
 
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant

@@ -75,7 +75,8 @@ local MUTED = { brush1 = true, brush2 = true, brush3 = true,
 -- topped up every frame, so he is hit all the time and the hurt would be a
 -- second drone under the burn. A boss reel keeps it -- there a hit is the boss
 -- landing one, which is half of what is being shown.
-local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true } }
+local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true },
+                     storm = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -125,9 +126,9 @@ local SUN_CORNER = 3   -- bottom left: clear of the HUD's top rows when close
 -- baked face whatever the baked face becomes.
 local TOOL_OF = { [Design.PENCIL] = "p", [Design.PEN] = "b" }
 
-local function faceStrokes()
+local function faceStrokes(art)
     local strokes = {}
-    for y, row in ipairs(Sprites.SUNFACE) do
+    for y, row in ipairs(art) do
         local x = 1
         while x <= #row do
             local ch = row:sub(x, x)
@@ -146,7 +147,7 @@ local function faceStrokes()
     return strokes
 end
 
-local FACE = faceStrokes()
+local FACE = faceStrokes(Sprites.SUNFACE)
 local FACE_STEP = 0.05  -- seconds from one cell of a stroke to the next
 local FACE_LIFT = 0.1   -- and between strokes, the pen off the page
 
@@ -229,11 +230,12 @@ end
 
 -- The face, drawn: where the pointer is `t` seconds into the drawing and
 -- whether it is down. Cells are aimed at their middles off the board's own
--- layout, so the bot draws on whatever size of board the studio picked.
-local function faceAt(t)
+-- layout, so the bot draws on whatever size of board the studio picked. Any
+-- other design drawn in rows (`faceStrokes`) is drawn by the same hand.
+local function faceAt(t, strokes)
     local lay = Studio.lay
     if not lay or t < 0 then return nil end
-    for _, stroke in ipairs(FACE) do
+    for _, stroke in ipairs(strokes or FACE) do
         -- Down for a step at least, or a one-cell stroke is never drawn.
         local span = math.max(1, #stroke - 1) * FACE_STEP
         if t < span + FACE_LIFT then
@@ -531,12 +533,12 @@ local function coolsAim(game)
     return s.x * 0.85 + p.x * 0.15 - left, s.y * 0.85 + p.y * 0.15 - top
 end
 
--- A run to film the S in: `runShot`, with the hero out of harm's way. The horde
+-- A run to film a weapon in: `runShot`, with the hero out of harm's way. The horde
 -- still comes at him, but a hit is a knock of the whole page and a flash, and
 -- the minute's crowd hits a hero who stands still for it all the time -- a
--- shaking frame is a frame the S cannot be followed across. The truce is the
+-- shaking frame is a frame the weapon cannot be followed across. The truce is the
 -- one the eye's fall uses (Player:hurt), so nothing lands: no knock, no cry.
-local function coolsRun(game, subject)
+local function safeRun(game, subject)
     runShot(game, subject)
     game.player.truce = true
 end
@@ -576,7 +578,7 @@ local function coolsReel()
     local FIRST = math.pi / 2   -- from the top: down the long side of the frame
     shots[#shots + 1] = {
         kind = "run", warm = 2.5, rec = 11,
-        setup = function(game) coolsRun(game) end,
+        setup = function(game) safeRun(game) end,
         direct = function(game, t, s)
             if t > 0.3 and not s.dealt then
                 s.dealt = true
@@ -638,7 +640,7 @@ local function coolsReel()
         return {
             kind = "run", warm = 3, rec = spec.rec,
             setup = function(game)
-                coolsRun(game, spec.subject)
+                safeRun(game, spec.subject)
                 for _ = 1, spec.level do game.loadout:take("cools", game) end
                 game.player:applyStats()
             end,
@@ -667,10 +669,272 @@ local function coolsReel()
     return shots
 end
 
+-- The storm, told the sun's way, unlock and all: it is held back by the book
+-- (beating seven bosses), so the first shot is the sun's -- the shelf walked to
+-- the hole, the demand, and the book opening it. Its board is drawn in rows off
+-- the baked bolt (Sprites.LIGHTNING, `faceStrokes`): a thick bolt is runs of
+-- three, so the row-by-row hand draws it without the cool S's stairs.
+local BOLT = faceStrokes(Sprites.LIGHTNING)
+
+-- Where the strike is staged, from the hero: up and to one side, so the cloud
+-- hanging over it and its bolt are in a close frame with him under them.
+local PILE_X, PILE_Y = 18, -34
+local PILE_EVERY = 0.07
+local PILE_WIDE = 14    -- about the base bolt's 12px circle, so most of it is hit
+
+-- A crowd stood where the bolt will fall: the minute's own arrivals
+-- (`Spawner:dropAt`) dropped round a point off the hero, and then walking in on
+-- him through it. The storm parks over one enemy at random anywhere on the page,
+-- so left alone the bolt that comes on camera hits a straggler; a pile and a
+-- cloud sent to it (`sendCloud`) is the weapon on the crowd it is named for.
+local function pile(game, s, ox, oy)
+    s.fed = (s.fed or 0) - DT
+    if s.fed > 0 then return end
+    s.fed = PILE_EVERY
+    local a = love.math.random() * math.pi * 2
+    local r = math.sqrt(love.math.random()) * PILE_WIDE
+    game.spawner:dropAt(game, game.player.x + (ox or PILE_X) + math.cos(a) * r,
+        game.player.y + (oy or PILE_Y) + math.sin(a) * r)
+end
+
+-- The thickest part of the crowd within a pile's width of a point: the enemy
+-- with most others inside the bolt's circle, nearer the point breaking ties.
+-- Not whoever is nearest the point -- that is the arrival dropped there last,
+-- while the ones before it have walked off toward the hero.
+local function densest(game, px, py, radius)
+    local near = game:nearestEnemies(px, py, 45, 40)
+    local best, most = nil, -math.huge
+    for _, e in ipairs(near) do
+        if not e.gone then
+            local n = -util.len(e.x - px, e.y - py) / 15
+            for _, o in ipairs(near) do
+                if util.len(o.x - e.x, o.y - e.y) <= radius then n = n + 1 end
+            end
+            if n > most then best, most = e, n end
+        end
+    end
+    return best
+end
+
+-- One cloud sent onto the pile rather than over whoever the page picked: through
+-- `launch`, so its damage, circle and bolts are the level's, then marked on the
+-- enemy nearest the pile's middle and started `back` pixels off its station, so
+-- it is there and gathering inside the clip instead of rolling in for two
+-- seconds. The weapon's own clock is held, so the only clouds are these.
+local function sendCloud(game, ox, oy, angle, back)
+    local storm = game.loadout.live.storm
+    storm.cool = math.huge
+    -- Room made for it: a cloud of ours on its way out has done what it came
+    -- for, and one the clock sent before it was held is still off the page.
+    for i = #storm.live, 1, -1 do
+        local c = storm.live[i]
+        if not c.ours or c.state == "out" then table.remove(storm.live, i) end
+    end
+    if not storm:launch(game) then return end
+    local c = storm.live[#storm.live]
+    c.ours = true
+    c.target = densest(game, game.player.x + ox, game.player.y + oy, c.radius)
+        or c.target
+    -- And should the hero's own weapon kill its mark before the bolt, it picks
+    -- again here rather than at random across the page (Storm:remark), which
+    -- sends the cloud off over bare paper with the camera after it.
+    if not storm.held then
+        storm.held = true
+        local remark = storm.remark
+        storm.remark = function(self, cloud, g)
+            local e = cloud.ours and densest(g, cloud.target.x, cloud.target.y, cloud.radius)
+            if e then cloud.target = e return true end
+            return remark(self, cloud, g)
+        end
+    end
+    local tx, ty = c.target.x, c.target.y - 25
+    c.dx, c.dy = math.cos(angle), math.sin(angle)
+    c.x, c.y = tx - c.dx * back, ty - c.dy * back
+end
+
+-- The newest of our clouds, and whether it has struck yet. The pile is fed only
+-- until it has: a crowd fed for the whole of a take is a lump the bolt is lost
+-- in, and one the bolt has just been through should be seen thinning.
+local function ourCloud(game)
+    local storm = game.loadout.live.storm
+    local c = storm and storm.live[#storm.live]
+    if c and c.ours then return c, c.state == "strike" or c.state == "out" end
+end
+
+-- Where to look in a storm shot filmed close: the newest cloud's mark, raised
+-- a little so the cloud above it is in, with a fifth of the hero in it -- and
+-- once it has struck, where it struck, so what is shown after the bolt is the
+-- crowd it went into rather than the cloud leaving.
+local function stormAim(game)
+    local left, top = Camera.steady()
+    local p = game.player
+    local c, struck = ourCloud(game)
+    if not c then return p.x + PILE_X - left, p.y + PILE_Y - top end
+    local x, y = c.target.x, c.target.y - 12
+    if struck then x, y = c.sx, c.sy - 12 end
+    return x * 0.8 + p.x * 0.2 - left, y * 0.8 + p.y * 0.2 - top
+end
+
+local function stormReel()
+    local shots = {}
+
+    -- The hole on the weapons page and what it asks for, then the book opening
+    -- it: the same entry, written out in full.
+    shots[#shots + 1] = {
+        kind = "library", warm = 0.1, rec = 4.6,
+        hook = { "UNLOCK", "THE STORM" }, hookY = 226,
+        setup = function(game)
+            Dev.boss = false
+            Dev.unlocks = "none"
+            game:toLibrary()
+        end,
+        direct = function(game, t, s)
+            local at, want = Library:find("storm")
+            s.turned = s.turned or 0
+            if t > 0.25 and s.turned < at - 1 and t - (s.turnAt or 0) > 0.3 then
+                s.turned, s.turnAt = s.turned + 1, t
+                Library:step(1)
+            end
+            if s.turned == at - 1 and t > 0.9 and Library.index < want
+                and t - (s.walked or 0) > 0.16 then
+                s.walked = t
+                Library:keypressed("down")
+            end
+            if t > 2.8 and not s.opened then
+                s.opened = true
+                Dev.unlocks = "all"
+                Sfx.play("accept")
+            end
+            if s.opened then s.hook, s.say = nil, "UNLOCKED!" end
+        end,
+    }
+
+    -- Dealt, drawn and sent, in one take: the draft lands on the run, the
+    -- storm's card is circled, the board comes up blank and the bolt is drawn
+    -- back onto it, and the run comes back with a cloud rolling onto the crowd
+    -- -- where the camera punches in -- and then a second.
+    shots[#shots + 1] = {
+        kind = "run", warm = 2.5, rec = 11,
+        setup = function(game) safeRun(game) end,
+        direct = function(game, t, s)
+            if t > 0.3 and not s.dealt then
+                s.dealt = true
+                game.player.pending = 1
+                game.state = "levelup"
+                Sfx.play("levelup_enter")
+                game:holdRun()
+                game.draft:open(game, { Upgrades.byId.star, Upgrades.byId.storm,
+                    Upgrades.byId.rocket })
+            end
+            if game.state == "levelup" then
+                if t > 1.4 and not s.picked then
+                    s.picked = true
+                    game.draft:keypressed("2")
+                end
+            elseif game.state == "studio" then
+                if not s.board then
+                    -- A blank board, so the bolt is drawn rather than edited.
+                    s.board = t
+                    local d = Design.by.lightning
+                    for y = 1, d.h do
+                        for x = 1, d.w do d.grid[y][x] = Design.BLANK end
+                    end
+                    d:apply()
+                end
+                local x, y, tool, done = faceAt(t - s.board - 0.6, BOLT)
+                if tool and tool ~= s.tool then
+                    s.tool = tool
+                    Studio:keypressed(tool)
+                end
+                Input.pointerDown = x ~= nil
+                if x then Input.pointerX, Input.pointerY = x, y end
+                if done and not s.ok then
+                    s.ok = true
+                    Studio:keypressed("return")
+                end
+            elseif s.ok then
+                Input.pointerDown = false
+                local storm = game.loadout.live.storm
+                if storm and not s.back then
+                    s.back = t
+                    storm.cool = math.huge
+                end
+                if s.back then
+                    local k = t - s.back
+                    -- The second strike on the other side of him.
+                    local ox = k < 2.4 and PILE_X or -PILE_X
+                    local _, struck = ourCloud(game)
+                    if (k < 1.5 and not struck) or (k > 1.8 and s.second == nil) then
+                        pile(game, s, ox, PILE_Y)
+                    end
+                    if k > 0.7 and not s.first then
+                        s.first = true
+                        sendCloud(game, ox, PILE_Y, -0.6, 70)
+                    end
+                    if k > 2.6 and not s.second then
+                        s.second = true
+                        sendCloud(game, ox, PILE_Y, math.pi + 0.6, 70)
+                    end
+                    if s.second and struck then s.second = false end
+                    if k > 1.1 then s.say = "IT STRIKES THE CROWD" end
+                end
+            end
+        end,
+        zoom = function(game, t, s)
+            return s.back and t - s.back > 1.1 and CLOSE or 1
+        end,
+        aim = stormAim,
+    }
+
+    -- Then the storm at the level it was dealt at, on other pages, close and
+    -- with nothing written over it: the pile gathered unseen, the cloud already
+    -- coming when the camera rolls (`lead`). Then the last level, wide and
+    -- uncaptioned: two clouds that stay, and the zap passed along the crowd.
+    local function stormShot(spec)
+        return {
+            kind = "run", warm = 3, rec = spec.rec,
+            setup = function(game)
+                safeRun(game, spec.subject)
+                for _ = 1, spec.level do game.loadout:take("storm", game) end
+                game.player:applyStats()
+                game.loadout.live.storm.cool = math.huge
+            end,
+            direct = function(game, t, s)
+                local _, struck = ourCloud(game)
+                if struck then s.struck = true end
+                for i, at in ipairs(spec.piles) do
+                    -- Gathered in the second and a half before the bolt, not
+                    -- through the whole warm: a crowd, not a lump.
+                    if t > -1.5 and not s.struck then pile(game, s, at[1], at[2]) end
+                    s.sent = s.sent or {}
+                    if t >= -spec.lead and not s.sent[i] then
+                        s.sent[i] = true
+                        sendCloud(game, at[1], at[2], at[3], spec.back)
+                    end
+                end
+            end,
+            zoom = spec.zoom,
+            aim = spec.zoom and stormAim or nil,
+        }
+    end
+
+    shots[#shots + 1] = stormShot({ level = 1, piles = { { PILE_X, PILE_Y, 0.5 } },
+        back = 80, lead = 0.3, rec = 2.4, zoom = CLOSE, subject = "language" })
+    shots[#shots + 1] = stormShot({ level = 1, piles = { { -PILE_X, PILE_Y, math.pi - 0.5 } },
+        back = 80, lead = 0.3, rec = 2.4, zoom = CLOSE, subject = "art" })
+    shots[#shots + 1] = stormShot({ level = #Upgrades.byId.storm.levels,
+        piles = { { -40, -30, 0.4 }, { 40, 30, math.pi + 0.4 } },
+        back = 40, lead = 0.3, rec = 2.4, subject = "music" })
+
+    shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
+    return shots
+end
+
 local REELS = {
     montage = bossMontage,
     sun = sunReel,
     cools = coolsReel,
+    storm = stormReel,
 }
 
 --- the clock -----------------------------------------------------------------
