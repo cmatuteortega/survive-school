@@ -53,6 +53,7 @@ local Studio = require("src.studio")
 local Subjects = require("src.subjects")
 local Upgrades = require("src.upgrades")
 local util = require("src.util")
+local Worksheet = require("src.worksheet")
 
 local Capture = {}
 
@@ -75,7 +76,7 @@ local MUTED = { brush1 = true, brush2 = true, brush3 = true,
 -- topped up every frame, so he is hit all the time and the hurt would be a
 -- second drone under the burn. A boss reel keeps it -- there a hit is the boss
 -- landing one, which is half of what is being shown.
-local REEL_MUTED = { sun = { hurt = true } }
+local REEL_MUTED = { sun = { hurt = true }, science = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -384,9 +385,273 @@ local function sunReel()
     return shots
 end
 
+-- One lesson's teaser, told on SCIENCE: the class that comes in on its page,
+-- each kind walking into its own seat of a three-by-three with its name under
+-- it, then scribbled out row by row; the lesson's two worksheets answered; and
+-- a couple of seconds of each of its two bosses. The other lessons are the same
+-- reel on their own page (`lessonReel`) once they are wanted.
+--
+-- Played with the mouse: the cursor is drawn (`REEL_CURSOR`), and everything the
+-- hand does -- the scribble, the wire, the answer it points at -- goes through
+-- `point`, so the cursor is always where the pen is and glides between strokes
+-- rather than jumping, which is what a feed is shown: where and how you write.
+local REEL_CURSOR = { science = true }
+
+-- The bot's hand: where the pointer is (page pixels, turned into the canvas's
+-- here) and whether it is down. The cursor eases after it while it is lifted.
+local hoverX, hoverY
+local aimX, aimY
+
+local function point(x, y, down)
+    local left, top = Camera.steady()
+    Input.pointerX, Input.pointerY = x - left, y - top
+    Input.pointerDown = down and true or false
+    aimX, aimY = Input.pointerX, Input.pointerY
+end
+
+-- A scripted hand: nodes { x, y, down, speed } walked in order at `speed` page
+-- pixels a second (the leg into a node is drawn if the node is `down`), and
+-- { wait = s, down = } held where it is. Answers where the hand is `t` seconds
+-- in, whether it is down, and whether it has finished.
+local function along(path, t)
+    local x, y = path[1][1], path[1][2]
+    if t <= 0 then return x, y, false end
+    for i = 2, #path do
+        local n = path[i]
+        if n.wait then
+            if t < n.wait then return x, y, n.down end
+            t = t - n.wait
+        else
+            local dur = util.len(n[1] - x, n[2] - y) / (n.speed or 140)
+            if t < dur then
+                local f = t / dur
+                return x + (n[1] - x) * f, y + (n[2] - y) * f, n.down
+            end
+            t = t - dur
+            x, y = n[1], n[2]
+        end
+    end
+    return x, y, false, true
+end
+
+-- A page with nothing on it but what the shot puts there: no horde, no sheets
+-- of its own, the meter topped up by the director. The class is called in by
+-- name and the sheets are printed where the camera is.
+local function quiet(game)
+    game.spawner.update = function() end
+    setmetatable(game.worksheetCells, { __index = function() return true end })
+end
+
+local function aimAt(dx, dy)
+    return function(game)
+        local left, top = Camera.steady()
+        return game.player.x + dx - left, game.player.y + dy - top
+    end
+end
+
+-- Walk the hero to a page point and stand.
+local function walkTo(game, x, y)
+    local dx, dy, d = util.normalize(x - game.player.x, y - game.player.y)
+    if d < 1 then return 0, 0 end
+    local k = math.min(1, d / 6)
+    return dx * k, dy * k
+end
+
+-- The class, in the order the minutes bring it (src/spawner.lua's TABLE).
+local CLASS = { "blob", "bat", "wad", "blot", "skull", "bulb", "eye", "grin", "redeye" }
+local SEAT = 26           -- between seats of the three-by-three
+local SEAT_UP = 44        -- its middle, above the hero
+local SEAT_EVERY = 0.45   -- between arrivals
+local SEAT_WALK = 60      -- how fast they walk to their seat
+
+local function classShot(subject, hook)
+    local function seat(game, k)
+        local col, row = (k - 1) % 3, math.floor((k - 1) / 3)
+        return game.player.x + (col - 1) * SEAT, game.player.y - SEAT_UP + (row - 1) * SEAT
+    end
+
+    -- One continuous line, row by row and back again, zigzagging through each.
+    local function scribblePath(game)
+        local path = { { game.player.x + 52, game.player.y + 18 } }
+        local zig = 8
+        for row = 1, 3 do
+            local y = game.player.y - SEAT_UP + (row - 2) * SEAT
+            local from, to = -SEAT - 12, SEAT + 12
+            if row == 2 then from, to = to, from end
+            path[#path + 1] = { game.player.x + from, y, row > 1, row > 1 and 220 or 160 }
+            if row == 1 then path[#path + 1] = { wait = 0.15 } end
+            local steps = math.floor(math.abs(to - from) / zig)
+            for i = 1, steps do
+                local x = from + (to - from) * i / steps
+                path[#path + 1] = { game.player.x + x, y + (i % 2 == 1 and -zig or zig), true, 220 }
+            end
+        end
+        path[#path + 1] = { wait = 0.1 }
+        path[#path + 1] = { game.player.x + 50, game.player.y + 10, false, 120 }
+        for _, n in ipairs(path) do
+            if n[3] ~= nil then n.down, n.speed = n[3], n[4] end
+        end
+        return path
+    end
+
+    local release = 0.3 + #CLASS * SEAT_EVERY + 0.5
+    return {
+        kind = "run", warm = 0.5, rec = release + 3.2, zoom = ZOOM,
+        hook = hook, aim = aimAt(0, -30),
+        setup = function(game)
+            runShot(game, subject)
+            game.time = 20
+            quiet(game)
+        end,
+        move = function() return 0, 0 end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            if t < 0 then return end
+            if t > 2.6 then s.hook = nil end
+            s.class = s.class or {}
+            local k = #s.class + 1
+            if CLASS[k] and t > 0.3 + (k - 1) * SEAT_EVERY then
+                local x, y = seat(game, k)
+                local col = (k - 1) % 3
+                local fx, fy = (col - 1) * 50, col == 1 and -50 or 0
+                local e = game:spawnEnemy(CLASS[k], x + fx, y + fy)
+                e:lure(x, y, 1e9)
+                e.walk, e.speed = e.speed, SEAT_WALK
+                -- Not to be put down by the hero's own weapon before the
+                -- pencil gets to them.
+                e.hurt = function() return false end
+                s.class[k] = e
+                s.say = Enemy.types[CLASS[k]].name
+            end
+            if t > release and not s.freed then
+                s.freed = true
+                for _, e in ipairs(s.class) do
+                    e.hurt, e.speed = nil, e.walk
+                    -- Whatever their row, the pencil's one touch is enough:
+                    -- this is the class being met, not the minute's sums.
+                    e.hp = math.min(e.hp, 6)
+                end
+                s.path = scribblePath(game)
+            end
+            if s.freed then s.say = "DRAW TO FIGHT" end
+            if s.path then
+                local x, y, down = along(s.path, t - release + 0.6)
+                point(x, y, down)
+            end
+        end,
+    }
+end
+
+-- The LAB board: a question out of the lesson's book and three answers; the
+-- cursor points at the right one and the hero goes and stands on it.
+local function labShot(subject, kind)
+    return {
+        kind = "run", warm = 0.5, rec = 5, say = "STAND ON THE ANSWER",
+        setup = function(game)
+            runShot(game, subject)
+            game.time = 20
+            quiet(game)
+            local p = game.player
+            -- The diamond is taken on camera, but the draft it banks would
+            -- stop the take.
+            p.levelUp = function() end
+            local q = Worksheet._kinds[kind](p.x, p.y - 52, game)
+            game.worksheets[#game.worksheets + 1] = q
+            game.lab = q
+        end,
+        move = function(game, t, s)
+            local q = game.lab
+            if t < 0.9 then return 0, 0 end
+            if q.state == "open" then
+                local a = q.answers[q.quiz.right]
+                return walkTo(game, a.x, a.y)
+            end
+            -- And on to the prize it dropped.
+            local a = q.answers[q.chosen]
+            return walkTo(game, a.x, q.y - 2)
+        end,
+        direct = function(game, t, s)
+            if t < 0 then return end
+            local q, p = game.lab, game.player
+            local a = q.answers[q.quiz.right]
+            s.path = s.path or { { p.x + 34, p.y + 26 }, { wait = 0.2 },
+                { a.x + 4, a.y + 4, speed = 110 }, { wait = 1.6 },
+                { a.x + 30, a.y + 30, speed = 70 } }
+            local x, y = along(s.path, t)
+            point(x, y, false)
+            if q.state ~= "open" then s.say = nil end
+        end,
+    }
+end
+
+-- The circuit: the hand drags a wire across the gap, from the battery's side
+-- to the bulb's, and the ringed bulb comes on.
+local function circuitShot(subject)
+    return {
+        kind = "run", warm = 0.5, rec = 4.4, say = "WIRE THE BULB",
+        setup = function(game)
+            runShot(game, subject)
+            game.time = 20
+            quiet(game)
+            local p = game.player
+            local c = Worksheet._kinds.circuit(p.x, p.y - 58, game)
+            game.worksheets[#game.worksheets + 1] = c
+            game.lab = c
+        end,
+        move = function() return 0, 0 end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            if t < 0 then return end
+            local c, p = game.lab, game.player
+            if not s.path then
+                -- The gap is the one between the battery's + wire and the
+                -- wire on to the bulb; the third end is the stub that shorts.
+                local from, to
+                for _, e in ipairs(c.ends) do
+                    if e.nets.p then from = e end
+                    if e.nets.a then to = e end
+                end
+                s.path = { { p.x + 40, p.y + 20 }, { wait = 0.2 },
+                    { from.x, from.y, speed = 120 }, { wait = 0.15, down = true },
+                    { to.x, to.y, down = true, speed = 45 }, { wait = 0.15, down = true },
+                    { to.x + 24, to.y + 30, speed = 70 } }
+            end
+            local x, y, down = along(s.path, t)
+            point(x, y, down)
+            if c.state ~= "open" then s.say = nil end
+        end,
+    }
+end
+
+-- `sheets` are the lesson's own worksheets, a shot builder each.
+local function lessonReel(key, sheets)
+    return function()
+        local subject = Subjects.get(key)
+        local shots = {}
+        shots[#shots + 1] = classShot(key, { subject.name, "THE LESSON" })
+        for _, sheet in ipairs(sheets) do shots[#shots + 1] = sheet(key) end
+        for i, kind in ipairs({ subject.boss, subject.encore }) do
+            shots[#shots + 1] = {
+                kind = "boss", subject = key, encore = i == 2,
+                -- The eye is filmed landing; the atom drifts in from far
+                -- off, and is filmed once it is in the box with the hero.
+                warm = i == 1 and 0.25 or 2, rec = 2.6, zoom = ZOOM,
+                tag = string.format("BOSS %d/2", i),
+                title = Enemy.types[kind].title,
+            }
+        end
+        shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
+        return shots
+    end
+end
+
 local REELS = {
     montage = bossMontage,
     sun = sunReel,
+    science = lessonReel("science", {
+        function(key) return labShot(key, "science") end,
+        circuitShot,
+    }),
 }
 
 --- the clock -----------------------------------------------------------------
@@ -499,19 +764,21 @@ end
 local function scribble(game)
     local boss = game.boss
     local burst = (bot.t + bot.seed) % 1.3
-    if not boss or boss.arrive or burst > 0.75 or game.ink < 0.2 then
+    if not boss or boss.arrive then
         Input.pointerDown = false
         return
     end
 
-    -- A zigzag dragged across the body, in canvas pixels.
-    local left, top = Camera.steady()
+    -- A zigzag dragged across the body; between bursts, the lifted hand sits
+    -- where the next one starts, so a drawn cursor glides there.
     local r = math.max(8, boss.radius * 0.8)
+    if burst > 0.75 or game.ink < 0.2 then
+        point(boss.x - r * 0.8, boss.y, false)
+        return
+    end
     local zig = math.sin(burst * 22) * r
     local drift = (burst / 0.75 - 0.5) * r * 1.6
-    Input.pointerDown = true
-    Input.pointerX = boss.x - left + drift
-    Input.pointerY = boss.y - top + zig * 0.6
+    point(boss.x + drift, boss.y + zig * 0.6, true)
 end
 
 --- the lens --------------------------------------------------------------------
@@ -597,6 +864,7 @@ local function begin(i)
     Input.releaseAll()
     Input.pointerDown = false
     lensX = nil
+    hoverX, hoverY, aimX, aimY = nil, nil, nil, nil
 
     if shot.kind == "boss" then
         game:setSubject(shot.subject)
@@ -697,9 +965,15 @@ end
 function Capture.start(g)
     game = g
     hookSound()
-    -- The pointer is the bot's, and a drawn cursor would only say so.
-    Input.hover = function() return nil end
-    Input.movement = function() return steer(game) end
+    -- The pointer is the bot's, and on most reels a drawn cursor would only say
+    -- so; a reel that is about how the page is written on draws it.
+    Input.hover = function()
+        if REEL_CURSOR[Capture.reel] then return hoverX, hoverY end
+    end
+    Input.movement = function()
+        if shot and shot.move then return shot.move(game, shotT - (shot.warm or 0), shot) end
+        return steer(game)
+    end
 
     shots = REELS[Capture.reel]()
     begin(1)
@@ -725,6 +999,18 @@ function Capture.update()
         game.player.hp = game.player.maxHp
     end
     if shot.direct then shot.direct(game, shotT - (shot.warm or 0), shot) end
+
+    -- The cursor is on the pen while it is down, and eases after the hand
+    -- while it is lifted, so it never jumps between strokes.
+    if aimX then
+        if Input.pointerDown or not hoverX then
+            hoverX, hoverY = aimX, aimY
+        else
+            local k = math.min(1, DT * 14)
+            hoverX = hoverX + (aimX - hoverX) * k
+            hoverY = hoverY + (aimY - hoverY) * k
+        end
+    end
 end
 
 -- Drawn on top of the page, inside the canvas, so it is pixels of the same size

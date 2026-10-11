@@ -142,6 +142,20 @@ The sun reel is the one signed off, and the template for the rest. What it settl
   reel (`REEL_MUTED`), since the hero is topped up and hit constantly. Keep the
   weapon's own sounds.
 
+#### A lesson teaser
+
+`./capture.sh science` is the first of one teaser per lesson (`lessonReel`, a
+row in `REELS` with the lesson's own worksheet shots): about 25s of the class
+walking into a three-by-three one kind at a time, each named as it sits, then
+scribbled out row by row in one line (`classShot`); the lesson's worksheets
+answered (`labShot`, `circuitShot`); 2.6s of each of its two bosses; the card.
+These are played with the mouse: `REEL_CURSOR` draws the cursor, and every bot
+hand goes through `point`, so it is always on the pen and eases between strokes
+rather than jumping; a scripted hand is a list of nodes walked by `along`. The
+shots are `quiet` (no horde, no sheets but the shot's), the hero is walked by a
+shot's `move`, and the class cannot be hurt until the pencil reaches them, then
+falls to one touch. Another lesson is a `lessonReel` row with its own sheet shots.
+
 A new highlight is a reel function beside `sunReel` and a row in `REELS` (and
 `REEL_MUTED`), reusing `runShot`, `feed`, `faceStrokes` and a `sunAim`-style aim.
 Expect a take to run a few minutes in a cloud session; check a contact sheet of
