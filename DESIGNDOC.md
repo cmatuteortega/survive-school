@@ -159,7 +159,17 @@ landing, the same boss forced into its signature move (the eye's weep), the
 encore landing, the encore's (the atom's fission) -- and the card. The hero is
 under `truce` (nothing lands, nothing blinks), the minute's own horde and sheets
 are off, and a diamond banks no level. These reels are played with the mouse:
-`REEL_CURSOR` draws the cursor and keeps the brush's sound (the hand draws in
+`./capture.sh music` and `./capture.sh maths` are the same reel on their
+pages. The hand works with the lesson's own tool (`lessonTool`, and `hunt`'s
+`GESTURES`: a brush zigzagged across, a pin tapped on, a compass planted beside
+and opened out to the prey); on a boss cut a pin is kept for the escort, since a
+glued boss drops the move the cut is there for. MUSIC's sheets are the STAVE,
+Simon says (`simonShot`: the bell tapped, walked from the bell note by note,
+dealt at school so the tune is three notes) and a wrong STAVE answer; MATHS's
+the pop quiz, the sequence and a wrong quiz answer (`labShot(..., true)`, cut in
+on WRONG ANSWER). Their moves are the metronome's sweep (cued a whole bar early,
+for its count-in), the speaker's drop, the die's own throw and the tesseract's
+fold (`forceMove`). `REEL_CURSOR` draws the cursor and keeps the brush's sound (the hand draws in
 bursts here, so it is a gesture and not a drone), and every bot hand goes
 through `point`, so the cursor is on the pen and eases between strokes; a
 scripted hand is a list of nodes walked by `along`.

@@ -78,7 +78,8 @@ local MUTED = { brush1 = true, brush2 = true, brush3 = true,
 -- topped up every frame, so he is hit all the time and the hurt would be a
 -- second drone under the burn. A boss reel keeps it -- there a hit is the boss
 -- landing one, which is half of what is being shown.
-local REEL_MUTED = { sun = { hurt = true }, science = { hurt = true } }
+local REEL_MUTED = { sun = { hurt = true }, science = { hurt = true },
+                     music = { hurt = true }, maths = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -398,7 +399,7 @@ end
 -- hand does -- the scribble, the wire, the answer it points at -- goes through
 -- `point`, so the cursor is always where the pen is and glides between strokes
 -- rather than jumping, which is what a feed is shown: where and how you write.
-local REEL_CURSOR = { science = true }
+local REEL_CURSOR = { science = true, music = true, maths = true }
 
 -- The bot's hand: where the pointer is (page pixels, turned into the canvas's
 -- here) and whether it is down. The cursor eases after it while it is lifted.
@@ -467,16 +468,34 @@ local function crowd(game, s, every, most, low, zoom)
     game:spawnEnemy(CLASS[s.next], x, y)
 end
 
--- The hand at work on the crowd, the way a player fights with the pencil: a
--- short zigzag dragged across the nearest monster, a beat lifted while the
--- cursor glides to the next, and again. `near` is how far from the hero it
--- looks.
-local HUNT_EVERY, HUNT_DOWN = 0.95, 0.5
+-- The hand at work on the crowd, the way a player fights with the lesson's
+-- tool: the nearest monster picked, the gesture that tool is used with made on
+-- it, a beat lifted while the cursor glides to the next, and again. `near` is
+-- how far from the hero it looks; `boss` aims it at the boss instead.
+--
+-- One gesture per kind of tool (src/compass.lua lists the four): a brush is
+-- dragged across in a zigzag; a pin is tapped, and lands where it was tapped; a
+-- compass's needle goes in beside the prey and its leg is dragged out to it, so
+-- the circle it swings on release runs through the prey.
+local GESTURES = {
+    brush = { every = 0.95, down = 0.5 },
+    drop = { every = 0.5, down = 0.1 },
+    sweep = { every = 1.25, down = 0.4 },
+}
 
-local function hunt(game, s, t, near)
+local function gestureOf(game)
+    local tool = game.loadout:tool(game.tool)
+    if tool and tool.sweep then return "sweep" end
+    if tool and tool.drop then return "drop" end
+    return "brush"
+end
+
+local function hunt(game, s, t, near, boss)
     local p = game.player
-    local burst = t % HUNT_EVERY
-    local n = math.floor(t / HUNT_EVERY)
+    local kind = gestureOf(game)
+    local g = GESTURES[kind]
+    local burst = t % g.every
+    local n = math.floor(t / g.every)
     -- Put down mid-stroke: the hand lifts until the next one, rather than
     -- dragging the line on across the page to whoever is nearest now.
     if s.huntN == n and s.prey and s.prey.hp <= 0 then
@@ -486,11 +505,16 @@ local function hunt(game, s, t, near)
     if s.huntN ~= n or not s.prey then
         s.huntN = n
         s.prey = nil
-        local best
-        for _, e in ipairs(game.enemies) do
-            local d = util.len(e.x - p.x, e.y - p.y)
-            if not e.def.boss and d < near and (not best or d < best) then
-                s.prey, best = e, d
+        if boss then
+            local e = game.boss
+            if e and not e.arrive then s.prey = e end
+        else
+            local best
+            for _, e in ipairs(game.enemies) do
+                local d = util.len(e.x - p.x, e.y - p.y)
+                if not e.def.boss and d < near and (not best or d < best) then
+                    s.prey, best = e, d
+                end
             end
         end
     end
@@ -499,13 +523,44 @@ local function hunt(game, s, t, near)
         point(p.x + 26, p.y + 18, false)
         return
     end
+
+    if kind == "drop" then
+        -- Over it, and tapped.
+        point(e.x, e.y, burst < g.down)
+        return
+    end
+
+    if kind == "sweep" then
+        -- The needle between the hero and the prey, the leg opened out to it.
+        local dx, dy, d = util.normalize(p.x - e.x, p.y - e.y)
+        if d == 0 then dx, dy = 0, 1 end
+        local r = util.clamp(e.radius + 22, 18, 50)
+        local cx, cy = e.x + dx * r, e.y + dy * r
+        if burst > g.down then
+            point(cx, cy, false)
+            return
+        end
+        local f = math.min(1, burst / (g.down * 0.8))
+        point(cx + (e.x - cx) * f, cy + (e.y - cy) * f, true)
+        return
+    end
+
     local r = math.max(7, e.radius * 1.6)
-    if burst > HUNT_DOWN then
+    if burst > g.down then
         point(e.x - r, e.y - 2, false)
         return
     end
-    local f = burst / HUNT_DOWN
+    local f = burst / g.down
     point(e.x + (f - 0.5) * r * 2, e.y + math.sin(f * math.pi * 7) * r * 0.6, true)
+end
+
+-- The lesson's own tool in the hand, for a reel that is about the lesson: the
+-- one it issues (src/subjects.lua's `tool`) rather than the pencil every run
+-- also carries.
+local function lessonTool(game)
+    for i, slot in ipairs(game.loadout.equipped) do
+        if slot.tool and slot.tool.icon == game.subject.tool then game.tool = i end
+    end
 end
 
 -- A run on the lesson's page with nothing on it but what the shot puts there:
@@ -521,6 +576,7 @@ local function lessonRun(game, subject)
     -- A diamond taken on camera would bank a level, and the draft would stop
     -- the take.
     game.player.levelUp = function() end
+    lessonTool(game)
 end
 
 -- Walk the hero to a page point and stand.
@@ -543,15 +599,13 @@ local SHEET_COURSE = "masters"
 -- prize nobody saw.
 local PRIZE_LOOK, PRIZE_WALK = 0.45, 1.2
 
-local function prizeWatch(game, s, t, kind)
+-- Asked from the frame the sheet is won: the newest thing on the page is what
+-- it paid. Not looked for by kind -- a master's board pays better than its row
+-- says (Worksheet.prize turns a heart or a diamond into the course's own).
+local function prizeWatch(game, s, t)
     if s.prize then return end
-    for i = #game.pickups, 1, -1 do
-        local k = game.pickups[i]
-        if k.kind == kind and not k.dead then
-            s.prize, s.prizeT = k, t
-            return
-        end
-    end
+    local k = game.pickups[#game.pickups]
+    if k and not k.dead then s.prize, s.prizeT = k, t end
 end
 
 local function prizeMove(game, s, t)
@@ -601,10 +655,16 @@ end
 
 -- The LAB board, the crowd still coming: the hero goes and stands on the right
 -- answer while the hand keeps the nearest of them off him.
-local function labShot(subject, kind, prize)
+-- With `fail`, the board got wrong: the hero stands on a wrong answer, and the
+-- camera cuts in on WRONG ANSWER and whatever the board charges for it (a giant
+-- on the pop quiz and the LAB, a sting on the sequence and the STAVE).
+local function labShot(subject, kind, prize, fail)
     local sheet
     sheet = {
-        kind = "run", warm = 1.5, rec = 6.2, zoom = prizeZoom,
+        kind = "run", warm = 1.5, rec = fail and 4.2 or 6.2,
+        zoom = fail and function(game, t, s)
+            return s.failT and t - s.failT > 0.25 and ZOOM or 1
+        end or prizeZoom,
         setup = function(game)
             lessonRun(game, subject)
             game.course = Course.get(SHEET_COURSE)
@@ -618,6 +678,7 @@ local function labShot(subject, kind, prize)
             if t < 0.6 then return 0, 0 end
             if q.state == "open" then
                 local a = q.answers[q.quiz.right]
+                if fail then a = q.answers[q.quiz.right % 3 + 1] end
                 return walkTo(game, a.x, a.y)
             end
             -- Stood on the answer while the prize is looked at, then over to it.
@@ -629,7 +690,72 @@ local function labShot(subject, kind, prize)
             game.ink = game.loadout.stats.inkMax
             crowd(game, s, 0.4, 12)
             if t > -0.6 then hunt(game, s, t + 0.6, 50) end
-            if game.lab.state ~= "open" then prizeWatch(game, s, t, prize) end
+            if game.lab.state ~= "open" then
+                if fail then s.failT = s.failT or t else prizeWatch(game, s, t, prize) end
+            end
+        end,
+    }
+    sheet.aim = prizeAim(sheet)
+    if fail then
+        -- On the words, thrown up over the board (src/worksheet.lua's Q:update).
+        sheet.aim = function(game)
+            local left, top = Camera.steady()
+            local q = game.lab
+            return q.x - left, q.y - 20 - q.bh / 2 - top
+        end
+    end
+    return sheet
+end
+
+-- Simon says: the hand taps the bell, the tune plays while the hero walks over
+-- to it (a note cannot be struck while the tune is playing), and then he walks
+-- the notes in the order they were played. Every walk between two of the bell
+-- and the notes is dealt clear of the rest (src/worksheet.lua's `fair`), so
+-- starting from the bell no note is struck that the tune did not ask for.
+local function simonShot(subject)
+    local sheet
+    sheet = {
+        kind = "run", warm = 1.5, rec = 9, zoom = prizeZoom,
+        setup = function(game)
+            lessonRun(game, subject)
+            -- A first-year's tune, three notes: at a master's five the walk
+            -- between them is most of a minute of a reel.
+            game.course = Course.get("school")
+            local p = game.player
+            local sim
+            for k = 0, 20 do
+                sim = Worksheet._kinds.simon(p.x, p.y - 70 - k, game)
+                if sim then break end
+            end
+            game.worksheets[#game.worksheets + 1] = sim
+            game.lab = sim
+        end,
+        move = function(game, t)
+            local sim = game.lab
+            if sim.state == "playing" then return walkTo(game, sim.bell.x, sim.bell.y) end
+            if sim.state == "answer" then
+                local pad = sim.pads[sim.tune[sim.pos]]
+                return walkTo(game, pad.x, pad.y)
+            end
+            local mx, my = prizeMove(game, sheet, t)
+            if mx then return mx, my end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, 0.5, 8, true)
+            local sim, p = game.lab, game.player
+            if sim.state == "idle" then
+                -- Over to the bell and tapped (the pen on it rings it).
+                s.path = s.path or { { p.x + 30, p.y + 20 }, { wait = 0.2 },
+                    { sim.bell.x, sim.bell.y, speed = 150 }, { wait = 0.15, down = true },
+                    { sim.bell.x + 24, sim.bell.y + 24, speed = 90 } }
+                local x, y, down = along(s.path, t)
+                point(x, y, down)
+            elseif t > -0.6 then
+                hunt(game, s, t + 0.6, 40)
+            end
+            if sim.state == "won" then prizeWatch(game, s, t, "heart") end
         end,
     }
     sheet.aim = prizeAim(sheet)
@@ -726,6 +852,9 @@ end
 -- box with the hero (`force`, called every frame until it says it is done). No
 -- caption -- the game's own call is the caption.
 local function bossCut(subject, encore, warm, rec, force)
+    if type(warm) == "table" then
+        warm, rec, force = warm.warm, warm.rec, warm.force
+    end
     return {
         kind = "boss", subject = subject, encore = encore,
         warm = warm, rec = rec, zoom = ZOOM,
@@ -762,18 +891,49 @@ local function atomSplits(game, e, t)
     end
 end
 
+-- A boss made to play the move it is known for once it is free to: `start` is
+-- the brain's own Start for it, and `hurt` the share of its health to knock it
+-- down to first where the move waits on a phase.
+local function forceMove(start, hurt, states)
+    states = states or { idle = true, resting = true }
+    return function(game, e, t, s)
+        if hurt and not s.hurt then
+            s.hurt = true
+            e.hp = math.floor(e.maxHp * hurt)
+        end
+        local b = e.brain
+        if t > -0.9 and states[b.state] then
+            start(b, game, e)
+            return true
+        end
+    end
+end
+
+-- The metronome: a sweep, counted in on the beat like every move it plays --
+-- a whole bar of it, four seconds at its first tempo, so it is cued that long
+-- before the camera rolls and the cut opens on the beam going hot.
+local function metronomeSweeps(game, e, t)
+    local b = e.brain
+    if t > -4.3 and b.state == "idle" then
+        b.move, b.state, b.left = "sweep", "count", b.def.bar
+        b:sweepStart(game, e)
+        return true
+    end
+end
+
 -- `sheets` are the lesson's own worksheets, a shot builder each, and `cuts` its
--- two bosses' moments after their landings.
+-- two bosses' moments after their landings: { warm, rec, force }, and `enter`
+-- the first boss's landing's own warm, where it comes from off the shot.
 local function lessonReel(key, sheets, cuts)
     return function()
         local subject = Subjects.get(key)
         local shots = {}
         shots[#shots + 1] = playShot(key, { subject.name })
         for _, sheet in ipairs(sheets) do shots[#shots + 1] = sheet(key) end
-        shots[#shots + 1] = bossCut(key, false, 0.25, 1.7)
-        shots[#shots + 1] = bossCut(key, false, 5, 1.9, cuts[1])
+        shots[#shots + 1] = bossCut(key, false, cuts[1].enter or 0.25, 1.7)
+        shots[#shots + 1] = bossCut(key, false, cuts[1])
         shots[#shots + 1] = bossCut(key, true, 2, 1.4)
-        shots[#shots + 1] = bossCut(key, true, 4, 2.2, cuts[2])
+        shots[#shots + 1] = bossCut(key, true, cuts[2])
         shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
         return shots
     end
@@ -786,7 +946,22 @@ local REELS = {
         function(key) return labShot(key, "science", "diamond") end,
         function(key) return circuitShot(key, true) end,
         circuitShot,
-    }, { eyeWeeps, atomSplits }),
+    }, { { warm = 5, rec = 1.9, force = eyeWeeps },
+         { warm = 4, rec = 2.2, force = atomSplits } }),
+    music = lessonReel("music", {
+        function(key) return labShot(key, "music", "heart") end,
+        simonShot,
+        function(key) return labShot(key, "music", "heart", true) end,
+    }, { { warm = 5.5, rec = 2.4, force = metronomeSweeps },
+         { warm = 3, rec = 2.6, force = forceMove(function(b, game, e)
+             b:dropStart(game, e, e.speaker) end, nil, { idle = true }) } }),
+    maths = lessonReel("maths", {
+        function(key) return labShot(key, "quiz", "diamond") end,
+        function(key) return labShot(key, "sequence", "heart") end,
+        function(key) return labShot(key, "quiz", "diamond", true) end,
+    }, { { warm = 2.5, rec = 2.6, enter = 1.1 },
+         { warm = 4, rec = 2.6, force = forceMove(function(b, game, e)
+             b:foldStart(game, e, e.tesseract) end, 0.6) } }),
 }
 
 --- the clock -----------------------------------------------------------------
@@ -1011,6 +1186,7 @@ local function begin(i)
         game:reset()
         -- The draft would stop the take; a level is not what is being filmed.
         game.player.addXp = function() end
+        if REEL_CURSOR[Capture.reel] then lessonTool(game) end
         -- And the coaching hand (src/coach.lua) is for somebody who has not
         -- drawn on the crowd yet; the bot is about to.
         game.drewKill = true
@@ -1130,7 +1306,19 @@ function Capture.update()
 
     if shot.kind == "boss" then
         game.player.hp = game.player.maxHp
-        scribble(game)
+        if REEL_CURSOR[Capture.reel] then
+            game.ink = game.loadout.stats.inkMax
+            -- A pin glues what it lands on (src/pin.lua), and a glued boss drops
+            -- whatever it was winding up: the move a cut is there to show. So
+            -- the pin is for the escort, and the boss is left to play.
+            if gestureOf(game) == "drop" then
+                hunt(game, bot, bot.t, 90)
+            else
+                hunt(game, bot, bot.t, 0, true)
+            end
+        else
+            scribble(game)
+        end
     elseif shot.kind == "run" then
         game.player.hp = game.player.maxHp
     end
