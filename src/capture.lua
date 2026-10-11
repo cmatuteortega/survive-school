@@ -140,13 +140,18 @@ local function runShot(game, subject)
     game.drewKill = true
 end
 
--- The sun pinned to its corner for the length of a shot, and timed to come up
--- just after the camera rolls rather than wherever its cycle happened to be.
-local function sunUp(game, warm)
+-- The sun pinned to its corner for the length of a shot, held below the page
+-- while the crowd gathers unseen and sent up on the frame the camera rolls,
+-- rather than wherever its cycle happened to be.
+local function sunUp(game, t, s)
     local sun = game.loadout.live.sun
-    sun.phase = "off"
-    sun.t = math.max(0, sun.def.gap - warm - 0.15)
     sun.corner = SUN_CORNER
+    if t < 0 then
+        sun.phase, sun.t = "off", 0
+    elseif not s.risen then
+        s.risen = true
+        sun.phase, sun.t = "rise", 0
+    end
 end
 
 -- Where on the canvas to look for a sun shot filmed close: between the corner
@@ -179,7 +184,7 @@ local function faceAt(t)
         end
         t = t - span - FACE_LIFT
     end
-    return nil, nil, true
+    return nil, nil, nil, true
 end
 
 local function sunReel()
@@ -189,7 +194,7 @@ local function sunReel()
     -- it: the same entry, written out in full.
     shots[#shots + 1] = {
         kind = "library", warm = 0.1, rec = 4.6,
-        hook = { "UNLOCK", "THE SUN" },
+        hook = { "UNLOCK", "THE SUN" }, hookY = 226,
         setup = function(game)
             Dev.boss = false
             Dev.unlocks = "none"
@@ -211,7 +216,9 @@ local function sunReel()
                 Dev.unlocks = "all"
                 Sfx.play("accept")
             end
-            s.say = s.opened and "UNLOCKED!" or nil
+            -- The hook says what to look at until the book opens it, and then
+            -- gives the space under the entry to what just happened.
+            if s.opened then s.hook, s.say = nil, "UNLOCKED!" end
         end,
     }
 
@@ -220,7 +227,7 @@ local function sunReel()
     -- comes back with the sun rising in the corner -- where the camera punches
     -- in to watch it burn.
     shots[#shots + 1] = {
-        kind = "run", warm = 2.5, rec = 13,
+        kind = "run", warm = 2.5, rec = 11,
         setup = function(game) runShot(game) end,
         direct = function(game, t, s)
             if t > 0.3 and not s.dealt then
@@ -233,7 +240,6 @@ local function sunReel()
                     Upgrades.byId.rocket })
             end
             if game.state == "levelup" then
-                s.say = "LEVEL UP"
                 if t > 1.4 and not s.picked then
                     s.picked = true
                     game.draft:keypressed("2")
@@ -286,10 +292,9 @@ local function sunReel()
                 runShot(game)
                 for _ = 1, n do game.loadout:take("sun", game) end
                 game.player:applyStats()
-                sunUp(game, warm)
             end,
-            direct = function(game)
-                game.loadout.live.sun.corner = SUN_CORNER
+            direct = function(game, t, s)
+                sunUp(game, t, s)
             end,
             zoom = n == 2 and ZOOM or nil,
             aim = sunAim,
@@ -667,7 +672,7 @@ local function caption()
     -- anybody has decided whether to watch it.
     if shot.hook then
         for i, line in ipairs(shot.hook) do
-            Scribble.printBig(I18n.t(line), w / 2, 28 + (i - 1) * 22, 3,
+            Scribble.printBig(I18n.t(line), w / 2, (shot.hookY or 28) + (i - 1) * 22, 3,
                 i == 1 and Palette.ink or Palette.red,
                 { shadow = Palette.paper, count = math.floor(shotT * 18) - (i - 1) * 6,
                   wobble = true, t = shotT, seed = i * 7 })
