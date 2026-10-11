@@ -172,15 +172,18 @@ the next highlight.
 gated, so it opens on the real unlock. Its bolt is thick runs of cells, so its
 board is drawn in rows (`faceStrokes(Sprites.LIGHTNING)`, `faceAt(t, BOLT)`).
 A storm parks over one enemy picked at random from the whole page, which on
-camera is a straggler. So each strike is staged instead. A crowd is dropped
-round a point off the hero (`pile`), only in the second or so before the bolt,
-since a crowd fed for a whole take is a lump. A cloud is sent through `launch`
-(`sendCloud`), started close enough to strike about a second into the clip,
-and marked on the thickest part of the crowd (`densest`). If the hero's own
-weapon kills that mark first, the cloud picks again from the same crowd
-instead of crossing the page. The close shots, at zoom 3 like the S, hold on
-where the bolt fell once it has (`stormAim`). The finale is the last level
-wide: two clouds that stay, and the zap passed along the crowd.
+camera is a straggler. So each strike is staged instead. A thin crowd, a dozen
+bodies, is dropped round a point off the hero (`pile`) in the second or so
+before the bolt, and no more once it has struck. A cloud is sent through
+`launch` (`sendCloud`), started just off the edge of the page on a level
+heading, and marked on the thickest part of the crowd (`densest`). If the
+hero's own weapon kills that mark first, the cloud picks again from the same
+crowd instead of crossing the page. The camera rides the cloud at zoom 2
+(`stormAim`): in over one edge, the strike, and off the other, with the hero
+only somewhere in the crowd. The weapon is the subject. The end is the last
+level on a whole crowd at minute six (`minute` on the shot). The chain only
+passes through enemies that survive a hit, and at minute four the bolt kills
+everything it touches, so the zap would go nowhere.
 
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant

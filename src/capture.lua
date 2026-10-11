@@ -676,23 +676,24 @@ end
 -- three, so the row-by-row hand draws it without the cool S's stairs.
 local BOLT = faceStrokes(Sprites.LIGHTNING)
 
--- Where the strike is staged, from the hero: up and to one side, so the cloud
--- hanging over it and its bolt are in a close frame with him under them.
+-- Where the strike is staged, from the hero: a little up and to one side, so
+-- the crowd the cloud comes for is its own, not the one round his feet.
 local PILE_X, PILE_Y = 18, -34
-local PILE_EVERY = 0.07
-local PILE_WIDE = 14    -- about the base bolt's 12px circle, so most of it is hit
+local PILE_EVERY = 0.13
+local PILE_WIDE = 16    -- a little over the base bolt's 12px circle
 
 -- A crowd stood where the bolt will fall: the minute's own arrivals
 -- (`Spawner:dropAt`) dropped round a point off the hero, and then walking in on
 -- him through it. The storm parks over one enemy at random anywhere on the page,
--- so left alone the bolt that comes on camera hits a straggler; a pile and a
--- cloud sent to it (`sendCloud`) is the weapon on the crowd it is named for.
-local function pile(game, s, ox, oy)
+-- so left alone the bolt that comes on camera hits a straggler; a crowd and a
+-- cloud sent to it (`sendCloud`) is the weapon on what it is named for. Thin:
+-- a dozen bodies, so each one the bolt takes is seen going.
+local function pile(game, s, ox, oy, wide, every)
     s.fed = (s.fed or 0) - DT
     if s.fed > 0 then return end
-    s.fed = PILE_EVERY
+    s.fed = every or PILE_EVERY
     local a = love.math.random() * math.pi * 2
-    local r = math.sqrt(love.math.random()) * PILE_WIDE
+    local r = math.sqrt(love.math.random()) * (wide or PILE_WIDE)
     game.spawner:dropAt(game, game.player.x + (ox or PILE_X) + math.cos(a) * r,
         game.player.y + (oy or PILE_Y) + math.sin(a) * r)
 end
@@ -701,8 +702,8 @@ end
 -- with most others inside the bolt's circle, nearer the point breaking ties.
 -- Not whoever is nearest the point -- that is the arrival dropped there last,
 -- while the ones before it have walked off toward the hero.
-local function densest(game, px, py, radius)
-    local near = game:nearestEnemies(px, py, 45, 40)
+local function densest(game, px, py, radius, reach)
+    local near = game:nearestEnemies(px, py, reach or 45, 60)
     local best, most = nil, -math.huge
     for _, e in ipairs(near) do
         if not e.gone then
@@ -716,12 +717,14 @@ local function densest(game, px, py, radius)
     return best
 end
 
--- One cloud sent onto the pile rather than over whoever the page picked: through
--- `launch`, so its damage, circle and bolts are the level's, then marked on the
--- enemy nearest the pile's middle and started `back` pixels off its station, so
--- it is there and gathering inside the clip instead of rolling in for two
--- seconds. The weapon's own clock is held, so the only clouds are these.
-local function sendCloud(game, ox, oy, angle, back)
+-- One cloud sent onto the crowd rather than over whoever the page picked:
+-- through `launch`, so its damage, circle and bolts are the level's, then
+-- marked on the thickest of the crowd round a point off the hero, and started
+-- just off the edge of the page on the heading `angle`, so it is seen rolling
+-- in. It leaves on the same heading (Storm:step), so a level heading keeps the
+-- whole visit short: half a page in, half a page out. The weapon's own clock
+-- is held, so the only clouds are these.
+local function sendCloud(game, ox, oy, angle)
     local storm = game.loadout.live.storm
     storm.cool = math.huge
     -- Room made for it: a cloud of ours on its way out has done what it came
@@ -747,32 +750,46 @@ local function sendCloud(game, ox, oy, angle, back)
             return remark(self, cloud, g)
         end
     end
+    -- Back along the heading from its station until it is past the page's
+    -- edge, a cloud's width clear.
     local tx, ty = c.target.x, c.target.y - 25
     c.dx, c.dy = math.cos(angle), math.sin(angle)
+    local left, top, w, h = Camera.bounds()
+    local back = 0
+    while back < 400 do
+        local x, y = tx - c.dx * back, ty - c.dy * back
+        if x < left - Sprites.cloud.w or x > left + w + Sprites.cloud.w
+            or y < top - Sprites.cloud.h or y > top + h + Sprites.cloud.h then break end
+        back = back + 2
+    end
     c.x, c.y = tx - c.dx * back, ty - c.dy * back
 end
 
--- The newest of our clouds, and whether it has struck yet. The pile is fed only
--- until it has: a crowd fed for the whole of a take is a lump the bolt is lost
--- in, and one the bolt has just been through should be seen thinning.
+-- The newest of our clouds, and whether it has struck yet. The crowd is fed
+-- only until it has: one the bolt has just been through should be seen
+-- thinning, not topped up.
 local function ourCloud(game)
     local storm = game.loadout.live.storm
     local c = storm and storm.live[#storm.live]
     if c and c.ours then return c, c.state == "strike" or c.state == "out" end
 end
 
--- Where to look in a storm shot filmed close: the newest cloud's mark, raised
--- a little so the cloud above it is in, with a fifth of the hero in it -- and
--- once it has struck, where it struck, so what is shown after the bolt is the
--- crowd it went into rather than the cloud leaving.
+-- Where to look in a storm shot: on the cloud, in and out -- the weapon is the
+-- subject and the hero is only somewhere in the crowd. A little below it, so
+-- the bolt and what it lands on are in the frame with it. The lens stops at
+-- the edge of the page, so a cloud arriving is seen coming over the edge and
+-- one leaving is seen going off it. Held where it last was once the cloud has
+-- gone, rather than swinging back to the hero.
+local stormLast
+
 local function stormAim(game)
     local left, top = Camera.steady()
-    local p = game.player
-    local c, struck = ourCloud(game)
-    if not c then return p.x + PILE_X - left, p.y + PILE_Y - top end
-    local x, y = c.target.x, c.target.y - 12
-    if struck then x, y = c.sx, c.sy - 12 end
-    return x * 0.8 + p.x * 0.2 - left, y * 0.8 + p.y * 0.2 - top
+    local c = ourCloud(game)
+    if c then stormLast = { c.x, c.y + 22 }
+    elseif not stormLast then
+        stormLast = { game.player.x + PILE_X, game.player.y + PILE_Y }
+    end
+    return stormLast[1] - left, stormLast[2] - top
 end
 
 local function stormReel()
@@ -811,11 +828,15 @@ local function stormReel()
 
     -- Dealt, drawn and sent, in one take: the draft lands on the run, the
     -- storm's card is circled, the board comes up blank and the bolt is drawn
-    -- back onto it, and the run comes back with a cloud rolling onto the crowd
-    -- -- where the camera punches in -- and then a second.
+    -- back onto it, and the run comes back with a cloud rolling in over the
+    -- edge of the page -- the camera punching in on it -- onto the crowd,
+    -- striking, and rolling off the other side.
     shots[#shots + 1] = {
-        kind = "run", warm = 2.5, rec = 11,
-        setup = function(game) safeRun(game) end,
+        kind = "run", warm = 2.5, rec = 10,
+        setup = function(game)
+            stormLast = nil
+            safeRun(game)
+        end,
         direct = function(game, t, s)
             if t > 0.3 and not s.dealt then
                 s.dealt = true
@@ -861,40 +882,38 @@ local function stormReel()
                 end
                 if s.back then
                     local k = t - s.back
-                    -- The second strike on the other side of him.
-                    local ox = k < 2.4 and PILE_X or -PILE_X
                     local _, struck = ourCloud(game)
-                    if (k < 1.5 and not struck) or (k > 1.8 and s.second == nil) then
-                        pile(game, s, ox, PILE_Y)
+                    if not s.sent then
+                        -- The crowd gathers for a beat before the cloud is
+                        -- sent, so it has something to come for.
+                        pile(game, s)
+                        if k > 0.6 then
+                            s.sent = true
+                            sendCloud(game, PILE_X, PILE_Y, 0)
+                        end
+                    elseif not struck then
+                        pile(game, s)
                     end
-                    if k > 0.7 and not s.first then
-                        s.first = true
-                        sendCloud(game, ox, PILE_Y, -0.6, 70)
-                    end
-                    if k > 2.6 and not s.second then
-                        s.second = true
-                        sendCloud(game, ox, PILE_Y, math.pi + 0.6, 70)
-                    end
-                    if s.second and struck then s.second = false end
-                    if k > 1.1 then s.say = "IT STRIKES THE CROWD" end
+                    if k > 0.7 then s.say = "IT STRIKES THE CROWD" end
                 end
             end
         end,
         zoom = function(game, t, s)
-            return s.back and t - s.back > 1.1 and CLOSE or 1
+            return s.sent and ZOOM or 1
         end,
         aim = stormAim,
     }
 
-    -- Then the storm at the level it was dealt at, on other pages, close and
-    -- with nothing written over it: the pile gathered unseen, the cloud already
-    -- coming when the camera rolls (`lead`). Then the last level, wide and
-    -- uncaptioned: two clouds that stay, and the zap passed along the crowd.
+    -- Then the storm at the level it was dealt at, on other pages, followed in
+    -- over one edge and off the other with nothing written over it: the crowd
+    -- gathered unseen, the cloud already coming when the camera rolls.
     local function stormShot(spec)
         return {
-            kind = "run", warm = 3, rec = spec.rec,
+            kind = "run", warm = 2, rec = spec.rec,
             setup = function(game)
+                stormLast = nil
                 safeRun(game, spec.subject)
+                if spec.minute then game.time = spec.minute * 60 end
                 for _ = 1, spec.level do game.loadout:take("storm", game) end
                 game.player:applyStats()
                 game.loadout.live.storm.cool = math.huge
@@ -902,29 +921,33 @@ local function stormReel()
             direct = function(game, t, s)
                 local _, struck = ourCloud(game)
                 if struck then s.struck = true end
-                for i, at in ipairs(spec.piles) do
-                    -- Gathered in the second and a half before the bolt, not
-                    -- through the whole warm: a crowd, not a lump.
-                    if t > -1.5 and not s.struck then pile(game, s, at[1], at[2]) end
-                    s.sent = s.sent or {}
-                    if t >= -spec.lead and not s.sent[i] then
-                        s.sent[i] = true
-                        sendCloud(game, at[1], at[2], at[3], spec.back)
-                    end
+                if t > -1.6 and not s.struck then
+                    pile(game, s, spec.ox, spec.oy, spec.wide, spec.every)
+                end
+                if t >= -(spec.lead or 0.2) and not s.sent then
+                    s.sent = true
+                    sendCloud(game, spec.ox, spec.oy, spec.angle)
                 end
             end,
-            zoom = spec.zoom,
-            aim = spec.zoom and stormAim or nil,
+            zoom = ZOOM,
+            aim = stormAim,
         }
     end
 
-    shots[#shots + 1] = stormShot({ level = 1, piles = { { PILE_X, PILE_Y, 0.5 } },
-        back = 80, lead = 0.3, rec = 2.4, zoom = CLOSE, subject = "language" })
-    shots[#shots + 1] = stormShot({ level = 1, piles = { { -PILE_X, PILE_Y, math.pi - 0.5 } },
-        back = 80, lead = 0.3, rec = 2.4, zoom = CLOSE, subject = "art" })
+    shots[#shots + 1] = stormShot({ level = 1, ox = PILE_X, oy = PILE_Y, angle = 0,
+        rec = 3.4, subject = "language" })
+    shots[#shots + 1] = stormShot({ level = 1, ox = -PILE_X, oy = PILE_Y, angle = math.pi,
+        rec = 3.4, subject = "art" })
+
+    -- The end: the last level on a whole crowd, followed in and out. A wide
+    -- crowd and a later minute, since the chain runs along the *living* (src/
+    -- storm.lua) -- at minute four the bolt kills its circle outright and the
+    -- zap has nobody to be passed on by -- and minute eight is where a run that
+    -- has finished the line is anyway. It stays for its three bolts, each one
+    -- going through the crowd from wherever it lands.
     shots[#shots + 1] = stormShot({ level = #Upgrades.byId.storm.levels,
-        piles = { { -40, -30, 0.4 }, { 40, 30, math.pi + 0.4 } },
-        back = 40, lead = 0.3, rec = 2.4, subject = "music" })
+        minute = 6, ox = 0, oy = -40, wide = 45, every = 0.08, angle = 0,
+        rec = 5.6, subject = "music" })
 
     shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
     return shots
