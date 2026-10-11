@@ -110,8 +110,9 @@ and quests still apply; no ads, so no offers). With the dev row showing a
 stand-in ad answers on a desktop.
 
 Short-form video (TikTok / Reels / Shorts) is shot by the game itself:
-`love . --capture montage` (`src/capture.lua`, dev only, needs `ffmpeg`;
-headless as `SDL_AUDIODRIVER=dummy xvfb-run -a love . --capture montage`) plays
+`./capture.sh [reel]` (installs LÖVE / ffmpeg / Xvfb with apt if missing, runs
+headless without a display) or `love . --capture montage` (`src/capture.lua`,
+dev only) plays
 a scripted reel on a fixed 30fps clock and writes an upright 1080x1920 MP4 with
 its sound mixed in to `capture/` (gitignored). `DESIGNDOC.md`'s **Filming it**
 has how; a new reel is a row in its `REELS`.

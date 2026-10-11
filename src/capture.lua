@@ -58,23 +58,39 @@ local DT = 1 / FPS
 local RATE = 44100      -- the mix's sample rate
 local WINDOW_W, WINDOW_H = 360, 640   -- a 180x320 canvas at 2x (main.lua)
 local UPSCALE = 6       -- 180x320 -> 1080x1920
+local ZOOM = 2          -- how much closer a boss shot is filmed (see `lens`)
+
+-- Sounds left out of the mix. The bot draws nearly all the time, and a brush
+-- swish under every frame of a reel is a hiss that buries everything else --
+-- what a player hears in bursts, the reel would hear as a drone.
+local MUTED = { brush1 = true, brush2 = true, brush3 = true,
+                brush4 = true, brush5 = true, brush6 = true }
 
 --- the reels -----------------------------------------------------------------
 
--- Every boss in the book, in the order the library shelves them, each dropped
--- onto its own page: the red ring closing, the thud, the call, and a second or
--- two of the fight. Bracketed by a title and a sign-off on the bare page.
+-- Every boss in the book, each dropped onto its own page: the red ring
+-- closing, the thud, the call, and a second or two of the fight, filmed close.
+-- A feed decides in the first second whether to keep watching, so the reel
+-- opens straight on the boss that looks most like nothing else -- `OPENER`, held
+-- a little longer and with the hook written over it -- rather than on a title
+-- card, and the rest follow in the library's order. Signed off on the bare page.
+local OPENER = "redpen"
+
 local function bossMontage()
     local roster = Subjects.bosses()
-    local shots = {
-        { kind = "card", rec = 1.6, lines = { #roster .. " BOSSES", "1 NOTEBOOK" } },
-    }
-    for i, b in ipairs(roster) do
+    local order = {}
+    for _, b in ipairs(roster) do
+        if b.kind == OPENER then table.insert(order, 1, b) else order[#order + 1] = b end
+    end
+
+    local shots = {}
+    for i, b in ipairs(order) do
         shots[#shots + 1] = {
             kind = "boss", subject = b.subject.key, encore = b.encore,
-            warm = 0.25, rec = 2.4,
-            tag = string.format("%d/%d", i, #roster),
+            warm = 0.25, rec = i == 1 and 3.2 or 2.4, zoom = ZOOM,
+            tag = string.format("%d/%d", i, #order),
             title = Enemy.types[b.kind].title,
+            hook = i == 1 and { #roster .. " BOSSES", "1 NOTEBOOK" } or nil,
         }
     end
     shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
@@ -86,6 +102,10 @@ local REELS = {
 }
 
 --- the clock -----------------------------------------------------------------
+
+local shots, shot, index
+local shotT = 0
+local game
 
 local clock = 0         -- seconds since the camera first rolled, filmed or not
 local filmed = 0        -- frames written
@@ -126,7 +146,7 @@ local function mix(seconds, level)
     local out = ffi.new("float[?]", frames * 2)
 
     for _, ev in ipairs(events) do
-        local data = Sfx.sample(ev.name)
+        local data = not MUTED[ev.name] and Sfx.sample(ev.name)
         if data then
             local channels = data:getChannelCount()
             local count = data:getSampleCount()
@@ -176,7 +196,8 @@ local function steer(game)
     local dx, dy, d = util.normalize(p.x - boss.x, p.y - boss.y)
     if d == 0 then dx, dy = 0, 1 end
     -- Round it, and out or in toward a ring that clears its body.
-    local want = boss.radius + 46
+    -- Closer when filmed close, or the hero walks out of the shot.
+    local want = boss.radius + ((shot and shot.zoom or 1) > 1 and 30 or 46)
     local out = util.clamp((want - d) / 20, -1, 1)
     local tx, ty = -dy, dx
     if bot.seed % 2 < 1 then tx, ty = dy, -dx end
@@ -204,11 +225,61 @@ local function scribble(game)
     Input.pointerY = boss.y - top + zig * 0.6
 end
 
+--- the lens --------------------------------------------------------------------
+
+-- Close up is the game's canvas blown up again, `zoom` times, on a second canvas
+-- the size of the first: every game pixel becomes a square block of them, so the
+-- picture is still whole pixels on the grid -- just fewer, bigger ones -- and the
+-- caption drawn over it afterwards stays at the page's own size. The window onto
+-- the canvas is aimed between the hero and the boss, weighted to the boss (it
+-- lands far from the hero and is the subject), eased so the shot does not judder
+-- with the walk, and kept inside the canvas and off the HUD. Aimed at the
+-- landing spot during the drop, which is where the ring is closing.
+local lensX, lensY
+local out
+
+-- Rows of the canvas the HUD lives in, top and bottom, kept out of a close shot:
+-- the bars blown up are a picture of the HUD, not of the fight.
+local HUD_TOP, HUD_BOTTOM = 34, 22
+
+local function aim()
+    local p, boss = game.player, game.boss
+    local left, top = Camera.steady()
+    local x, y = p.x, p.y
+    if boss then x, y = boss.x * 0.6 + p.x * 0.4, boss.y * 0.6 + p.y * 0.4 end
+    return x - left, y - top
+end
+
+local function lens(canvas)
+    local z = shot.zoom or 1
+    local w, h = canvas:getDimensions()
+    if not out then
+        out = love.graphics.newCanvas(w, h)
+        out:setFilter("nearest", "nearest")
+    end
+
+    love.graphics.setCanvas(out)
+    love.graphics.clear(Palette.paper)
+    love.graphics.setColor(1, 1, 1)
+    if z == 1 or shot.kind ~= "boss" then
+        love.graphics.draw(canvas, 0, 0)
+        return out
+    end
+
+    local tx, ty = aim()
+    if not lensX then lensX, lensY = tx, ty end
+    lensX = lensX + (tx - lensX) * math.min(1, DT * 5)
+    lensY = lensY + (ty - lensY) * math.min(1, DT * 5)
+
+    local vw, vh = w / z, h / z
+    local ox = math.floor(util.clamp(lensX - vw / 2, 0, w - vw) + 0.5)
+    local oy = math.floor(util.clamp(lensY - vh / 2, HUD_TOP, h - vh - HUD_BOTTOM) + 0.5)
+    love.graphics.draw(canvas, -ox * z, -oy * z, 0, z, z)
+    return out
+end
+
 --- shots ---------------------------------------------------------------------
 
-local shots, shot, index
-local shotT = 0
-local game
 
 local function begin(i)
     index, shot, shotT = i, shots[i], 0
@@ -219,6 +290,7 @@ local function begin(i)
 
     Input.releaseAll()
     Input.pointerDown = false
+    lensX = nil
 
     if shot.kind == "boss" then
         game:setSubject(shot.subject)
@@ -365,8 +437,18 @@ local function caption()
         return
     end
 
-    -- The boss's name low on the page, clear of the HUD along the top, and
-    -- its number in the reel above it.
+    -- The hook, over the first shot only: what the reel is, said before
+    -- anybody has decided whether to watch it.
+    if shot.hook then
+        for i, line in ipairs(shot.hook) do
+            Scribble.printBig(I18n.t(line), w / 2, 28 + (i - 1) * 22, 3,
+                i == 1 and Palette.ink or Palette.red,
+                { shadow = Palette.paper, count = math.floor(shotT * 18) - (i - 1) * 6,
+                  wobble = true, t = shotT, seed = i * 7 })
+        end
+    end
+
+    -- The boss's name low on the page and its number in the reel above it.
     local s = 2
     local y = h - 64
     Scribble.printBig(shot.tag, w / 2, y - 14, 1, Palette.graphite, {})
@@ -374,19 +456,20 @@ local function caption()
         { shadow = Palette.paper, wobble = true, t = shotT, seed = index })
 end
 
--- Called with the canvas still bound, after the game has drawn: the caption,
--- then the frame read back and down the pipe.
+-- Called with the canvas still bound, after the game has drawn: the lens, the
+-- caption over it, then the frame read back and down the pipe.
 function Capture.frame(canvas)
     if not shot then
         finish()
         return
     end
+    local frame = lens(canvas)
     caption()
     love.graphics.setCanvas()
 
     if recording then
-        if not pipe then openPipe(canvas:getDimensions()) end
-        pipe:write(canvas:newImageData():getString())
+        if not pipe then openPipe(frame:getDimensions()) end
+        pipe:write(frame:newImageData():getString())
         filmed = filmed + 1
     end
 
