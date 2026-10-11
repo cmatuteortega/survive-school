@@ -499,7 +499,9 @@ local function feedLine(game, s, angle)
     if s.fed > 0 then return end
     s.fed = FEED_EVERY
     local dx, dy = math.cos(angle), math.sin(angle)
-    local along = (love.math.random() * 2 - 1) * 90
+    -- Never on top of him: an arrival dropped at his feet is a hit on the next
+    -- frame, and a crowd stood on the hero is a lump the line is lost in.
+    local along = (30 + love.math.random() * 60) * (love.math.random() < 0.5 and -1 or 1)
     local off = (love.math.random() * 2 - 1) * 24
     game.spawner:dropAt(game, game.player.x + dx * along - dy * off,
         game.player.y + dy * along + dx * off)
@@ -513,6 +515,16 @@ local function coolsAim(game)
     local s = game.loadout.live.cools and game.loadout.live.cools.live[1]
     if not s then return p.x - left, p.y - top end
     return s.x * 0.6 + p.x * 0.4 - left, s.y * 0.6 + p.y * 0.4 - top
+end
+
+-- A run to film the S in: `runShot`, with the hero out of harm's way. The horde
+-- still comes at him, but a hit is a knock of the whole page and a flash, and
+-- the minute's crowd hits a hero who stands still for it all the time -- a
+-- shaking frame is a frame the S cannot be followed across. The truce is the
+-- one the eye's fall uses (Player:hurt), so nothing lands: no knock, no cry.
+local function coolsRun(game, subject)
+    runShot(game, subject)
+    game.player.truce = true
 end
 
 local function coolsReel()
@@ -550,7 +562,7 @@ local function coolsReel()
     local FIRST = math.pi / 2   -- from the top: down the long side of the frame
     shots[#shots + 1] = {
         kind = "run", warm = 2.5, rec = 11,
-        setup = function(game) runShot(game) end,
+        setup = function(game) coolsRun(game) end,
         direct = function(game, t, s)
             if t > 0.3 and not s.dealt then
                 s.dealt = true
@@ -612,7 +624,7 @@ local function coolsReel()
         return {
             kind = "run", warm = 3, rec = spec.rec,
             setup = function(game)
-                runShot(game, spec.subject)
+                coolsRun(game, spec.subject)
                 for _ = 1, spec.level do game.loadout:take("cools", game) end
                 game.player:applyStats()
             end,
