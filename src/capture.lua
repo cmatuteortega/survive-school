@@ -401,6 +401,8 @@ end
 -- hand does -- the scribble, the wire, the answer it points at -- goes through
 -- `point`, so the cursor is always where the pen is and glides between strokes
 -- rather than jumping, which is what a feed is shown: where and how you write.
+local wrapUp
+
 local REEL_CURSOR = { science = true, music = true, maths = true,
                       art = true, finance = true, grammar = true, pe = true }
 
@@ -615,6 +617,35 @@ local function prizeWatch(game, s, t)
     if s.prize then return end
     local k = game.pickups[#game.pickups]
     if k and not k.dead then s.prize, s.prizeT = k, t end
+end
+
+-- A sheet shot ends on its moment rather than running its length out: a beat
+-- after the last of the prize is taken, or a second and a bit after the words
+-- of a failure are up. A prize paid in several (the till's coins, the market's)
+-- is walked over one after another before that, the next being whatever is
+-- lying nearest where the last one was.
+local PRIZE_NEAR = 36
+
+function wrapUp(game, s, t)
+    if s.wrapped then return end
+    if s.failT then
+        s.wrapped = true
+        s.rec = math.min(s.rec, s.failT + 1.9)
+        return
+    end
+    local k = s.prize
+    if not k or not k.dead then return end
+    local best, bd
+    for _, o in ipairs(game.pickups) do
+        local d = util.len(o.x - k.x, o.y - k.y)
+        if not o.dead and d < PRIZE_NEAR and (not bd or d < bd) then best, bd = o, d end
+    end
+    if best then
+        s.prize = best
+        return
+    end
+    s.wrapped = true
+    s.rec = math.min(s.rec, t + 0.7)
 end
 
 local function prizeMove(game, s, t)
@@ -1085,12 +1116,12 @@ end
 -- thrown at him; he dodges, the hand fastening what it can. Its clock cut short
 -- once it has started (a master's fifteen seconds). Lasted, SAFE! and the
 -- diamond; with `fail`, he steps over the line and the camera cuts in on OUT!.
-local PIT_SHOWN = 3.2
+local PIT_SHOWN = 4
 
 local function dodgeShot(subject, fail)
     local sheet
     sheet = {
-        kind = "run", warm = 1.5, rec = fail and 4.4 or 7,
+        kind = "run", warm = 1.5, rec = fail and 4.4 or 8,
         zoom = fail and failZoom or prizeZoom,
         setup = function(game)
             lessonRun(game, subject)
@@ -1120,6 +1151,9 @@ local function dodgeShot(subject, fail)
             if d.live and not s.live then
                 s.live = t
                 d.left = math.min(d.left, PIT_SHOWN)
+                -- And thrown at twice as often, so the shortened drill is
+                -- still mostly balls in the air.
+                d.every, d.throwT = d.every / 2, 0.4
             end
             if t > -0.6 then hunt(game, s, t + 0.6, 50) end
             if d.state == "fading" then
@@ -1677,6 +1711,7 @@ function Capture.update()
         game.player.hp = game.player.maxHp
     end
     if shot.direct then shot.direct(game, shotT - (shot.warm or 0), shot) end
+    if shot.kind == "run" then wrapUp(game, shot, shotT - (shot.warm or 0)) end
 
     -- The cursor is on the pen while it is down, and eases after the hand
     -- while it is lifted, so it never jumps between strokes.
