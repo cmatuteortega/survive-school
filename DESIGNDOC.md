@@ -97,8 +97,10 @@ samples (`Sfx.sample`), with the track underneath at the default level
 
 `./capture.sh sun` is the other reel, and the shape for a weapon's highlight: the
 library's hole for the sun and what it asks, the book opening it, the draft dealing
-it, its face drawn on a blank board by the bot, the sun rising over a corner with
-the lens punching in, then one shot per later level with the card's own words. Its
+it, the game's own face (`Sprites.SUNFACE`) drawn back onto a blank board by the
+bot, the sun rising over a corner with the lens punching in, then the base sun
+burning the crowd in two more corners, close, and a few uncaptioned seconds of the
+finished line -- the levels between are left for the game to show. Its
 shots are ordinary runs rather than boss tests (`runShot`: minute four for a crowd,
 marked as a test so they bank nothing), and a shot may carry a `setup`, a `direct`
 called every frame with the shot's clock, a `zoom` that is a function of that clock,

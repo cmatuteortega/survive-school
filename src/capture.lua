@@ -48,6 +48,7 @@ local Library = require("src.library")
 local Palette = require("src.palette")
 local Scribble = require("src.scribble")
 local Sfx = require("src.sfx")
+local Sprites = require("src.sprites")
 local Studio = require("src.studio")
 local Subjects = require("src.subjects")
 local Upgrades = require("src.upgrades")
@@ -111,19 +112,37 @@ end
 local HORDE_AT = 240
 local SUN_CORNER = 3   -- bottom left: clear of the HUD's top rows when close
 
--- The face drawn on the board, as strokes of cells (x, y on the 15x9 grid) and
--- the tool each is drawn with, the studio's own keys. Two brows set hard, two
--- square eyes, a grin across the bottom: a sun that means it.
-local FACE = {
-    { tool = "p", { 3, 2 }, { 4, 2 }, { 5, 3 }, { 6, 3 } },
-    { tool = "p", { 13, 2 }, { 12, 2 }, { 11, 3 }, { 10, 3 } },
-    { tool = "p", { 5, 5 }, { 6, 5 }, { 6, 4 }, { 5, 4 } },
-    { tool = "p", { 10, 5 }, { 11, 5 }, { 11, 4 }, { 10, 4 } },
-    { tool = "b", { 3, 6 }, { 4, 7 }, { 5, 8 }, { 6, 8 }, { 7, 8 }, { 8, 8 },
-      { 9, 8 }, { 10, 8 }, { 11, 8 }, { 12, 7 }, { 13, 6 } },
-}
-local FACE_STEP = 0.07  -- seconds from one cell of a stroke to the next
-local FACE_LIFT = 0.18  -- and between strokes, the pen off the page
+-- The face drawn on the board: the game's own (Sprites.SUNFACE), so the sun
+-- that comes up is the one a player is handed, drawn back onto a blank board a
+-- run of cells at a time, row by row, each run one stroke with the tool its
+-- colour belongs to. Read off the art rather than copied out, so it is the
+-- baked face whatever the baked face becomes.
+local TOOL_OF = { [Design.PENCIL] = "p", [Design.PEN] = "b" }
+
+local function faceStrokes()
+    local strokes = {}
+    for y, row in ipairs(Sprites.SUNFACE) do
+        local x = 1
+        while x <= #row do
+            local ch = row:sub(x, x)
+            if TOOL_OF[ch] then
+                local stroke = { tool = TOOL_OF[ch] }
+                while x <= #row and row:sub(x, x) == ch do
+                    stroke[#stroke + 1] = { x, y }
+                    x = x + 1
+                end
+                strokes[#strokes + 1] = stroke
+            else
+                x = x + 1
+            end
+        end
+    end
+    return strokes
+end
+
+local FACE = faceStrokes()
+local FACE_STEP = 0.05  -- seconds from one cell of a stroke to the next
+local FACE_LIFT = 0.1   -- and between strokes, the pen off the page
 
 -- A run to film a weapon in: the lesson's page at minute four, the draft kept
 -- shut, the coaching hand retired, the book left alone.
@@ -145,8 +164,8 @@ end
 -- rather than wherever its cycle happened to be.
 local function sunUp(game, t, s)
     local sun = game.loadout.live.sun
-    sun.corner = SUN_CORNER
-    if t < 0 then
+    sun.corner = s.corner or SUN_CORNER
+    if t < -(s.lead or 0) then
         sun.phase, sun.t = "off", 0
     elseif not s.risen then
         s.risen = true
@@ -155,12 +174,16 @@ local function sunUp(game, t, s)
 end
 
 -- Where on the canvas to look for a sun shot filmed close: between the corner
--- it rises in and the hero, weighted to the corner.
-local function sunAim(game)
-    local left, top = Camera.steady()
-    local px, py = game.player.x - left, game.player.y - top
-    local cx, cy = 0, game.vh
-    return cx * 0.6 + px * 0.4, cy * 0.6 + py * 0.4
+-- it rises in and the hero, weighted to the corner. Numbered as src/sun.lua
+-- numbers them: 1 and 2 along the top, 3 and 4 along the bottom.
+local function sunAim(corner)
+    return function(game)
+        local left, top = Camera.steady()
+        local px, py = game.player.x - left, game.player.y - top
+        local cx = (corner == 2 or corner == 4) and game.vw or 0
+        local cy = corner >= 3 and game.vh or 0
+        return cx * 0.6 + px * 0.4, cy * 0.6 + py * 0.4
+    end
 end
 
 -- The face, drawn: where the pointer is `t` seconds into the drawing and
@@ -170,13 +193,15 @@ local function faceAt(t)
     local lay = Studio.lay
     if not lay or t < 0 then return nil end
     for _, stroke in ipairs(FACE) do
-        local span = (#stroke - 1) * FACE_STEP
+        -- Down for a step at least, or a one-cell stroke is never drawn.
+        local span = math.max(1, #stroke - 1) * FACE_STEP
         if t < span + FACE_LIFT then
             if t > span then return nil, stroke.tool end
             local k = t / FACE_STEP
             local i = math.floor(k)
             local f = k - i
-            local a, b = stroke[i + 1], stroke[math.min(i + 2, #stroke)]
+            local a = stroke[math.min(i + 1, #stroke)]
+            local b = stroke[math.min(i + 2, #stroke)]
             local gx = a[1] + (b[1] - a[1]) * f
             local gy = a[2] + (b[2] - a[2]) * f
             return lay.bx + (gx - 0.5) * lay.zoom, lay.board + (gy - 0.5) * lay.zoom,
@@ -227,7 +252,7 @@ local function sunReel()
     -- comes back with the sun rising in the corner -- where the camera punches
     -- in to watch it burn.
     shots[#shots + 1] = {
-        kind = "run", warm = 2.5, rec = 11,
+        kind = "run", warm = 2.5, rec = 10,
         setup = function(game) runShot(game) end,
         direct = function(game, t, s)
             if t > 0.3 and not s.dealt then
@@ -277,29 +302,35 @@ local function sunReel()
         zoom = function(game, t, s)
             return s.back and t - s.back > 0.9 and ZOOM or 1
         end,
-        aim = sunAim,
+        aim = sunAim(SUN_CORNER),
     }
 
-    -- Every level after the first, at its own level with the one before it
-    -- under it, and the card's words to say what changed.
-    local levels = Upgrades.byId.sun.levels
-    for n = 2, #levels do
-        local warm = 2
-        shots[#shots + 1] = {
-            kind = "run", warm = warm, rec = n == #levels and 4.2 or 3.4,
-            tag = "LV " .. n, text = levels[n].text,
+    -- Then the sun at the level it was dealt at, burning the crowd in other
+    -- corners, close and with nothing written over it: already up when the
+    -- camera rolls (`lead`), so every second of it is mobs in the light. The
+    -- levels between are left for the run to find -- only the last is shown,
+    -- a few seconds of it, wide, as what the corner becomes.
+    local function sunShot(spec)
+        return {
+            kind = "run", warm = 2.5, rec = spec.rec, corner = spec.corner,
+            lead = spec.lead,
             setup = function(game)
-                runShot(game)
-                for _ = 1, n do game.loadout:take("sun", game) end
+                runShot(game, spec.subject)
+                for _ = 1, spec.level do game.loadout:take("sun", game) end
                 game.player:applyStats()
             end,
-            direct = function(game, t, s)
-                sunUp(game, t, s)
-            end,
-            zoom = n == 2 and ZOOM or nil,
-            aim = sunAim,
+            direct = function(game, t, s) sunUp(game, t, s) end,
+            zoom = spec.zoom,
+            aim = sunAim(spec.corner),
         }
     end
+
+    shots[#shots + 1] = sunShot({ level = 1, corner = 4, rec = 2.4, lead = 1.2,
+        zoom = ZOOM, subject = "science" })
+    shots[#shots + 1] = sunShot({ level = 1, corner = 1, rec = 2.4, lead = 1.2,
+        zoom = ZOOM, subject = "art" })
+    shots[#shots + 1] = sunShot({ level = #Upgrades.byId.sun.levels, corner = 3,
+        rec = 4, lead = 0.9, subject = "music" })
 
     shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
     return shots
