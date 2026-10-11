@@ -107,6 +107,46 @@ called every frame with the shot's clock, a `zoom` that is a function of that cl
 and an `aim` of its own. A take that errors prints it and exits rather than standing
 on LÖVE's error screen.
 
+#### A weapon or tool highlight
+
+The sun reel is the one signed off, and the template for the rest. What it settled:
+
+- **The story, in this order, about 24s.** The unlock (the library walked to the
+  line, shut, showing the game's own demand; then opened, with UNLOCKED!), getting
+  it (the draft dealing it among two others, the card scribbled), the drawing board
+  if it has one, the base ability on the page with the lens punching in, a montage
+  of the base ability doing damage, a couple of seconds of the finished line, the
+  SURVIVE SCHOOL card. Roughly: unlock 4.6s, draft-to-ability one take of 10s,
+  montage clips of 2.4s, finished line 2.4s, card 2.2s.
+- **Do not spoil the levels.** No shot per level and no level text. The base
+  ability is what is explained; the finished line is shown wide, briefly and with
+  no caption, as a tease of what it becomes. The levels between are the game's to
+  show.
+- **Captions are few and short.** The hook over the unlock ("UNLOCK" / the name),
+  UNLOCKED!, and one line naming what the base ability does ("IT BURNS A CORNER").
+  Nothing over a card, a board or the finished line. They are filmed in English and
+  are not in the dictionary.
+- **Draw the baked design.** A drawn weapon's board is cleared and the game's own
+  art (its `Sprites` table) is drawn back onto it stroke by stroke (`faceStrokes`),
+  so what comes out is what a player is handed -- never a design made up for the
+  reel.
+- **Close for the base ability, wide for the finished line.** Zoom 2 (`ZOOM`) aimed
+  between the hero and where the weapon is working; zoom 1 when the finished line
+  covers the page (two suns, rays across it).
+- **Something to hit, on camera.** Fill each shot with the minute's own horde
+  (`runShot` moves the clock to minute four), and where the weapon works in one
+  place, feed arrivals in through that place (`feed`, `Spawner:dropAt`) through an
+  unseen warm, so the clip opens mid-action. Vary the lesson page between montage
+  clips.
+- **Sound.** The brush is muted everywhere; mute the hero's `hurt` on a weapon
+  reel (`REEL_MUTED`), since the hero is topped up and hit constantly. Keep the
+  weapon's own sounds.
+
+A new highlight is a reel function beside `sunReel` and a row in `REELS` (and
+`REEL_MUTED`), reusing `runShot`, `feed`, `faceStrokes` and a `sunAim`-style aim.
+Expect a take to run a few minutes in a cloud session; check a contact sheet of
+frames (`ffmpeg -vf fps=2,tile=...`) before handing a cut over.
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.
