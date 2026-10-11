@@ -159,7 +159,11 @@ cell beside them, so the drawn S would come out with stairs in it. Use `trace`
 for any design that is mostly diagonals. Each clip sends its own S down a chosen
 line through the hero (`sendS`, through `launch` so it carries the level's
 numbers, with the weapon's clock held). The crowd is fed along that line
-(`feedLine`), and the close shots follow the S in (`coolsAim`).
+(`feedLine`), and the close shots follow the S in (`coolsAim`). The hero is put under
+the truce the eye's fall uses (`coolsRun`, `Player:hurt`). A crowd always on him
+otherwise knocks the page and flashes him every frame, and a shaking frame is
+one the weapon can't be followed across. Prefer this to muting `hurt` alone on
+the next highlight.
 
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
