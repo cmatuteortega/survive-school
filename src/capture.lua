@@ -491,30 +491,44 @@ local function sendS(game, angle, back)
     cools.cool = math.huge
 end
 
--- The lesson's horde, fed in along the line the S is coming down, ahead of it
--- and either side of the hero, so the crowd it cuts is on camera with it. Real
--- arrivals off the spawner (`Spawner:dropAt`), as the sun's are.
-local function feedLine(game, s, angle)
+-- The lesson's horde, packed onto the line just ahead of the S, so what is on
+-- camera with it is a pile for it to go through rather than a few strays. Real
+-- arrivals off the spawner (`Spawner:dropAt`), as the sun's are -- the minute's
+-- own kinds, health and champions, just stood where the S is about to be. Never
+-- on top of the hero: an arrival dropped at his feet is a crowd stood on him, a
+-- lump the line is lost in.
+local LINE_EVERY = 0.05
+local LINE_AHEAD = 110  -- how far in front of the S the pile reaches
+local LINE_WIDE = 10    -- and how far either side of its line
+
+local function feedLine(game, s)
+    local cools = game.loadout.live.cools
+    local S = cools and cools.live[1]
+    if not S then return end
     s.fed = (s.fed or 0) - DT
     if s.fed > 0 then return end
-    s.fed = FEED_EVERY
-    local dx, dy = math.cos(angle), math.sin(angle)
-    -- Never on top of him: an arrival dropped at his feet is a hit on the next
-    -- frame, and a crowd stood on the hero is a lump the line is lost in.
-    local along = (30 + love.math.random() * 60) * (love.math.random() < 0.5 and -1 or 1)
-    local off = (love.math.random() * 2 - 1) * 24
-    game.spawner:dropAt(game, game.player.x + dx * along - dy * off,
-        game.player.y + dy * along + dx * off)
+    s.fed = LINE_EVERY
+    local along = 12 + love.math.random() * LINE_AHEAD
+    local off = (love.math.random() * 2 - 1) * LINE_WIDE
+    local x = S.x + S.dx * along - S.dy * off
+    local y = S.y + S.dy * along + S.dx * off
+    if util.len(x - game.player.x, y - game.player.y) < 24 then return end
+    game.spawner:dropAt(game, x, y)
 end
 
--- Where to look in a cool S shot filmed close: between the S and the hero,
--- weighted to the S, so it is followed in, through him and out the other side.
+-- How close the S is filmed: closer than a boss, since the S is the size of the
+-- hero and what it is doing -- the pile coming apart, the numbers going up -- is
+-- a few pixels a body.
+local CLOSE = 3
+
+-- Where to look in a cool S shot filmed close: on the S, a little toward the
+-- hero, so the camera rides it through the pile.
 local function coolsAim(game)
     local left, top = Camera.steady()
     local p = game.player
     local s = game.loadout.live.cools and game.loadout.live.cools.live[1]
     if not s then return p.x - left, p.y - top end
-    return s.x * 0.6 + p.x * 0.4 - left, s.y * 0.6 + p.y * 0.4 - top
+    return s.x * 0.85 + p.x * 0.15 - left, s.y * 0.85 + p.y * 0.15 - top
 end
 
 -- A run to film the S in: `runShot`, with the hero out of harm's way. The horde
@@ -605,12 +619,12 @@ local function coolsReel()
                     s.back = t
                     sendS(game, FIRST, 190)
                 end
-                feedLine(game, s, FIRST)
+                feedLine(game, s)
                 if t - s.back > 0.9 then s.say = "IT CUTS A LINE THROUGH YOU" end
             end
         end,
         zoom = function(game, t, s)
-            return s.back and t - s.back > 0.9 and ZOOM or 1
+            return s.back and t - s.back > 0.9 and CLOSE or 1
         end,
         aim = coolsAim,
     }
@@ -634,7 +648,7 @@ local function coolsReel()
                         s.sent = true
                         sendS(game, spec.angle, spec.back)
                     end
-                    feedLine(game, s, spec.angle)
+                    feedLine(game, s)
                 end
             end,
             zoom = spec.zoom,
@@ -642,10 +656,10 @@ local function coolsReel()
         }
     end
 
-    shots[#shots + 1] = coolsShot({ level = 1, angle = -math.pi * 0.62, back = 150,
-        lead = 0.6, rec = 2.4, zoom = ZOOM, subject = "science" })
-    shots[#shots + 1] = coolsShot({ level = 1, angle = math.pi * 0.4, back = 150,
-        lead = 0.6, rec = 2.4, zoom = ZOOM, subject = "art" })
+    shots[#shots + 1] = coolsShot({ level = 1, angle = -math.pi * 0.62, back = 205,
+        lead = 1.5, rec = 2.4, zoom = CLOSE, subject = "science" })
+    shots[#shots + 1] = coolsShot({ level = 1, angle = math.pi * 0.4, back = 205,
+        lead = 1.5, rec = 2.4, zoom = CLOSE, subject = "art" })
     shots[#shots + 1] = coolsShot({ level = #Upgrades.byId.cools.levels,
         angle = -0.45, back = 0, lead = 2.5, rec = 2.4, subject = "music" })
 

@@ -158,8 +158,11 @@ diagonal crosses the corner two cells share, which `Studio:cellAt` reads as the
 cell beside them, so the drawn S would come out with stairs in it. Use `trace`
 for any design that is mostly diagonals. Each clip sends its own S down a chosen
 line through the hero (`sendS`, through `launch` so it carries the level's
-numbers, with the weapon's clock held). The crowd is fed along that line
-(`feedLine`), and the close shots follow the S in (`coolsAim`). The hero is put under
+numbers, with the weapon's clock held). A pile of the minute's crowd is
+dropped onto the line just ahead of the S (`feedLine`, every 0.05s, never on
+the hero), and the close shots ride the S at zoom 3 (`CLOSE`, `coolsAim`): it
+is the hero's size, so at the boss's zoom 2 the pile coming apart and its
+numbers are a few pixels each. The hero is put under
 the truce the eye's fall uses (`coolsRun`, `Player:hurt`). A crowd always on him
 otherwise knocks the page and flashes him every frame, and a shaking frame is
 one the weapon can't be followed across. Prefer this to muting `hurt` alone on
