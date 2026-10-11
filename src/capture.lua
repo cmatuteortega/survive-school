@@ -38,15 +38,19 @@ local ffi = require("ffi")
 
 local Camera = require("src.camera")
 local Course = require("src.course")
+local Design = require("src.design")
 local Dev = require("src.dev")
 local Enemy = require("src.enemy")
 local Font = require("src.font")
 local I18n = require("src.i18n")
 local Input = require("src.input")
+local Library = require("src.library")
 local Palette = require("src.palette")
 local Scribble = require("src.scribble")
 local Sfx = require("src.sfx")
+local Studio = require("src.studio")
 local Subjects = require("src.subjects")
+local Upgrades = require("src.upgrades")
 local util = require("src.util")
 
 local Capture = {}
@@ -97,8 +101,209 @@ local function bossMontage()
     return shots
 end
 
+-- One weapon's whole life, told on the sun: the hole in the library where it
+-- will be and what the book asks for it, the book opening it, the draft dealing
+-- it, the board you draw its face on, the sun coming up over a corner filmed
+-- close as it burns, and then every level after the first, one shot each with
+-- the card's own words under it. A run shot is an ordinary run rather than a
+-- boss test -- the horde is the subject -- moved on to `HORDE_AT` so there is a
+-- crowd to burn, and marked as a test so it banks nothing.
+local HORDE_AT = 240
+local SUN_CORNER = 3   -- bottom left: clear of the HUD's top rows when close
+
+-- The face drawn on the board, as strokes of cells (x, y on the 15x9 grid) and
+-- the tool each is drawn with, the studio's own keys. Two brows set hard, two
+-- square eyes, a grin across the bottom: a sun that means it.
+local FACE = {
+    { tool = "p", { 3, 2 }, { 4, 2 }, { 5, 3 }, { 6, 3 } },
+    { tool = "p", { 13, 2 }, { 12, 2 }, { 11, 3 }, { 10, 3 } },
+    { tool = "p", { 5, 5 }, { 6, 5 }, { 6, 4 }, { 5, 4 } },
+    { tool = "p", { 10, 5 }, { 11, 5 }, { 11, 4 }, { 10, 4 } },
+    { tool = "b", { 3, 6 }, { 4, 7 }, { 5, 8 }, { 6, 8 }, { 7, 8 }, { 8, 8 },
+      { 9, 8 }, { 10, 8 }, { 11, 8 }, { 12, 7 }, { 13, 6 } },
+}
+local FACE_STEP = 0.07  -- seconds from one cell of a stroke to the next
+local FACE_LIFT = 0.18  -- and between strokes, the pen off the page
+
+-- A run to film a weapon in: the lesson's page at minute four, the draft kept
+-- shut, the coaching hand retired, the book left alone.
+local function runShot(game, subject)
+    game:setSubject(subject or "maths")
+    Course.current = Course.get("school")
+    Dev.boss = false
+    Dev.unlocks = "all"
+    game:reset()
+    game.bossTest = true
+    game.resumable = false
+    game.time = HORDE_AT
+    game.player.addXp = function() end
+    game.drewKill = true
+end
+
+-- The sun pinned to its corner for the length of a shot, and timed to come up
+-- just after the camera rolls rather than wherever its cycle happened to be.
+local function sunUp(game, warm)
+    local sun = game.loadout.live.sun
+    sun.phase = "off"
+    sun.t = math.max(0, sun.def.gap - warm - 0.15)
+    sun.corner = SUN_CORNER
+end
+
+-- Where on the canvas to look for a sun shot filmed close: between the corner
+-- it rises in and the hero, weighted to the corner.
+local function sunAim(game)
+    local left, top = Camera.steady()
+    local px, py = game.player.x - left, game.player.y - top
+    local cx, cy = 0, game.vh
+    return cx * 0.6 + px * 0.4, cy * 0.6 + py * 0.4
+end
+
+-- The face, drawn: where the pointer is `t` seconds into the drawing and
+-- whether it is down. Cells are aimed at their middles off the board's own
+-- layout, so the bot draws on whatever size of board the studio picked.
+local function faceAt(t)
+    local lay = Studio.lay
+    if not lay then return nil end
+    for _, stroke in ipairs(FACE) do
+        local span = (#stroke - 1) * FACE_STEP
+        if t < span + FACE_LIFT then
+            if t > span then return nil, stroke.tool end
+            local k = t / FACE_STEP
+            local i = math.floor(k)
+            local f = k - i
+            local a, b = stroke[i + 1], stroke[math.min(i + 2, #stroke)]
+            local gx = a[1] + (b[1] - a[1]) * f
+            local gy = a[2] + (b[2] - a[2]) * f
+            return lay.bx + (gx - 0.5) * lay.zoom, lay.board + (gy - 0.5) * lay.zoom,
+                stroke.tool
+        end
+        t = t - span - FACE_LIFT
+    end
+    return nil, nil, true
+end
+
+local function sunReel()
+    local shots = {}
+
+    -- The hole on the weapons page and what it asks for, then the book opening
+    -- it: the same entry, written out in full.
+    shots[#shots + 1] = {
+        kind = "library", warm = 0.1, rec = 4.6,
+        hook = { "UNLOCK", "THE SUN" },
+        setup = function(game)
+            Dev.boss = false
+            Dev.unlocks = "none"
+            game:toLibrary()
+        end,
+        direct = function(game, t, s)
+            -- Turned once the book has been laid out and knows it has pages.
+            if t > 0.25 and not s.turned then
+                s.turned = true
+                Library:step(1)
+            end
+            local _, want = Library:find("sun")
+            if t > 0.9 and Library.index < want and t - (s.walked or 0) > 0.16 then
+                s.walked = t
+                Library:keypressed("down")
+            end
+            if t > 2.8 and not s.opened then
+                s.opened = true
+                Dev.unlocks = "all"
+                Sfx.play("accept")
+            end
+            s.say = s.opened and "UNLOCKED!" or nil
+        end,
+    }
+
+    -- Dealt, drawn and up, in one take: the draft lands on the run, the sun's
+    -- card is circled, the board comes up with the face drawn on it, and the run
+    -- comes back with the sun rising in the corner -- where the camera punches
+    -- in to watch it burn.
+    shots[#shots + 1] = {
+        kind = "run", warm = 2.5, rec = 13,
+        setup = function(game) runShot(game) end,
+        direct = function(game, t, s)
+            if t > 0.3 and not s.dealt then
+                s.dealt = true
+                game.player.pending = 1
+                game.state = "levelup"
+                Sfx.play("levelup_enter")
+                game:holdRun()
+                game.draft:open(game, { Upgrades.byId.star, Upgrades.byId.sun,
+                    Upgrades.byId.rocket })
+            end
+            if game.state == "levelup" then
+                s.say = "LEVEL UP"
+                if t > 1.4 and not s.picked then
+                    s.picked = true
+                    game.draft:keypressed("2")
+                end
+            elseif game.state == "studio" then
+                s.say = nil
+                local sun = game.loadout.live.sun
+                if sun then sun.corner = SUN_CORNER end
+                if not s.board then
+                    -- A blank board, so the face is drawn rather than edited.
+                    s.board = t
+                    local d = Design.by.sun
+                    for y = 1, d.h do
+                        for x = 1, d.w do d.grid[y][x] = Design.BLANK end
+                    end
+                    d:apply()
+                end
+                local x, y, tool, done = faceAt(t - s.board - 0.6)
+                if t - s.board < 0.6 then tool = nil end
+                if tool and tool ~= s.tool then
+                    s.tool = tool
+                    Studio:keypressed(tool)
+                end
+                Input.pointerDown = x ~= nil
+                if x then Input.pointerX, Input.pointerY = x, y end
+                if done and not s.ok then
+                    s.ok = true
+                    Studio:keypressed("return")
+                end
+            elseif s.ok then
+                Input.pointerDown = false
+                if not s.back then s.back = t end
+                s.say = "IT BURNS A CORNER"
+            end
+        end,
+        zoom = function(game, t, s)
+            return s.back and t - s.back > 0.9 and ZOOM or 1
+        end,
+        aim = sunAim,
+    }
+
+    -- Every level after the first, at its own level with the one before it
+    -- under it, and the card's words to say what changed.
+    local levels = Upgrades.byId.sun.levels
+    for n = 2, #levels do
+        local warm = 2
+        shots[#shots + 1] = {
+            kind = "run", warm = warm, rec = n == #levels and 4.2 or 3.4,
+            tag = "LV " .. n, text = levels[n].text,
+            setup = function(game)
+                runShot(game)
+                for _ = 1, n do game.loadout:take("sun", game) end
+                game.player:applyStats()
+                sunUp(game, warm)
+            end,
+            direct = function(game)
+                game.loadout.live.sun.corner = SUN_CORNER
+            end,
+            zoom = n == 2 and ZOOM or nil,
+            aim = sunAim,
+        }
+    end
+
+    shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
+    return shots
+end
+
 local REELS = {
     montage = bossMontage,
+    sun = sunReel,
 }
 
 --- the clock -----------------------------------------------------------------
@@ -250,8 +455,20 @@ local function aim()
     return x - left, y - top
 end
 
-local function lens(canvas)
+-- A shot's zoom is a number, or a function of the shot's clock for one that
+-- punches in partway through; `aim` likewise names where to look, and a shot
+-- that is about a weapon rather than a boss may let the HUD into the frame
+-- (`hud`), since the weapon's own column is part of what is being shown.
+local lastZoom
+
+local function zoomOf()
     local z = shot.zoom or 1
+    if type(z) == "function" then z = z(game, shotT - (shot.warm or 0), shot) end
+    return z
+end
+
+local function lens(canvas)
+    local z = zoomOf()
     local w, h = canvas:getDimensions()
     if not out then
         out = love.graphics.newCanvas(w, h)
@@ -261,19 +478,23 @@ local function lens(canvas)
     love.graphics.setCanvas(out)
     love.graphics.clear(Palette.paper)
     love.graphics.setColor(1, 1, 1)
-    if z == 1 or shot.kind ~= "boss" then
+    -- A punch in is a cut, not a drift: the lens starts on its subject.
+    if z ~= lastZoom then lensX, lastZoom = nil, z end
+    if z == 1 or (shot.kind ~= "boss" and shot.kind ~= "run") then
         love.graphics.draw(canvas, 0, 0)
         return out
     end
 
-    local tx, ty = aim()
+    local tx, ty = (shot.aim or aim)(game)
     if not lensX then lensX, lensY = tx, ty end
     lensX = lensX + (tx - lensX) * math.min(1, DT * 5)
     lensY = lensY + (ty - lensY) * math.min(1, DT * 5)
 
     local vw, vh = w / z, h / z
+    local top, bottom = HUD_TOP, HUD_BOTTOM
+    if shot.kind == "run" then top, bottom = 0, 0 end
     local ox = math.floor(util.clamp(lensX - vw / 2, 0, w - vw) + 0.5)
-    local oy = math.floor(util.clamp(lensY - vh / 2, HUD_TOP, h - vh - HUD_BOTTOM) + 0.5)
+    local oy = math.floor(util.clamp(lensY - vh / 2, top, h - vh - bottom) + 0.5)
     love.graphics.draw(canvas, -ox * z, -oy * z, 0, z, z)
     return out
 end
@@ -304,6 +525,8 @@ local function begin(i)
         -- And the coaching hand (src/coach.lua) is for somebody who has not
         -- drawn on the crowd yet; the bot is about to.
         game.drewKill = true
+    elseif shot.setup then
+        shot.setup(game)
     end
 end
 
@@ -413,7 +636,10 @@ function Capture.update()
     if shot.kind == "boss" then
         game.player.hp = game.player.maxHp
         scribble(game)
+    elseif shot.kind == "run" then
+        game.player.hp = game.player.maxHp
     end
+    if shot.direct then shot.direct(game, shotT - (shot.warm or 0), shot) end
 end
 
 -- Drawn on top of the page, inside the canvas, so it is pixels of the same size
@@ -446,6 +672,24 @@ local function caption()
                 { shadow = Palette.paper, count = math.floor(shotT * 18) - (i - 1) * 6,
                   wobble = true, t = shotT, seed = i * 7 })
         end
+    end
+
+    -- A line said over the shot as it goes (`say`, set by its director), or a
+    -- level and the card's own words for it, low on the page.
+    if shot.kind ~= "boss" then
+        local y = h - 70
+        if shot.tag then
+            Scribble.printBig(I18n.t(shot.tag), w / 2, y - 16, 2, Palette.red,
+                { shadow = Palette.paper, wobble = true, t = shotT, seed = index })
+        end
+        local text = shot.say or shot.text
+        if text then
+            for i, line in ipairs(Font.wrap(I18n.t(text), math.floor((w - 16) / 2))) do
+                Scribble.printBig(line, w / 2, y + (i - 1) * 14, 2, Palette.ink,
+                    { shadow = Palette.paper, wobble = true, t = shotT, seed = index + i })
+            end
+        end
+        return
     end
 
     -- The boss's name low on the page and its number in the reel above it.

@@ -904,6 +904,18 @@ function Library:step(dir)
     self.book:turn(dir)
 end
 
+-- Which section a line is on and where on its shelf, for the camera
+-- (src/capture.lua), which walks the shelf to one by name. Asked of the shelves
+-- rather than worked out beside them, so it is wherever the sort put it.
+function Library:find(id)
+    build()
+    for at, shelf in ipairs(shelves) do
+        for i, up in ipairs(shelf) do
+            if up.id == id then return at, i end
+        end
+    end
+end
+
 function Library:select(i)
     if i == self.index then return end
     self.index = i
