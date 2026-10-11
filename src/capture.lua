@@ -173,6 +173,36 @@ local function sunUp(game, t, s)
     end
 end
 
+-- The lesson's own horde, fed in from just off the page behind the lit corner
+-- so it walks to the hero through the light. The sun is pinned to the screen
+-- and the hero to its middle, and the ordinary horde arrives from all round, so
+-- left alone a close shot of one corner is mostly a close shot of paper. Real
+-- arrivals off the spawner (`Spawner:dropAt`), just aimed: what kind, how big
+-- and whether a champion are the minute's own.
+local FEED_EVERY = 0.16
+local FEED_SPREAD = 46   -- how far along either edge from the corner they come in
+
+local function feed(game, s, corner)
+    s.fed = (s.fed or 0) - DT
+    if s.fed > 0 then return end
+    s.fed = FEED_EVERY
+
+    local left, top, w, h = Camera.bounds()
+    local right = corner == 2 or corner == 4
+    local bottom = corner >= 3
+    local x = left + (right and w or 0)
+    local y = top + (bottom and h or 0)
+    local along = love.math.random() * FEED_SPREAD
+    if love.math.random() < 0.5 then
+        x = x + (right and -along or along)
+        y = y + (bottom and 10 or -10)
+    else
+        y = y + (bottom and -along or along)
+        x = x + (right and 10 or -10)
+    end
+    game.spawner:dropAt(game, x, y)
+end
+
 -- Where on the canvas to look for a sun shot filmed close: between the corner
 -- it rises in and the hero, weighted to the corner. Numbered as src/sun.lua
 -- numbers them: 1 and 2 along the top, 3 and 4 along the bottom.
@@ -252,7 +282,7 @@ local function sunReel()
     -- comes back with the sun rising in the corner -- where the camera punches
     -- in to watch it burn.
     shots[#shots + 1] = {
-        kind = "run", warm = 2.5, rec = 10, away = SUN_CORNER,
+        kind = "run", warm = 2.5, rec = 10,
         setup = function(game) runShot(game) end,
         direct = function(game, t, s)
             if t > 0.3 and not s.dealt then
@@ -296,6 +326,7 @@ local function sunReel()
             elseif s.ok then
                 Input.pointerDown = false
                 if not s.back then s.back = t end
+                if t - s.back > 0.5 then feed(game, s, SUN_CORNER) end
                 s.say = "IT BURNS A CORNER"
             end
         end,
@@ -313,22 +344,25 @@ local function sunReel()
     local function sunShot(spec)
         return {
             kind = "run", warm = 2.5, rec = spec.rec, corner = spec.corner,
-            lead = spec.lead, away = spec.away and spec.corner,
+            lead = spec.lead,
             setup = function(game)
                 runShot(game, spec.subject)
                 for _ = 1, spec.level do game.loadout:take("sun", game) end
                 game.player:applyStats()
             end,
-            direct = function(game, t, s) sunUp(game, t, s) end,
+            direct = function(game, t, s)
+                sunUp(game, t, s)
+                if t > -1 then feed(game, s, s.corner) end
+            end,
             zoom = spec.zoom,
             aim = sunAim(spec.corner),
         }
     end
 
     shots[#shots + 1] = sunShot({ level = 1, corner = 4, rec = 2.4, lead = 1.2,
-        zoom = ZOOM, subject = "science", away = true })
+        zoom = ZOOM, subject = "science" })
     shots[#shots + 1] = sunShot({ level = 1, corner = 3, rec = 2.4, lead = 1.2,
-        zoom = ZOOM, subject = "art", away = true })
+        zoom = ZOOM, subject = "art" })
     shots[#shots + 1] = sunShot({ level = #Upgrades.byId.sun.levels, corner = 3,
         rec = 4, lead = 0.9, subject = "music" })
 
@@ -427,18 +461,6 @@ local bot = { t = 0, seed = 0 }
 local function steer(game)
     local p, boss = game.player, game.boss
     if not p then return 0, 0 end
-
-    -- A sun shot: walk away from the lit corner. The sun is pinned to the
-    -- screen and the hero to its middle, so walking cannot take him to it --
-    -- but the horde trails behind whoever it is chasing, and walking off from a
-    -- corner drags the crowd back through it. A sway, so it is not a slide.
-    if shot and shot.away then
-        local cx = (shot.away == 2 or shot.away == 4) and 1 or -1
-        local cy = shot.away >= 3 and 1 or -1
-        local sway = math.sin(bot.t * 2.1) * 0.35
-        local nx, ny = util.normalize(-cx + cy * sway, -cy - cx * sway)
-        return nx * 0.75, ny * 0.75
-    end
     if not boss or boss.arrive then
         -- Before the boss lands: drift, so the hero is not a statue.
         local a = bot.t * 0.9 + bot.seed
