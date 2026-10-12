@@ -4500,18 +4500,22 @@ Tools.list = {
         -- you were fastening a moment before the staple arrived. Two levels out, one
         -- certainty in.
         --
-        -- The two circles are the same size, 7 and 7, and that is the parents'
-        -- arithmetic rather than a decision: a rub reaches exactly as far as a staple
-        -- holds, so the sweep that touches the wire covers what the wire caught.
+        -- The rub is the rubber's own 12 against the staple's 7, and the parents'
+        -- arithmetic rather than a decision: the sweep is the finished rubber, so it
+        -- reaches further than a staple holds and the wire comes out wherever the
+        -- tip passes near it (`Game:snagDrops` measures off the mark's reach).
         --
         -- What keeps the whole thing honest is that a staple is still small enough to
         -- miss with, still two seconds, and the collecting is a second gesture out of
         -- the same meter -- so the run has to *go back*, across a page the crowd is
         -- still walking over, before the wire comes out on its own for a fifth of the
         -- damage.
-        radius = 7, damage = 2, knock = 240,
+        radius = 12, damage = 2, knock = 240,
         spacing = 2, ink = 1 / 150, life = 0,
         rehit = 0.3,
+        -- The parent's plough, read-only like its crumbs: the rub that rips the wire
+        -- out pushes what it frees ahead of the swipe rather than off to the sides.
+        plow = { ahead = 12, forward = 0.75, every = 0.08 },
         -- The rubber's third level. It is worth more here than on the parent, and
         -- for the row's own reason rather than a number: the rub you actually make
         -- with this tool is back and forth over the staples you placed, which is
@@ -4776,9 +4780,13 @@ Tools.list = {
         -- thing to the other's leavings, which is the honest answer rather than a
         -- gap. A rubber cannot rub a hole shut and must not be able to: the offcut
         -- is the level the scissors spent three levels earning.
-        radius = 7, damage = 2, knock = 240,
+        --
+        -- The finished rubber's own tip and plough: a sweep that pushes the crowd
+        -- ahead of the finger is a sweep you can aim at the slit.
+        radius = 12, damage = 2, knock = 240,
         spacing = 2, ink = 1 / 150, life = 0,
         rehit = 0.3,
+        plow = { ahead = 12, forward = 0.75, every = 0.08 },
         -- The rubber's third level, worth what it is worth on the parent: the rub
         -- this tool actually makes is back and forth over the line you just cut,
         -- which is precisely the motion `scrub` discounts (Stroke:revisits).

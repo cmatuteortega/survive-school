@@ -4205,7 +4205,8 @@ and the two need not agree:
   brush with no `stamp` keeps no stamps and draws nothing — the rubber is one,
   and all it leaves is `crumbs`, particles shed sideways off the moving tip.
   A brush's shove goes square off its own line (`Stroke:apply`) unless the row
-  carries **`plow = {ahead, forward, every}`**, which only the rubber does: then
+  carries **`plow = {ahead, forward, every}`** — the rubber, and the two fusions whose
+  swipe is the finished rubber (SNAG, SHEAR): then
   the moving tip's reach runs `ahead` pixels past the head and the shove points
   `forward` of the way along the travel and the rest out to the body's own side
   (`Stroke:plough`), so the crowd is pushed in front of the swipe. Bodies still
@@ -5630,7 +5631,7 @@ unlock's `apply`.
 **One new field, and it is the only gesture a brush row can carry.** The STUB is the
 pencil fused with the rubber, and it is the one row on the strip that is a different
 tool depending on whether your finger moves: drag and it is the pencil unchanged,
-tap and it is the whole finished rubber at once — a 7px circle at the point, 240 of
+tap and it is the whole finished rubber at once — a 12px circle at the point, 240 of
 shove thrown radially out of it, and `ram` on what that sends flying. That cannot be
 a `drop`: `drop` beats the brush fields in the precedence list at the top of
 `Game:updateDrawing`, so a row carrying both would never lay a line. So it is `tap`

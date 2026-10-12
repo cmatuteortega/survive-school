@@ -6118,7 +6118,7 @@ it fits. Swipe and it is the finished marker, every number of it: thirteen pixel
 band under the crowd, 5 a tick to whatever stands on it, layers where the passes
 cross, and anything that so much as touches it alight. Tap — press and lift without
 travelling — and it is the finished rubber instead, the whole of it in one press: a
-7px circle at the point your finger landed on, 240 of shove thrown radially out of
+12px circle at the point your finger landed on, 240 of shove thrown radially out of
 it, and what that sends flying knocking down what it lands on.
 
 **Which turns the tap/drag split from a coincidence into a rule.** The STUB earned it
@@ -8846,6 +8846,9 @@ outruns one throw within a few frames and a plough that waited the 0.3s chip
 cadence would pass through what it had just pushed; keeping those shoves bare is
 what keeps the damage and the finale's volley exactly where they were. A tip at
 rest has no direction to plough in, so the lean level still shoves radially.
+The fusions that carry the finished rubber carry this one: the SNAG's and the
+SHEAR's swipe plough at the same 25px, and the STUB's and the SCUFF's tap is a
+12px circle rather than the 7 it was — a tap has no travel, so it stays radial.
 
 All of which has to be delivered by your own hand, through the crowd you are
 shoving. That is what the rubber's fusion is for: see **What the clearing is**.
