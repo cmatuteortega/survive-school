@@ -82,7 +82,9 @@ local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true },
                      storm = { hurt = true }, science = { hurt = true },
                      music = { hurt = true }, maths = { hurt = true },
                      art = { hurt = true }, finance = { hurt = true },
-                     grammar = { hurt = true }, pe = { hurt = true } }
+                     grammar = { hurt = true }, pe = { hurt = true },
+                     halo = { hurt = true }, trench = { hurt = true },
+                     snag = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -406,7 +408,8 @@ end
 local wrapUp
 
 local REEL_CURSOR = { science = true, music = true, maths = true,
-                      art = true, finance = true, grammar = true, pe = true }
+                      art = true, finance = true, grammar = true, pe = true,
+                      halo = true, trench = true, snag = true }
 
 -- The bot's hand: where the pointer is (page pixels, turned into the canvas's
 -- here) and whether it is down. The cursor eases after it while it is lifted.
@@ -1877,11 +1880,241 @@ local function stormReel()
     return shots
 end
 
+-- A fusion, told as the road to it: the two tools it is made of, each at its
+-- first level on the crowd and then each finished; the draft dealing the
+-- catalyst's last level and, the moment it is circled, the fusion's card; and
+-- the fused tool on the page. The levels are the subject here, so unlike the
+-- sun's reel each clip says which one it is (`tag`), and the tool's name (`say`).
+--
+-- The strip is built rather than drafted (`fusionStrip`, through
+-- `Loadout:restore`): only the lines the shot is about, at the levels it names,
+-- and no hero's weapon -- anything that dies on camera died to the tool in the
+-- hand. The page is a lesson's run with the class called in round the hero
+-- (`lessonRun`, `crowd`), played with the mouse, as the teasers are.
+local function fusionStrip(game, lines)
+    local set = {}
+    for _, line in ipairs(lines) do
+        local up = Upgrades.byId[line[1]]
+        local level = line[2] == "max" and Upgrades.levelsIn(up) or line[2]
+        set[#set + 1] = { id = up.id, level = level }
+    end
+    game.loadout:restore(set, game.vw, game.vh)
+    game.player:applyStats()
+end
+
+-- The tool in the hand, by its line.
+local function hold(game, id)
+    for i, slot in ipairs(game.loadout.equipped) do
+        if slot.up.id == id then game.tool = i end
+    end
+end
+
+-- On the hero, pulled a little toward the hand, which is where the tool is
+-- working.
+local function handAim(game)
+    local left, top = Camera.steady()
+    local x, y = game.player.x - left, game.player.y - top
+    if hoverX then x, y = x * 0.65 + hoverX * 0.35, y * 0.65 + hoverY * 0.35 end
+    return x, y
+end
+
+-- The playShot's slow curve, under half speed so the crowd keeps up.
+local function stroll(game, t)
+    local a = (t + 3) * 0.5
+    return math.cos(a) * 0.45, math.sin(a) * 0.4
+end
+
+-- The SNAG's two gestures in the one hand: three taps a quarter of a second
+-- apart, a staple in each of the three nearest, and then the rub dragged back
+-- across them, the last stapled first, to rip the staples back out.
+local SNAG_CYCLE = 1.9
+
+local function snagHunt(game, s, t, near)
+    local p = game.player
+    local n = math.floor(t / SNAG_CYCLE)
+    local k = t % SNAG_CYCLE
+    if s.snagN ~= n then
+        s.snagN = n
+        local list = {}
+        for _, e in ipairs(game.enemies) do
+            local d = util.len(e.x - p.x, e.y - p.y)
+            if not e.def.boss and d < near then list[#list + 1] = { e = e, d = d } end
+        end
+        table.sort(list, function(a, b) return a.d < b.d end)
+        s.marks = {}
+        for i = 1, math.min(3, #list) do s.marks[i] = list[i].e end
+    end
+    local m = s.marks
+    if #m == 0 then
+        point(p.x + 26, p.y + 18, false)
+        return
+    end
+    if k < 0.75 then
+        local i = math.floor(k / 0.25) + 1
+        local e = m[i] or m[#m]
+        point(e.x, e.y, m[i] ~= nil and k % 0.25 < 0.08)
+        return
+    end
+    -- Back across them: a path through where they stand, last to first, run
+    -- past either end so a lone one is still rubbed over.
+    local pts = {}
+    for i = #m, 1, -1 do pts[#pts + 1] = { m[i].x, m[i].y } end
+    local a, b = pts[1], pts[#pts]
+    local dx, dy, d = util.normalize(b[1] - a[1], b[2] - a[2])
+    if d == 0 then dx, dy = 1, 0 end
+    table.insert(pts, 1, { a[1] - dx * 10, a[2] - dy * 10 })
+    pts[#pts + 1] = { b[1] + dx * 10, b[2] + dy * 10 }
+    if k < 0.9 then
+        point(pts[1][1], pts[1][2], false)
+        return
+    end
+    if k < 1.5 then
+        local f = (k - 0.9) / 0.6 * (#pts - 1)
+        local i = math.min(#pts - 1, math.floor(f) + 1)
+        local g = f - (i - 1)
+        local x = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * g
+        local y = pts[i][2] + (pts[i + 1][2] - pts[i][2]) * g
+        local zig = math.sin(k * 40) * 5
+        point(x - dy * zig, y + dx * zig, true)
+        return
+    end
+    point(pts[#pts][1] + 8, pts[#pts][2] - 6, false)
+end
+
+-- One tool on the crowd: `lines` the strip ({ id, level or "max" }), `hold` the
+-- one in the hand. Already at work when the camera rolls.
+local function toolShot(spec)
+    local z = spec.zoom or ZOOM
+    return {
+        kind = "run", warm = spec.warm or 3, rec = spec.rec or 2.8, zoom = z,
+        hook = spec.hook, tag = spec.tag, say = spec.say,
+        aim = handAim,
+        setup = function(game)
+            lessonRun(game, spec.subject)
+            fusionStrip(game, spec.lines)
+            hold(game, spec.hold)
+        end,
+        move = stroll,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, spec.every or 0.1, spec.most or 30, false, z > 1 and z or nil)
+            if t > 2.4 then s.hook = nil end
+            if t > -1.6 then (spec.hunt or hunt)(game, s, t + 1.6, spec.near or 45) end
+        end,
+    }
+end
+
+-- The draft and what it makes, in one take: both tools finished and the
+-- catalyst one level short, the draft lands with the catalyst's last level on
+-- it, that card is circled, the next draft has the fusion on it -- dealt off the
+-- run's own `roll`, held to that deal for the shot -- and that is circled too,
+-- and the run comes back holding the fused tool, where the camera punches in.
+-- Filmed wide until then: the cards are the width of the page.
+local function fuseShot(spec)
+    local up = function(id) return Upgrades.byId[id] end
+    return {
+        kind = "run", warm = 2, rec = 12,
+        aim = handAim,
+        setup = function(game)
+            lessonRun(game, spec.subject)
+            local cat = up(spec.catalyst)
+            fusionStrip(game, { { spec.parents[1], "max" }, { spec.parents[2], "max" },
+                { cat.id, Upgrades.levelsIn(cat) - 1 } })
+            hold(game, spec.parents[1])
+            game.loadout.roll = function()
+                return { up(spec.decoys[3]), up(spec.fusion), up(spec.decoys[4]) }
+            end
+        end,
+        move = function(game, t, s) if s.back or t < 0.5 then return stroll(game, t) end return 0, 0 end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            crowd(game, s, spec.every or 0.1, spec.most or 30, false, spec.zoom)
+            if t > 0.5 and not s.dealt then
+                s.dealt = true
+                Input.pointerDown = false
+                game.player.pending = 2
+                game.state = "levelup"
+                Sfx.play("levelup_enter")
+                game:holdRun()
+                game.draft:open(game, { up(spec.decoys[1]), up(spec.catalyst), up(spec.decoys[2]) })
+            end
+            if game.state == "levelup" then
+                Input.pointerDown = false
+                if game.draft.offer ~= s.offer then s.offer, s.openT = game.draft.offer, t end
+                if t - s.openT > 1.3 and s.picked ~= s.offer then
+                    s.picked = s.offer
+                    game.draft:keypressed("2")
+                end
+            elseif s.dealt then
+                if not s.back then
+                    s.back = t
+                    s.rec = t + (spec.after or 3.6)
+                end
+                if t - s.back > 0.5 then
+                    s.tag, s.say = "FUSED!", up(spec.fusion).name
+                end
+                (spec.hunt or hunt)(game, s, t - s.back + 0.2, spec.near or 45)
+            elseif t > -1.6 then
+                (spec.huntBefore or hunt)(game, s, t + 1.6, spec.near or 45)
+            end
+        end,
+        zoom = function(game, t, s)
+            if s.back then return t - s.back > 0.5 and spec.zoom or 1 end
+            return 1
+        end,
+    }
+end
+
+-- Every fusion reel is the same seven shots; a row names the parents, the
+-- catalyst, the fusion, the four decoy cards and the pages.
+local function fusionReel(spec)
+    return function()
+        local a, b = spec.parents[1], spec.parents[2]
+        local name = function(id) return Upgrades.byId[id].name end
+        local both = function(la, lb) return { { a, la }, { b, lb } } end
+        local shots = {}
+        local zoomOf = spec.zooms or {}
+        shots[#shots + 1] = toolShot({ subject = spec.pages[1], lines = both(1, 1), hold = a,
+            hook = { name(a), "+ " .. name(b) }, tag = "LEVEL 1", say = name(a),
+            zoom = zoomOf[a], hunt = spec.hunts and spec.hunts[a] })
+        shots[#shots + 1] = toolShot({ subject = spec.pages[2], lines = both(1, 1), hold = b,
+            tag = "LEVEL 1", say = name(b), zoom = zoomOf[b], hunt = spec.hunts and spec.hunts[b] })
+        shots[#shots + 1] = toolShot({ subject = spec.pages[3], lines = both("max", "max"), hold = a,
+            tag = "MAX LEVEL", say = name(a), every = 0.06, most = 40,
+            zoom = zoomOf[a], hunt = spec.hunts and spec.hunts[a] })
+        shots[#shots + 1] = toolShot({ subject = spec.pages[4], lines = both("max", "max"), hold = b,
+            tag = "MAX LEVEL", say = name(b), every = 0.06, most = 40,
+            zoom = zoomOf[b], hunt = spec.hunts and spec.hunts[b] })
+        shots[#shots + 1] = fuseShot({ subject = spec.pages[5], parents = spec.parents,
+            catalyst = spec.catalyst, fusion = spec.fusion, decoys = spec.decoys,
+            zoom = zoomOf[spec.fusion] or ZOOM, every = 0.06, most = 40,
+            hunt = spec.hunts and spec.hunts[spec.fusion],
+            huntBefore = spec.hunts and spec.hunts[a] })
+        shots[#shots + 1] = toolShot({ subject = spec.pages[6], warm = 4, rec = 3.4,
+            lines = { { a, "max" }, { b, "max" }, { spec.catalyst, "max" }, { spec.fusion, 1 } },
+            hold = spec.fusion, every = 0.05, most = 50, zoom = spec.wide or 1, near = 70,
+            hunt = spec.hunts and spec.hunts[spec.fusion] })
+        shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
+        return shots
+    end
+end
+
 local REELS = {
     montage = bossMontage,
     sun = sunReel,
     cools = coolsReel,
     storm = stormReel,
+    halo = fusionReel({ parents = { "compass", "highlighter" }, catalyst = "fixative",
+        fusion = "halo", decoys = { "magnet", "laminate", "cartridge", "bandaid" },
+        pages = { "maths", "language", "art", "science", "music", "finance" } }),
+    trench = fusionReel({ parents = { "ruler", "gluestick" }, catalyst = "tape",
+        fusion = "trench", decoys = { "blotter", "plane", "bandaid", "metronome" },
+        pages = { "finance", "science", "maths", "art", "language", "pe" },
+        zooms = { trench = 1 } }),
+    snag = fusionReel({ parents = { "rubber", "stapler" }, catalyst = "inkwell",
+        fusion = "snag", decoys = { "page", "topmarks", "magnet", "fixative" },
+        pages = { "art", "pe", "music", "maths", "science", "language" },
+        hunts = { snag = snagHunt }, wide = ZOOM }),
     science = lessonReel("science", {
         function(key) return labShot(key, "science", "diamond") end,
         function(key) return circuitShot(key, true) end,

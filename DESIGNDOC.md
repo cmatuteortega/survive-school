@@ -228,6 +228,22 @@ level on a whole crowd at minute six (`minute` on the shot). The chain only
 passes through enemies that survive a hit, and at minute four the bolt kills
 everything it touches, so the zap would go nowhere.
 
+`./capture.sh halo`, `trench` and `snag` are the fusion reels, one row each in
+`REELS` through `fusionReel` (the two parents, the catalyst, the fusion, four
+decoy cards and six pages), about 26s. Unlike a weapon highlight, the levels are
+the story here, so each clip says which one it is (`tag`: LEVEL 1, MAX LEVEL) and
+the tool's own name. The parents are shown one at a time at level one and then
+finished; one take then deals the catalyst's last level, circles it, deals
+the fusion off the run's own `roll` (pinned to that deal for the shot), circles that too,
+and comes back holding the fused tool (FUSED! and its name), with the camera
+cut in; then a few uncaptioned seconds of it and the card. The strip
+is built rather than drafted (`fusionStrip`, through `Loadout:restore`) and
+carries no hero's weapon, so whatever dies on camera died to the tool in the
+hand. The page is a lesson run with the class called in round the hero, played
+with the cursor. The SNAG plays with its own hand (`snagHunt`: three staples
+tapped in, then the rub dragged back across them), and the TRENCH's finale is
+wide because its bar crosses the page.
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.
