@@ -4204,6 +4204,15 @@ and the two need not agree:
   between the old and new head so a fast flick can't tunnel past an enemy. A
   brush with no `stamp` keeps no stamps and draws nothing — the rubber is one,
   and all it leaves is `crumbs`, particles shed sideways off the moving tip.
+  A brush's shove goes square off its own line (`Stroke:apply`) unless the row
+  carries **`plow = {ahead, forward, every}`**, which only the rubber does: then
+  the moving tip's reach runs `ahead` pixels past the head and the shove points
+  `forward` of the way along the travel and the rest out to the body's own side
+  (`Stroke:plough`), so the crowd is pushed in front of the swipe. Bodies still
+  in that reach between `rehit`s are shoved again every `every` seconds, push
+  only — no damage, no `ram` — which is what keeps them ahead of a fast swipe
+  without speeding up the chip. A zero-length segment (the `lean` resting hit,
+  a pin's pool) has no travel and stays radial.
 
   **A brush row may carry one gesture, and `tap` is it.** A press that ends
   without going anywhere is a radial hit at the point it landed on —

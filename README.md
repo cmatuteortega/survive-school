@@ -8776,7 +8776,7 @@ keeps drawing, because the page slides underneath the nib.
 | --- | --- | --- |
 | Pencil | thin, ragged | big damage, one hit per enemy per stroke |
 | Pen | smooth, 3px | no damage: the line is a **wall** enemies must go around |
-| Rubber | 15px sweep, shoving, no mark | hard knockback and chip damage, re-hits every 0.3s |
+| Rubber | 25px sweep, ploughing, no mark | pushes the crowd ahead of the swipe, chip damage every 0.3s |
 | Highlighter | wide band | lingers ~3.6s, damaging anything standing on it |
 | Gluestick | 29px smear | no damage at all: anything caught stops dead |
 | Pushpin | not drawn: **dropped** | 41px circle, 10 damage, and survivors are pinned 2.5s |
@@ -8830,6 +8830,22 @@ is truly flying, it shoves and damages whatever it runs into, 5 damage being a
 blob dead on arrival — so a rub delivered into the front rank of a crowd bowls
 it through the second. Victims are shoved on but never become projectiles
 themselves: one rub is one volley of pins, not a chain reaction.
+
+**The rubber is a plough, not a broom.** It was written as a 15px tip whose
+shove went square off the line, and it was the most underwhelming tool on the
+strip: you had to drag straight through a thing to touch it, and a swipe threw
+what it touched out to both sides and moved on, so nothing ever showed in front
+of the finger that the rub was doing anything. Now the tip is 25px across
+(radius 12 — still priced per pixel of path, so no dearer to rub with), its
+reach runs twelve pixels *ahead* of the moving tip, and the shove points three
+quarters along the swipe and a quarter out to whichever side the body was on.
+The crowd bunches up in front of your finger and spills off its shoulders, which
+is what pushing a heap of anything looks like. A body still in front of the tip
+is shoved again every 0.08s — push only, no damage, no launch — because a swipe
+outruns one throw within a few frames and a plough that waited the 0.3s chip
+cadence would pass through what it had just pushed; keeping those shoves bare is
+what keeps the damage and the finale's volley exactly where they were. A tip at
+rest has no direction to plough in, so the lean level still shoves radially.
 
 All of which has to be delivered by your own hand, through the crowd you are
 shoving. That is what the rubber's fusion is for: see **What the clearing is**.
@@ -8897,7 +8913,7 @@ the eyes shoot over and the boss has to be killed on.
 And a fence still has ends, which is the one thing four levels never fixed and
 what the pen's fusion is for: see **What the corral is**.
 
-The gluestick is a 29px paper-coloured smear, twice the rubber's radius, and it
+The gluestick is a 29px paper-coloured smear, twice the radius the rubber had then, and it
 sits on the page for six seconds. It is the look the rubber used to have and
 gave up: a pale shape lying on the paper afterwards is exactly wrong for
 something you rubbed off and exactly right for something you smeared on.
@@ -9528,8 +9544,9 @@ A few touches make the marks feel like marks rather than shapes:
   the crumbs are the whole tool. They come off the sides of the tip as it
   travels, thrown out across the rub and carried a little way along it, and
   they brake hard and vanish within half a second — a rub reads as the spray it
-  is throwing, and stops existing the moment you let go. The hit is unchanged:
-  same 15px reach, same shove, same chip damage every 0.3s.
+  is throwing, and stops existing the moment you let go. The hit was unchanged
+  by that: same chip damage every 0.3s. What did change later is the reach and
+  the shove — see the plough, below.
 - **The highlighter has a chisel nib** held at 45 degrees, like the real thing:
   sweeping across the page lays a wide band with angled ends, and a rim of red
   marks where the ink pooled at the edge.
