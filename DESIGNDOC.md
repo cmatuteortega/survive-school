@@ -287,6 +287,14 @@ lands (BANKRUPT!, the rings filmed wide) and the run's coins counting up close,
 then the till. The page takes avoid a lesson whose tool glues (MUSIC's pins) where
 a stop should be the clock's alone.
 
+`./capture.sh pickups` is all seven in one, about 33s: the page takes only, one
+after another under the pickup's name, with no readout shown first, each lying
+closer and walked to briskly (`quick`), the beats after each take cut to the one
+that says what it did, the star's ending on the 50-star clip and the coin's
+being the piggy bank. Every pickup reel lays its sounds over the track at under
+half the game's level (`REEL_SFX`): a grab, a kill and a pen stroke every moment
+otherwise bury the music.
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.

@@ -81,6 +81,12 @@ local MUTED = { brush1 = true, brush2 = true, brush3 = true,
 -- topped up every frame, so he is hit all the time and the hurt would be a
 -- second drone under the burn. A boss reel keeps it -- there a hit is the boss
 -- landing one, which is half of what is being shown.
+-- And how loud a reel's sounds are laid over the track, where not the game's
+-- own level: the pickup reels are a sound on every grab and every kill round a
+-- hand that never stops, and at full level they bury the music.
+local REEL_SFX = { pickups = 0.45, heart = 0.45, ink = 0.45, diamond = 0.45,
+                   clock = 0.45, alarm = 0.45, star = 0.45, coin = 0.45 }
+
 local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true },
                      storm = { hurt = true }, science = { hurt = true },
                      music = { hurt = true }, maths = { hurt = true },
@@ -90,7 +96,8 @@ local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true },
                      snag = { hurt = true }, heart = { hurt = true },
                      ink = { hurt = true }, diamond = { hurt = true },
                      clock = { hurt = true }, alarm = { hurt = true },
-                     star = { hurt = true }, coin = { hurt = true } }
+                     star = { hurt = true }, coin = { hurt = true },
+                     pickups = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -417,7 +424,7 @@ local REEL_CURSOR = { science = true, music = true, maths = true,
                       art = true, finance = true, grammar = true, pe = true,
                       halo = true, trench = true, snag = true,
                       heart = true, ink = true, diamond = true, clock = true,
-                      alarm = true, star = true, coin = true }
+                      alarm = true, star = true, coin = true, pickups = true }
 
 -- The bot's hand: where the pointer is (page pixels, turned into the canvas's
 -- here) and whether it is down. The cursor eases after it while it is lifted.
@@ -2492,11 +2499,13 @@ end
 -- shatter as it lands so the first thing it does is crack, say BANKRUPT! and
 -- throw its savings across the box in rings -- and the hero, once they are
 -- down, walks over them, the camera cut in on the run's coins counting up.
-local function piggyShot(hook)
+-- `say` is said over it until the coins are taken, and `short` trims the
+-- walk over them for the reel of every pickup.
+local function piggyShot(hook, say, short)
     local sh
     local beats = {
-        { len = 1.2, zoom = 1, move = gather("coin") },
-        { len = 2.6, zoom = HUD_LOOK, aim = "purse", say = "+1 COIN EACH",
+        { len = short and 0.7 or 1.2, zoom = 1, move = gather("coin") },
+        { len = short and 1.6 or 2.6, zoom = HUD_LOOK, aim = "purse", say = "+1 COIN EACH",
           move = gather("coin") },
     }
     sh = {
@@ -2525,6 +2534,7 @@ local function piggyShot(hook)
                 e.brain.state, e.brain.t = "crack", e.brain.def.shatter.time
             end
             if t > 2.6 or s.takenT then s.hook = nil end
+            if not s.takenT then s.say = not s.hook and say or nil end
             local b = e and e.brain
             if b and b.state == "burst" then s.burst = true end
             -- Down to the floor once the rings have stopped coming.
@@ -2567,9 +2577,9 @@ local function toughCrowd(game, s, every, most)
         game.player.y + math.sin(a) * r)
 end
 
-local function starsLater(n, subject)
+local function starsLater(n, subject, rec)
     return {
-        kind = "run", warm = 3, rec = 2.2, zoom = ZOOM,
+        kind = "run", warm = 3, rec = rec or 2.2, zoom = ZOOM,
         tag = n .. " STARS", say = string.format("+%d%% DAMAGE", math.floor(n * Pickup.STAR * 100 + 0.5)),
         setup = function(game)
             lessonRun(game, subject)
@@ -2625,7 +2635,57 @@ local DRAFTED = {
     { len = 0.6, zoom = 1 },
 }
 
+-- Every pickup in one reel, shortened: the page takes only, one after another,
+-- with no readout shown first (the bar is in the HUD anyway) and the beats after
+-- each take cut down to the one that says what it did. Each one is closer to
+-- the hero and walked to briskly, so the reel is mostly grabs and effects.
+local QUICK = { at = 70, pace = 0.95, wait = 0 }
+
+local function quick(spec)
+    spec.at = { spec.side * 12, -QUICK.at }
+    spec.pace, spec.wait = QUICK.pace, QUICK.wait
+    return grabShot(spec)
+end
+
+local function allPickups()
+    return {
+        quick({ kind = "heart", subject = "science", side = 1, keepHp = true, setup = lowHp,
+            hook = { "EVERY", "PICKUP" }, say = "HEART",
+            beats = { { len = 1.5, zoom = HUD_LOOK, aim = "hp", say = "+25 HEALTH",
+                        preview = true } } }),
+        quick({ kind = "ink", subject = "science", side = -1, setup = lowInk, say = "INK DROP",
+            each = function(game, s) if not s.takenT then lowInk(game) end end,
+            hold = true, feed = { 0.1, 22, ZOOM },
+            beats = { { len = 0.9, zoom = HUD_LOOK, aim = "ink", say = "FREE INK", hand = frenzy,
+                        preview = true },
+                      { len = 1.7, zoom = ZOOM, aim = "hero", say = "DRAW WITHOUT STOPPING",
+                        hand = frenzy, move = stroll } } }),
+        quick({ kind = "diamond", subject = "maths", side = 1, setup = realLevels,
+            say = "DIAMOND", beats = { { len = 1.9, zoom = 1, say = "A WHOLE LEVEL",
+                                         direct = pickCard } } }),
+        quick({ kind = "clock", subject = "maths", side = -1, say = "WALL CLOCK",
+            feed = { 0.05, 36, ZOOM },
+            beats = { FROZEN[1], { len = 1.2, zoom = ZOOM, aim = "hero",
+                                   say = "THE CLASS FREEZES" } } }),
+        quick({ kind = "alarm", subject = "pe", side = 1, setup = quietLevels, say = "ALARM CLOCK",
+            feed = { 0.05, 40, 1.4 },
+            beats = { { len = 0.9, zoom = 1, say = "IT CLEARS THE PAGE", hand = function() end },
+                      { len = 1.6, zoom = HUD_LOOK, aim = "xp", say = "+XP", move = gather("gem"),
+                        hand = function() end } } }),
+        quick({ kind = "star", subject = "finance", side = -1, say = "GOLD STAR",
+            setup = function(game) starStrip(game, 0) end, feed = false, hold = true,
+            each = function(game, s) toughCrowd(game, s, 0.18, 14) end,
+            beats = { { len = 1.4, zoom = ZOOM, aim = "hero", tag = "1 STAR",
+                        say = "+2% DAMAGE" } } }),
+        starsLater(50, "music", 1.6),
+        piggyShot(nil, "COINS", true),
+        { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } },
+    }
+end
+
 return {
+    pickups = allPickups,
+
     heart = pickupReel(
         function() return grabShot({ kind = "heart", subject = "science", at = { 14, -96 },
             keepHp = true, setup = lowHp, hook = { "LOW ON", "HEALTH?" }, hookY = 120,
@@ -3027,7 +3087,7 @@ local function finish()
 
     local seconds = filmed * DT
     local level, musicLevel, music = Sfx.levels()
-    local buf, frames = mix(seconds, level)
+    local buf, frames = mix(seconds, level * (REEL_SFX[Capture.reel] or 1))
     local f = io.open(audioPath, "wb")
     f:write(ffi.string(buf, frames * 2 * 4))
     f:close()
