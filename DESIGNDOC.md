@@ -245,9 +245,22 @@ open each circle to a different size in turn (`vary`, `VARY`), so the reel
 shows its whole reach. The strip
 is built rather than drafted (`fusionStrip`, through `Loadout:restore`) and
 carries no hero's weapon, so whatever dies on camera died to the tool in the
-hand. The page is a lesson run, played with the cursor. The SNAG plays with its own hand (`snagHunt`: three staples
-tapped in, then the rub dragged back across them), and the TRENCH's finale is
-wide because its bar crosses the page.
+hand. The page is a lesson run, played with the cursor. The SNAG plays with its
+own hand (`snagHunt`: three staples tapped in, then the rub dragged back across
+them). The hook asks what the two make ("= ?") and the finale carries the
+fusion's own unlock line.
+
+Nine more follow on the same row: `punch`, `guillotine`, `tearline`, `parting`,
+`underline`, `corral`, `spindle`, `crater` and `dots`. The hunt cuts with the
+scissors in two taps (`cut`: once short of the prey, once past it, along the
+line to its nearest neighbour). Each fusion that is about the pack gets a hand
+aimed at the pack (`pack`) rather than at whoever is nearest. The PUNCH, CORRAL
+and SPINDLE plant a ring on its middle and open it round the pack (`ringPack`).
+It is never opened round the hero, since a PUNCH round him lifts the page out
+from under him. The TEAR LINE pins either side of it (`pinPair`), the DOT TO DOT
+pins a triangle round it (`pinShape`), and the CRATER pins its thickest knot
+(`pinDense`). The hand rests before the draft, since finished scissors trim
+half the page away and the fused tool should come back to a whole one.
 
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant

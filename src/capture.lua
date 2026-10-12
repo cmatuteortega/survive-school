@@ -2089,8 +2089,11 @@ local function ringPack(period)
             if cx then
                 local p = game.player
                 local away = util.len(p.x - cx, p.y - cy)
-                local r = util.clamp(spread + 10, sw.minR, math.min(sw.maxR, math.max(sw.minR, away - 6)))
-                s.ring = { cx, cy, r }
+                -- Never round the hero as well: a ring that took him in would
+                -- be the PUNCH lifting the page out from under him. Too close
+                -- for the smallest ring, and this swing is sat out.
+                local r = math.min(spread + 10, sw.maxR, away - 12)
+                s.ring = r >= sw.minR and { cx, cy, r } or nil
             else
                 s.ring = nil
             end
@@ -2239,8 +2242,11 @@ local function fuseShot(spec)
                     s.tag, s.say = "FUSED!", up(spec.fusion).name
                 end
                 (spec.hunt or hunt)(game, s, t - s.back + 0.2, spec.near or 60)
-            elseif t > -1.6 then
-                (spec.huntBefore or hunt)(game, s, t + 1.6, spec.near or 60)
+            else
+                -- The hand rests until the draft: a finished pair of scissors
+                -- trims half the page away, and the fused tool should come back
+                -- to a whole page and a pack to use it on.
+                point(game.player.x + 26, game.player.y + 18, false)
             end
         end,
     }
@@ -2268,8 +2274,7 @@ local function fusionReel(spec)
         shots[#shots + 1] = fuseShot({ subject = spec.pages[5], parents = spec.parents,
             catalyst = spec.catalyst, fusion = spec.fusion, decoys = spec.decoys,
             every = 0.08, most = 32,
-            hunt = spec.hunts and spec.hunts[spec.fusion],
-            huntBefore = spec.hunts and spec.hunts[a] })
+            hunt = spec.hunts and spec.hunts[spec.fusion] })
         shots[#shots + 1] = toolShot({ subject = spec.pages[6], warm = 4, rec = 4,
             say = Upgrades.byId[spec.fusion].levels[1].text,
             lines = { { a, "max" }, { b, "max" }, { spec.catalyst, "max" }, { spec.fusion, 1 } },
