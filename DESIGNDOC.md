@@ -190,6 +190,44 @@ A new highlight is a reel function beside `sunReel` and a row in `REELS` (and
 Expect a take to run a few minutes in a cloud session; check a contact sheet of
 frames (`ffmpeg -vf fps=2,tile=...`) before handing a cut over.
 
+`./capture.sh cools` is the second, the cool S, and shows the two places a line
+can differ from the sun's. Nothing gates the S (it has no row in
+`Collection.gates`), so its first shot is the entry walked to and shown, with the
+hook "DRAW" / "THE COOL S" and no UNLOCKED!, which would be a lie. And its art is
+six thin diagonals rather than rows of runs, so the board is drawn by `trace`:
+the cells in the order a hand goes round the S, each put down as a dab (a frame
+down, a frame up) rather than dragged. A drag along an up-right or down-left
+diagonal crosses the corner two cells share, which `Studio:cellAt` reads as the
+cell beside them, so the drawn S would come out with stairs in it. Use `trace`
+for any design that is mostly diagonals. Each clip sends its own S down a chosen
+line through the hero (`sendS`, through `launch` so it carries the level's
+numbers, with the weapon's clock held). A pile of the minute's crowd is
+dropped onto the line just ahead of the S (`feedLine`, every 0.05s, never on
+the hero), and the close shots ride the S at zoom 3 (`CLOSE`, `coolsAim`): it
+is the hero's size, so at the boss's zoom 2 the pile coming apart and its
+numbers are a few pixels each. The hero is put under
+the truce the eye's fall uses (`safeRun`, `Player:hurt`). A crowd always on him
+otherwise knocks the page and flashes him every frame, and a shaking frame is
+one the weapon can't be followed across. Prefer this to muting `hurt` alone on
+the next highlight.
+
+`./capture.sh storm` is the third, and the closest to the sun's: the storm is
+gated, so it opens on the real unlock. Its bolt is thick runs of cells, so its
+board is drawn in rows (`faceStrokes(Sprites.LIGHTNING)`, `faceAt(t, BOLT)`).
+A storm parks over one enemy picked at random from the whole page, which on
+camera is a straggler. So each strike is staged instead. A thin crowd, a dozen
+bodies, is dropped round a point off the hero (`pile`) in the second or so
+before the bolt, and no more once it has struck. A cloud is sent through
+`launch` (`sendCloud`), started just off the edge of the page on a level
+heading, and marked on the thickest part of the crowd (`densest`). If the
+hero's own weapon kills that mark first, the cloud picks again from the same
+crowd instead of crossing the page. The camera rides the cloud at zoom 2
+(`stormAim`): in over one edge, the strike, and off the other, with the hero
+only somewhere in the crowd. The weapon is the subject. The end is the last
+level on a whole crowd at minute six (`minute` on the shot). The chain only
+passes through enemies that survive a hit, and at minute four the bolt kills
+everything it touches, so the zap would go nowhere.
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.
