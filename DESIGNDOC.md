@@ -235,7 +235,7 @@ the story here, so each clip says which one it is (`tag`: LEVEL 1, MAX LEVEL) an
 the tool's own name. The parents are shown one at a time at level one and then
 finished; one take then deals the catalyst's last level, circles it, deals
 the fusion off the run's own `roll` (pinned to that deal for the shot), circles that too,
-and comes back holding the fused tool (FUSED! and its name), with the camera
+and comes back holding the fused tool (FUSED! and its name), the hero
 still kiting; then a few uncaptioned seconds of it and the card. Every
 shot is at the page's own size (no lens): the hero kites (`kite`), running a
 wide ring round a point on the page with the class called in from beyond it
