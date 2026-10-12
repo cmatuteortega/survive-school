@@ -245,9 +245,22 @@ open each circle to a different size in turn (`vary`, `VARY`), so the reel
 shows its whole reach. The strip
 is built rather than drafted (`fusionStrip`, through `Loadout:restore`) and
 carries no hero's weapon, so whatever dies on camera died to the tool in the
-hand. The page is a lesson run, played with the cursor. The SNAG plays with its own hand (`snagHunt`: three staples
-tapped in, then the rub dragged back across them), and the TRENCH's finale is
-wide because its bar crosses the page.
+hand. The page is a lesson run, played with the cursor. The SNAG plays with its
+own hand (`snagHunt`: three staples tapped in, then the rub dragged back across
+them). The hook asks what the two make ("= ?") and the finale carries the
+fusion's own unlock line.
+
+Nine more follow on the same row: `punch`, `guillotine`, `tearline`, `parting`,
+`underline`, `corral`, `spindle`, `crater` and `dots`. The hunt cuts with the
+scissors in two taps (`cut`: once short of the prey, once past it, along the
+line to its nearest neighbour). Each fusion that is about the pack gets a hand
+aimed at the pack (`pack`) rather than at whoever is nearest. The PUNCH, CORRAL
+and SPINDLE plant a ring on its middle and open it round the pack (`ringPack`).
+It is never opened round the hero, since a PUNCH round him lifts the page out
+from under him. The TEAR LINE pins either side of it (`pinPair`), the DOT TO DOT
+pins a triangle round it (`pinShape`), and the CRATER pins its thickest knot
+(`pinDense`). The hand rests before the draft, since finished scissors trim
+half the page away and the fused tool should come back to a whole one.
 
 #### A pickup highlight
 
@@ -4237,6 +4250,16 @@ and the two need not agree:
   between the old and new head so a fast flick can't tunnel past an enemy. A
   brush with no `stamp` keeps no stamps and draws nothing — the rubber is one,
   and all it leaves is `crumbs`, particles shed sideways off the moving tip.
+  A brush's shove goes square off its own line (`Stroke:apply`) unless the row
+  carries **`plow = {ahead, forward, every}`** — the rubber, and the two fusions whose
+  swipe is the finished rubber (SNAG, SHEAR): then
+  the moving tip's reach runs `ahead` pixels past the head and the shove points
+  `forward` of the way along the travel and the rest out to the body's own side
+  (`Stroke:plough`), so the crowd is pushed in front of the swipe. Bodies still
+  in that reach between `rehit`s are shoved again every `every` seconds, push
+  only — no damage, no `ram` — which is what keeps them ahead of a fast swipe
+  without speeding up the chip. A zero-length segment (the `lean` resting hit,
+  a pin's pool) has no travel and stays radial.
 
   **A brush row may carry one gesture, and `tap` is it.** A press that ends
   without going anywhere is a radial hit at the point it landed on —
@@ -5654,7 +5677,7 @@ unlock's `apply`.
 **One new field, and it is the only gesture a brush row can carry.** The STUB is the
 pencil fused with the rubber, and it is the one row on the strip that is a different
 tool depending on whether your finger moves: drag and it is the pencil unchanged,
-tap and it is the whole finished rubber at once — a 7px circle at the point, 240 of
+tap and it is the whole finished rubber at once — a 12px circle at the point, 240 of
 shove thrown radially out of it, and `ram` on what that sends flying. That cannot be
 a `drop`: `drop` beats the brush fields in the precedence list at the top of
 `Game:updateDrawing`, so a row carrying both would never lay a line. So it is `tap`

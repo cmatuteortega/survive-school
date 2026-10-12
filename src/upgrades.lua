@@ -3714,7 +3714,7 @@ Upgrades.list = {
         -- numbers in it by name -- `loop.damage`, `tap.damage` and `tap.ram.damage`
         -- -- and Tools.copy is one level deep, let alone two.
         --
-        -- Every number is the rubber's own: the 7px tip it was written with, the
+        -- Every number is the rubber's own: the 12px tip it has now, the
         -- 2 it chips for, the 240 its first level throws at, and the 5 its finale
         -- knocks down what it lands on for. What is left out is `lean` and
         -- `scrub`, and both for the LASSO's reason rather than as a nudge -- one
@@ -3726,7 +3726,7 @@ Upgrades.list = {
         apply = function(t)
             t.loop = { damage = 4 }
             t.tap = {
-                radius = 7, damage = 2, knock = 240,
+                radius = 12, damage = 2, knock = 240,
                 ram = { damage = 5 },
                 ink = 0.12,
                 -- What still counts as not having moved, and both numbers are the
@@ -3997,7 +3997,7 @@ Upgrades.list = {
         -- The tap is the STUB's, to the number, and it is written out again rather
         -- than shared because that is precisely what Tools.copy being one level deep
         -- forbids -- a table two rows point at is a table the sharpener multiplies
-        -- twice. It is the same parent finished, so it is the same rub: a 7px circle
+        -- twice. It is the same parent finished, so it is the same rub: a 12px circle
         -- at the point the finger landed on, 240 of shove out of it, 2 of chip, and
         -- what it launches knocking down what it hits. `slack` and `hold` are the
         -- finger's own travel and the length of the press (Game:wasTap), never the
@@ -4007,7 +4007,7 @@ Upgrades.list = {
         apply = function(t)
             t.ignite = { time = 2, tick = 0.4, damage = 2 }
             t.tap = {
-                radius = 7, damage = 2, knock = 240,
+                radius = 12, damage = 2, knock = 240,
                 ram = { damage = 5 },
                 ink = 0.12,
                 slack = 6, hold = 0.3,

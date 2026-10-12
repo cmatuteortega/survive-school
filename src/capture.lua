@@ -93,8 +93,8 @@ local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true },
                      art = { hurt = true }, finance = { hurt = true },
                      grammar = { hurt = true }, pe = { hurt = true },
                      halo = { hurt = true }, trench = { hurt = true },
-                     snag = { hurt = true }, heart = { hurt = true },
-                     ink = { hurt = true }, diamond = { hurt = true },
+                     snag = { hurt = true }, punch = { hurt = true }, guillotine = { hurt = true }, tearline = { hurt = true }, parting = { hurt = true }, underline = { hurt = true }, corral = { hurt = true }, spindle = { hurt = true }, crater = { hurt = true }, dots = { hurt = true },
+                     heart = { hurt = true }, ink = { hurt = true }, diamond = { hurt = true },
                      clock = { hurt = true }, alarm = { hurt = true },
                      star = { hurt = true }, coin = { hurt = true },
                      pickups = { hurt = true } }
@@ -422,7 +422,7 @@ local wrapUp
 
 local REEL_CURSOR = { science = true, music = true, maths = true,
                       art = true, finance = true, grammar = true, pe = true,
-                      halo = true, trench = true, snag = true,
+                      halo = true, trench = true, snag = true, punch = true, guillotine = true, tearline = true, parting = true, underline = true, corral = true, spindle = true, crater = true, dots = true,
                       heart = true, ink = true, diamond = true, clock = true,
                       alarm = true, star = true, coin = true, pickups = true }
 
@@ -508,6 +508,7 @@ local GESTURES = {
     drop = { every = 0.5, down = 0.1 },
     sweep = { every = 1.25, down = 0.4 },
     snap = { every = 1.0, down = 0.35 },
+    cut = { every = 1.0, down = 0.43 },
 }
 
 local function gestureOf(game)
@@ -515,6 +516,7 @@ local function gestureOf(game)
     if tool and tool.sweep then return "sweep" end
     if tool and tool.drop then return "drop" end
     if tool and tool.snap then return "snap" end
+    if tool and tool.cut then return "cut" end
     return "brush"
 end
 
@@ -530,7 +532,7 @@ local function hunt(game, s, t, near, boss)
     local n = math.floor(t / g.every)
     -- Put down mid-stroke: the hand lifts until the next one, rather than
     -- dragging the line on across the page to whoever is nearest now.
-    if s.huntN == n and s.prey and s.prey.hp <= 0 then
+    if kind ~= "cut" and s.huntN == n and s.prey and s.prey.hp <= 0 then
         point(s.prey.x + 8, s.prey.y - 6, false)
         return
     end
@@ -553,6 +555,32 @@ local function hunt(game, s, t, near, boss)
     local e = s.prey
     if not e then
         point(p.x + 26, p.y + 18, false)
+        return
+    end
+
+    if kind == "cut" then
+        -- Scissors: tapped once just short of the prey and once just past it,
+        -- along the line to whoever stands nearest it, so the cut runs through
+        -- both. The second tap always comes, dead prey or not -- an anchor
+        -- left open would turn the next cycle's first tap into a cut.
+        if s.cutN ~= n then
+            s.cutN = n
+            local o, od
+            for _, f in ipairs(game.enemies) do
+                local d = util.len(f.x - e.x, f.y - e.y)
+                if f ~= e and not f.def.boss and d < 40 and (not od or d < od) then o, od = f, d end
+            end
+            local dx, dy, d = 0, 0, 0
+            if o then dx, dy, d = util.normalize(o.x - e.x, o.y - e.y) end
+            if d == 0 then dx, dy = util.normalize(e.x - p.x, e.y - p.y) end
+            s.cutDx, s.cutDy = dx, dy
+        end
+        local dx, dy = s.cutDx, s.cutDy
+        if burst < 0.35 then
+            point(e.x - dx * 16, e.y - dy * 16, burst < 0.08)
+        else
+            point(e.x + dx * 24, e.y + dy * 24, burst < g.down)
+        end
         return
     end
 
@@ -2042,6 +2070,128 @@ local function snagHunt(game, s, t, near)
     point(pts[#pts][1] + 8, pts[#pts][2] - 6, false)
 end
 
+-- The pack: the middle of everything chasing the hero within `reach`, and how
+-- far out from that middle it stands (a little past the average).
+local function pack(game, reach)
+    local p, n, sx, sy = game.player, 0, 0, 0
+    for _, e in ipairs(game.enemies) do
+        if not e.def.boss and e.hp > 0 and util.len(e.x - p.x, e.y - p.y) < (reach or 110) then
+            n, sx, sy = n + 1, sx + e.x, sy + e.y
+        end
+    end
+    if n == 0 then return end
+    local cx, cy = sx / n, sy / n
+    local spread = 0
+    for _, e in ipairs(game.enemies) do
+        if not e.def.boss and e.hp > 0 and util.len(e.x - p.x, e.y - p.y) < (reach or 110) then
+            spread = spread + util.len(e.x - cx, e.y - cy)
+        end
+    end
+    return cx, cy, spread / n
+end
+
+-- Each fusion's moment, a hand of its own on the pack rather than on whoever
+-- is nearest -- what the fused tool is *for*, shown on the crowd it is for.
+-- All take (game, s, t, near) as `hunt` does, and lift between gestures.
+
+-- A compass ring planted on the middle of the pack and opened out round it:
+-- the PUNCH lifts the whole pack out of the page, the CORRAL fences it in, the
+-- SPINDLE drags it round and pins it. Kept off the hero, who is ahead of it.
+local function ringPack(period)
+    return function(game, s, t)
+        local k = t % period
+        local n = math.floor(t / period)
+        if s.ringN ~= n then
+            s.ringN = n
+            local cx, cy, spread = pack(game)
+            local sw = game.loadout:tool(game.tool).sweep
+            if cx then
+                local p = game.player
+                local away = util.len(p.x - cx, p.y - cy)
+                -- Never round the hero as well: a ring that took him in would
+                -- be the PUNCH lifting the page out from under him. Too close
+                -- for the smallest ring, and this swing is sat out.
+                local r = math.min(spread + 10, sw.maxR, away - 12)
+                s.ring = r >= sw.minR and { cx, cy, r } or nil
+            else
+                s.ring = nil
+            end
+        end
+        local r = s.ring
+        if not r then
+            point(game.player.x + 26, game.player.y + 18, false)
+            return
+        end
+        if k < 0.1 then point(r[1], r[2], false) return end
+        if k < 0.6 then
+            local f = math.min(1, (k - 0.1) / 0.35)
+            point(r[1] + r[3] * f, r[2], true)
+            return
+        end
+        point(r[1] + r[3], r[2], false)
+    end
+end
+
+-- Pins tapped down either side of the pack, square across the way it is
+-- chasing, so the TEAR LINE threaded between them runs edge to edge through it.
+local function pinPair(game, s, t)
+    local k = t % 1.6
+    local n = math.floor(t / 1.6)
+    if s.pairN ~= n then
+        s.pairN = n
+        local cx, cy = pack(game)
+        s.pair = nil
+        if cx then
+            local p = game.player
+            local dx, dy, d = util.normalize(cx - p.x, cy - p.y)
+            if d == 0 then dx, dy = 1, 0 end
+            s.pair = { { cx - dy * 38, cy + dx * 38 }, { cx + dy * 38, cy - dx * 38 } }
+        end
+    end
+    if not s.pair then point(game.player.x + 26, game.player.y + 18, false) return end
+    local i = k < 0.3 and 1 or 2
+    point(s.pair[i][1], s.pair[i][2], (k < 0.3 and k < 0.08) or (k >= 0.3 and k < 0.38))
+end
+
+-- Three pins round the pack, a triangle the DOT TO DOT joins in pencil and
+-- cuts everything inside.
+local function pinShape(game, s, t)
+    local k = t % 1.8
+    local n = math.floor(t / 1.8)
+    if s.shapeN ~= n then
+        s.shapeN = n
+        local cx, cy, spread = pack(game)
+        s.shape = nil
+        if cx then
+            local r = util.clamp(spread + 12, 24, 48)
+            local a = n * 0.7
+            s.shape = {}
+            for i = 0, 2 do
+                local b = a + i * math.pi * 2 / 3
+                s.shape[#s.shape + 1] = { cx + math.cos(b) * r, cy + math.sin(b) * r }
+            end
+        end
+    end
+    if not s.shape then point(game.player.x + 26, game.player.y + 18, false) return end
+    local i = math.min(3, math.floor(k / 0.28) + 1)
+    point(s.shape[i][1], s.shape[i][2], k < 0.84 and k % 0.28 < 0.08)
+end
+
+-- A pin on the thickest knot of the pack, every so often: the CRATER's blast
+-- is a shove out of the middle, so it wants a middle.
+local function pinDense(game, s, t)
+    local k = t % 0.8
+    local n = math.floor(t / 0.8)
+    if s.denseN ~= n then
+        s.denseN = n
+        local cx, cy = pack(game)
+        local e = cx and densest(game, cx, cy, 25, 60)
+        s.dense = e and { e.x, e.y } or nil
+    end
+    if not s.dense then point(game.player.x + 26, game.player.y + 18, false) return end
+    point(s.dense[1], s.dense[2], k < 0.08)
+end
+
 -- One tool on the crowd: `lines` the strip ({ id, level or "max" }), `hold` the
 -- one in the hand. Already at work when the camera rolls.
 local function toolShot(spec)
@@ -2111,8 +2261,11 @@ local function fuseShot(spec)
                     s.tag, s.say = "FUSED!", up(spec.fusion).name
                 end
                 (spec.hunt or hunt)(game, s, t - s.back + 0.2, spec.near or 60)
-            elseif t > -1.6 then
-                (spec.huntBefore or hunt)(game, s, t + 1.6, spec.near or 60)
+            else
+                -- The hand rests until the draft: a finished pair of scissors
+                -- trims half the page away, and the fused tool should come back
+                -- to a whole page and a pack to use it on.
+                point(game.player.x + 26, game.player.y + 18, false)
             end
         end,
     }
@@ -2127,7 +2280,7 @@ local function fusionReel(spec)
         local both = function(la, lb) return { { a, la }, { b, lb } } end
         local shots = {}
         shots[#shots + 1] = toolShot({ subject = spec.pages[1], lines = both(1, 1), hold = a,
-            hook = { name(a), "+ " .. name(b) }, tag = "LEVEL 1", say = name(a),
+            hook = { name(a), "+ " .. name(b), "= ?" }, tag = "LEVEL 1", say = name(a),
             hunt = spec.hunts and spec.hunts[a] })
         shots[#shots + 1] = toolShot({ subject = spec.pages[2], lines = both(1, 1), hold = b,
             tag = "LEVEL 1", say = name(b), hunt = spec.hunts and spec.hunts[b] })
@@ -2140,9 +2293,9 @@ local function fusionReel(spec)
         shots[#shots + 1] = fuseShot({ subject = spec.pages[5], parents = spec.parents,
             catalyst = spec.catalyst, fusion = spec.fusion, decoys = spec.decoys,
             every = 0.08, most = 32,
-            hunt = spec.hunts and spec.hunts[spec.fusion],
-            huntBefore = spec.hunts and spec.hunts[a] })
-        shots[#shots + 1] = toolShot({ subject = spec.pages[6], warm = 4, rec = 3.4,
+            hunt = spec.hunts and spec.hunts[spec.fusion] })
+        shots[#shots + 1] = toolShot({ subject = spec.pages[6], warm = 4, rec = 4,
+            say = Upgrades.byId[spec.fusion].levels[1].text,
             lines = { { a, "max" }, { b, "max" }, { spec.catalyst, "max" }, { spec.fusion, 1 } },
             hold = spec.fusion, every = 0.08, most = 36, near = 70,
             hunt = spec.hunts and spec.hunts[spec.fusion] })
@@ -2776,6 +2929,39 @@ local REELS = {
         fusion = "snag", decoys = { "page", "topmarks", "magnet", "fixative" },
         pages = { "art", "pe", "music", "maths", "science", "language" },
         hunts = { snag = snagHunt } }),
+    punch = fusionReel({ parents = { "scissors", "compass" }, catalyst = "topmarks",
+        fusion = "punch", decoys = { "magnet", "plane", "inkwell", "bandaid" },
+        pages = { "science", "maths", "art", "music", "language", "finance" },
+        hunts = { punch = ringPack(1.7) } }),
+    guillotine = fusionReel({ parents = { "scissors", "ruler" }, catalyst = "topmarks",
+        fusion = "guillotine", decoys = { "laminate", "page", "cartridge", "metronome" },
+        pages = { "art", "finance", "pe", "science", "maths", "music" } }),
+    tearline = fusionReel({ parents = { "scissors", "pushpin" }, catalyst = "cartridge",
+        fusion = "tearline", decoys = { "blotter", "bandaid", "magnet", "plane" },
+        pages = { "language", "music", "finance", "pe", "art", "science" },
+        hunts = { tearline = pinPair } }),
+    parting = fusionReel({ parents = { "rubber", "ruler" }, catalyst = "magnet",
+        fusion = "parting", decoys = { "inkwell", "laminate", "tape", "page" },
+        pages = { "art", "finance", "music", "language", "pe", "maths" } }),
+    underline = fusionReel({ parents = { "highlighter", "ruler" }, catalyst = "fixative",
+        fusion = "underline", decoys = { "metronome", "tape", "blotter", "bandaid" },
+        pages = { "language", "finance", "science", "art", "maths", "pe" } }),
+    corral = fusionReel({ parents = { "pen", "compass" }, catalyst = "tape",
+        fusion = "corral", decoys = { "cartridge", "plane", "fixative", "magnet" },
+        pages = { "music", "maths", "pe", "finance", "science", "art" },
+        hunts = { corral = ringPack(2.2) } }),
+    spindle = fusionReel({ parents = { "pushpin", "compass" }, catalyst = "fixative",
+        fusion = "spindle", decoys = { "topmarks", "page", "inkwell", "laminate" },
+        pages = { "music", "maths", "language", "science", "finance", "pe" },
+        hunts = { spindle = ringPack(1.8) } }),
+    crater = fusionReel({ parents = { "rubber", "pushpin" }, catalyst = "magnet",
+        fusion = "crater", decoys = { "bandaid", "blotter", "plane", "tape" },
+        pages = { "art", "music", "science", "pe", "maths", "language" },
+        hunts = { crater = pinDense } }),
+    dots = fusionReel({ parents = { "pencil", "pushpin" }, catalyst = "cartridge",
+        fusion = "dots", decoys = { "laminate", "metronome", "fixative", "page" },
+        pages = { "science", "music", "pe", "finance", "art", "maths" },
+        hunts = { dots = pinShape } }),
     science = lessonReel("science", {
         function(key) return labShot(key, "science", "diamond") end,
         function(key) return circuitShot(key, true) end,

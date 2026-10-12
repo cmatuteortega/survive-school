@@ -878,10 +878,36 @@ Tools.list = {
         -- leaves: they come off the sides of the tip as it travels and they are
         -- gone before the stroke is. Nothing outlives the rub, hence a life of
         -- zero -- the mark is over the moment you let go.
-        radius = 7, damage = 2, knock = 165,
+        --
+        -- 12 rather than the 7 it was written with: at 7 the rub was a 15px
+        -- line you had to drag straight through a thing to touch, and a tool
+        -- whose whole job is moving the crowd moved almost none of it. The
+        -- price is per pixel of path, not per pixel of page, so the wider tip
+        -- costs nothing more to rub with.
+        radius = 12, damage = 2, knock = 165,
         spacing = 2, ink = 1 / 150, life = 0,
         rehit = 0.3,
         crumbs = { chance = 0.7, color = Palette.graphite },
+        -- A plough, not a broom. The shove used to go square off the line, which
+        -- threw a swipe's crowd out to both sides and left nothing in front of
+        -- the finger to show the rub was doing anything. Now it reaches `ahead`
+        -- pixels past the moving tip and throws mostly along the travel --
+        -- `forward` of it, the rest out to whichever side the body was already
+        -- on -- so the crowd bunches up in front of the swipe and spills off its
+        -- shoulders, which is what pushing a heap of anything actually looks like.
+        --
+        -- `every` is how often a body still in front of the tip is shoved again,
+        -- and it is not `rehit`: a swipe outruns a single 165 throw within a few
+        -- frames, so a plough that waited the 0.3s damage cadence would pass
+        -- through what it had just pushed. Shoves between hits are push only --
+        -- no damage and no launch -- so the chip and the finale's volley are
+        -- paced exactly as before. The shoves stack (Enemy:knockback adds), and
+        -- that is self-limiting: a body pushed clear of the reach stops being
+        -- pushed until the tip catches it up again.
+        --
+        -- A tip at rest has no travel to point along, so the lean level's
+        -- resting hit stays radial (Stroke:damageSegment).
+        plow = { ahead = 12, forward = 0.75, every = 0.08 },
     },
     {
         name = "HIGHLIGHTER",
@@ -913,7 +939,7 @@ Tools.list = {
     {
         name = "GLUESTICK",
         icon = "glue",
-        -- Deliberately the eraser's look at exactly twice its radius. It deals
+        -- The look the eraser used to have, at twice the radius it had then. It deals
         -- no damage at all: the whole point is that anything caught in the smear
         -- stops dead for as long as the smear is on the page, which is a long
         -- time. Freeze is re-applied on every tick, so a stuck enemy stays
@@ -928,9 +954,8 @@ Tools.list = {
         stamp = glueStamp,
         edge = { stamp = glueEdge, color = Palette.graphite, rough = 0.45 },
         speck = { chance = 0.08, color = Palette.sky },
-        -- The head the "wider smear" level swaps in. 20 keeps the tool's
-        -- written identity -- twice the rubber's radius -- true against a
-        -- rubber that has taken its own wider level to 10.
+        -- The head the "wider smear" level swaps in, half as wide again as the
+        -- 14 it starts on.
         broad = {
             radius = 20,
             stamp = glueWideStamp,
@@ -4475,18 +4500,22 @@ Tools.list = {
         -- you were fastening a moment before the staple arrived. Two levels out, one
         -- certainty in.
         --
-        -- The two circles are the same size, 7 and 7, and that is the parents'
-        -- arithmetic rather than a decision: a rub reaches exactly as far as a staple
-        -- holds, so the sweep that touches the wire covers what the wire caught.
+        -- The rub is the rubber's own 12 against the staple's 7, and the parents'
+        -- arithmetic rather than a decision: the sweep is the finished rubber, so it
+        -- reaches further than a staple holds and the wire comes out wherever the
+        -- tip passes near it (`Game:snagDrops` measures off the mark's reach).
         --
         -- What keeps the whole thing honest is that a staple is still small enough to
         -- miss with, still two seconds, and the collecting is a second gesture out of
         -- the same meter -- so the run has to *go back*, across a page the crowd is
         -- still walking over, before the wire comes out on its own for a fifth of the
         -- damage.
-        radius = 7, damage = 2, knock = 240,
+        radius = 12, damage = 2, knock = 240,
         spacing = 2, ink = 1 / 150, life = 0,
         rehit = 0.3,
+        -- The parent's plough, read-only like its crumbs: the rub that rips the wire
+        -- out pushes what it frees ahead of the swipe rather than off to the sides.
+        plow = { ahead = 12, forward = 0.75, every = 0.08 },
         -- The rubber's third level. It is worth more here than on the parent, and
         -- for the row's own reason rather than a number: the rub you actually make
         -- with this tool is back and forth over the staples you placed, which is
@@ -4751,9 +4780,13 @@ Tools.list = {
         -- thing to the other's leavings, which is the honest answer rather than a
         -- gap. A rubber cannot rub a hole shut and must not be able to: the offcut
         -- is the level the scissors spent three levels earning.
-        radius = 7, damage = 2, knock = 240,
+        --
+        -- The finished rubber's own tip and plough: a sweep that pushes the crowd
+        -- ahead of the finger is a sweep you can aim at the slit.
+        radius = 12, damage = 2, knock = 240,
         spacing = 2, ink = 1 / 150, life = 0,
         rehit = 0.3,
+        plow = { ahead = 12, forward = 0.75, every = 0.08 },
         -- The rubber's third level, worth what it is worth on the parent: the rub
         -- this tool actually makes is back and forth over the line you just cut,
         -- which is precisely the motion `scrub` discounts (Stroke:revisits).

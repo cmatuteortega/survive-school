@@ -34,6 +34,7 @@ function Stroke.new(tool, x, y)
         -- is four comparisons in the overwhelmingly common case of "no".
         minX = x, minY = y, maxX = x, maxY = y,
         hit = {},           -- enemy -> time last hit by this stroke
+        shoved = {},        -- enemy -> time last pushed by a plough (`plow`)
         seed = love.math.random() * 997,
         i = 0,              -- stamp counter, doubles as each stamp's noise seed
         carry = 0,          -- leftover distance, keeps spacing even across frames
@@ -443,23 +444,31 @@ end
 -- only ever above 1 for a lingering tool with `stack` (see lingerTick below) --
 -- and it multiplies the damage alone: two layers of ink do not shove or hold
 -- any harder than one.
-function Stroke:apply(game, enemy, index, ax, ay, bx, by, layers, lingering)
+--
+-- (dx, dy) is the way to shove, when the caller has already decided it -- the
+-- plough, which pushes along the travel rather than off the line (Stroke:plough).
+function Stroke:apply(game, enemy, index, ax, ay, bx, by, layers, lingering, dx, dy)
     local tool = self.tool
     self.hit[enemy] = game.time
 
     if tool.knock > 0 then
-        -- Push away from the line itself, so an eraser sweep shoves the horde
-        -- sideways instead of along the direction you happened to be drawing.
-        local vx, vy = bx - ax, by - ay
-        local len2 = vx * vx + vy * vy
-        local t = 0
-        if len2 > 0 then
-            t = ((enemy.x - ax) * vx + (enemy.y - ay) * vy) / len2
-            t = t < 0 and 0 or (t > 1 and 1 or t)
+        local px, py = dx, dy
+        if not px then
+            -- Push away from the line itself, so a sweep of a tool that is not
+            -- a plough shoves the horde sideways instead of along the direction
+            -- you happened to be drawing.
+            local vx, vy = bx - ax, by - ay
+            local len2 = vx * vx + vy * vy
+            local t = 0
+            if len2 > 0 then
+                t = ((enemy.x - ax) * vx + (enemy.y - ay) * vy) / len2
+                t = t < 0 and 0 or (t > 1 and 1 or t)
+            end
+            px, py = util.normalize(enemy.x - (ax + vx * t), enemy.y - (ay + vy * t))
+            if px == 0 and py == 0 then px, py = util.normalize(-vy, vx) end
         end
-        local px, py = util.normalize(enemy.x - (ax + vx * t), enemy.y - (ay + vy * t))
-        if px == 0 and py == 0 then px, py = util.normalize(-vy, vx) end
         enemy:knockback(px, py, tool.knock)
+        self.shoved[enemy] = game.time
 
         -- The rubber's last level: this shove is hard enough that what it
         -- sends flying is itself a weapon until it slows back down.
@@ -507,11 +516,59 @@ end
 
 function Stroke:damageSegment(game, ax, ay, bx, by)
     local radius = self:reach()
+
+    -- A plough only has a front while it is moving: a zero-length segment is a
+    -- tip at rest (the lean level, a pin's pool), and that shoves radially below.
+    if self.tool.plow then
+        local vx, vy = bx - ax, by - ay
+        local len = math.sqrt(vx * vx + vy * vy)
+        if len > 0 then
+            return self:plough(game, ax, ay, bx, by, vx / len, vy / len, radius)
+        end
+    end
+
     for i = #game.enemies, 1, -1 do
         local e = game.enemies[i]
         if self:canHit(e, game.time)
             and util.distToSegment(e.x, e.y, ax, ay, bx, by) < radius + e.radius then
             self:apply(game, e, i, ax, ay, bx, by)
+        end
+    end
+end
+
+-- The rubber's sweep (`plow` in src/tools.lua): the reach runs from where this
+-- stretch started to `ahead` pixels past where it ended, so what the tip is about
+-- to arrive at is shoved before it gets there, and the shove points mostly along
+-- (nx, ny) -- the travel -- with the rest out to whichever side of it the body
+-- stands on, so the heap in front of the swipe spills off both shoulders rather
+-- than balling up where the tip has to go through it.
+--
+-- Two clocks. A body due a hit (`rehit`) gets the whole of `apply` -- chip, shove
+-- and the finale's launch -- along this direction; one that is not, but has not
+-- been pushed for `every`, gets the shove alone. That second clock is what keeps
+-- the crowd in front of a fast swipe, and keeping it push-only is what keeps the
+-- damage and the ram volley on the rubber's own 0.3s.
+function Stroke:plough(game, ax, ay, bx, by, nx, ny, radius)
+    local plow = self.tool.plow
+    local fx, fy = bx + nx * plow.ahead, by + ny * plow.ahead
+    local f = plow.forward
+    local time = game.time
+    for i = #game.enemies, 1, -1 do
+        local e = game.enemies[i]
+        if util.distToSegment(e.x, e.y, ax, ay, fx, fy) < radius + e.radius then
+            -- Which side of the travel the body is on: the sign of its offset
+            -- along the left-hand normal (-ny, nx). Dead on the line counts as
+            -- the left, which only decides which shoulder one body spills off.
+            local s = ((e.x - ax) * -ny + (e.y - ay) * nx) < 0 and -1 or 1
+            local dx, dy = util.normalize(
+                nx * f - ny * s * (1 - f),
+                ny * f + nx * s * (1 - f))
+            if self:canHit(e, time) then
+                self:apply(game, e, i, ax, ay, bx, by, nil, nil, dx, dy)
+            elseif time - (self.shoved[e] or -math.huge) >= plow.every then
+                self.shoved[e] = time
+                e:knockback(dx, dy, self.tool.knock)
+            end
         end
     end
 end
