@@ -236,11 +236,16 @@ the tool's own name. The parents are shown one at a time at level one and then
 finished; one take then deals the catalyst's last level, circles it, deals
 the fusion off the run's own `roll` (pinned to that deal for the shot), circles that too,
 and comes back holding the fused tool (FUSED! and its name), with the camera
-cut in; then a few uncaptioned seconds of it and the card. The strip
+still kiting; then a few uncaptioned seconds of it and the card. Every
+shot is at the page's own size (no lens): the hero kites (`kite`), running a
+wide ring round a point on the page with the class called in from beyond it
+(`kiteCrowd`), so the pack chases him in a clump to one side and the tool works
+its edge, rather than him standing in the thick of it. The compass and the halo
+open each circle to a different size in turn (`vary`, `VARY`), so the reel
+shows its whole reach. The strip
 is built rather than drafted (`fusionStrip`, through `Loadout:restore`) and
 carries no hero's weapon, so whatever dies on camera died to the tool in the
-hand. The page is a lesson run with the class called in round the hero, played
-with the cursor. The SNAG plays with its own hand (`snagHunt`: three staples
+hand. The page is a lesson run, played with the cursor. The SNAG plays with its own hand (`snagHunt`: three staples
 tapped in, then the rub dragged back across them), and the TRENCH's finale is
 wide because its bar crosses the page.
 

@@ -503,6 +503,10 @@ local function gestureOf(game)
     return "brush"
 end
 
+-- The share of a compass's reach between its smallest and widest circle that
+-- each swing of a fusion reel opens to (`vary` on the shot), in turn.
+local VARY = { 0.15, 0.6, 1, 0.35, 0.8 }
+
 local function hunt(game, s, t, near, boss)
     local p = game.player
     local kind = gestureOf(game)
@@ -548,6 +552,13 @@ local function hunt(game, s, t, near, boss)
         local dx, dy, d = util.normalize(p.x - e.x, p.y - e.y)
         if d == 0 then dx, dy = 0, 1 end
         local r = util.clamp(e.radius + 22, 18, 50)
+        if s.vary then
+            -- A fusion reel shows the compass's range rather than its habit:
+            -- every circle a different size, small to the tool's full reach.
+            local sw = game.loadout:tool(game.tool).sweep
+            local f = VARY[n % #VARY + 1]
+            r = sw.minR + (sw.maxR - sw.minR) * f
+        end
         local cx, cy = e.x + dx * r, e.y + dy * r
         if burst > g.down then
             point(cx, cy, false)
@@ -1890,7 +1901,9 @@ end
 -- `Loadout:restore`): only the lines the shot is about, at the levels it names,
 -- and no hero's weapon -- anything that dies on camera died to the tool in the
 -- hand. The page is a lesson's run with the class called in round the hero
--- (`lessonRun`, `crowd`), played with the mouse, as the teasers are.
+-- (`lessonRun`), played with the mouse, as the teasers are, and filmed at the
+-- page's own size: the hero kites the class round the page (`kite`) rather
+-- than standing in it, and a close shot would lose the pack he is leading.
 local function fusionStrip(game, lines)
     local set = {}
     for _, line in ipairs(lines) do
@@ -1909,19 +1922,48 @@ local function hold(game, id)
     end
 end
 
--- On the hero, pulled a little toward the hand, which is where the tool is
--- working.
-local function handAim(game)
-    local left, top = Camera.steady()
-    local x, y = game.player.x - left, game.player.y - top
-    if hoverX then x, y = x * 0.65 + hoverX * 0.35, y * 0.65 + hoverY * 0.35 end
-    return x, y
+-- Kiting: the hero runs a wide ring round a point on the page, and the class,
+-- called in from beyond that point (`kiteCrowd`), clumps in the middle of it
+-- chasing him -- so the pack is always to one side of him and the tool is
+-- worked on its edge, never on a hero stood in the thick of it. Anyone who
+-- gets close is stepped away from, which bends the ring out round them.
+local KITE_R = 62       -- the ring's radius
+local KITE_PACE = 0.62  -- of his speed: a little under, so the pack keeps up
+local KITE_SHY = 24     -- how close a body gets before he steps out of its way
+
+local function kite(game, t, s)
+    local p = game.player
+    if not s.cx then s.cx, s.cy = p.x + KITE_R, p.y end
+    local dx, dy, d = util.normalize(p.x - s.cx, p.y - s.cy)
+    if d == 0 then dx, dy = -1, 0 end
+    local mx = -dy + dx * util.clamp((KITE_R - d) / 20, -1, 1)
+    local my = dx + dy * util.clamp((KITE_R - d) / 20, -1, 1)
+    for _, e in ipairs(game.enemies) do
+        local ex, ey, ed = util.normalize(p.x - e.x, p.y - e.y)
+        if ed > 0 and ed < KITE_SHY + e.radius then
+            local w = (KITE_SHY + e.radius - ed) / KITE_SHY * 1.6
+            mx, my = mx + ex * w, my + ey * w
+        end
+    end
+    local nx, ny, len = util.normalize(mx, my)
+    if len == 0 then return 0, 0 end
+    return nx * KITE_PACE, ny * KITE_PACE
 end
 
--- The playShot's slow curve, under half speed so the crowd keeps up.
-local function stroll(game, t)
-    local a = (t + 3) * 0.5
-    return math.cos(a) * 0.45, math.sin(a) * 0.4
+-- The class, a kind at a time, dropped beyond the ring's middle on the far
+-- side from the hero, off what the shot shows, so it walks in and joins the
+-- pack rather than arriving across his path.
+local function kiteCrowd(game, s, every, most)
+    s.fedT = (s.fedT or 0) - DT
+    if s.fedT > 0 or #game.enemies >= most or not s.cx then return end
+    s.fedT = every
+    s.next = (s.next or love.math.random(#CLASS)) % #CLASS + 1
+    local p = game.player
+    local dx, dy, d = util.normalize(s.cx - p.x, s.cy - p.y)
+    if d == 0 then dx, dy = 1, 0 end
+    local back = 150 + love.math.random() * 40
+    local off = (love.math.random() * 2 - 1) * 70
+    game:spawnEnemy(CLASS[s.next], s.cx + dx * back - dy * off, s.cy + dy * back + dx * off)
 end
 
 -- The SNAG's two gestures in the one hand: three taps a quarter of a second
@@ -1984,22 +2026,20 @@ end
 -- One tool on the crowd: `lines` the strip ({ id, level or "max" }), `hold` the
 -- one in the hand. Already at work when the camera rolls.
 local function toolShot(spec)
-    local z = spec.zoom or ZOOM
     return {
-        kind = "run", warm = spec.warm or 3, rec = spec.rec or 2.8, zoom = z,
+        kind = "run", warm = spec.warm or 4, rec = spec.rec or 2.8, vary = true,
         hook = spec.hook, tag = spec.tag, say = spec.say,
-        aim = handAim,
         setup = function(game)
             lessonRun(game, spec.subject)
             fusionStrip(game, spec.lines)
             hold(game, spec.hold)
         end,
-        move = stroll,
+        move = kite,
         direct = function(game, t, s)
             game.ink = game.loadout.stats.inkMax
-            crowd(game, s, spec.every or 0.1, spec.most or 30, false, z > 1 and z or nil)
+            kiteCrowd(game, s, spec.every or 0.12, spec.most or 24)
             if t > 2.4 then s.hook = nil end
-            if t > -1.6 then (spec.hunt or hunt)(game, s, t + 1.6, spec.near or 45) end
+            if t > -1.6 then (spec.hunt or hunt)(game, s, t + 1.6, spec.near or 60) end
         end,
     }
 end
@@ -2008,13 +2048,11 @@ end
 -- catalyst one level short, the draft lands with the catalyst's last level on
 -- it, that card is circled, the next draft has the fusion on it -- dealt off the
 -- run's own `roll`, held to that deal for the shot -- and that is circled too,
--- and the run comes back holding the fused tool, where the camera punches in.
--- Filmed wide until then: the cards are the width of the page.
+-- and the run comes back holding the fused tool, still kiting.
 local function fuseShot(spec)
     local up = function(id) return Upgrades.byId[id] end
     return {
-        kind = "run", warm = 2, rec = 12,
-        aim = handAim,
+        kind = "run", warm = 4, rec = 14, vary = true,
         setup = function(game)
             lessonRun(game, spec.subject)
             local cat = up(spec.catalyst)
@@ -2025,10 +2063,10 @@ local function fuseShot(spec)
                 return { up(spec.decoys[3]), up(spec.fusion), up(spec.decoys[4]) }
             end
         end,
-        move = function(game, t, s) if s.back or t < 0.5 then return stroll(game, t) end return 0, 0 end,
+        move = kite,
         direct = function(game, t, s)
             game.ink = game.loadout.stats.inkMax
-            crowd(game, s, spec.every or 0.1, spec.most or 30, false, spec.zoom)
+            kiteCrowd(game, s, spec.every or 0.1, spec.most or 30)
             if t > 0.5 and not s.dealt then
                 s.dealt = true
                 Input.pointerDown = false
@@ -2053,14 +2091,10 @@ local function fuseShot(spec)
                 if t - s.back > 0.5 then
                     s.tag, s.say = "FUSED!", up(spec.fusion).name
                 end
-                (spec.hunt or hunt)(game, s, t - s.back + 0.2, spec.near or 45)
+                (spec.hunt or hunt)(game, s, t - s.back + 0.2, spec.near or 60)
             elseif t > -1.6 then
-                (spec.huntBefore or hunt)(game, s, t + 1.6, spec.near or 45)
+                (spec.huntBefore or hunt)(game, s, t + 1.6, spec.near or 60)
             end
-        end,
-        zoom = function(game, t, s)
-            if s.back then return t - s.back > 0.5 and spec.zoom or 1 end
-            return 1
         end,
     }
 end
@@ -2073,26 +2107,25 @@ local function fusionReel(spec)
         local name = function(id) return Upgrades.byId[id].name end
         local both = function(la, lb) return { { a, la }, { b, lb } } end
         local shots = {}
-        local zoomOf = spec.zooms or {}
         shots[#shots + 1] = toolShot({ subject = spec.pages[1], lines = both(1, 1), hold = a,
             hook = { name(a), "+ " .. name(b) }, tag = "LEVEL 1", say = name(a),
-            zoom = zoomOf[a], hunt = spec.hunts and spec.hunts[a] })
+            hunt = spec.hunts and spec.hunts[a] })
         shots[#shots + 1] = toolShot({ subject = spec.pages[2], lines = both(1, 1), hold = b,
-            tag = "LEVEL 1", say = name(b), zoom = zoomOf[b], hunt = spec.hunts and spec.hunts[b] })
+            tag = "LEVEL 1", say = name(b), hunt = spec.hunts and spec.hunts[b] })
         shots[#shots + 1] = toolShot({ subject = spec.pages[3], lines = both("max", "max"), hold = a,
-            tag = "MAX LEVEL", say = name(a), every = 0.06, most = 40,
-            zoom = zoomOf[a], hunt = spec.hunts and spec.hunts[a] })
+            tag = "MAX LEVEL", say = name(a), every = 0.08, most = 32,
+            hunt = spec.hunts and spec.hunts[a] })
         shots[#shots + 1] = toolShot({ subject = spec.pages[4], lines = both("max", "max"), hold = b,
-            tag = "MAX LEVEL", say = name(b), every = 0.06, most = 40,
-            zoom = zoomOf[b], hunt = spec.hunts and spec.hunts[b] })
+            tag = "MAX LEVEL", say = name(b), every = 0.08, most = 32,
+            hunt = spec.hunts and spec.hunts[b] })
         shots[#shots + 1] = fuseShot({ subject = spec.pages[5], parents = spec.parents,
             catalyst = spec.catalyst, fusion = spec.fusion, decoys = spec.decoys,
-            zoom = zoomOf[spec.fusion] or ZOOM, every = 0.06, most = 40,
+            every = 0.08, most = 32,
             hunt = spec.hunts and spec.hunts[spec.fusion],
             huntBefore = spec.hunts and spec.hunts[a] })
         shots[#shots + 1] = toolShot({ subject = spec.pages[6], warm = 4, rec = 3.4,
             lines = { { a, "max" }, { b, "max" }, { spec.catalyst, "max" }, { spec.fusion, 1 } },
-            hold = spec.fusion, every = 0.05, most = 50, zoom = spec.wide or 1, near = 70,
+            hold = spec.fusion, every = 0.08, most = 36, near = 70,
             hunt = spec.hunts and spec.hunts[spec.fusion] })
         shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
         return shots
@@ -2109,12 +2142,11 @@ local REELS = {
         pages = { "maths", "language", "art", "science", "music", "finance" } }),
     trench = fusionReel({ parents = { "ruler", "gluestick" }, catalyst = "tape",
         fusion = "trench", decoys = { "blotter", "plane", "bandaid", "metronome" },
-        pages = { "finance", "science", "maths", "art", "language", "pe" },
-        zooms = { trench = 1 } }),
+        pages = { "finance", "science", "maths", "art", "language", "pe" } }),
     snag = fusionReel({ parents = { "rubber", "stapler" }, catalyst = "inkwell",
         fusion = "snag", decoys = { "page", "topmarks", "magnet", "fixative" },
         pages = { "art", "pe", "music", "maths", "science", "language" },
-        hunts = { snag = snagHunt }, wide = ZOOM }),
+        hunts = { snag = snagHunt } }),
     science = lessonReel("science", {
         function(key) return labShot(key, "science", "diamond") end,
         function(key) return circuitShot(key, true) end,
