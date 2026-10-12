@@ -42,15 +42,18 @@ local Design = require("src.design")
 local Dev = require("src.dev")
 local Enemy = require("src.enemy")
 local Font = require("src.font")
+local Hud = require("src.hud")
 local I18n = require("src.i18n")
 local Input = require("src.input")
 local Library = require("src.library")
 local Palette = require("src.palette")
+local Pickup = require("src.pickup")
 local Scribble = require("src.scribble")
 local Sfx = require("src.sfx")
 local Sprites = require("src.sprites")
 local Studio = require("src.studio")
 local Subjects = require("src.subjects")
+local Tools = require("src.tools")
 local Upgrades = require("src.upgrades")
 local util = require("src.util")
 local Worksheet = require("src.worksheet")
@@ -84,7 +87,10 @@ local REEL_MUTED = { sun = { hurt = true }, cools = { hurt = true },
                      art = { hurt = true }, finance = { hurt = true },
                      grammar = { hurt = true }, pe = { hurt = true },
                      halo = { hurt = true }, trench = { hurt = true },
-                     snag = { hurt = true } }
+                     snag = { hurt = true }, heart = { hurt = true },
+                     ink = { hurt = true }, diamond = { hurt = true },
+                     clock = { hurt = true }, alarm = { hurt = true },
+                     star = { hurt = true }, coin = { hurt = true } }
 
 --- the reels -----------------------------------------------------------------
 
@@ -409,7 +415,9 @@ local wrapUp
 
 local REEL_CURSOR = { science = true, music = true, maths = true,
                       art = true, finance = true, grammar = true, pe = true,
-                      halo = true, trench = true, snag = true }
+                      halo = true, trench = true, snag = true,
+                      heart = true, ink = true, diamond = true, clock = true,
+                      alarm = true, star = true, coin = true }
 
 -- The bot's hand: where the pointer is (page pixels, turned into the canvas's
 -- here) and whether it is down. The cursor eases after it while it is lifted.
@@ -661,7 +669,9 @@ function wrapUp(game, s, t)
         return
     end
     s.wrapped = true
-    s.rec = math.min(s.rec, t + 0.7)
+    -- Unless the shot has something still to show after the take (`hold`, a
+    -- pickup reel's effect).
+    s.rec = math.max(math.min(s.rec, t + 0.7), s.hold or 0)
 end
 
 local function prizeMove(game, s, t)
@@ -714,7 +724,9 @@ end
 -- With `fail`, the board got wrong: the hero stands on a wrong answer, and the
 -- camera cuts in on WRONG ANSWER and whatever the board charges for it (a giant
 -- on the pop quiz and the LAB, a sting on the sequence and the STAVE).
-local function labShot(subject, kind, prize, fail)
+-- `course` deals it at another rung than a master's: a heart or a diamond is
+-- only what the board pays below one (Worksheet.prize).
+local function labShot(subject, kind, prize, fail, course)
     local sheet
     sheet = {
         kind = "run", warm = 1.5, rec = fail and 4.2 or 6.2,
@@ -723,7 +735,7 @@ local function labShot(subject, kind, prize, fail)
         end or prizeZoom,
         setup = function(game)
             lessonRun(game, subject)
-            game.course = Course.get(SHEET_COURSE)
+            game.course = Course.get(course or SHEET_COURSE)
             local p = game.player
             local q = Worksheet._kinds[kind](p.x, p.y - 52, game)
             game.worksheets[#game.worksheets + 1] = q
@@ -2132,6 +2144,563 @@ local function fusionReel(spec)
     end
 end
 
+-- One pickup's highlight: what it is, found and taken, and what it does, told
+-- in two takes -- one lying on the page and walked to, and one won off a
+-- worksheet -- since those are the two ways the page hands it over. Each take
+-- is the same shape: the hero walks in, the page slows as he reaches it and the
+-- lens punches in on it turning (`GRAB_SLOW`, `GRAB_LOOK`), and the moment it is
+-- taken the reel cuts to whatever it changed -- the bar it filled, the crowd it
+-- stopped, the numbers it raised -- in a row of `beats`, each a zoom, a place to
+-- look and a line, cut between rather than panned.
+--
+-- The page is a lesson's run with nothing on it but what the take puts there
+-- (`lessonRun`), and no pickup but the one being filmed: the fixed layer is
+-- marked taken and the scatter clock never comes round (`bare`), so the turning
+-- thing on camera is the one the reel is about.
+--
+-- Built inside a function of its own: the file's main chunk is at the 200
+-- locals Lua allows one function, and these are only read through
+-- `PICKUP_REELS`.
+local PICKUP_REELS = (function()
+local GRAB_NEAR = 22    -- how far off it, past his own radius, the page slows
+local GRAB_SLOW = 0.3   -- and to what share of its speed
+local GRAB_LOOK = 3     -- the lens on the pickup while it does
+local HUD_LOOK = 3      -- and on a readout, after
+
+-- A first beat marked `preview` is cut to a moment before the touch rather than
+-- on it, so the readout is seen while it still says the old figure and the
+-- jump happens on camera: this many pixels short of it, on the page's slowed
+-- walk and on a sheet's full-speed one.
+local PREVIEW_PAGE, PREVIEW_SHEET = 4, 12
+
+local function bare(game)
+    game.pickupTaken = setmetatable({}, { __index = function() return true end })
+    game.pickupTimer = math.huge
+end
+
+-- Where a readout is on the canvas, read off src/hud.lua's layout: the health
+-- bar and its figure top left, the ink bar and its figure top right with the
+-- run's coins under it, the level along the foot. Measured as Hud.draw measures
+-- the bars (its `barWidth`), so a close shot of one sits on it.
+local function hudAt(game, which)
+    local ins, vw, vh = game.inset, game.vw, game.vh
+    local top = ins.t + 4
+    local left = ins.l + 4 + Hud.CORNER_SIZE + 6
+    local right = vw - ins.r - 4
+    local centre = ins.l + (vw - ins.l - ins.r) / 2
+    local clockW = Font.width("00:00")
+    local clockL = math.floor(centre - clockW / 2)
+    local figure = Font.width("000")
+    local keep = 8 + figure
+    local barW = util.clamp(math.min(clockL - left - keep, right - (clockL + clockW) - keep), 24, 60)
+    if which == "hp" then return left + (barW + 4 + figure) / 2, top + 6 end
+    if which == "ink" or which == "purse" then return right - (barW + 4 + figure) / 2, top + 10 end
+    return centre, vh - ins.b - 4
+end
+
+-- A beat's `aim`: a readout by name, the hero, the pickup, or a function of
+-- the game answering canvas pixels.
+local function aimAt(game, s, at)
+    if type(at) == "function" then return at(game, s) end
+    if at == "hero" or at == "item" then
+        local left, top = Camera.steady()
+        local k = at == "item" and s.item or game.player
+        return k.x - left, k.y - top
+    end
+    return hudAt(game, at)
+end
+
+-- The beat `t` seconds after the take, and how far into it.
+local function beatAt(beats, t)
+    for i, b in ipairs(beats) do
+        if t < b.len then return b, t, i end
+        t = t - b.len
+    end
+end
+
+local function beatsLong(beats)
+    local n = 0
+    for _, b in ipairs(beats) do n = n + b.len end
+    return n
+end
+
+-- One frame of the beats: which is on, a cut on the frame it changes, its line,
+-- and its hand. `s.takenT` is when the pickup was taken.
+local function beatStep(game, s, t, beats)
+    if not s.takenT then return end
+    local b, bt, i = beatAt(beats, t - s.takenT)
+    if i ~= s.beatN then
+        s.beatN, s.cut = i, true
+    end
+    s.beat = b
+    if not b then return end
+    s.say, s.tag = b.say, b.tag
+    if b.hand then b.hand(game, s, bt) end
+    if b.direct then b.direct(game, s, bt) end
+end
+
+-- Whether the first beat is being shown early (`preview`), and if so it. Marked
+-- as already on, so the take itself is not a second cut to the same place.
+local function previewing(game, s, item, beats, near)
+    local b = beats[1]
+    if s.takenT or not (b and b.preview) or not item or item.dead then return end
+    local p = game.player
+    if util.len(p.x - item.x, p.y - item.y) >= p.radius + 4 + near then return end
+    if not s.previewed then s.previewed, s.cut, s.beatN = true, true, 1 end
+    return b
+end
+
+-- Hands for a beat. The lesson's tool on the nearest, as a player fights; and
+-- the pen never lifted, swept back and forth across the crowd round the hero in
+-- one long zigzag -- what free ink is for.
+local function fighting(game, s, t) hunt(game, s, t + 0.6, 50) end
+
+-- And the hero walked slowly round, so the crowd strings out behind him
+-- rather than piling on, and the line has bodies to go through.
+local function stroll(game, t)
+    return math.cos(t * 0.9) * 0.45, math.sin(t * 0.9) * 0.45
+end
+
+-- Lifted for a frame now and then all the same: whether a press may draw is
+-- asked as it lands (Game:updateDrawing), so a pen still held from before the
+-- drop, pressed on an empty well, would draw nothing however long it stayed down.
+local FRENZY_LIFT = 1.6
+
+local function frenzy(game, s, t)
+    local p = game.player
+    local x = p.x + math.sin(t * 2.3) * 34 + math.sin(t * 19) * 6
+    local y = p.y + math.sin(t * 1.4 + 0.6) * 44 + math.cos(t * 23) * 5
+    point(x, y, t % FRENZY_LIFT > 1.5 * DT)
+end
+
+-- What is lying nearest the hero: a pickup of a kind, or a gem.
+local function nearestOf(game, kind)
+    local p, best, bd = game.player
+    local list = kind == "gem" and game.gems or game.pickups
+    for _, k in ipairs(list) do
+        if not k.dead and (kind == "gem" or k.kind == kind) then
+            local d = util.len(k.x - p.x, k.y - p.y)
+            if not bd or d < bd then best, bd = k, d end
+        end
+    end
+    return best
+end
+
+-- A beat's `move`: walk over to whatever of a kind is lying nearest.
+local function gather(kind)
+    return function(game)
+        local k = nearestOf(game, kind)
+        if k then return walkTo(game, k.x, k.y) end
+        return 0, 0
+    end
+end
+
+-- A level that lands without stopping the run for the draft: the bar wraps and
+-- the number goes up, as it would, and nothing is offered. The alarm's gems are
+-- the subject, not the cards.
+local function quietLevels(game)
+    local p = game.player
+    p.addXp, p.levelUp = nil, nil
+    local real = p.levelUp
+    p.levelUp = function(self)
+        real(self)
+        self.pending = self.pending - 1
+    end
+end
+
+-- And one that does stop it: the diamond's level is the draft, so the draft
+-- opens -- the diamond's level and no other, the gems still banking nothing --
+-- dealt cards with no board behind them (a board would take the take
+-- off the page), and the director circles the middle one.
+local DIAMOND_DEAL = { "magnet", "bandaid", "inkwell" }
+
+local function realLevels(game)
+    -- The level only: a gem banked on the way over would open the draft first.
+    game.player.levelUp = nil
+    game.loadout.roll = function()
+        local deal = {}
+        for i, id in ipairs(DIAMOND_DEAL) do deal[i] = Upgrades.byId[id] end
+        return deal
+    end
+end
+
+local function pickCard(game, s, t)
+    if game.state == "levelup" and t > 1.3 and not s.carded then
+        s.carded = true
+        game.draft:keypressed("2")
+    end
+end
+
+-- The take on the page: `kind` lying `at` off the hero, walked to at `pace`,
+-- and `beats` after it. An `intro` is a beat before the walk (the bar it is
+-- about to fill, close), and the hook is over it; with none, the hook is over
+-- the first of the walk (`HOOK_FOR`). `say` is said on the rest of the walk;
+-- `feed` is the crowd ({ every, most, zoom }, or false) and `hold` keeps it
+-- coming after the take.
+local HOOK_FOR = 2.2
+
+local function grabShot(spec)
+    local sh
+    local intro = spec.intro and spec.intro.len or 0
+    local hookFor = spec.intro and intro or HOOK_FOR
+    sh = {
+        kind = "run", warm = spec.warm or 2, rec = 30, keepHp = spec.keepHp,
+        hook = spec.hook, hookY = spec.hookY,
+        speed = function(game, t, s)
+            return s.slow and not s.takenT and GRAB_SLOW or 1
+        end,
+        setup = function(game)
+            lessonRun(game, spec.subject)
+            bare(game)
+            if spec.setup then spec.setup(game, sh) end
+            local p = game.player
+            sh.item = Pickup.new(spec.kind, p.x + spec.at[1], p.y + spec.at[2])
+            game.pickups[#game.pickups + 1] = sh.item
+        end,
+        move = function(game, t, s)
+            if not s.takenT then
+                if t < intro + (spec.wait or 0.3) then return 0, 0 end
+                local mx, my = walkTo(game, s.item.x, s.item.y)
+                local pace = spec.pace or 0.75
+                return mx * pace, my * pace
+            end
+            local b = s.beat
+            if b and b.move then return b.move(game, t, s) end
+            return 0, 0
+        end,
+        direct = function(game, t, s)
+            local p = game.player
+            if not s.takenT then
+                if s.item.dead then
+                    s.takenT = t
+                    s.rec = t + beatsLong(spec.beats)
+                    s.say, s.hook = nil, nil
+                else
+                    s.slow = util.len(p.x - s.item.x, p.y - s.item.y) < GRAB_NEAR + p.radius
+                    if t > hookFor or s.slow then s.hook = nil end
+                    if t > intro then
+                        s.say = not s.hook and not s.slow and spec.say or nil
+                    end
+                end
+            end
+            local feed = spec.feed
+            if feed ~= false and (not s.takenT or spec.hold) then
+                feed = feed or {}
+                crowd(game, s, feed[1] or 0.14, feed[2] or 20, false, feed[3] or spec.zoom)
+            end
+            if spec.each then spec.each(game, s, t) end
+            if s.takenT then
+                beatStep(game, s, t, spec.beats)
+                if not (s.beat and s.beat.hand) then fighting(game, s, t) end
+            elseif t > -0.6 and not s.slow then
+                fighting(game, s, t)
+            elseif s.slow then
+                -- The hand lifted out of the frame for the grab.
+                point(p.x + 40, p.y + 60, false)
+            end
+        end,
+        zoom = function(game, t, s)
+            if not s.takenT then
+                if spec.intro and t < intro then return spec.intro.zoom end
+                local pv = previewing(game, s, s.item, spec.beats, PREVIEW_PAGE)
+                if pv then return pv.zoom end
+                if s.slow then return GRAB_LOOK end
+                return spec.zoom or 1
+            end
+            return s.beat and s.beat.zoom or 1
+        end,
+        aim = function(game)
+            local s = sh
+            if not s.takenT then
+                if s.introOn then return aimAt(game, s, spec.intro.aim) end
+                local pv = previewing(game, s, s.item, spec.beats, PREVIEW_PAGE)
+                if pv then return aimAt(game, s, pv.aim) end
+                if s.slow then return aimAt(game, s, "item") end
+                return aimAt(game, s, "hero")
+            end
+            if s.beat and s.beat.aim then return aimAt(game, s, s.beat.aim) end
+        end,
+    }
+    if spec.intro then
+        local direct = sh.direct
+        sh.direct = function(game, t, s)
+            s.introOn = t < intro
+            if s.introOn then s.say = spec.intro.say end
+            direct(game, t, s)
+        end
+    end
+    return sh
+end
+
+-- The take off a worksheet: one of the lesson reels' sheet shots, played as it
+-- is, with the line that says this is the other way to get one over its start,
+-- and the same beats from the moment the first of its prize is taken. A prize
+-- paid in several (the till's coins) goes on being walked over under them.
+local SHEET_SAY = 2.4
+
+local function sheetFx(build, fx)
+    return function(key)
+        local sh = build(key)
+        local setup, direct, zoom, aim, move = sh.setup, sh.direct, sh.zoom, sh.aim, sh.move
+        sh.keepHp = fx.keepHp
+        sh.setup = function(game)
+            setup(game)
+            bare(game)
+            if fx.setup then fx.setup(game, sh) end
+        end
+        sh.direct = function(game, t, s)
+            direct(game, t, s)
+            if fx.feed and not s.takenT then
+                s.more = s.more or {}
+                crowd(game, s.more, fx.feed[1], fx.feed[2], fx.feed[4], fx.feed[3])
+            end
+            s.say = t < SHEET_SAY and (fx.say or "OR WIN ONE ON A SHEET") or nil
+            if not s.takenT and s.prize and s.prize.dead then
+                s.takenT = t
+                s.hold = t + beatsLong(fx.beats)
+                s.rec = math.max(s.rec, s.hold)
+            end
+            beatStep(game, s, t, fx.beats)
+        end
+        sh.zoom = function(game, t, s)
+            if s.takenT and s.beat then return s.beat.zoom or 1 end
+            local pv = previewing(game, s, s.prize, fx.beats, PREVIEW_SHEET)
+            if pv then return pv.zoom end
+            if type(zoom) == "function" then return zoom(game, t, s) end
+            return zoom or 1
+        end
+        sh.aim = function(game)
+            local b = sh.takenT and sh.beat
+            if b then
+                if b.aim then return aimAt(game, sh, b.aim) end
+                return aimAt(game, sh, "hero")
+            end
+            local pv = previewing(game, sh, sh.prize, fx.beats, PREVIEW_SHEET)
+            if pv then return aimAt(game, sh, pv.aim) end
+            if aim then return aim(game) end
+        end
+        sh.move = function(game, t, s)
+            local b = s.takenT and s.beat
+            if b and b.move then return b.move(game, t, s) end
+            return move(game, t, s)
+        end
+        return sh
+    end
+end
+
+-- The piggy bank broken open on camera: FINANCE's encore, knocked down past its
+-- shatter as it lands so the first thing it does is crack, say BANKRUPT! and
+-- throw its savings across the box in rings -- and the hero, once they are
+-- down, walks over them, the camera cut in on the run's coins counting up.
+local function piggyShot(hook)
+    local sh
+    local beats = {
+        { len = 1.2, zoom = 1, move = gather("coin") },
+        { len = 2.6, zoom = HUD_LOOK, aim = "purse", say = "+1 COIN EACH",
+          move = gather("coin") },
+    }
+    sh = {
+        kind = "boss", subject = "finance", encore = true, warm = 2.5, rec = 30,
+        -- Close on it cracking, wide for the rings going out across the box.
+        zoom = function(game, t, s)
+            if s.takenT then return s.beat and s.beat.zoom or 1 end
+            return s.burst and 1 or ZOOM
+        end,
+        hud = true, hook = hook,
+        aim = function(game)
+            local b = sh.takenT and sh.beat
+            if b and b.aim then return aimAt(game, sh, b.aim) end
+        end,
+        move = function(game, t, s)
+            if s.gather then return gather("coin")(game) end
+        end,
+        direct = function(game, t, s)
+            local e = game.boss
+            -- Knocked past its shatter and set cracking straight away, out of
+            -- whatever it was doing (PiggyBoss:update waits for it to be free).
+            if e and not e.arrive and not s.hurt and t > 0.2 then
+                s.hurt = true
+                e.hp = math.floor(e.maxHp * e.brain.def.shatter.at)
+                e.brain:calm(e)
+                e.brain.state, e.brain.t = "crack", e.brain.def.shatter.time
+            end
+            if t > 2.6 or s.takenT then s.hook = nil end
+            local b = e and e.brain
+            if b and b.state == "burst" then s.burst = true end
+            -- Down to the floor once the rings have stopped coming.
+            if s.burst and b and b.state ~= "burst" then s.gather = true end
+            -- Counted from the savings, not from any bait it spat before.
+            s.banked = s.banked or game.banked or 0
+            if not s.gather then s.banked = game.banked or 0 end
+            if not s.takenT and s.gather and (game.banked or 0) > s.banked then
+                s.takenT = t
+                s.rec = t + beatsLong(beats)
+            end
+            beatStep(game, s, t, beats)
+        end,
+    }
+    return sh
+end
+
+-- The gold stars counted up: the same page, the same tool and the same crowd,
+-- jumped ahead to a run that has walked to `n` of them, filmed close on the
+-- numbers coming off the crowd. Tough kinds only, so a body takes a few hits
+-- and the figure is seen more than once.
+local STAR_CROWD = { "grin", "skull", "grin", "eye", "grin", "blot" }
+local STAR_TOOL = { { "ruler", "max" } }
+
+local function starStrip(game, n)
+    fusionStrip(game, STAR_TOOL)
+    hold(game, "ruler")
+    game.loadout.stars = n
+    game.loadout:rebuild(game.vw, game.vh)
+end
+
+local function toughCrowd(game, s, every, most)
+    s.fedT = (s.fedT or 0) - DT
+    if s.fedT > 0 or #game.enemies >= most then return end
+    s.fedT = every
+    local a = love.math.random() * math.pi * 2
+    local r = 70 + love.math.random() * 20
+    s.next = (s.next or 0) % #STAR_CROWD + 1
+    game:spawnEnemy(STAR_CROWD[s.next], game.player.x + math.cos(a) * r,
+        game.player.y + math.sin(a) * r)
+end
+
+local function starsLater(n, subject)
+    return {
+        kind = "run", warm = 3, rec = 2.2, zoom = ZOOM,
+        tag = n .. " STARS", say = string.format("+%d%% DAMAGE", math.floor(n * Pickup.STAR * 100 + 0.5)),
+        setup = function(game)
+            lessonRun(game, subject)
+            bare(game)
+            starStrip(game, n)
+        end,
+        direct = function(game, t, s)
+            game.ink = game.loadout.stats.inkMax
+            toughCrowd(game, s, 0.07, 26)
+            if t > -2 then hunt(game, s, t + 2, 50) end
+        end,
+    }
+end
+
+-- Every pickup reel is the page's take, the sheet's take and the card; the
+-- star's goes on to the run that has kept on picking them up.
+local function pickupReel(page, sheet, after)
+    return function()
+        local shots = { page() }
+        if sheet then shots[#shots + 1] = sheet() end
+        for _, shot in ipairs(after or {}) do shots[#shots + 1] = shot() end
+        shots[#shots + 1] = { kind = "card", rec = 2.2, lines = { "SURVIVE", "SCHOOL" } }
+        return shots
+    end
+end
+
+local function lowHp(game) game.player.hp = 30 end
+-- Under what it takes to start a stroke (Tools.MIN_INK), so the hand's
+-- gestures draw nothing until the drop: out of ink, as a well left alone to
+-- run dry is.
+local function lowInk(game) game.ink = math.min(game.ink, Tools.MIN_INK * 0.6) end
+
+-- After a clock: the class stood where it was, close on the hero and the hand
+-- taking them apart while they cannot move.
+local FROZEN = {
+    { len = 1.0, zoom = ZOOM, aim = "hero", say = "THE CLASS FREEZES",
+      hand = function(game, s) point(game.player.x + 30, game.player.y + 50, false) end },
+    { len = 1.9, zoom = ZOOM, aim = "hero", say = "THE CLASS FREEZES" },
+    { len = 0.8, zoom = 1 },
+}
+
+-- After an alarm: the bang, wide; the hero over the gems it left; the level bar
+-- close as they come in.
+local CLEARED = {
+    { len = 1.3, zoom = 1, say = "IT CLEARS THE PAGE", hand = function() end },
+    { len = 1.0, zoom = 1, move = gather("gem"), hand = function() end },
+    { len = 2.0, zoom = HUD_LOOK, aim = "xp", say = "+XP", move = gather("gem"),
+      hand = function() end },
+}
+
+local DRAFTED = {
+    { len = 2.4, zoom = 1, say = "A WHOLE LEVEL", direct = pickCard },
+    { len = 0.6, zoom = 1 },
+}
+
+return {
+    heart = pickupReel(
+        function() return grabShot({ kind = "heart", subject = "science", at = { 14, -96 },
+            keepHp = true, setup = lowHp, hook = { "LOW ON", "HEALTH?" }, hookY = 120,
+            intro = { len = 1.4, zoom = HUD_LOOK, aim = "hp" },
+            say = "GRAB A HEART",
+            beats = { { len = 1.8, zoom = HUD_LOOK, aim = "hp", say = "+25 HEALTH", preview = true },
+                      { len = 0.8, zoom = 1 } } }) end,
+        function() return sheetFx(function(key)
+            return labShot(key, "sequence", "heart", false, "school") end,
+            { keepHp = true, setup = lowHp,
+              beats = { { len = 1.8, zoom = HUD_LOOK, aim = "hp", say = "+25 HEALTH", preview = true } } })("maths") end),
+
+    ink = pickupReel(
+        -- SCIENCE, for its pencil: a line left on the page is what free ink buys.
+        function() return grabShot({ kind = "ink", subject = "science", at = { -14, -96 },
+            setup = lowInk, hook = { "OUT OF", "INK?" }, hookY = 120,
+            intro = { len = 1.4, zoom = HUD_LOOK, aim = "ink" },
+            say = "GRAB AN INK DROP",
+            each = function(game, s)
+                -- Held dry until the drop, and left alone after: the drop is
+                -- what keeps it full.
+                if not s.takenT then lowInk(game) end
+            end,
+            hold = true, feed = { 0.1, 22, ZOOM },
+            beats = { { len = 1.3, zoom = HUD_LOOK, aim = "ink", say = "FREE INK", hand = frenzy,
+                        preview = true },
+                      { len = 2.9, zoom = ZOOM, aim = "hero", say = "DRAW WITHOUT STOPPING",
+                        hand = frenzy, move = stroll } } }) end),
+
+    diamond = pickupReel(
+        function() return grabShot({ kind = "diamond", subject = "maths", at = { 12, -96 },
+            setup = realLevels, hook = { "A FREE", "LEVEL" }, hookY = 120,
+            intro = { len = 1.2, zoom = HUD_LOOK, aim = "xp" },
+            say = "GRAB A DIAMOND", beats = DRAFTED }) end,
+        function() return sheetFx(function(key)
+            return labShot(key, "quiz", "diamond", false, "school") end,
+            { setup = realLevels, beats = DRAFTED })("maths") end),
+
+    clock = pickupReel(
+        -- Not MUSIC, whose pins glue what they land on: the clock's stop
+        -- should be the only one on the page.
+        function() return grabShot({ kind = "clock", subject = "maths", at = { -10, -96 },
+            hook = { "TOO MANY", "OF THEM?" }, say = "GRAB A CLOCK",
+            feed = { 0.05, 36, ZOOM }, beats = FROZEN }) end,
+        function() return sheetFx(circuitShot, { feed = { 0.08, 26, ZOOM, true }, beats = FROZEN })("science") end),
+
+    alarm = pickupReel(
+        function() return grabShot({ kind = "alarm", subject = "pe", at = { 10, -96 },
+            setup = quietLevels, hook = { "SURROUNDED?" }, say = "GRAB AN ALARM",
+            feed = { 0.05, 40, 1.4 }, beats = CLEARED }) end,
+        function() return sheetFx(portraitShot, { setup = quietLevels, feed = { 0.1, 30 },
+            beats = CLEARED })("art") end),
+
+    star = pickupReel(
+        function() return grabShot({ kind = "star", subject = "finance", at = { -12, -96 },
+            setup = function(game)
+                starStrip(game, 0)
+                game.spawner.update = function() end
+            end,
+            hook = { "GOLD", "STARS" }, say = "GRAB A STAR", feed = false, hold = true,
+            each = function(game, s) toughCrowd(game, s, 0.18, 14) end,
+            beats = { { len = 2.2, zoom = ZOOM, aim = "hero", tag = "1 STAR", say = "+2% DAMAGE" } } }) end,
+        function() return sheetFx(dotsShot, { beats = {
+            { len = 1.4, zoom = ZOOM, aim = "hero", say = "+2% DAMAGE" } } })("art") end,
+        { function() return starsLater(20, "science") end,
+          function() return starsLater(50, "music") end }),
+
+    coin = pickupReel(
+        function() return piggyShot({ "BREAK THE", "BANK" }) end,
+        function() return sheetFx(function(key) return labShot(key, "finance") end,
+            { beats = { { len = 2.6, zoom = HUD_LOOK, aim = "purse", say = "+1 COIN EACH",
+                preview = true } } })("finance") end),
+}
+end)()
+
 local REELS = {
     montage = bossMontage,
     sun = sunReel,
@@ -2187,6 +2756,8 @@ local REELS = {
         function(key) return dodgeShot(key, true) end,
     }, { { warm = 3.5, rec = 2.4 }, { warm = 3.5, rec = 2.4 } }),
 }
+
+for key, reel in pairs(PICKUP_REELS) do REELS[key] = reel end
 
 --- the clock -----------------------------------------------------------------
 
@@ -2286,7 +2857,9 @@ local function steer(game)
     if d == 0 then dx, dy = 0, 1 end
     -- Round it, and out or in toward a ring that clears its body.
     -- Closer when filmed close, or the hero walks out of the shot.
-    local want = boss.radius + ((shot and shot.zoom or 1) > 1 and 30 or 46)
+    local z = shot and shot.zoom or 1
+    if type(z) == "function" then z = z(game, shotT - (shot.warm or 0), shot) end
+    local want = boss.radius + (z > 1 and 30 or 46)
     local out = util.clamp((want - d) / 20, -1, 1)
     local tx, ty = -dy, dx
     if bot.seed % 2 < 1 then tx, ty = dy, -dx end
@@ -2364,21 +2937,26 @@ local function lens(canvas)
     love.graphics.setCanvas(out)
     love.graphics.clear(Palette.paper)
     love.graphics.setColor(1, 1, 1)
-    -- A punch in is a cut, not a drift: the lens starts on its subject.
-    if z ~= lastZoom then lensX, lastZoom = nil, z end
+    -- A punch in is a cut, not a drift: the lens starts on its subject. So is a
+    -- jump from one subject to another at the same zoom (`cut`, set by a pickup
+    -- reel's beat), which would otherwise be a slow pan across the page.
+    if z ~= lastZoom or shot.cut then lensX, lastZoom, shot.cut = nil, z, nil end
     if z == 1 or (shot.kind ~= "boss" and shot.kind ~= "run") then
         love.graphics.draw(canvas, 0, 0)
         return out
     end
 
-    local tx, ty = (shot.aim or aim)(game)
+    -- A shot's own aim may pass (nil), for the boss and hero in between.
+    local tx, ty
+    if shot.aim then tx, ty = shot.aim(game) end
+    if not tx then tx, ty = aim(game) end
     if not lensX then lensX, lensY = tx, ty end
     lensX = lensX + (tx - lensX) * math.min(1, DT * 5)
     lensY = lensY + (ty - lensY) * math.min(1, DT * 5)
 
     local vw, vh = w / z, h / z
     local top, bottom = HUD_TOP, HUD_BOTTOM
-    if shot.kind == "run" then top, bottom = 0, 0 end
+    if shot.kind == "run" or shot.hud then top, bottom = 0, 0 end
     local ox = math.floor(util.clamp(lensX - vw / 2, 0, w - vw) + 0.5)
     local oy = math.floor(util.clamp(lensY - vh / 2, top, h - vh - bottom) + 0.5)
     love.graphics.draw(canvas, -ox * z, -oy * z, 0, z, z)
@@ -2484,6 +3062,14 @@ function Capture.parse(args)
     if not Capture.on then return end
     if not REELS[Capture.reel] then error("capture: no reel named " .. Capture.reel) end
 
+    -- A take that errors says so and stops, rather than standing on LOVE's
+    -- error screen until the timeout with nobody there to read it.
+    love.errorhandler = function(msg)
+        print(debug.traceback("capture: " .. tostring(msg), 2))
+        io.stdout:flush()
+        os.exit(1)
+    end
+
     love.filesystem.setIdentity("notebook-survivors-capture")
     love.window.setMode(WINDOW_W, WINDOW_H, { fullscreen = false, resizable = false, vsync = 0 })
     love.audio.setVolume(0)
@@ -2507,7 +3093,10 @@ function Capture.start(g)
         if REEL_CURSOR[Capture.reel] then return hoverX, hoverY end
     end
     Input.movement = function()
-        if shot and shot.move then return shot.move(game, shotT - (shot.warm or 0), shot) end
+        if shot and shot.move then
+            local mx, my = shot.move(game, shotT - (shot.warm or 0), shot)
+            if mx then return mx, my end
+        end
         return steer(game)
     end
 
@@ -2515,9 +3104,14 @@ function Capture.start(g)
     begin(1)
 end
 
--- Every frame's dt, whatever the machine took.
+-- Every frame's dt, whatever the machine took -- or a share of it, for a shot
+-- that slows the page down (`speed`, a function of the shot's clock: a pickup
+-- reel's grab). The film's own clock runs on at DT a frame either way, so a
+-- slowed second is still a second of the reel.
 function Capture.dt()
-    return DT
+    local k = shot and shot.speed
+    if type(k) == "function" then k = k(game, shotT - (shot.warm or 0), shot) end
+    return DT * (k or 1)
 end
 
 function Capture.update()
@@ -2543,7 +3137,7 @@ function Capture.update()
         else
             scribble(game)
         end
-    elseif shot.kind == "run" then
+    elseif shot.kind == "run" and not shot.keepHp then
         game.player.hp = game.player.maxHp
     end
     if shot.direct then shot.direct(game, shotT - (shot.warm or 0), shot) end
@@ -2596,7 +3190,7 @@ local function caption()
 
     -- A line said over the shot as it goes (`say`, set by its director), or a
     -- level and the card's own words for it, low on the page.
-    if shot.kind ~= "boss" then
+    if shot.kind ~= "boss" or shot.say then
         local y = h - 70
         if shot.tag then
             Scribble.printBig(I18n.t(shot.tag), w / 2, y - 16, 2, Palette.red,

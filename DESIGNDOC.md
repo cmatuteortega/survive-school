@@ -249,6 +249,44 @@ hand. The page is a lesson run, played with the cursor. The SNAG plays with its 
 tapped in, then the rub dragged back across them), and the TRENCH's finale is
 wide because its bar crosses the page.
 
+#### A pickup highlight
+
+`./capture.sh heart`, `ink`, `diamond`, `clock`, `alarm`, `star` and `coin` are
+one reel per pickup (`PICKUP_REELS`, built inside a function of its own since
+the file's main chunk is at Lua's 200 locals), about 11-19s, each telling the
+two ways it is handed over: lying on the page and walked to (`grabShot`), then
+won off a worksheet (`sheetFx` round one of the lesson reels' sheet shots, under
+OR WIN ONE ON A SHEET), then the card. The page is a lesson run with no pickup on
+it but the filmed one (`bare`: the fixed layer marked taken, the scatter clock
+never coming round). The edit is the reel's own:
+
+- **The grab.** The hero walks in, and inside `GRAB_NEAR` of it the page runs at
+  `GRAB_SLOW` (a shot's `speed`, read by `Capture.dt`; the film's clock runs on)
+  with the lens punched in on the pickup turning.
+- **The effect, in `beats`.** From the take, a row of beats, each a zoom, an
+  `aim` (a readout by name -- `hp`, `ink`, `purse`, `xp`, off `hudAt`, which reads
+  Hud.draw's layout -- the hero, or the pickup), a line, a hand and a walk, cut
+  between rather than panned (`cut`). A first beat marked `preview` is cut to a
+  moment before the touch, so the readout is seen at the old figure and the jump
+  happens on camera.
+- **A readout close.** The heart and the ink open on their bar close (`intro`)
+  with the hook as a question (LOW ON HEALTH?, OUT OF INK?), the well held under
+  `Tools.MIN_INK` so the hand draws nothing until the drop.
+
+What each shows: the heart, HP 30 to 55 (the sequence at school, where a heart is
+still a heart, Worksheet.prize); the ink, the meter's free-ink tube and the pen
+never lifted (`frenzy`, on SCIENCE for its pencil -- no sheet pays ink, so its
+reel has one take); the diamond, the draft it opens (dealt cards with no board,
+`DIAMOND_DEAL`; the pop quiz at school); the wall clock, the crowd stopped round
+the hero, first untouched and then taken apart (the circuit); the alarm, the view
+cleared and the gems walked over with the level bar close, levels landing
+without a draft (`quietLevels`; the portrait); the gold star, the ruler's numbers
+on a tough crowd at 1, 20 and 50 stars (`starsLater`: 12, 17, 24), after join the
+dots; the coin, the piggy bank knocked past its shatter and set cracking as it
+lands (BANKRUPT!, the rings filmed wide) and the run's coins counting up close,
+then the till. The page takes avoid a lesson whose tool glues (MUSIC's pins) where
+a stop should be the clock's alone.
+
 `README.md` is the design document, and an unusually complete one — it explains
 *why* every tool, number and layout decision is what it is. Read the relevant
 section before changing behaviour, and update it when behaviour changes.
