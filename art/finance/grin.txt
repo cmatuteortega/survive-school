@@ -1,19 +1,20 @@
-# grin -- 16x16 over 14x14. The sheet itself: a grey header row and column, a
-# grid of white cells, and a face filled into them -- two cells for eyes and a
-# row for the grin. White and ink, as the vanilla grin is.
+# grin -- 16x16 over 14x14. Save: the floppy disk, the heaviest-looking icon on
+# the toolbar for the heaviest thing in the crowd -- a solid square of ink that
+# shrugs off a shove (Enemy.types `knock` and `hold`). Graphite shutter with
+# its slot, a white ruled label; ink and white, as the vanilla grin is.
+ooogggggggggooo.
+ooogggggwwggoooo
+ooogggggwwggoooo
+ooogggggwwggoooo
+ooogggggggggoooo
 oooooooooooooooo
-oggsgggsgggsgggo
-oggsgggsgggsgggo
-osssssssssssssso
-oggsoooswwwsoooo
-oggsoooswwwsoooo
-oggsoooswwwsoooo
-osssssssssssssso
-oggswwwswwwswwwo
-oggswwwswwwswwwo
-osssssssssssssso
-oggsoooooooooooo
-oggsowowowowowoo
-oggswooooooooowo
-osssssssssssssso
+oooooooooooooooo
+oooooooooooooooo
+oowwwwwwwwwwwwoo
+oowwwwwwwwwwwwoo
+oowsssssssssswoo
+oowwwwwwwwwwwwoo
+oowsssssssssswoo
+oowwwwwwwwwwwwoo
+oowwwwwwwwwwwwoo
 oooooooooooooooo

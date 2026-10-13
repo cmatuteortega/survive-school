@@ -848,7 +848,7 @@ the blob is a quarter note, the bat two beamed quavers, the skull a whole note,
 the two eyes the two clefs and the grin an upright piano grinning with its
 keyboard. On the finance page the crowd is the spreadsheet's own toolbar: paste,
 cut, copy, the fill bucket and its drops, an error cell, a pie chart, find, the
-sheet itself and the cursor. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
+save disk and the cursor. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
 stays on the row in `Enemy.types`, so a blob on the music page is the same 4hp
 walking at the same 20px/s, and a build learned on one page reads on every other.
 Only the drawing changes. Four things hold it together:
