@@ -1,0 +1,12 @@
+# skull -- 12x10 over 10x10. A palette in the skull's blush with its ink outline,
+# a thumb hole and dabs of paint on it.
+..ooooooo...
+.okkkkkkkoo.
+okrkkkckkkko
+okkkkkkkokko
+okkoookkkkko
+okkowwokkko.
+okkoookkkbko
+.okkkkkkkko.
+..ooookkkoo.
+......ooo...

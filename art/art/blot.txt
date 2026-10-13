@@ -1,0 +1,12 @@
+# blot -- 12x10 over 10x9. A splat of paint, ink as the blot is, which breaks into
+# drops of paint when it dies (`split`).
+s...sos..sos
+os..sos.sss.
+sss.sossoos.
+soosooooos..
+.soowoowos..
+..sooooooss.
+.ssoooooooos
+sooooooossoo
+sossssos..so
+.s...sos...s

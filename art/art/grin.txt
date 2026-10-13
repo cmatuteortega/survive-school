@@ -1,0 +1,18 @@
+# grin -- 16x16 over 14x14. An easel with a canvas on it and a grin painted on
+# the canvas: the heaviest thing in the art room, paper inside ink.
+.......oo.......
+.oooooooooooooo.
+.owwwwwwwwwwwwo.
+.owwoowwwwoowwo.
+.owwoowwwwoowwo.
+.owwwwwwwwwwwwo.
+.owowwwwwwwwowo.
+.owwowwwwwwowwo.
+.owwwoooooowwwo.
+.owwwwwwwwwwwwo.
+.oooooooooooooo.
+oooooooooooooooo
+...o...oo...o...
+..o....oo....o..
+.o.....oo.....o.
+o......oo......o

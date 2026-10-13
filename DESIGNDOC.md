@@ -855,12 +855,15 @@ bursts, a volleyball and a basketball for the two eyes, and a kettlebell again,
 bigger and in ink, for the grin. On the GRAMMAR page it is writing: a speech
 bubble, a flapping book, a crumpled draft, an ink bottle and the full stops it
 breaks into, a question mark, an exclamation mark, an ampersand, and speech
-bubbles with a blue and a red @ for the two eyes. It is a **skin and nothing
-else**, which is what keeps it on the right side of the paragraph above: every
-number the crowd is made of stays on the row in `Enemy.types`, so a blob on the
-music page is the same 4hp walking at the same 20px/s, and a build learned on
-one page reads on every other. Only the drawing changes. Four things hold it
-together:
+bubbles with a blue and a red @ for the two eyes. On the ART page it is the art
+room: a lump of clay, an origami crane, a pencil, a paint splat and its drops, a
+palette, a tube of paint, an easel with a grin painted on it, and two
+paintbrushes for the two eyes, a pointed one loaded with blue and a flat one
+with red. It is a **skin and nothing else**, which is what keeps it on the right
+side of the paragraph above: every number the crowd is made of stays on the row
+in `Enemy.types`, so a blob on the music page is the same 4hp walking at the
+same 20px/s, and a build learned on one page reads on every other. Only the
+drawing changes. Four things hold it together:
 
 - **The grid may be bigger, and only bigger.** A skin may be drawn up to
   `SKIN_ROOM` (4) over the enemy it replaces in each direction, and the extra is
@@ -891,7 +894,7 @@ together:
   nobody starts. What it falls through to is the **vanilla** skin
   (`art/vanilla/`), which is SCIENCE's crowd -- SCIENCE has no folder of its own
   -- and so the crowd on every page that has not drawn that name yet (today
-  ART entirely). Under that is `Sprites.enemies`: the
+  every lesson but SCIENCE has drawn all ten, so it is SCIENCE's alone). Under that is `Sprites.enemies`: the
   size every skin is measured against, and the drawing of a name no folder has,
   which is the stickman.
 - **The art is authored in `art/<subject>/*.txt` and baked in by

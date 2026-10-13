@@ -1,0 +1,11 @@
+# bat -- 13x9 over 11x7. An origami crane, paper wings and the bat's red at the
+# body with two ink eyes: the thing in an art room that flies.
+s...........s
+ss.........ss
+sws.......sws
+swws.....swws
+.swws.s.swws.
+..swwsrswws..
+...srorors...
+....srrrs....
+.....sss.....

@@ -1,0 +1,11 @@
+# blob -- 10x9 over 8x8. A lump of clay with thumbprints in its top, grey as the
+# blob is, and the blob's face pressed into it.
+...ssss...
+..sgsgss..
+.sggggggs.
+sggoggoggs
+sggggggggs
+sgggoogggs
+sggggggggs
+ssggggggss
+.ssssssss.
