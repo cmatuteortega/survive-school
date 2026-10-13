@@ -1,5 +1,6 @@
 # blot -- 10x10 over 10x9. A bowling ball, ink with its three finger holes,
-# which breaks into the little black balls it leaves behind (`split`).
+# which breaks into the small cans of body spray it leaves behind (`split`):
+# what tumbles out of a kit bag when it is dropped.
 ...ssss...
 .ssooooss.
 .soowowos.

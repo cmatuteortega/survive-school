@@ -1,5 +1,6 @@
 # wad -- 11x11 over 9x9. A traffic cone, blush with white bands -- the wad's two
-# colours -- for the one that charges: the thing you run round, running at you.
+# colours -- and the wad's two ink dots for eyes, for the one that charges: the
+# thing you run round, running at you.
 .....s.....
 ....sks....
 ....sks....
@@ -7,7 +8,7 @@
 ...skkks...
 ..skkkkks..
 ..swwwwws..
-.skkkkkkks.
+.skokkkoks.
 .skkkkkkks.
 skkkkkkkkks
 sssssssssss

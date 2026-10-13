@@ -1,8 +1,12 @@
-# drop -- 6x7. What the bowling ball breaks into: a small black ball.
-......
+# drop -- 6x9 over 6x7. A small can of body spray -- the deodorant's black can
+# and red bands, P.E.'s encore boss in miniature -- for the little things the
+# bowling ball breaks into.
 ..ss..
-.swos.
-soooos
-soooos
+.srrs.
+.ssss.
 .soos.
-..ss..
+.srrs.
+.sows.
+.soos.
+.srrs.
+.ssss.
