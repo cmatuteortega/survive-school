@@ -857,13 +857,13 @@ bubble, a flapping book, a crumpled draft, an ink bottle and the full stops it
 breaks into, a question mark, an exclamation mark, an ampersand, and speech
 bubbles with a blue and a red @ for the two eyes. On the ART page it is the art
 room: a lump of clay, an origami crane, a pencil, a paint splat and its drops, a
-palette, a tube of paint, an easel with a grin painted on it, and two
-paintbrushes for the two eyes, a pointed one loaded with blue and a flat one
-with red. It is a **skin and nothing else**, which is what keeps it on the right
-side of the paragraph above: every number the crowd is made of stays on the row
-in `Enemy.types`, so a blob on the music page is the same 4hp walking at the
-same 20px/s, and a build learned on one page reads on every other. Only the
-drawing changes. Four things hold it together:
+palette, a tube of paint, an easel with a grin painted on it, and two jars of
+rinse water for the two eyes, one gone blue and one gone red. It is a **skin and
+nothing else**, which is what keeps it on the right side of the paragraph above:
+every number the crowd is made of stays on the row in `Enemy.types`, so a blob
+on the music page is the same 4hp walking at the same 20px/s, and a build
+learned on one page reads on every other. Only the drawing changes. Four things
+hold it together:
 
 - **The grid may be bigger, and only bigger.** A skin may be drawn up to
   `SKIN_ROOM` (4) over the enemy it replaces in each direction, and the extra is
