@@ -844,9 +844,9 @@ put it. A subject with no `drills` gets `DRILL_MIX` (an even hand) at
 
 **But it may not look the same.** A lesson may reinterpret the crowd --
 `Sprites.enemySkins` in `src/sprites.lua`, keyed by subject, and on the music page
-the blob is a quarter note, the bat two beamed quavers, the skull a whole note and
-the two eyes the two clefs. It is a **skin and nothing else**, which is what keeps
-it on the right side of the paragraph above: every number the crowd is made of
+the blob is a quarter note, the bat two beamed quavers, the skull a whole note,
+the two eyes the two clefs and the grin an upright piano grinning with its
+keyboard. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
 stays on the row in `Enemy.types`, so a blob on the music page is the same 4hp
 walking at the same 20px/s, and a build learned on one page reads on every other.
 Only the drawing changes. Four things hold it together:
