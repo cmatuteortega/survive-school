@@ -1,0 +1,15 @@
+# bulb -- 9x13 over 9x10. An exclamation mark in red, for the one that bursts:
+# the loudest thing in punctuation.
+..ooooo..
+.orrrrro.
+.orrrrro.
+.orkrrro.
+..orrro..
+..orrro..
+..orrro..
+...oro...
+...ooo...
+.........
+..ooooo..
+..orrro..
+..ooooo..

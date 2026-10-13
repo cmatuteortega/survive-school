@@ -1,0 +1,15 @@
+# redeye -- 11x13 over 11x11. The eye's speech bubble with a red @, for the
+# fastest thing in the crowd.
+.sssssssss.
+swwwwwwwwws
+swwrrrrrwws
+swrwwwwwrws
+swrwrrrwrws
+swrwrwrwrws
+swrwrrrrrws
+swrwwwwwwws
+swwrrrrrwws
+swwwwwwwwws
+.sssssssss.
+..sws......
+..ss.......

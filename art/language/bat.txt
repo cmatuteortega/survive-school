@@ -1,0 +1,12 @@
+# bat -- 13x10 over 11x7. An open book flapping its pages for wings, lines of
+# text on them, the bat's ink eyes, and its red come down as the ribbon.
+.sssss.sssss.
+swwwwwswwwwws
+swsssswssssws
+swwwwwswwwwws
+swowwwswwwows
+swwwwwswwwwws
+sssswwswwssss
+....sssss....
+......r......
+.....r.r.....

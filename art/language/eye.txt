@@ -1,0 +1,15 @@
+# eye -- 11x13 over 11x11. A speech bubble with a blue @ in it -- the eye's
+# colour -- for the one that shoots: a message aimed at you.
+.sssssssss.
+swwwwwwwwws
+swwbbbbbwws
+swbwwwwwbws
+swbwbbbwbws
+swbwbwbwbws
+swbwbbbbbws
+swbwwwwwwws
+swwbbbbbwws
+swwwwwwwwws
+.sssssssss.
+..sws......
+..ss.......

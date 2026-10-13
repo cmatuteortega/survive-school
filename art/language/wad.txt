@@ -1,0 +1,12 @@
+# wad -- 11x10 over 9x9. A crumpled draft, paper with its blush lines and the
+# wad's two ink eyes: the page thrown away, thrown at you.
+...ss.sss..
+..swkswwss.
+.swwkkswwws
+sskwwwkswws
+swowwwwwows
+sswwwkkwsws
+swkkswwwkks
+.swwkswkws.
+.sswwswwss.
+..sssss.s..

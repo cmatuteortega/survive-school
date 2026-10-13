@@ -1,0 +1,11 @@
+# blob -- 10x9 over 8x8. A speech bubble, grey as the blob is, with its face in
+# it: the commonest thing on a page of writing is something being said.
+..ssssss..
+.sggggggs.
+sggggggggs
+sggoggoggs
+sggggggggs
+sgggoogggs
+.ssgsssss.
+..sgs.....
+..ss......

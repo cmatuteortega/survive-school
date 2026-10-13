@@ -1,0 +1,12 @@
+# blot -- 10x10 over 10x9. A bottle of ink with a face on its label, which
+# breaks into full stops when it dies (`split`).
+...ssss...
+...soos...
+..ssooss..
+.soooooos.
+soooooooos
+sowwwwwwos
+sowowwowos
+sowwwwwwos
+soooooooos
+.ssssssss.
