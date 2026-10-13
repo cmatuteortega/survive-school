@@ -64,9 +64,9 @@ def blank(x, y):                       # BLANK in src/subjects.lua
 # Each subject renders on its own page (src/subjects.lua): a re-skin is judged
 # against the page it will actually be read on.
 #
-# `vanilla` is the exception: it is not a re-skin of anything, it is the crowd
-# every other page falls back to, and the page it is read on is the science one
-# it was drawn for.
+# `vanilla` is the exception: it is not a re-skin of a page, it is the crowd
+# every page falls back to (Sprites.enemy), and the page it is read on is the
+# science one, which has no skin of its own and so is where it is seen as drawn.
 PAGES = {'music': staves, 'vanilla': ruled, 'maths': squared, 'pe': calendar,
          'language': grouped, 'finance': ledger, 'art': blank}
 ORDER = ['blob', 'bat', 'wad', 'blot', 'drop', 'skull', 'bulb', 'eye',

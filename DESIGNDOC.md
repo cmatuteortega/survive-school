@@ -874,17 +874,24 @@ Only the drawing changes. Four things hold it together:
 - **`Sprites.enemy(name)` is the one door and `Sprites.setSkin` the one latch**,
   called from `Game:setSubject` beside `Background.setSubject` and for the same
   reason: the page and the crowd standing on it are one choice. It falls through
-  to `Sprites.enemies` a *name* at a time rather than a page at a time, so a
-  lesson may reinterpret two of the ten and leave the rest -- a page half drawn
-  is a page you can look at, and a page that had to be finished before any of it
-  counted is a page nobody starts.
+  a *name* at a time rather than a page at a time, so a lesson may reinterpret
+  two of the ten and leave the rest -- a page half drawn is a page you can look
+  at, and a page that had to be finished before any of it counted is a page
+  nobody starts. What it falls through to is the **vanilla** skin
+  (`art/vanilla/`), which is SCIENCE's crowd -- SCIENCE has no folder of its own
+  -- and so the crowd on every page that has not drawn that name yet (today
+  P.E., GRAMMAR, FINANCE and ART entirely). Under that is `Sprites.enemies`: the
+  size every skin is measured against, and the drawing of a name no folder has,
+  which is the stickman.
 - **The art is authored in `art/<subject>/*.txt` and baked in by
   `lua art/bake.lua`**, which is the one direction it travels. `art/check.lua`
   validates a grid and `art/preview.py` renders it onto that subject's own ruling
   through the overprint table, since a re-skin is judged against the page it will
   be read on. Nothing reads `art/` at runtime -- a distributable is still
-  `main.lua`, `conf.lua` and `src` -- and `art/vanilla/` is the unskinned crowd
-  kept there to draw against rather than to be baked over itself.
+  `main.lua`, `conf.lua` and `src` -- and `art/vanilla/` is baked like any
+  subject, as the crowd every page falls back to. A page folder holds only what
+  that page redraws: a copy of a vanilla drawing in it is not harmless, since it
+  would stand in front of whatever vanilla is redrawn to next.
 
 A skin used to be authored against the overprint pass — paper (`w`) wiped the
 ruling and sky (`c`) came out blue wherever it crossed a rule — and that is no
@@ -7346,8 +7353,9 @@ and are all the same 11x11 glyph.
   rebuild would wipe (a stat) is counted on the loadout and folded in by
   `Loadout:rebuild`, as `stars` is, and written into the bookmark.
 - **Enemy:** sprite in `Sprites.enemies` + row in `Enemy.types` + row in `TABLE`
-  in `src/spawner.lua` (unlock time, weight). A reference copy of the art goes in
-  `art/vanilla/<name>.txt` with its size in `BASE` and its place in `ORDER` in
+  in `src/spawner.lua` (unlock time, weight). Its art goes in
+  `art/vanilla/<name>.txt` too -- baked, it is what SCIENCE and every page that
+  has not redrawn it shows -- with its size in `BASE` and its place in `ORDER` in
   both `art/bake.lua` and `art/preview.py`, or no page can ever reskin it and
   nothing can draw it against a ruling before it ships. The row's `name` is the
   one field on it a run never reads: it is what the *book* calls the thing, for

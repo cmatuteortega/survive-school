@@ -10244,7 +10244,8 @@ src/
   commits to a stale heading, `split` leaves smaller things behind, `burst`
   makes killing it cost something, and `knock`/`hold` are what a shove and a
   glueing are worth against it. See **What walks on** for why each exists.
-  A reference copy of the art belongs in `art/vanilla/<name>.txt`, with its size
+  Its art belongs in `art/vanilla/<name>.txt` as well -- baked, that is the
+  drawing SCIENCE and every lesson that has not redrawn it shows -- with its size
   added to `BASE` and its name to `ORDER` in `art/bake.lua` and
   `art/preview.py` — otherwise no lesson can ever reskin it and there is no way
   to look at it against a ruling before it ships. And red is a poor choice for a

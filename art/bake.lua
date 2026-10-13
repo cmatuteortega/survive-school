@@ -40,9 +40,10 @@ local BASE = {
 local ORDER = { "blob", "bat", "wad", "blot", "drop", "skull", "bulb", "eye",
                 "grin", "redeye" }
 
--- Not every folder under art/ is a subject: `vanilla` is the crowd as it stands,
--- kept there to draw against rather than to be baked over the top of itself.
-local SKIP = { vanilla = true }
+-- Every folder under art/ is baked, `vanilla` included: it is not a subject but
+-- the crowd every subject falls back to a name at a time (Sprites.enemy), which
+-- makes it SCIENCE's crowd and the one any page shows until it draws its own.
+local SKIP = {}
 
 local function art(path)
     local f = io.open(path)

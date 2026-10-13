@@ -598,13 +598,20 @@ function Sprites.setSkin(key)
     Sprites.skin = Sprites.enemySkins and Sprites.enemySkins[key] or nil
 end
 
--- Falls through to the unskinned crowd a name at a time rather than a page at a
--- time, so a lesson may reinterpret two of the ten and leave the rest as they
--- are: a page half drawn is a page you can look at, and a page that had to be
--- finished before any of it counted is a page nobody starts.
+-- Falls through a name at a time rather than a page at a time, so a lesson may
+-- reinterpret two of the ten and leave the rest as they are: a page half drawn is
+-- a page you can look at, and a page that had to be finished before any of it
+-- counted is a page nobody starts.
+--
+-- What it falls through *to* is the vanilla crowd (art/vanilla, baked like any
+-- page's), which is SCIENCE's -- the page with no skin of its own -- and so the
+-- crowd on every page that has not drawn a thing yet. Under that is
+-- Sprites.enemies, which is what every skin is measured against (SKIN_ROOM) and
+-- what a name no folder has drawn, like the stickman, is still drawn with.
 function Sprites.enemy(name)
-    local skin = Sprites.skin
-    return (skin and skin[name]) or Sprites.enemies[name]
+    local skin, vanilla = Sprites.skin, Sprites.enemySkins.vanilla
+    return (skin and skin[name]) or (vanilla and vanilla[name])
+        or Sprites.enemies[name]
 end
 
 -- The same body gone over in red pen (`fury` in src/spawner.lua): the drawing
@@ -1063,9 +1070,12 @@ function Sprites.load()
     -- so `h - oy` -- which is what the shadow is struck off (Enemy:draw) -- comes
     -- out unchanged. The drawing grows upward out of the same feet.
     --
-    -- A subject with no skin here is drawn with Sprites.enemies, which is what
-    -- makes this cheap to grow: a page is either reinterpreted or it is the
-    -- crowd everybody else fights, and there is no third state to keep in step.
+    -- A subject with no skin here is drawn with the `vanilla` one, which is
+    -- SCIENCE's crowd and the crowd everybody else fights until their page draws
+    -- its own -- and that is what makes this cheap to grow: a page is either
+    -- reinterpreted or it is the vanilla crowd, a name at a time, and there is no
+    -- third state to keep in step (Sprites.enemy). Sprites.enemies, under it, is
+    -- the size every skin is measured against rather than a look any page wears.
     --
     -- The art is authored in art/<subject>/*.txt and baked in here by
     -- `lua art/bake.lua`, which is the one direction it travels. The txt files
@@ -1081,183 +1091,6 @@ function Sprites.load()
 
     -- BAKE:enemySkins begin
     Sprites.enemySkins = {
-        art = {
-            blob = pixelart.newSprite({
-                "..ssss..",
-                ".sggggs.",
-                "sggggggs",
-                "sgoggogs",
-                "sggggggs",
-                "sggooggs",
-                ".sggggs.",
-                "..s..s..",
-            }),
-            bat = pixelart.newSprite({
-                "s.........s",
-                "ss.......ss",
-                "sws.sss.sws",
-                "swwwrrrwwws",
-                ".swworowws.",
-                "..ssrrrss..",
-                "....sss....",
-            }),
-            skull = pixelart.newSprite({
-                "..oooooo..",
-                ".okkkkkko.",
-                "okkkkkkkko",
-                "okookkooko",
-                "okookkooko",
-                "okkkkkkkko",
-                "okkkkkkkko",
-                ".okkkkkko.",
-                "..oooooo..",
-                "...o..o...",
-            }),
-            eye = pixelart.newSprite({
-                "...sssss...",
-                "..swwwwws..",
-                ".swwwwwwws.",
-                "swwwcccwwws",
-                "swwcccccwws",
-                "swwccoocwws",
-                "swwccoocwws",
-                "swwwcccwwws",
-                ".swwwwwwws.",
-                "..swwwwws..",
-                "...sssss...",
-            }),
-            redeye = pixelart.newSprite({
-                "...sssss...",
-                "..swwwwws..",
-                ".swwwwwwws.",
-                "swwwcccwwws",
-                "swwcccccwws",
-                "swwccrrcwws",
-                "swwccrrcwws",
-                "swwwcccwwws",
-                ".swwwwwwws.",
-                "..swwwwws..",
-                "...sssss...",
-            }),
-        },
-        finance = {
-            blob = pixelart.newSprite({
-                "..ssss..",
-                ".sggggs.",
-                "sggggggs",
-                "sgoggogs",
-                "sggggggs",
-                "sggooggs",
-                ".sggggs.",
-                "..s..s..",
-            }),
-            bat = pixelart.newSprite({
-                "s.........s",
-                "ss.......ss",
-                "sws.sss.sws",
-                "swwwrrrwwws",
-                ".swworowws.",
-                "..ssrrrss..",
-                "....sss....",
-            }),
-            skull = pixelart.newSprite({
-                "..oooooo..",
-                ".okkkkkko.",
-                "okkkkkkkko",
-                "okookkooko",
-                "okookkooko",
-                "okkkkkkkko",
-                "okkkkkkkko",
-                ".okkkkkko.",
-                "..oooooo..",
-                "...o..o...",
-            }),
-            eye = pixelart.newSprite({
-                "...sssss...",
-                "..swwwwws..",
-                ".swwwwwwws.",
-                "swwwcccwwws",
-                "swwcccccwws",
-                "swwccoocwws",
-                "swwccoocwws",
-                "swwwcccwwws",
-                ".swwwwwwws.",
-                "..swwwwws..",
-                "...sssss...",
-            }),
-            redeye = pixelart.newSprite({
-                "...sssss...",
-                "..swwwwws..",
-                ".swwwwwwws.",
-                "swwwcccwwws",
-                "swwcccccwws",
-                "swwccrrcwws",
-                "swwccrrcwws",
-                "swwwcccwwws",
-                ".swwwwwwws.",
-                "..swwwwws..",
-                "...sssss...",
-            }),
-        },
-        language = {
-            blob = pixelart.newSprite({
-                "..ssss..",
-                ".sggggs.",
-                "sggggggs",
-                "sgoggogs",
-                "sggggggs",
-                "sggooggs",
-                ".sggggs.",
-                "..s..s..",
-            }),
-            bat = pixelart.newSprite({
-                "s.........s",
-                "ss.......ss",
-                "sws.sss.sws",
-                "swwwrrrwwws",
-                ".swworowws.",
-                "..ssrrrss..",
-                "....sss....",
-            }),
-            skull = pixelart.newSprite({
-                "..oooooo..",
-                ".okkkkkko.",
-                "okkkkkkkko",
-                "okookkooko",
-                "okookkooko",
-                "okkkkkkkko",
-                "okkkkkkkko",
-                ".okkkkkko.",
-                "..oooooo..",
-                "...o..o...",
-            }),
-            eye = pixelart.newSprite({
-                "...sssss...",
-                "..swwwwws..",
-                ".swwwwwwws.",
-                "swwwcccwwws",
-                "swwcccccwws",
-                "swwccoocwws",
-                "swwccoocwws",
-                "swwwcccwwws",
-                ".swwwwwwws.",
-                "..swwwwws..",
-                "...sssss...",
-            }),
-            redeye = pixelart.newSprite({
-                "...sssss...",
-                "..swwwwws..",
-                ".swwwwwwws.",
-                "swwwcccwwws",
-                "swwcccccwws",
-                "swwccrrcwws",
-                "swwccrrcwws",
-                "swwwcccwwws",
-                ".swwwwwwws.",
-                "..swwwwws..",
-                "...sssss...",
-            }),
-        },
         maths = {
             blob = pixelart.newSprite({
                 "ssssssss",
@@ -1526,7 +1359,7 @@ function Sprites.load()
                 "..s........",
             }),
         },
-        pe = {
+        vanilla = {
             blob = pixelart.newSprite({
                 "..ssss..",
                 ".sggggs.",
@@ -1546,6 +1379,38 @@ function Sprites.load()
                 "..ssrrrss..",
                 "....sss....",
             }),
+            wad = pixelart.newSprite({
+                "..sssss..",
+                ".sgwswgs.",
+                "sgwwwwwgs",
+                "swowwwows",
+                "swwkkkwws",
+                "sgwkkkwgs",
+                "swwwkwwws",
+                ".sgwswgs.",
+                "..sssss..",
+            }),
+            blot = pixelart.newSprite({
+                "s..ssss..s",
+                "sssoooosss",
+                ".soooooos.",
+                "soooooooos",
+                "sowoooowos",
+                "soooooooos",
+                ".soooooos.",
+                "..soooos..",
+                "..s.s..s..",
+            }),
+            drop = pixelart.newSprite({
+                "s......s",
+                "ss.ss.ss",
+                "..soos..",
+                ".soooos.",
+                ".sowoos.",
+                ".soooos.",
+                "..soos..",
+                "...ss...",
+            }),
             skull = pixelart.newSprite({
                 "..oooooo..",
                 ".okkkkkko.",
@@ -1557,6 +1422,18 @@ function Sprites.load()
                 ".okkkkkko.",
                 "..oooooo..",
                 "...o..o...",
+            }),
+            bulb = pixelart.newSprite({
+                ".............",
+                ".....ooo.....",
+                ".oo.okkko.oo.",
+                "o..okkkkko..o",
+                "..okwkkkwko..",
+                ".ookkkkkkkoo.",
+                "o.okrrrrrko.o",
+                "..okrrrrrko..",
+                ".o.okrrrko.o.",
+                "o...ooooo...o",
             }),
             eye = pixelart.newSprite({
                 "...sssss...",
@@ -1571,15 +1448,32 @@ function Sprites.load()
                 "..swwwwws..",
                 "...sssss...",
             }),
+            grin = pixelart.newSprite({
+                "....ssssssss....",
+                "...swwwwwswws...",
+                "..swwwssswwwws..",
+                ".swwwswwswwwwws.",
+                "swwwwwwwwwwwwwws",
+                "swwooowwwwooowws",
+                "swooooowwooooows",
+                "swooooowwooooows",
+                "swwwwowwwwowwwws",
+                "swwwwwwoowwwwwws",
+                ".swwwwwoowwwwws.",
+                "..ssswwoowwsss..",
+                "....swwwwwws....",
+                "....swswwsws....",
+                "....swswssws....",
+            }),
             redeye = pixelart.newSprite({
                 "...sssss...",
                 "..swwwwws..",
                 ".swwwwwwws.",
-                "swwwcccwwws",
-                "swwcccccwws",
-                "swwccrrcwws",
-                "swwccrrcwws",
-                "swwwcccwwws",
+                "swwwrrrwwws",
+                "swwrrrrrwws",
+                "swwrroorwws",
+                "swwrroorwws",
+                "swwwrrrwwws",
                 ".swwwwwwws.",
                 "..swwwwws..",
                 "...sssss...",
