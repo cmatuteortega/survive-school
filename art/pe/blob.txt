@@ -1,0 +1,12 @@
+# blob -- 10x10 over 8x8. A kettlebell: the commonest thing in a gym for the
+# commonest thing in the crowd, grey as the blob is, with its face on the bell.
+..ssssss..
+.s......s.
+.s......s.
+..ssssss..
+.sggggggs.
+sggggggggs
+sgoggggogs
+sggggggggs
+sgggoogggs
+.ssssssss.

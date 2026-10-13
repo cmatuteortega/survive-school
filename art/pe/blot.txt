@@ -1,0 +1,12 @@
+# blot -- 10x10 over 10x9. A bowling ball, ink with its three finger holes,
+# which breaks into the little black balls it leaves behind (`split`).
+...ssss...
+.ssooooss.
+.soowowos.
+soooooooos
+sooowoooos
+soooooooos
+soooooooos
+.soooooos.
+.ssooooss.
+...ssss...

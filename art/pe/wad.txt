@@ -1,0 +1,13 @@
+# wad -- 11x11 over 9x9. A boxing glove, blush with a white cuff -- the wad's two
+# colours -- for the one that charges: it comes at you like a punch.
+..sssss....
+.skkkkkss..
+skkkkkkkks.
+skkkkkkkks.
+skkkkkkkks.
+skkskkkkks.
+.skkskkkks.
+..skkkkks..
+..swwwwws..
+..swwwwws..
+..sssssss..

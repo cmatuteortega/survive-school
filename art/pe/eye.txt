@@ -1,0 +1,13 @@
+# eye -- 11x11. A volleyball, white with sky panels as the eye is white with a sky
+# iris -- the thing on the court that is served at you.
+....sss....
+..ssccsss..
+.sccccswws.
+.scccswwws.
+sccccswwwws
+sccsswwwwss
+ssswwwwsscs
+.swwwwsccs.
+.swwwwsccs.
+..sswscss..
+....sss....

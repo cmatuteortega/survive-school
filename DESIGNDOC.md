@@ -848,7 +848,9 @@ the blob is a quarter note, the bat two beamed quavers, the skull a whole note,
 the two eyes the two clefs and the grin an upright piano grinning with its
 keyboard. On the finance page the crowd is the spreadsheet's own toolbar: paste,
 cut, copy, the fill bucket and its drops, an error cell, a pie chart, find, the
-save disk and the cursor. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
+save disk and the cursor; on the P.E. page it is the kit cupboard: a
+kettlebell, a shuttlecock, a boxing glove, a bowling ball and its little balls,
+a basketball, an exercise ball, a volleyball, a weight plate and a trainer. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
 stays on the row in `Enemy.types`, so a blob on the music page is the same 4hp
 walking at the same 20px/s, and a build learned on one page reads on every other.
 Only the drawing changes. Four things hold it together:
@@ -882,7 +884,7 @@ Only the drawing changes. Four things hold it together:
   nobody starts. What it falls through to is the **vanilla** skin
   (`art/vanilla/`), which is SCIENCE's crowd -- SCIENCE has no folder of its own
   -- and so the crowd on every page that has not drawn that name yet (today
-  P.E., GRAMMAR and ART entirely). Under that is `Sprites.enemies`: the
+  GRAMMAR and ART entirely). Under that is `Sprites.enemies`: the
   size every skin is measured against, and the drawing of a name no folder has,
   which is the stickman.
 - **The art is authored in `art/<subject>/*.txt` and baked in by
