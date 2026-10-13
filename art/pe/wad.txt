@@ -1,13 +1,13 @@
-# wad -- 11x11 over 9x9. A boxing glove, blush with a white cuff -- the wad's two
-# colours -- for the one that charges: it comes at you like a punch.
-..sssss....
-.skkkkkss..
-skkkkkkkks.
-skkkkkkkks.
-skkkkkkkks.
-skkskkkkks.
-.skkskkkks.
+# wad -- 11x11 over 9x9. A traffic cone, blush with white bands -- the wad's two
+# colours -- for the one that charges: the thing you run round, running at you.
+.....s.....
+....sks....
+....sks....
+...swwws...
+...skkks...
 ..skkkkks..
 ..swwwwws..
-..swwwwws..
-..sssssss..
+.skkkkkkks.
+.skkkkkkks.
+skkkkkkkkks
+sssssssssss

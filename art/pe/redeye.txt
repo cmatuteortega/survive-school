@@ -1,13 +1,13 @@
-# redeye -- 13x11 over 11x11. A high-top trainer, white with a red stripe, for
-# the fastest thing in the crowd.
-..ssssss.....
-..swwwws.....
-..swrwws.....
-..swwrws.....
-..swwwrs.....
-..swwwwwss...
-..swwwrrwwss.
-.swwrrwwwwwws
-swrrwwwwwwwws
-soooooooooooo
-.ssssssssssss
+# redeye -- 11x11. A basketball, blush with ink seams, for the fastest thing in
+# the crowd: the ball that comes at you quickest on court.
+...ooooo...
+..okkokko..
+.ookkokkoo.
+okkokokokko
+okkokokokko
+ooooooooooo
+okkokokokko
+okkokokokko
+.ookkokkoo.
+..okkokko..
+...ooooo...

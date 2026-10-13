@@ -849,8 +849,9 @@ the two eyes the two clefs and the grin an upright piano grinning with its
 keyboard. On the finance page the crowd is the spreadsheet's own toolbar: paste,
 cut, copy, the fill bucket and its drops, an error cell, a pie chart, find, the
 save disk and the cursor; on the P.E. page it is the kit cupboard: a
-kettlebell, a shuttlecock, a boxing glove, a bowling ball and its little balls,
-a basketball, an exercise ball, a volleyball, a weight plate and a trainer. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
+kettlebell, a shuttlecock, a cone, a bowling ball and its little balls, the
+coach's whistle in red, an exercise ball, a volleyball and a basketball for the
+two eyes, and a kettlebell again, bigger and in ink, for the grin. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
 stays on the row in `Enemy.types`, so a blob on the music page is the same 4hp
 walking at the same 20px/s, and a build learned on one page reads on every other.
 Only the drawing changes. Four things hold it together:
