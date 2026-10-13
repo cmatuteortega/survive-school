@@ -1517,7 +1517,7 @@ function Sprites.load()
                 "..swwswswws..",
                 "...sswwwss...",
                 "....srrrs....",
-                "...srrrrrs...",
+                "...srorors...",
                 "....sssss....",
             }),
             wad = pixelart.newSprite({
