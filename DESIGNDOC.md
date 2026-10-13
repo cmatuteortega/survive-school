@@ -894,7 +894,8 @@ drawing changes. Four things hold it together:
   nobody starts. What it falls through to is the **vanilla** skin
   (`art/vanilla/`), which is SCIENCE's crowd -- SCIENCE has no folder of its own
   -- and so the crowd on every page that has not drawn that name yet (today
-  every lesson but SCIENCE has drawn all ten, so it is SCIENCE's alone). Under that is `Sprites.enemies`: the
+  every lesson but SCIENCE has drawn all ten, so it is SCIENCE's alone). Under
+  that is `Sprites.enemies`: the
   size every skin is measured against, and the drawing of a name no folder has,
   which is the stickman.
 - **The art is authored in `art/<subject>/*.txt` and baked in by
