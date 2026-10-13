@@ -1,13 +1,15 @@
-# bulb -- 11x11 over 9x10. An exercise ball, blush with a red band, for the one
-# that bursts when it dies: it pops.
-....ooo....
-..ookkkoo..
-.okwkkkkko.
-.owwkkkkko.
-okkkkkkkkko
-orrrrrrrrro
-orrrrrrrrro
-.okkkkkkko.
-.okkkkkkko.
-..ookkkoo..
-....ooo....
+# bulb -- 9x12 over 9x10. A can of body spray -- P.E.'s encore boss, the
+# deodorant, small -- in the bulb's own blush and red with its ink outline, for
+# the one that bursts when it dies: a can under pressure, popped.
+...ooo...
+...oro...
+..ooooo..
+.okkkkko.
+.orrrrro.
+.okwkkko.
+.okwkkko.
+.okkkkko.
+.okkkkko.
+.orrrrro.
+.okkkkko.
+.ooooooo.

@@ -843,18 +843,20 @@ put it. A subject with no `drills` gets `DRILL_MIX` (an even hand) at
 `DRILL_EVERY`, so a new row works before it has an opinion.
 
 **But it may not look the same.** A lesson may reinterpret the crowd --
-`Sprites.enemySkins` in `src/sprites.lua`, keyed by subject, and on the music page
-the blob is a quarter note, the bat two beamed quavers, the skull a whole note,
-the two eyes the two clefs and the grin an upright piano grinning with its
+`Sprites.enemySkins` in `src/sprites.lua`, keyed by subject, and on the music
+page the blob is a quarter note, the bat two beamed quavers, the skull a whole
+note, the two eyes the two clefs and the grin an upright piano grinning with its
 keyboard. On the finance page the crowd is the spreadsheet's own toolbar: paste,
 cut, copy, the fill bucket and its drops, an error cell, a pie chart, find, the
-save disk and the cursor; on the P.E. page it is the kit cupboard: a
-kettlebell, a shuttlecock, a cone with the wad's eyes, a bowling ball and
-the small cans of body spray it breaks into, the coach's whistle in blush, an exercise ball, a volleyball and a basketball for the
-two eyes, and a kettlebell again, bigger and in ink, for the grin. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
-stays on the row in `Enemy.types`, so a blob on the music page is the same 4hp
-walking at the same 20px/s, and a build learned on one page reads on every other.
-Only the drawing changes. Four things hold it together:
+save disk and the cursor; on the P.E. page it is the kit cupboard: a kettlebell,
+a shuttlecock, a cone with the wad's eyes, a bowling ball and the little black
+balls it breaks into, the coach's whistle in blush, a can of body spray that
+bursts, a volleyball and a basketball for the two eyes, and a kettlebell again,
+bigger and in ink, for the grin. It is a **skin and nothing else**, which is
+what keeps it on the right side of the paragraph above: every number the crowd
+is made of stays on the row in `Enemy.types`, so a blob on the music page is the
+same 4hp walking at the same 20px/s, and a build learned on one page reads on
+every other. Only the drawing changes. Four things hold it together:
 
 - **The grid may be bigger, and only bigger.** A skin may be drawn up to
   `SKIN_ROOM` (4) over the enemy it replaces in each direction, and the extra is
