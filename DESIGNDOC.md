@@ -846,7 +846,9 @@ put it. A subject with no `drills` gets `DRILL_MIX` (an even hand) at
 `Sprites.enemySkins` in `src/sprites.lua`, keyed by subject, and on the music page
 the blob is a quarter note, the bat two beamed quavers, the skull a whole note,
 the two eyes the two clefs and the grin an upright piano grinning with its
-keyboard. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
+keyboard. On the finance page the crowd is the spreadsheet's own toolbar: paste,
+cut, copy, the fill bucket and its drops, an error cell, a pie chart, find, the
+sheet itself and the cursor. It is a **skin and nothing else**, which is what keeps it on the right side of the paragraph above: every number the crowd is made of
 stays on the row in `Enemy.types`, so a blob on the music page is the same 4hp
 walking at the same 20px/s, and a build learned on one page reads on every other.
 Only the drawing changes. Four things hold it together:
@@ -880,7 +882,7 @@ Only the drawing changes. Four things hold it together:
   nobody starts. What it falls through to is the **vanilla** skin
   (`art/vanilla/`), which is SCIENCE's crowd -- SCIENCE has no folder of its own
   -- and so the crowd on every page that has not drawn that name yet (today
-  P.E., GRAMMAR, FINANCE and ART entirely). Under that is `Sprites.enemies`: the
+  P.E., GRAMMAR and ART entirely). Under that is `Sprites.enemies`: the
   size every skin is measured against, and the drawing of a name no folder has,
   which is the stickman.
 - **The art is authored in `art/<subject>/*.txt` and baked in by

@@ -1,0 +1,13 @@
+# blob -- 10x10 over 8x8. Paste: the clipboard, the most-pressed button on the
+# sheet for the commonest thing in the crowd. Graphite board, as the blob is grey,
+# and the face on the page it holds.
+...ssss...
+.sssoosss.
+sggsoosggs
+sggggggggs
+sgwwwwwwgs
+sgwowwowgs
+sgwwwwwwgs
+sgwwoowwgs
+sggggggggs
+.ssssssss.

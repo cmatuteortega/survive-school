@@ -1,0 +1,15 @@
+# eye -- 11x13 over 11x11. Find: the magnifier. White lens with a sky glint, as
+# the eye is white with a sky iris -- the thing on the sheet that looks for you.
+...sssss...
+..swwwwws..
+.swwccwwws.
+swwcwwwwwws
+swwcwwwwwws
+swwwwwooww.
+swwwwwoowws
+.swwwwwwws.
+..swwwwwss.
+...sssssoos
+.......ooos
+........ooo
+.........oo

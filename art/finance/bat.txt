@@ -1,0 +1,12 @@
+# bat -- 13x10 over 11x7. Cut: the scissors, blades spread like wings and the
+# bat's red moved down into the two handles. White blades, as the bat's wings are.
+s...........s
+ss.........ss
+sws.......sws
+.sws.....sws.
+..sws...sws..
+...swsoswws..
+....swoows...
+...srrssrrs..
+..srsr.srsrs.
+..srrs..srrs.

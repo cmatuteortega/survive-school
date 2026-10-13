@@ -1,0 +1,13 @@
+# wad -- 11x11 over 9x9. Copy: a page with its corner turned, blush lines of
+# figures on paper, as the wad is paper with a blush core.
+.sssssss...
+.swwwwwss..
+.swkkkwsws.
+.swwwwwssss
+.swkkkwwkws
+.swwwwwwwws
+.swkkkkkkws
+.swwwwwwwws
+.swkkkkkkws
+.ssswwwwwws
+...ssssssss

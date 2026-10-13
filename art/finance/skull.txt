@@ -1,0 +1,12 @@
+# skull -- 12x10 over 10x10. An error cell, #! in a blush cell with ink rules:
+# the spreadsheet's own skull. Blush and ink, the skull's two colours.
+oooooooooooo
+okkkkkkkkkko
+okkokkokkkko
+okoooookokko
+okkokkokokko
+okoooookokko
+okkokkokkkko
+okkkkkkkokko
+oooooooooooo
+....o..o....

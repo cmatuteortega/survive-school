@@ -1,0 +1,19 @@
+# grin -- 16x16 over 14x14. The sheet itself: a grey header row and column, a
+# grid of white cells, and a face filled into them -- two cells for eyes and a
+# row for the grin. White and ink, as the vanilla grin is.
+oooooooooooooooo
+oggsgggsgggsgggo
+oggsgggsgggsgggo
+osssssssssssssso
+oggsoooswwwsoooo
+oggsoooswwwsoooo
+oggsoooswwwsoooo
+osssssssssssssso
+oggswwwswwwswwwo
+oggswwwswwwswwwo
+osssssssssssssso
+oggsoooooooooooo
+oggsowowowowowoo
+oggswooooooooowo
+osssssssssssssso
+oooooooooooooooo

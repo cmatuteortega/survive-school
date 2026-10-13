@@ -1,0 +1,9 @@
+# drop -- 6x8 over 6x7. What the fill bucket spills: a drop of ink.
+..ss..
+..ss..
+.soos.
+.soos.
+soooos
+sowoos
+soooos
+.ssss.
