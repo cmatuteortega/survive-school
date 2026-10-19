@@ -7,8 +7,10 @@
 -- out against `Game.vw/vh`.
 
 local Capture = require("src.capture")
+local Display = require("src.display")
 local Game = require("src.game")
 local Input = require("src.input")
+local Options = require("src.options")
 local Orient = require("src.orient")
 local Palette = require("src.palette")
 local Sfx = require("src.sfx")
@@ -131,6 +133,13 @@ function love.load(args)
     -- a frame or two later as an ordinary resize.
     Orient.apply()
 
+    -- The desktop's twin of that: the window the settings page last left, if it
+    -- is not the fullscreen conf.lua opened on (src/display.lua). A take keeps
+    -- the window it opened for itself.
+    Display.fit = fitToWindow
+    if Capture.on then Display.off = true end
+    Display.apply()
+
     if Capture.on then Capture.start(Game) end
 end
 
@@ -197,8 +206,10 @@ end
 
 function love.keypressed(key)
     if key == "f11" or (key == "return" and love.keyboard.isDown("lalt", "ralt")) then
-        love.window.setFullscreen(not love.window.getFullscreen(), "desktop")
-        fitToWindow()
+        -- Through the settings rather than round them, so the SCREEN row says
+        -- what the screen is doing and the next launch opens the same way.
+        Display.toggle()
+        Options.save()
     else
         Game:keypressed(key)
     end

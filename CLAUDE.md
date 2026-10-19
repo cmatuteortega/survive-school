@@ -174,7 +174,10 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
 
 - **Entry and frame:** `main.lua` (fit, canvas, resize, safe insets),
   `conf.lua`, `src/game.lua` (the state machine and the draw order),
-  `src/camera.lua`, `src/input.lua`, `src/util.lua`. `src/dev.lua` is the one
+  `src/camera.lua`, `src/input.lua`, `src/util.lua`, `src/orient.lua` (a phone's
+  SCREEN row) and `src/display.lua` (a computer's: fullscreen or a window, its
+  size, vsync -- the settings page shows each device only its own rows).
+  `src/dev.lua` is the one
   module here that does not ship: the settings page's `UNLOCKS` row, read by
   `Collection.has`, `Collection.lessonOpen`, `Characters.owns` and the library's
   boss page (`bossMet` / `bossBeaten`) and by nothing else, so taking it out at

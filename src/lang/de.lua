@@ -56,6 +56,10 @@ return {
     ["NEW DRAWINGS"] = "NEUE BILDER",
     ["ASK"] = "FRAGEN",
     ["SKIP"] = "AUSLASSEN",
+    ["FULL"] = "VOLL",
+    ["WINDOW"] = "FENSTER",
+    ["WINDOW SIZE"] = "FENSTERGROSSE",
+    ["VSYNC"] = "VSYNC",
 
     --- the timetable ----------------------------------------------------------
 

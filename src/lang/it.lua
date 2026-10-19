@@ -53,6 +53,10 @@ return {
     ["NEW DRAWINGS"] = "NUOVI DISEGNI",
     ["ASK"] = "CHIEDI",
     ["SKIP"] = "SALTA",
+    ["FULL"] = "INTERO",
+    ["WINDOW"] = "FINESTRA",
+    ["WINDOW SIZE"] = "MISURA FINESTRA",
+    ["VSYNC"] = "VSYNC",
 
     --- the timetable ----------------------------------------------------------
 

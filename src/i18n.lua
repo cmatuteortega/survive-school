@@ -182,6 +182,13 @@ local ES = {
     ["NEW DRAWINGS"] = "DIBUJOS NUEVOS",
     ["ASK"] = "PREGUNTAR",
     ["SKIP"] = "OMITIR",
+    -- A computer's three rows, in the phone's three's places (src/display.lua).
+    -- COMPLETA under PANTALLA reads as the whole phrase; the window sizes are
+    -- figures and have no line. VSYNC is the word in every language here.
+    ["FULL"] = "COMPLETA",
+    ["WINDOW"] = "VENTANA",
+    ["WINDOW SIZE"] = "TAMAÑO VENTANA",
+    ["VSYNC"] = "VSYNC",
 
     --- the timetable ----------------------------------------------------------
 

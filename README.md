@@ -396,10 +396,12 @@ run.
 ## Settings
 
 The top-left corner of the title screen opens a page with eight rows on it: how
-loud the music is, how loud the sound is, what language the game is in, which way
-up the page is held, which bottom corner the thumb stick sits in, how much of a
-hit the page says out loud, whether a hit buzzes the phone, and whether the game
-asks you to draw the things it hands you. It is
+loud the music is, how loud the sound is, what language the game is in, how much
+of a hit the page says out loud, whether the game asks you to draw the things it
+hands you, and three rows that depend on what it is played on. A phone is asked
+which way up the page is held, which bottom corner the thumb stick sits in and
+whether a hit buzzes it; a computer is asked whether the page fills the screen,
+how big its window is and whether frames wait for the monitor. It is
 a loop off the side of the title screen rather than a step through it — the corner
 button opens it and the corner button hands it back — and coming back lands on a
 title that is already written on, because you did not re-open the book.
@@ -453,12 +455,32 @@ reached without reading anything. Every row's arrows are
 struck off the widest word *any* of them can hold, so they line up with each
 other as well as standing still while their own word is stepped.
 
-`STICK` is `LEFT` or `RIGHT` and it is the one row on the page a phone needs and
-a desktop never uses — see **Controls** for what it moves, which is the ring and
-both margin columns with it. It is written down on every screen rather than
-appearing when you touch one: the whole reason this page can be centred at all is
-that eight rows are eight rows everywhere, and a row that came and went would be a
-block whose height changed under you.
+**Each kind of device is shown its own three rows and never the other's** — the
+way underroot splits its settings. An orientation on a monitor, a thumb stick on a
+keyboard, a window size on a phone: each is a row that says something and does
+nothing, and a settings page full of switches that do nothing teaches you not to
+trust the ones that do. The three and the three are the same count, so the block is
+eight rows on every device and still centres; and what kind of device it is never
+changes while the page is open, so no row comes or goes under you. The one thing
+that does *not* decide it is whether you have touched the screen yet: a phone's
+stick row is there before the first touch, because a row that appeared with it
+would be a block whose height changed under your finger.
+
+`STICK` is `LEFT` or `RIGHT` — see **Controls** for what it moves, which is the
+ring and both margin columns with it.
+
+On a computer the three are `SCREEN`, `WINDOW SIZE` and `VSYNC`
+(`src/display.lua`). `SCREEN` is `FULL` or `WINDOW` — the same label as the
+phone's orientation row, because it is the same question asked of a different
+thing, how the page sits on the glass — and `F11` / `alt+enter` steps it too, so
+the row always says what the screen is doing and the next launch opens the way
+the last one was left. `WINDOW SIZE` steps `1280X720` → `1600X900` →
+`1920X1080`, the three 16:9 windows a 180-pixel page fills at a whole zoom (x4,
+x5, x6), clamped to the screen; it is only read in a window, but it can be
+stepped in fullscreen so it is ready when you drop out. `VSYNC` is `ON` or
+`OFF`. All three are applied where they are stepped, for the reason the volumes
+are heard while they are dragged: the only way to know whether `WINDOW` is what
+you wanted is to see it.
 
 `DAMAGE NUMBERS` steps `ALL` → `BIG ONLY` → `NONE`, most to least, so a step
 right is always less of it. See **Reading a hit** for where the cut falls. It
@@ -478,8 +500,8 @@ telling you, since your eyes are on whatever is chasing you and not on the bar.
 The hit's own invulnerability window is the rate limit, so a crowd chewing on
 you is a stutter rather than a drone. Stepping the row buzzes once, so you know
 what `ON` means, and it ships on: it is what the genre has taught a phone player
-to expect, and the row is for the player who does not want it. Like `STICK`, a
-desktop has nothing to shake and the row simply does nothing there.
+to expect, and the row is for the player who does not want it. Like `STICK`, it
+is a phone's row: a desktop has nothing to shake and is never shown it.
 
 `NEW DRAWINGS` is the last row and it steps between `ASK` and `SKIP`. It is about
 the boards the game opens *for* you rather than the ones you go and ask for: the
@@ -498,12 +520,13 @@ row is worded the way it is: `ON` against a row that names a refusal is a double
 negative you have to stop and work out, and a stepper is read at a glance or not
 at all.
 
-All eight live in `options.txt` in the save directory, one setting a line, in the
+All of them live in `options.txt` in the save directory — a phone's and a
+computer's both, whichever wrote the file —, one setting a line, in the
 same shape a record is kept in: a line the game cannot read costs that one setting
 its default and nothing else. A garbled options file must never be a game that
 will not start. A yes or no is written there as `1` or `0`, and a row that steps
 through a list writes the value itself — read back against the list its own module
-owns (`Damage.MODES`, `Input.SIDES`), so a word from a later version of the game
+owns (`Damage.MODES`, `Input.SIDES`, `Display.SIZES`), so a word from a later version of the game
 keeps the default rather than being trusted. Every line is a key and one token.
 
 **And a ninth row that does not ship.** While the game is being made there is an
@@ -10120,11 +10143,13 @@ src/
                       and the Spanish for it
   lang/               the other four dictionaries, one file each: de, fr, it, pt
   options.lua         options.txt: the language, the two volumes, the stick's
-                      corner, the damage numbers, whether a new drawing is
-                      asked for and whether the opening has been seen
+                      corner, the damage numbers, the window, whether a new
+                      drawing is asked for and whether the opening has been seen
+  display.lua         a computer's window: fullscreen or not, its size, vsync
   intro.lua           the first launch's opening: eight scenes through a
                       blinking eye, which opens at the end on the title
-  settings.lua        the settings page: two bars and four steppers
+  settings.lua        the settings page: two bars and six steppers, three of
+                      them a phone's or a computer's
   damage.lua          what a hit was worth, thrown up off the thing it hit
   subjects.lua        the pages of the book: how each is ruled, who is in it
   background.lua      procedural notebook paper: one tile baked per subject

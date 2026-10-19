@@ -55,6 +55,10 @@ return {
     ["NEW DRAWINGS"] = "NOVOS DESENHOS",
     ["ASK"] = "PERGUNTAR",
     ["SKIP"] = "PULAR",
+    ["FULL"] = "CHEIA",
+    ["WINDOW"] = "JANELA",
+    ["WINDOW SIZE"] = "TAMANHO JANELA",
+    ["VSYNC"] = "VSYNC",
 
     --- the timetable ----------------------------------------------------------
 

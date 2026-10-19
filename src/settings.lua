@@ -1,7 +1,11 @@
--- The settings page: how loud the game is, what language it is in, which way up
--- the page is held, which thumb walks, how much of a hit it says out loud,
--- whether a hit buzzes the phone, and whether it asks you to draw the things it
--- hands you.
+-- The settings page: how loud the game is, what language it is in, how much of
+-- a hit it says out loud, and whether it asks you to draw the things it hands
+-- you -- and then three rows that depend on what it is being played on. A phone
+-- is asked which way up the page is held, which thumb walks and whether a hit
+-- buzzes it; a computer is asked whether the page fills the screen, how big its
+-- window is and whether frames wait for the monitor. Each is shown its own three
+-- and never the other's: a row a device cannot act on is a row that says
+-- something and does nothing.
 --
 -- **Nothing on this page is a question, so nothing on it is a box you scribble
 -- in.** That is the same rule the timetable's tabs and the whole of the library
@@ -16,9 +20,10 @@
 --
 -- It follows the pause card's shape rather than the library's -- one fixed block
 -- of rows, centred in the safe area, a heading over it and a hint under it --
--- because it *can*: eight rows are eight rows on every screen and in every
--- language, so there is a block here of a height that is always the same, which
--- is the one thing the library never has. The dev row is the one thing that
+-- because it *can*: eight rows are eight rows on every device and in every
+-- language -- the phone's three and the computer's three are the same count --
+-- so there is a block here of a height that is always the same, which is the
+-- one thing the library never has. The dev row is the one thing that
 -- changes that count and it is not a counter-example: it is on the page only
 -- once the heading has been tapped three times (src/dev.lua), so a block that
 -- grew is a block you asked for rather than one that twitched under you. What it does not borrow is the card.
@@ -64,6 +69,7 @@ local Design = require("src.design")
 local Damage = require("src.damage")
 local Haptics = require("src.haptics")
 local Orient = require("src.orient")
+local Display = require("src.display")
 local Characters = require("src.characters")
 local Dev = require("src.dev")
 local Purse = require("src.purse")
@@ -130,6 +136,12 @@ local SIDE_WORD = { left = "LEFT", right = "RIGHT" }
 -- English and than PREGUNTAR in Spanish -- so this row costs the layout
 -- nothing at all.
 local SCREEN_WORD = { auto = "AUTO", wide = "WIDE", tall = "TALL" }
+
+-- A computer's SCREEN row: over the whole screen or in a window (src/display.lua).
+-- The same label as the phone's row, because it is the same question asked of a
+-- different thing -- how the page sits on the glass -- and short words for the
+-- reason the phone's are.
+local WINDOW_WORD = { full = "FULL", window = "WINDOW" }
 
 -- DEV, and out at launch with the row at the bottom of `ROWS` and src/dev.lua.
 -- Two of the three words are the damage row's, which is the whole reason they are
@@ -205,12 +217,10 @@ local ROWS = {
       step = function(dir) I18n.step(dir) end },
     -- Which way up the phone holds the page, and the row above the stick because
     -- it is the larger fact about how the thing is held: how you are holding it
-    -- decides where your spare thumb ends up, not the other way round. Like the
-    -- stick it is a row only a phone can act on -- a desktop window is the
-    -- player's to drag and has no orientation to set -- and like the stick it is
-    -- written down on every screen anyway rather than coming and going, for the
-    -- reason given below.
-    { key = "screen", label = "SCREEN", kind = "choice",
+    -- decides where your spare thumb ends up, not the other way round. `phone`,
+    -- like the stick and the vibration: a desktop window has no orientation to
+    -- set, so a computer is shown its own SCREEN row instead.
+    { key = "screen", label = "SCREEN", kind = "choice", phone = true,
       text = function() return I18n.t(SCREEN_WORD[Orient.mode]) end,
       widest = function() return listWidth(Orient.MODES, SCREEN_WORD) end,
       step = function(dir)
@@ -221,13 +231,48 @@ local ROWS = {
           -- back on.
           Orient.apply()
       end },
-    -- Only a phone has a thumb stick, and this row is drawn on every screen
-    -- anyway. A row that came and went with `Input.usingTouch` would be a page
-    -- whose height changes under you the first time you touch the screen, and
-    -- the one fixed block is the whole reason this page can be centred at all --
-    -- so it is written down where a phone player can find it and simply says
-    -- nothing to anybody else.
-    { key = "stick", label = "STICK", kind = "choice",
+    -- The computer's three, in the phone's three's places (src/display.lua):
+    -- how the page sits on the screen, then the window's size, which is only
+    -- read in a window but stepped either way so it is ready when F11 drops
+    -- out, then vsync. Each applied where it is stepped, for SCREEN's reason:
+    -- the only way to know whether WINDOW is what you wanted is to see it.
+    { key = "window", label = "SCREEN", kind = "choice", desktop = true,
+      text = function() return I18n.t(WINDOW_WORD[Display.window]) end,
+      widest = function() return listWidth(Display.WINDOWS, WINDOW_WORD) end,
+      step = function(dir)
+          Display.window = stepped(Display.WINDOWS, Display.window, dir)
+          Display.apply()
+      end },
+    -- Figures rather than words, so never translated: 1280X720 is 1280X720 in
+    -- every language this page speaks.
+    { key = "size", label = "WINDOW SIZE", kind = "choice", desktop = true,
+      text = function() return Display.size:upper() end,
+      widest = function()
+          local w = 0
+          for _, size in ipairs(Display.SIZES) do
+              w = math.max(w, Font.width(size:upper()))
+          end
+          return w
+      end,
+      step = function(dir)
+          Display.size = stepped(Display.SIZES, Display.size, dir)
+          Display.apply()
+      end },
+    { key = "vsync", label = "VSYNC", kind = "choice", desktop = true,
+      text = function() return I18n.t(Display.vsync and "ON" or "OFF") end,
+      widest = function()
+          return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
+      end,
+      step = function()
+          Display.vsync = not Display.vsync
+          Display.apply()
+      end },
+    -- Only a phone has a thumb stick. Shown on a phone whether or not it has
+    -- been touched yet: a row that came and went with `Input.usingTouch` would
+    -- be a page whose height changes under you the first time you touch the
+    -- screen, and the one fixed block is the whole reason this page can be
+    -- centred at all. What kind of device it is never changes under you.
+    { key = "stick", label = "STICK", kind = "choice", phone = true,
       text = function() return I18n.t(SIDE_WORD[Input.stickSide]) end,
       widest = function() return listWidth(Input.SIDES, SIDE_WORD) end,
       step = function(dir)
@@ -241,11 +286,10 @@ local ROWS = {
       end },
     -- Whether a hit buzzes the phone (src/haptics.lua). Under the damage row
     -- because it is the other half of the same question -- how loudly a hit is
-    -- told to you -- and, like the stick, a row only a phone can act on that is
-    -- written down on every screen anyway, for the stick's reason. ON and OFF
+    -- told to you -- and, like the stick, a row only a phone is shown. ON and OFF
     -- rather than a pair of verbs, unlike the drawings row below it: the label
     -- names the thing rather than a refusal, so ON reads straight.
-    { key = "haptics", label = "VIBRATION", kind = "choice",
+    { key = "haptics", label = "VIBRATION", kind = "choice", phone = true,
       text = function() return I18n.t(Haptics.on and "ON" or "OFF") end,
       widest = function()
           return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
@@ -288,12 +332,21 @@ local ROWS = {
 }
 
 -- The rows actually on the page. `ROWS` above is every row there is; this is the
--- ones that get drawn, which is all of them but the dev row until the gesture has
--- been done. Rebuilt only when the answer changes rather than every frame, and
+-- ones that get drawn: the ones this kind of device can act on (`phone` rows on a
+-- phone, `desktop` rows on a computer), and of those all but the dev row until
+-- the gesture has been done. Rebuilt only when the answer changes rather than every frame, and
 -- refreshed at the top of `layout` so everything measuring, hit-testing or
 -- drawing a row this frame is looking at the same list.
-local rows = ROWS
+local rows = {}
 local shownDev = nil
+
+-- Whether a row belongs on this kind of device. Fixed for the life of the
+-- program, so only the dev row ever changes the list.
+local function here(row)
+    if row.phone then return Display.MOBILE end
+    if row.desktop then return not Display.MOBILE end
+    return true
+end
 
 local function refresh()
     local want = Dev.showing()
@@ -302,7 +355,7 @@ local function refresh()
 
     rows = {}
     for _, row in ipairs(ROWS) do
-        if want or not row.dev then rows[#rows + 1] = row end
+        if (want or not row.dev) and here(row) then rows[#rows + 1] = row end
     end
 end
 

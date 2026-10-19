@@ -1,12 +1,13 @@
 -- What the player has set: language, the two volumes, which way up the page is
 -- held, which corner the stick is in, how loud a hit is said, whether a hit
--- buzzes the phone, and whether a new drawing is asked for -- and one thing the
+-- buzzes the phone, how a computer shows the page (fullscreen or a window, its
+-- size, vsync), and whether a new drawing is asked for -- and one thing the
 -- player did rather than set, whether the opening has been seen. None of it
 -- belongs to a run.
 --
 -- Nothing here owns a value -- each setting lives in the module that knows what
 -- it means (src/i18n, src/sfx, src/orient, src/input, src/damage, src/haptics,
--- src/design, src/intro), and that module also owns the LIST of values it may take, which
+-- src/display, src/design, src/intro), and that module also owns the LIST of values it may take, which
 -- is what a line is read back against: a value not on the list is a later version's file
 -- and keeps the default. This file owns the format only, reading it once at
 -- load and writing whenever a screen sets a value on its owner and calls
@@ -24,6 +25,7 @@ local Input = require("src.input")
 local Damage = require("src.damage")
 local Orient = require("src.orient")
 local Haptics = require("src.haptics")
+local Display = require("src.display")
 local Dev = require("src.dev")
 local Intro = require("src.intro")
 local Save = require("src.save")
@@ -61,6 +63,11 @@ function Options.save()
         ("damage %s"):format(Damage.show),
         ("ask %d"):format(flag(Design.ask)),
         ("haptics %d"):format(flag(Haptics.on)),
+        -- Written on a phone too, where nothing reads them: one file whatever
+        -- device wrote it, so a save carried across keeps both halves.
+        ("window %s"):format(Display.window),
+        ("size %s"):format(Display.size),
+        ("vsync %d"):format(flag(Display.vsync)),
         -- Whether the opening has been seen (src/intro.lua). A file with no line
         -- for it plays the opening, an older version's file included.
         ("intro %d"):format(flag(Intro.seen)),
@@ -115,6 +122,14 @@ function Options.load()
             -- Same reading as `ask`: only a number turns it off.
             local v = tonumber(value)
             if v then Haptics.on = v ~= 0 end
+        elseif key == "window" then
+            -- Applied by main.lua, like the screen line: it is a window call.
+            Display.window = oneOf(Display.WINDOWS, value) or Display.window
+        elseif key == "size" then
+            Display.size = oneOf(Display.SIZES, value) or Display.size
+        elseif key == "vsync" then
+            local v = tonumber(value)
+            if v then Display.vsync = v ~= 0 end
         elseif key == "ask" then
             -- A non-number leaves the default alone, so a hand-edited file
             -- cannot turn the boards off by being unreadable.
