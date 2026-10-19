@@ -51,7 +51,8 @@ round, what every run so far *did* added up rather than the best of it (see
 `course.txt` is how far up the difficulty ladder the book has enrolled and which
 rung the next run is sat at (see **Courses**), `options.txt` is the language, the two volumes, the stick's
 corner, how much of a hit the page says out loud, a computer's window (fullscreen,
-size, vsync), whether a new drawing is
+size, vsync, a frame cap), the phone's battery saver, screen shake and reduced
+flashing, whether a new drawing is
 asked for and whether the opening has been seen (see **Settings and language**), and `bookmark.txt` is
 where the last run got to (see **Game states**). That last one is the only file
 here about a *run*, and it is deliberately not a save: twenty-odd numbers, no
@@ -3897,8 +3898,10 @@ the screen:
   what knows what a volume does to a voice; `Input.stickSide`, `Damage.show`,
   `Haptics.on` and `Design.ask` live on `Input`, `Damage`, `Haptics` and
   `Design` for the same reason again, as `Display.window`, `Display.size` and
-  `Display.vsync` live on `Display` (src/display.lua, which also puts them to
-  work: `Display.apply`, and `Display.toggle` for `F11`), and `Intro.seen` lives on `Intro`. That
+  `Display.vsync`, `Display.cap` and `Display.saver` live on `Display`
+  (src/display.lua, which also puts them to work: `Display.apply`, `Display.fps`,
+  and `Display.toggle` for `F11`), `Comfort.shake` and `Comfort.calm` on
+  `Comfort`, and `Intro.seen` lives on `Intro`. That
   last one is the only line in the file the player does not *set*: it records
   that the opening has been watched, and it is in here because it is one
   yes-or-no that belongs to the book and not to a run.
@@ -3967,12 +3970,35 @@ bar dragged to nothing leaves the track playing at zero rather than stopping it,
 since a stopped stream comes back at the top of the file and turning the music
 down and up again would restart it instead of turning it back on.
 
-**Three of its rows are the device's.** Every row carries `phone`, `desktop` or
-neither, and `refresh` keeps only those this kind of device can act on
-(`Display.MOBILE`): a phone gets `SCREEN` (orientation, src/orient.lua), `STICK`
-and `VIBRATION`; a computer gets `SCREEN` (`FULL`/`WINDOW`), `WINDOW SIZE` and
-`VSYNC` (src/display.lua), which apply where they are stepped. Three for three, so
-the block is eight rows on both and still centres. `F11` / `alt+enter` goes through
+**Three tabs: GENERAL, DEVICE, COMFORT.** Every row carries its `tab`, and
+`refresh` builds `all` (the rows this device can act on, the dev row only once it
+is shown), `rows` (those on the open tab) and `most` (the longest tab's count).
+The block is laid out for `most` and the label and arrow columns are measured
+across `all`, so changing tabs moves nothing but the rows. The tabs are the
+timetable's cards on their side (`Settings:drawTab`, out past the overprint pass),
+red on the open one, which stands `TAB_POP` taller; `Tab`/`shift+Tab`/`Q`/`E`
+change them, and the open tab is kept for the life of the program. `enter(focus)`
+opens on the tab the focused row is on, which is how the title's `LANG` button
+still lands on the language. The hint drops its "drag a bar" on a tab with no bar.
+
+**DEVICE is the device's.** Every row carries `phone`, `desktop` or neither, and
+only those this kind of device can act on are kept (`Display.MOBILE`): a phone
+gets `SCREEN` (orientation, src/orient.lua), `STICK`, `VIBRATION` and
+`BATTERY SAVER`; a computer gets `SCREEN` (`FULL`/`WINDOW`), `WINDOW SIZE`, `VSYNC`
+and `FRAME CAP` (src/display.lua), which apply where they are stepped. Four for
+four, so the block is the same on both and still centres. The frame cap (or the
+saver's 30) is slept off at the top of `love.update` (main.lua), as underroot does,
+and never under a take.
+
+**COMFORT** is `DAMAGE NUMBERS` and src/comfort.lua's two flags. `Comfort.shake`
+is read in `Camera`'s `knocked`, so with it off a knock runs its time and the page
+does not move. `Comfort.calm` holds every blink to `CALM_RATE` (four steps, two
+flashes, a second): a blink written `floor(t * rate) % 2` writes
+`floor(t * Comfort.rate(rate)) % 2`, and one kept as seconds a step passes them
+through `Comfort.period` (the bomb's fuse, the beam's wind-up, the storm's bolt,
+a wreck's flicker, the HUD's ink-wave warning). **A new blink owes the same** --
+it is the one thing the row cannot do for it. A single hit flash and a jiggle
+(a position that flips, not a colour) are not blinks. `F11` / `alt+enter` goes through
 `Display.toggle` and saves, so the row and the next launch follow it; under a dev
 take `Display.off` is set and the take's own window is left alone.
 

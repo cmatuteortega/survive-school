@@ -7,6 +7,7 @@
 local Camera = require("src.camera")
 local Palette = require("src.palette")
 local pixelart = require("src.pixelart")
+local Comfort = require("src.comfort")
 
 local Beam = {}
 Beam.__index = Beam
@@ -210,7 +211,7 @@ function Beam:flashing()
     if left > FLASH_FOR then return false end
 
     local into = 1 - left / math.min(FLASH_FOR, self.def.charge)
-    local period = BLINK_SLOW + (BLINK_FAST - BLINK_SLOW) * into
+    local period = Comfort.period(BLINK_SLOW + (BLINK_FAST - BLINK_SLOW) * into)
     return math.floor(self.t / period) % 2 == 0
 end
 

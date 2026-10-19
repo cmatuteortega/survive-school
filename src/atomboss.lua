@@ -43,6 +43,7 @@ local Palette = require("src.palette")
 local Camera = require("src.camera")
 local Atom = require("src.atom")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local AtomBoss = {}
 AtomBoss.__index = AtomBoss
@@ -448,7 +449,7 @@ function AtomBoss:drawGround(time)
     each(self, function(brain, e)
         if not e or not e.nucleus then return end
         local cx, cy = e.nucleus:centre(e.x, e.y)
-        local on = floor(time * 8) % 2 == 0
+        local on = floor(time * Comfort.rate(8)) % 2 == 0
         for _, ring in ipairs(e.nucleus.rings) do
             if ring.state == "tell" and brain.state == "sweepTell" then
                 Atom.drawRing(ring, cx, cy, brain.reach,
@@ -474,7 +475,7 @@ function AtomBoss:drawAir(time, boss)
                     Atom.electron(cx + px, cy + py)
                 end
             elseif ring.state == "tell" then
-                local on = floor(time * 10) % 2 == 0
+                local on = floor(time * Comfort.rate(10)) % 2 == 0
                 Atom.drawRing(ring, cx, cy, ring.r, on and Palette.red or Palette.slate, 1, 2, 0)
                 local px, py = Atom.point(ring, ring.phi)
                 Atom.electron(cx + px, cy + py)

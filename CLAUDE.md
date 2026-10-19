@@ -176,7 +176,10 @@ accents off: the 3x5 face draws only the marks that spell (Ñ, Ä Ö Ü, Ã Õ, 
   `conf.lua`, `src/game.lua` (the state machine and the draw order),
   `src/camera.lua`, `src/input.lua`, `src/util.lua`, `src/orient.lua` (a phone's
   SCREEN row) and `src/display.lua` (a computer's: fullscreen or a window, its
-  size, vsync -- the settings page shows each device only its own rows).
+  size, vsync, the frame cap -- the settings page's DEVICE tab shows each device
+  only its own rows) and `src/comfort.lua` (its COMFORT tab: screen shake, and
+  `Comfort.rate` / `Comfort.period`, which every blink goes through so REDUCE
+  FLASHING can hold it to two flashes a second -- a new blink owes the same).
   `src/dev.lua` is the one
   module here that does not ship: the settings page's `UNLOCKS` row, read by
   `Collection.has`, `Collection.lessonOpen`, `Characters.owns` and the library's

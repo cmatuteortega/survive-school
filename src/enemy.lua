@@ -27,6 +27,7 @@ local Solid = require("src.solid")
 local Solids = require("src.solids")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Enemy = {}
 Enemy.__index = Enemy
@@ -2267,12 +2268,12 @@ end
 function Enemy:outlineColour()
     if self.flash > 0 then return Palette.red end
     if self.chargePhase == "dash" then return Palette.red end
-    if self.chargePhase == "wind" and math.floor(self.phaseT * 14) % 2 == 0 then
+    if self.chargePhase == "wind" and math.floor(self.phaseT * Comfort.rate(14)) % 2 == 0 then
         return Palette.red
     end
     -- A whistle drawing breath for a blast blinks the same red the wind-up does
     -- and for the same reason: it is a warning, and there is one way to say one.
-    if self.blowT > 0 and math.floor(self.blowT * 14) % 2 == 0 then
+    if self.blowT > 0 and math.floor(self.blowT * Comfort.rate(14)) % 2 == 0 then
         return Palette.red
     end
     if self.shockT > 0 then return Palette.blue end

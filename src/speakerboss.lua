@@ -49,6 +49,7 @@ local Sfx = require("src.sfx")
 local Sprites = require("src.sprites")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local SpeakerBoss = {}
 SpeakerBoss.__index = SpeakerBoss
@@ -175,8 +176,8 @@ function SpeakerBoss:pose(dt, e, body, frac, muted)
         or (self.phase >= 3 and not muted and 0.3) or body.shake * 0.5
     if body.shake < 0.2 then body.shake = 0 end
 
-    body.plus = self.plusT > 0 and floor(self.plusT * 10) % 2 == 0
-    body.rune = state == "pairTell" and floor(self.t * 8) % 2 == 0
+    body.plus = self.plusT > 0 and floor(self.plusT * Comfort.rate(10)) % 2 == 0
+    body.rune = state == "pairTell" and floor(self.t * Comfort.rate(8)) % 2 == 0
 
     -- The ring: off when muted, coming up on the entrance, and otherwise a
     -- meter of how loud it is -- a third, two, all of it -- chasing round, in
@@ -193,7 +194,7 @@ function SpeakerBoss:pose(dt, e, body, frac, muted)
     elseif state == "dropping" or state == "shuffleTell" then
         lights.colour, lights.lit = "cycle", 12
     elseif state == "pairTell" then
-        lights.colour = floor(self.t * 8) % 2 == 0 and "blue" or "sky"
+        lights.colour = floor(self.t * Comfort.rate(8)) % 2 == 0 and "blue" or "sky"
         lights.lit = 12
     else
         lights.colour = self.phase >= 3 and "red" or "sky"
@@ -862,7 +863,7 @@ function SpeakerBoss:drawGround(time)
         arc(d.x, d.y, 60, d.gap + math.pi, TAU - d.width, true)
         -- Through the build, the red that is going to go out everywhere but there.
         if self.state == "dropBuild" then
-            love.graphics.setColor(floor(time * 8) % 2 == 0 and Palette.red or Palette.blush)
+            love.graphics.setColor(floor(time * Comfort.rate(8)) % 2 == 0 and Palette.red or Palette.blush)
             arc(d.x, d.y, 18 + d.built * 10, d.gap, d.width, true)
         end
     end
@@ -889,7 +890,7 @@ function SpeakerBoss:drawGround(time)
     local pr = self.paired
     if pr then
         local tx, ty = e.speaker:top(e.x, e.y)
-        local on = floor(time * 10) % 2 == 0
+        local on = floor(time * Comfort.rate(10)) % 2 == 0
         for _, o in ipairs(pr.list) do
             if not pr.gone[o] then
                 local dx, dy, dist = util.normalize(o.x - tx, o.y - ty)
@@ -920,7 +921,7 @@ function SpeakerBoss:drawAir(time, e)
 
     for _, n in ipairs(self.notes) do
         -- Blinking out for its last moment.
-        if n.life > 0.8 or floor(n.life * 12) % 2 == 0 then note(n.x, n.y) end
+        if n.life > 0.8 or floor(n.life * Comfort.rate(12)) % 2 == 0 then note(n.x, n.y) end
     end
 
     for _, b in ipairs(self.blasts) do
@@ -933,7 +934,7 @@ function SpeakerBoss:drawAir(time, e)
     if self.handful and e and e.speaker then
         local tx, ty = e.speaker:top(e.x, e.y)
         local n = pick(self.def.shuffle.count, self.phase)
-        if floor(time * 12) % 2 == 0 then
+        if floor(time * Comfort.rate(12)) % 2 == 0 then
             for k = 1, n do
                 local a = self.handful + k / n * TAU
                 note(tx + cos(a) * 16, ty - 6 + sin(a) * 6)
@@ -944,7 +945,7 @@ function SpeakerBoss:drawAir(time, e)
     -- The music coming out of it: little notes floating up and away.
     for _, f in ipairs(self.floats) do
         local k = f.t / FLOAT_TIME
-        if k < 0.75 or floor(f.t * 20) % 2 == 0 then
+        if k < 0.75 or floor(f.t * Comfort.rate(20)) % 2 == 0 then
             local x, y = floor(f.x), floor(f.y)
             love.graphics.setColor(k < 0.5 and f.colour or Palette.graphite)
             love.graphics.rectangle("fill", x, y + 2, 2, 2)

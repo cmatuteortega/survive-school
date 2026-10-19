@@ -13,6 +13,7 @@ local Input = require("src.input")
 local pixelart = require("src.pixelart")
 local Purse = require("src.purse")
 local Worksheet = require("src.worksheet")
+local Comfort = require("src.comfort")
 
 local Hud = {}
 
@@ -980,7 +981,7 @@ local function starShade(v)
 end
 
 local function inkWave(x, y, w, h, left, t)
-    if left < INK_WAVE_WARN and math.floor(left / INK_WAVE_BLINK) % 2 == 0 then
+    if left < INK_WAVE_WARN and math.floor(left / Comfort.period(INK_WAVE_BLINK)) % 2 == 0 then
         bar(x, y, w, h, 1, Palette.slate)
         return
     end

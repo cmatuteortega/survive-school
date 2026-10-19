@@ -34,6 +34,7 @@
 
 local Palette = require("src.palette")
 local pixelart = require("src.pixelart")
+local Comfort = require("src.comfort")
 
 local Tesseract = {}
 Tesseract.__index = Tesseract
@@ -313,7 +314,7 @@ function Tesseract:draw(x, y)
 
     -- The corners: a bead each, the near ones bigger. A corner the brain is
     -- about to throw blinks red (`hot`).
-    local blink = floor(self.t * 12) % 2 == 0
+    local blink = floor(self.t * Comfort.rate(12)) % 2 == 0
     for i = 1, #CORNERS do
         local sx, sy = floor(cx + px[i]), floor(cy + py[i])
         local hot = self.hot and self.hot[i]

@@ -43,6 +43,7 @@ local Palette = require("src.palette")
 local Puddle = require("src.puddle")
 local Sprites = require("src.sprites")
 local pixelart = require("src.pixelart")
+local Comfort = require("src.comfort")
 
 local Bomb = {}
 Bomb.__index = Bomb
@@ -126,7 +127,7 @@ end
 -- BLINK_FAST at the bang, whatever the fuse was.
 local function period(b)
     local left = math.max(0, b.fuse) / BLINK
-    return BLINK_FAST + (BLINK_SLOW - BLINK_FAST) * left
+    return Comfort.period(BLINK_FAST + (BLINK_SLOW - BLINK_FAST) * left)
 end
 
 --- going off -----------------------------------------------------------------

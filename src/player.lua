@@ -5,6 +5,7 @@ local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local Haptics = require("src.haptics")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Player = {}
 Player.__index = Player
@@ -358,7 +359,7 @@ end
 -- hero and once by the blank stamped into the page under him -- and a frame where
 -- the two disagreed would print a hero-shaped hole in the ruling.
 function Player:blinked()
-    return self.invuln > 0 and math.floor(self.invuln * 20) % 2 == 1
+    return self.invuln > 0 and math.floor(self.invuln * Comfort.rate(20)) % 2 == 1
 end
 
 -- Where his feet are this frame, bounce and all. Two callers for the blink's

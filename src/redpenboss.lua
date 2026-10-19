@@ -62,6 +62,7 @@ local RedPen = require("src.redpen")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local PenBoss = {}
 PenBoss.__index = PenBoss
@@ -1190,7 +1191,7 @@ function PenBoss:drawGround(time)
     if self.state ~= "enter" or e.redpen.tip > 0 then self:drawShadow(e) end
     for _, l in ipairs(self.ink) do drawInk(l) end
 
-    local blink = floor(time * 10) % 2 == 0
+    local blink = floor(time * Comfort.rate(10)) % 2 == 0
 
     -- The ring: dotted all the way round while it is aimed, then the part still
     -- to be drawn, blinking, ahead of the nib.

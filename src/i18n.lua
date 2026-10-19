@@ -189,6 +189,18 @@ local ES = {
     ["WINDOW"] = "VENTANA",
     ["WINDOW SIZE"] = "TAMAÑO VENTANA",
     ["VSYNC"] = "VSYNC",
+    -- The page's three tabs, and the rows that came with them. APARATO rather
+    -- than DISPOSITIVO, which would not fit three tabs across a phone held
+    -- upright.
+    ["GENERAL"] = "GENERAL",
+    ["DEVICE"] = "APARATO",
+    ["COMFORT"] = "COMODIDAD",
+    ["BATTERY SAVER"] = "AHORRO BATERIA",
+    ["FRAME CAP"] = "LIMITE FPS",
+    ["SCREEN SHAKE"] = "TEMBLOR",
+    ["REDUCE FLASHING"] = "MENOS DESTELLOS",
+    ["USE THE ARROWS"] = "USA LAS FLECHAS",
+    ["TAP AN ARROW TO SET IT"] = "TOCA UNA FLECHA",
 
     --- the timetable ----------------------------------------------------------
 

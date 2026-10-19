@@ -63,6 +63,15 @@ return {
     ["WINDOW"] = "FENETRE",
     ["WINDOW SIZE"] = "TAILLE FENETRE",
     ["VSYNC"] = "VSYNC",
+    ["GENERAL"] = "GENERAL",
+    ["DEVICE"] = "APPAREIL",
+    ["COMFORT"] = "CONFORT",
+    ["BATTERY SAVER"] = "ECO BATTERIE",
+    ["FRAME CAP"] = "LIMITE FPS",
+    ["SCREEN SHAKE"] = "SECOUSSES",
+    ["REDUCE FLASHING"] = "MOINS DE FLASHS",
+    ["USE THE ARROWS"] = "UTILISE LES FLECHES",
+    ["TAP AN ARROW TO SET IT"] = "TOUCHE UNE FLECHE",
 
     --- the timetable ----------------------------------------------------------
 

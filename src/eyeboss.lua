@@ -59,6 +59,7 @@ local Eyeball = require("src.eyeball")
 local Puddle = require("src.puddle")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local EyeBoss = {}
 EyeBoss.__index = EyeBoss
@@ -771,7 +772,7 @@ function EyeBoss:drawGround(time)
         end
         -- ...inside the same blinking ring the landing marker wears, since it is
         -- the same message: something big is about to be standing here.
-        if math.floor(time * 12) % 2 == 0 then
+        if math.floor(time * Comfort.rate(12)) % 2 == 0 then
             love.graphics.setColor(Palette.red)
             for k = 0, 35 do
                 if k % 3 ~= 2 then
@@ -808,7 +809,7 @@ function EyeBoss:drawAir(time, e)
                 local ex, ey = ox + math.cos(beam.a) * len, oy + math.sin(beam.a) * len
                 pixelart.line(math.floor(ox), math.floor(oy), math.floor(ex), math.floor(ey))
             else
-                love.graphics.setColor(math.floor(time * 10) % 2 == 0 and Palette.red or Palette.slate)
+                love.graphics.setColor(math.floor(time * Comfort.rate(10)) % 2 == 0 and Palette.red or Palette.slate)
                 dashes(ox, oy, beam.a, len, time * 40)
             end
         end

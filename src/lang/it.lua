@@ -57,6 +57,15 @@ return {
     ["WINDOW"] = "FINESTRA",
     ["WINDOW SIZE"] = "MISURA FINESTRA",
     ["VSYNC"] = "VSYNC",
+    ["GENERAL"] = "GENERALE",
+    ["DEVICE"] = "SISTEMA",
+    ["COMFORT"] = "COMFORT",
+    ["BATTERY SAVER"] = "RISP. BATTERIA",
+    ["FRAME CAP"] = "LIMITE FPS",
+    ["SCREEN SHAKE"] = "SCOSSE",
+    ["REDUCE FLASHING"] = "MENO LAMPI",
+    ["USE THE ARROWS"] = "USA LE FRECCE",
+    ["TAP AN ARROW TO SET IT"] = "TOCCA UNA FRECCIA",
 
     --- the timetable ----------------------------------------------------------
 

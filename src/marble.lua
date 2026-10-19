@@ -53,6 +53,7 @@ local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Marble = {}
 Marble.__index = Marble
@@ -537,12 +538,12 @@ end
 -- counted in.
 function Marble:drawGround(time)
     local shift = floor(time * 20)
-    local blink = floor(time * 8) % 2 == 0
+    local blink = floor(time * Comfort.rate(8)) % 2 == 0
     local lie = self.def.carve.lie
 
     for _, d in ipairs(self.debris) do
         -- Faded by dropping out, not by alpha: the last second blinks.
-        if d.age < lie - 1 or floor(d.age * 10) % 2 == 0 then lump(d.x, d.y, d.r) end
+        if d.age < lie - 1 or floor(d.age * Comfort.rate(10)) % 2 == 0 then lump(d.x, d.y, d.r) end
     end
 
     -- The slabs: falling (swinging down from upright to flat, so its far end
@@ -634,7 +635,7 @@ function Marble:drawAir(time, e)
     local w = self.wedge
     if w then
         local c = self.def.chisel
-        local blink = floor(time * 8) % 2 == 0
+        local blink = floor(time * Comfort.rate(8)) % 2 == 0
         love.graphics.setColor((w.locked and blink) and Palette.red or Palette.slate)
         local r0 = e.radius + 2
         for k = -1, 1, 2 do

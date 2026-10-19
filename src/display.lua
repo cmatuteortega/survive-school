@@ -1,15 +1,17 @@
 -- How a computer shows the page: over the whole screen or in a window, how big
--- that window is, and whether frames wait for the monitor -- the settings page's
--- three desktop rows, in the place src/orient.lua's SCREEN row and the stick
--- and vibration rows have on a phone. Each kind of device is shown the rows it
--- can act on and no others (`Display.MOBILE`, read by src/settings.lua), the way
--- underroot splits its own settings: a window size on a phone and an orientation
--- on a monitor are both rows that say something and do nothing.
+-- that window is, whether frames wait for the monitor and how many it draws a
+-- second -- the settings page's desktop rows on its DEVICE tab, in the place
+-- src/orient.lua's SCREEN row and the stick and vibration rows have on a phone.
+-- And the one of the phone's rows that is about frames too: the battery saver.
+-- Each kind of device is shown the rows it can act on and no others
+-- (`Display.MOBILE`, read by src/settings.lua), the way underroot splits its own
+-- settings: a window size on a phone and an orientation on a monitor are both
+-- rows that say something and do nothing.
 --
 -- Like src/orient.lua this owns the values and the lists they are read back
 -- against (src/options.lua writes them), and `apply` is what puts them to work.
--- Nothing here runs on a phone, and nothing here runs under a dev take
--- (src/capture.lua), which opens a window of its own.
+-- The window is never touched on a phone or under a dev take (src/capture.lua),
+-- which opens a window of its own.
 --
 -- Fullscreen is the desktop kind ("desktop", the screen's own resolution) for
 -- conf.lua's reason: a mode change would have the zoom picked off a size the
@@ -28,6 +30,16 @@ Display.SIZES = { "1280x720", "1600x900", "1920x1080" }
 Display.window = "full"
 Display.size = "1280x720"
 Display.vsync = true
+
+-- The frame cap: frames a second a computer draws at most, 0 for no cap of its
+-- own (vsync, if it is on, is still a cap). And the phone's battery saver, which
+-- is the same thing with one number in it: 30, half what a phone draws, which
+-- this game's whole-pixel page shows no difference at -- the dt is clamped at a
+-- thirtieth already (main.lua), so nothing in a run moves differently at it.
+Display.CAPS = { 0, 30, 60, 120 }
+Display.cap = 0
+Display.saver = false
+local SAVER = 30
 
 -- Set by main.lua: refit the canvas to the window. A setMode does not always
 -- come back as a resize, so it is asked for here rather than waited on.
@@ -71,6 +83,14 @@ function Display.apply()
         })
     end
     refit()
+end
+
+-- What to hold the frame rate to on this device, 0 for nothing. A take keeps
+-- its own clock (src/capture.lua) and is never capped.
+function Display.fps()
+    if Display.MOBILE then return Display.saver and SAVER or 0 end
+    if Display.off then return 0 end
+    return Display.cap
 end
 
 -- F11 / alt+enter (main.lua): the other of the two, and the setting follows,

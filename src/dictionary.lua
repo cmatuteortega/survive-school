@@ -51,6 +51,7 @@ local Font = require("src.font")
 local I18n = require("src.i18n")
 local Sfx = require("src.sfx")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Dictionary = {}
 Dictionary.__index = Dictionary
@@ -577,13 +578,13 @@ function Dictionary:drawGround(time)
             local left = dry - l.age
             if left > dry * 0.5 then
                 written(l, Palette.slate)
-            elseif left > 1 or math.floor(left * 10) % 2 == 0 then
+            elseif left > 1 or math.floor(left * Comfort.rate(10)) % 2 == 0 then
                 written(l, Palette.graphite)
             end
         end
     end
 
-    local blink = math.floor(time * 8) % 2 == 0
+    local blink = math.floor(time * Comfort.rate(8)) % 2 == 0
     local shift = math.floor(time * 20)
     if self.pass then
         for _, l in ipairs(self.pass) do

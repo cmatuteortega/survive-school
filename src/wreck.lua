@@ -23,6 +23,7 @@ local Camera = require("src.camera")
 local Palette = require("src.palette")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
+local Comfort = require("src.comfort")
 
 local Wreck = {}
 Wreck.__index = Wreck
@@ -88,7 +89,7 @@ function Wreck:update(dt, game)
     e.hop = self.hop * math.max(0, 1 - self.t / 0.2)
 
     -- The flicker speeds up towards the burst.
-    self.step = self.step + dt / (FLICK_SLOW + (FLICK_FAST - FLICK_SLOW) * f)
+    self.step = self.step + dt / Comfort.period(FLICK_SLOW + (FLICK_FAST - FLICK_SLOW) * f)
 
     -- And it spits, faster too: a few specks off its edge in its own colours.
     self.spitT = self.spitT - dt

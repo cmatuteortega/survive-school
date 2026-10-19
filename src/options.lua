@@ -1,13 +1,14 @@
 -- What the player has set: language, the two volumes, which way up the page is
 -- held, which corner the stick is in, how loud a hit is said, whether a hit
 -- buzzes the phone, how a computer shows the page (fullscreen or a window, its
--- size, vsync), and whether a new drawing is asked for -- and one thing the
+-- size, vsync, a frame cap), the phone's battery saver, whether a knock shakes
+-- the page and whether things blink fast, and whether a new drawing is asked for -- and one thing the
 -- player did rather than set, whether the opening has been seen. None of it
 -- belongs to a run.
 --
 -- Nothing here owns a value -- each setting lives in the module that knows what
 -- it means (src/i18n, src/sfx, src/orient, src/input, src/damage, src/haptics,
--- src/display, src/design, src/intro), and that module also owns the LIST of values it may take, which
+-- src/display, src/comfort, src/design, src/intro), and that module also owns the LIST of values it may take, which
 -- is what a line is read back against: a value not on the list is a later version's file
 -- and keeps the default. This file owns the format only, reading it once at
 -- load and writing whenever a screen sets a value on its owner and calls
@@ -26,6 +27,7 @@ local Damage = require("src.damage")
 local Orient = require("src.orient")
 local Haptics = require("src.haptics")
 local Display = require("src.display")
+local Comfort = require("src.comfort")
 local Dev = require("src.dev")
 local Intro = require("src.intro")
 local Save = require("src.save")
@@ -68,6 +70,10 @@ function Options.save()
         ("window %s"):format(Display.window),
         ("size %s"):format(Display.size),
         ("vsync %d"):format(flag(Display.vsync)),
+        ("cap %d"):format(Display.cap),
+        ("saver %d"):format(flag(Display.saver)),
+        ("shake %d"):format(flag(Comfort.shake)),
+        ("calm %d"):format(flag(Comfort.calm)),
         -- Whether the opening has been seen (src/intro.lua). A file with no line
         -- for it plays the opening, an older version's file included.
         ("intro %d"):format(flag(Intro.seen)),
@@ -130,6 +136,17 @@ function Options.load()
         elseif key == "vsync" then
             local v = tonumber(value)
             if v then Display.vsync = v ~= 0 end
+        elseif key == "cap" then
+            Display.cap = oneOf(Display.CAPS, tonumber(value)) or Display.cap
+        elseif key == "saver" then
+            local v = tonumber(value)
+            if v then Display.saver = v ~= 0 end
+        elseif key == "shake" then
+            local v = tonumber(value)
+            if v then Comfort.shake = v ~= 0 end
+        elseif key == "calm" then
+            local v = tonumber(value)
+            if v then Comfort.calm = v ~= 0 end
         elseif key == "ask" then
             -- A non-number leaves the default alone, so a hand-edited file
             -- cannot turn the boards off by being unreadable.

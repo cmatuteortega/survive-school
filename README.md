@@ -23,6 +23,7 @@ Requires [LÖVE 11.x](https://love2d.org).
 | Change language | the `LANG` button in the bottom-left corner, or `L`, then the `<` `>` it points at | tap the `LANG` button in the bottom-left corner, then the `>` it points at |
 | Set a volume | drag the bar, or `↑` / `↓` then `←` / `→` | drag the bar |
 | Change language in settings | the `<` `>` beside it, or `←` / `→` | tap the `<` `>` beside it |
+| Change settings tab | tap the tab, or `Tab` / `shift+Tab`, or `Q` / `E` | tap the tab |
 | Close the settings page | the arrow in the top-left corner, or `Backspace` | tap the arrow in the top-left corner |
 | Pick the subject | tap its tab, or `1`–`7` | tap its tab |
 | Start the run on it | scribble in `GO!`, or `Enter` | scribble in `GO!` |
@@ -395,19 +396,31 @@ run.
 
 ## Settings
 
-The top-left corner of the title screen opens a page with eight rows on it: how
-loud the music is, how loud the sound is, what language the game is in, how much
-of a hit the page says out loud, whether the game asks you to draw the things it
-hands you, and three rows that depend on what it is played on. A phone is asked
-which way up the page is held, which bottom corner the thumb stick sits in and
-whether a hit buzzes it; a computer is asked whether the page fills the screen,
-how big its window is and whether frames wait for the monitor. It is
+The top-left corner of the title screen opens a page with three tabs on it.
+`GENERAL` is how loud the music is, how loud the sound is, what language the game
+is in and whether it asks you to draw the things it hands you. `DEVICE` is four
+rows that depend on what it is played on: a phone is asked which way up the page
+is held, which bottom corner the thumb stick sits in, whether a hit buzzes it and
+whether to save its battery; a computer is asked whether the page fills the
+screen, how big its window is, whether frames wait for the monitor and how many
+it draws a second. `COMFORT` is how much of a hit the page says out loud, whether
+a knock shakes the page, and whether things blink fast. It is
 a loop off the side of the title screen rather than a step through it — the corner
 button opens it and the corner button hands it back — and coming back lands on a
 title that is already written on, because you did not re-open the book.
 
 It takes the pause card's shape: one block of rows centred in the page, a heading
-over it, a hint under it. What it does not take is the *card*. The pause card is
+over it, a hint under it. The block is laid out for the longest tab, so changing
+tabs moves nothing but the rows — the heading, the tabs and the hint stand still,
+and a shorter tab leaves its spare room empty at the bottom. The tabs came when
+the page outgrew one block: eight rows were all a 180-pixel page could hold with
+air between them, and the rows worth having did not stop at eight. They are the
+timetable's tabs on their side — paper cards, slate where there is somewhere else
+to look, red on the one the page is open at, which stands a little taller into the
+page — and they are pressed rather than scribbled in, for this page's own rule
+below: choosing what to look at is not a question. `Tab` (`shift+Tab` back), `Q`
+and `E` change them on a keyboard, and the page comes back on the tab you left.
+What it does not take is the *card*. The pause card is
 paper because there is a run underneath it that lettering cannot be read against;
 here there is nothing underneath but the page you came in on, so this is written
 straight onto it the way the timetable and the library are. The bars go out over
@@ -455,12 +468,12 @@ reached without reading anything. Every row's arrows are
 struck off the widest word *any* of them can hold, so they line up with each
 other as well as standing still while their own word is stepped.
 
-**Each kind of device is shown its own three rows and never the other's** — the
+**Each kind of device is shown its own four rows and never the other's** — the
 way underroot splits its settings. An orientation on a monitor, a thumb stick on a
 keyboard, a window size on a phone: each is a row that says something and does
 nothing, and a settings page full of switches that do nothing teaches you not to
-trust the ones that do. The three and the three are the same count, so the block is
-eight rows on every device and still centres; and what kind of device it is never
+trust the ones that do. The four and the four are the same count, so the block is
+the same on every device and still centres; and what kind of device it is never
 changes while the page is open, so no row comes or goes under you. The one thing
 that does *not* decide it is whether you have touched the screen yet: a phone's
 stick row is there before the first touch, because a row that appeared with it
@@ -469,7 +482,7 @@ would be a block whose height changed under your finger.
 `STICK` is `LEFT` or `RIGHT` — see **Controls** for what it moves, which is the
 ring and both margin columns with it.
 
-On a computer the three are `SCREEN`, `WINDOW SIZE` and `VSYNC`
+On a computer the four are `SCREEN`, `WINDOW SIZE`, `VSYNC` and `FRAME CAP`
 (`src/display.lua`). `SCREEN` is `FULL` or `WINDOW` — the same label as the
 phone's orientation row, because it is the same question asked of a different
 thing, how the page sits on the glass — and `F11` / `alt+enter` steps it too, so
@@ -478,15 +491,39 @@ the last one was left. `WINDOW SIZE` steps `1280X720` → `1600X900` →
 `1920X1080`, the three 16:9 windows a 180-pixel page fills at a whole zoom (x4,
 x5, x6), clamped to the screen; it is only read in a window, but it can be
 stepped in fullscreen so it is ready when you drop out. `VSYNC` is `ON` or
-`OFF`. All three are applied where they are stepped, for the reason the volumes
+`OFF`, and `FRAME CAP` steps `OFF` → `30` → `60` → `120`, the most frames a
+second it draws (vsync, when it is on, is a cap of its own). All four are applied where they are stepped, for the reason the volumes
 are heard while they are dragged: the only way to know whether `WINDOW` is what
 you wanted is to see it.
+
+`BATTERY SAVER` is the phone's frame cap with one number in it: `ON` draws thirty
+frames a second rather than sixty. Nothing in a run moves differently at it — every
+frame's step is clamped to a thirtieth of a second already — and on a whole-pixel
+page of eight colours it is hard to see at all, so it is the cheapest battery a
+phone player can buy.
 
 `DAMAGE NUMBERS` steps `ALL` → `BIG ONLY` → `NONE`, most to least, so a step
 right is always less of it. See **Reading a hit** for where the cut falls. It
 exists because a late build lands several hits a frame on a crowd and the page is
 the thing you are meant to be reading; it ships on `ALL`, because a page filling
 with fatter numbers is how a run reads its own progress.
+
+`SCREEN SHAKE` is `ON` or `OFF` (`src/comfort.lua`). Off, a knock still happens —
+it runs out its time, and the alarm clock still rings for as long as it did — and
+the page simply does not move. Things that shake *on* the page, a boss winding up
+or a wreck coming apart, are left alone: they are small, and they are what is
+being told. Stepping it on gives one small knock, so you see what `ON` means.
+
+`REDUCE FLASHING` is `ON` or `OFF`, and on, every blink in the game is held to
+two flashes a second — under the three a second that photosensitivity guidelines
+draw the line at. That is every warning ring, every boss telegraph, the bomb's
+fuse, the laser's wind-up, the storm's bolt, a wreck's flicker and the hero's own
+blink after a hit: all of them go through `Comfort.rate` or `Comfort.period`.
+Nothing is taken away — a warning that blinked still blinks, only slower — so the
+row costs a player who needs it no information. A single flash on a hit is not a
+blink and is left alone, and so is a jiggle, which moves rather than flashes. It
+ships off: the fast blinks are how this game says *now*, and the row is for the
+player they hurt.
 
 `VIBRATION` is `ON` or `OFF`, and it is the only buzz in the game: being hit.
 The phone gives one short pulse on every hit that lands — sized off the same
@@ -10143,13 +10180,16 @@ src/
                       and the Spanish for it
   lang/               the other four dictionaries, one file each: de, fr, it, pt
   options.lua         options.txt: the language, the two volumes, the stick's
-                      corner, the damage numbers, the window, whether a new
+                      corner, the damage numbers, the window, the frame cap,
+                      the shake and the flashing, whether a new
                       drawing is asked for and whether the opening has been seen
-  display.lua         a computer's window: fullscreen or not, its size, vsync
+  display.lua         a computer's window: fullscreen or not, its size, vsync,
+                      the frame cap; and a phone's battery saver
+  comfort.lua         screen shake, and every blink held to two a second
   intro.lua           the first launch's opening: eight scenes through a
                       blinking eye, which opens at the end on the title
-  settings.lua        the settings page: two bars and six steppers, three of
-                      them a phone's or a computer's
+  settings.lua        the settings page: three tabs, two bars and the
+                      steppers, four of them a phone's or a computer's
   damage.lua          what a hit was worth, thrown up off the thing it hit
   subjects.lua        the pages of the book: how each is ruled, who is in it
   background.lua      procedural notebook paper: one tile baked per subject

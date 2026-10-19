@@ -59,6 +59,7 @@ local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Metronome = {}
 Metronome.__index = Metronome
@@ -497,7 +498,7 @@ function Metronome:drawArm(e, x, y, colour)
     local cx, cy = bx + math.floor(wx) - 2, by + math.floor(wy) - 1
     love.graphics.rectangle("fill", cx, cy, 5, 4)
     if not colour then
-        local warn = self.state == "count" and math.floor(self.clock * 4) % 2 == 0
+        local warn = self.state == "count" and math.floor(self.clock * Comfort.rate(4)) % 2 == 0
         love.graphics.setColor(warn and Palette.red or Palette.graphite)
         love.graphics.rectangle("fill", cx + 1, cy + 1, 3, 2)
     end
@@ -553,7 +554,7 @@ function Metronome:drawGround(time)
                 love.graphics.setColor(Palette.red)
                 annulus(r.x, r.y, rad - c.width / 2, rad + c.width / 2)
             elseif not hot then
-                local warn = r.warn == k and math.floor(time * 8) % 2 == 0
+                local warn = r.warn == k and math.floor(time * Comfort.rate(8)) % 2 == 0
                 love.graphics.setColor(warn and Palette.red or Palette.slate)
                 dottedRing(r.x, r.y, rad - c.width / 2, math.floor(time * 6))
                 dottedRing(r.x, r.y, rad + c.width / 2, math.floor(time * 6))
@@ -589,7 +590,7 @@ function Metronome:drawAir(time, e)
         love.graphics.setColor(Palette.paper)
         pixelart.band(sw.x0, sw.y0, sw.x1, sw.y1, 1)
     else
-        love.graphics.setColor(math.floor(time * 10) % 2 == 0 and Palette.red or Palette.slate)
+        love.graphics.setColor(math.floor(time * Comfort.rate(10)) % 2 == 0 and Palette.red or Palette.slate)
         dashes(sw.x0, sw.y0, math.atan2(sw.y1 - sw.y0, sw.x1 - sw.x0),
             util.len(sw.x1 - sw.x0, sw.y1 - sw.y0), time * 40)
     end

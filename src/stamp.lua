@@ -63,6 +63,7 @@ local Font = require("src.font")
 local I18n = require("src.i18n")
 local Sfx = require("src.sfx")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Stamp = {}
 Stamp.__index = Stamp
@@ -618,13 +619,13 @@ function Stamp:drawGround(time)
             local left = dry - m.age
             if left > dry * 0.5 then
                 mark(m.c, m.r, Palette.slate)
-            elseif left > 1 or math.floor(left * 10) % 2 == 0 then
+            elseif left > 1 or math.floor(left * Comfort.rate(10)) % 2 == 0 then
                 mark(m.c, m.r, Palette.graphite)
             end
         end
     end
     if self.targets then
-        local blink = math.floor(time * 8) % 2 == 0
+        local blink = math.floor(time * Comfort.rate(8)) % 2 == 0
         local shift = math.floor(time * 20)
         for k, cell in ipairs(self.targets) do
             -- The next one blinks red; the rest of a board waits in slate.

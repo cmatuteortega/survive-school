@@ -61,6 +61,7 @@ local Camera = require("src.camera")
 local Sfx = require("src.sfx")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local DeoBoss = {}
 DeoBoss.__index = DeoBoss
@@ -344,7 +345,7 @@ function DeoBoss:pose(dt, e, body)
     else
         body.shake = 0
     end
-    local blink = floor(self.t * 10) % 2 == 0
+    local blink = floor(self.t * Comfort.rate(10)) % 2 == 0
     body.hot = ((state == "sprayTell" or state == "shakeTell" or state == "fanTell"
         or state == "leakTell" or state == "draughtTell") and blink)
         or state == "spraying" or state == "leaking" or state == "draught"
@@ -881,7 +882,7 @@ function DeoBoss:drawGround(time)
 
     local fan = self.fan
     if fan then
-        local blink = floor(time * 8) % 2 == 0
+        local blink = floor(time * Comfort.rate(8)) % 2 == 0
         love.graphics.setColor(self.state == "sprayTell" and blink and Palette.red or Palette.blush)
         arc(e.x, e.y, fan.reach, fan.from, fan.to, 3)
         for _, a in ipairs({ fan.from, fan.to }) do
@@ -912,7 +913,7 @@ function DeoBoss:drawGround(time)
     -- Solid rather than dotted, both of these: they are drawn over the mist,
     -- and a dotted ring in a cloud of dots is a ring you cannot find.
     if self.spinning then
-        love.graphics.setColor(floor(time * 10) % 2 == 0 and Palette.red or Palette.blush)
+        love.graphics.setColor(floor(time * Comfort.rate(10)) % 2 == 0 and Palette.red or Palette.blush)
         pixelart.circleOutline(floor(e.x), floor(e.y), self.def.leak.reach)
     end
 
@@ -920,7 +921,7 @@ function DeoBoss:drawGround(time)
     local w = self.wind
     local box = self.box
     if w and not w.on and box then
-        love.graphics.setColor(floor(time * 8) % 2 == 0 and Palette.sky or Palette.blue)
+        love.graphics.setColor(floor(time * Comfort.rate(8)) % 2 == 0 and Palette.sky or Palette.blue)
         if w.dx ~= 0 then
             local x = w.dx > 0 and box.left + 3 or box:right() - 3
             dashes(x, box.top, 0, 1, box.h, time * 40, 4)

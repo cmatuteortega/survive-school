@@ -63,6 +63,7 @@ local Sfx = require("src.sfx")
 local Plaster = require("src.plaster")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local StillLife = {}
 StillLife.__index = StillLife
@@ -862,7 +863,7 @@ function StillLife:drawGround(time)
             self:edges(w)
         end
     elseif shade and shade.sub == "tell" then
-        local blink = shade.t < 0.35 and floor(time * 10) % 2 == 0
+        local blink = shade.t < 0.35 and floor(time * Comfort.rate(10)) % 2 == 0
         for _, w in ipairs(ws) do
             love.graphics.setColor(Palette.graphite)
             self:fillWedge(w, 3, floor(time * 12))
@@ -876,7 +877,7 @@ function StillLife:drawGround(time)
 
     if self.mark then
         local dr = self.def.drop
-        love.graphics.setColor(floor(time * 8) % 2 == 0 and Palette.red or Palette.slate)
+        love.graphics.setColor(floor(time * Comfort.rate(8)) % 2 == 0 and Palette.red or Palette.slate)
         dottedRing(self.mark.x, self.mark.y, dr.shock, floor(time * 6))
         love.graphics.setColor(Palette.graphite)
         local f = 1 - math.max(0, self.mark.t) / dr.aim
@@ -891,7 +892,7 @@ function StillLife:drawGround(time)
     local roll = self:act("roll")
     if roll and roll.sub == "wind" then
         local aim = roll.aim
-        love.graphics.setColor(floor(time * 10) % 2 == 0 and Palette.red or Palette.slate)
+        love.graphics.setColor(floor(time * Comfort.rate(10)) % 2 == 0 and Palette.red or Palette.slate)
         dashes(aim.x, aim.y, aim.dx, aim.dy, aim.len, time * 30)
     end
 end
@@ -920,7 +921,7 @@ local HIT_FLASH, HIT_WHITE = 0.14, 0.06
 function StillLife:drawAir(time, e)
     if not self.lamps then return end
     local shade = self:act("shade")
-    local warn = shade and shade.sub == "tell" and floor(time * 10) % 2 == 0
+    local warn = shade and shade.sub == "tell" and floor(time * Comfort.rate(10)) % 2 == 0
     for _, l in ipairs(self.lamps) do drawLamp(l, warn) end
     for _, loose in pairs(self.out) do
         local flash = loose.part.flash

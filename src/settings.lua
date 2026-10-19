@@ -1,11 +1,13 @@
--- The settings page: how loud the game is, what language it is in, how much of
--- a hit it says out loud, and whether it asks you to draw the things it hands
--- you -- and then three rows that depend on what it is being played on. A phone
--- is asked which way up the page is held, which thumb walks and whether a hit
--- buzzes it; a computer is asked whether the page fills the screen, how big its
--- window is and whether frames wait for the monitor. Each is shown its own three
--- and never the other's: a row a device cannot act on is a row that says
--- something and does nothing.
+-- The settings page, on three tabs. GENERAL is how loud the game is, what
+-- language it is in and whether it asks you to draw the things it hands you.
+-- DEVICE depends on what it is being played on: a phone is asked which way up
+-- the page is held, which thumb walks, whether a hit buzzes it and whether to
+-- save its battery; a computer is asked whether the page fills the screen, how
+-- big its window is, whether frames wait for the monitor and how many to draw.
+-- Each is shown its own four and never the other's: a row a device cannot act
+-- on is a row that says something and does nothing. COMFORT is how much of a
+-- hit the page says out loud, whether a knock shakes it and whether things
+-- blink fast (src/comfort.lua).
 --
 -- **Nothing on this page is a question, so nothing on it is a box you scribble
 -- in.** That is the same rule the timetable's tabs and the whole of the library
@@ -18,15 +20,17 @@
 -- and the corner button closes the page -- and ink that lands anywhere else is
 -- still ink and still fades off, because the page is a page.
 --
--- It follows the pause card's shape rather than the library's -- one fixed block
--- of rows, centred in the safe area, a heading over it and a hint under it --
--- because it *can*: eight rows are eight rows on every device and in every
--- language -- the phone's three and the computer's three are the same count --
--- so there is a block here of a height that is always the same, which is the
--- one thing the library never has. The dev row is the one thing that
--- changes that count and it is not a counter-example: it is on the page only
--- once the heading has been tapped three times (src/dev.lua), so a block that
--- grew is a block you asked for rather than one that twitched under you. What it does not borrow is the card.
+-- It follows the pause card's shape rather than the library's -- one fixed block,
+-- centred in the safe area, a heading over it and a hint under it -- because it
+-- *can*: the block is laid out for the longest tab, which is as long on every
+-- device and in every language, so it is a height that is always the same and
+-- changing tabs moves nothing but the rows. That is the one thing the library
+-- never has. The tabs came when the page outgrew one block: eight rows were all
+-- 180 pixels could hold with air between them, and the rows worth having did not
+-- stop at eight. The dev row is the one thing that changes the count and it is
+-- not a counter-example: it is on the page only once the heading has been tapped
+-- three times (src/dev.lua), so a block that grew is a block you asked for rather
+-- than one that twitched under you. What it does not borrow is the card.
 -- The pause card is paper because there is a run underneath it that lettering
 -- cannot be read against; here there is nothing underneath but the page you came
 -- in on, so this is written straight onto it, the way the timetable and the
@@ -70,6 +74,8 @@ local Damage = require("src.damage")
 local Haptics = require("src.haptics")
 local Orient = require("src.orient")
 local Display = require("src.display")
+local Comfort = require("src.comfort")
+local Camera = require("src.camera")
 local Characters = require("src.characters")
 local Dev = require("src.dev")
 local Purse = require("src.purse")
@@ -88,6 +94,7 @@ local ROW_GAP = 7          -- one row to the next, and the most it is ever drawn
                            -- (Settings:layout)
 local HINT_GAP = 9         -- the last row to the hint
 local LABEL_GAP = 6        -- a label to the control beside it
+local TABS_GAP = 7         -- the tabs to the first row
 local VALUE_GAP = 5        -- a control to the number beside it
 
 -- The bar. Wider than the HUD's readout bars (60x6) and a pixel taller, and both
@@ -176,20 +183,19 @@ end
 -- that a few taps cross the range and fine enough that the step is not a jump.
 local KEY_STEP = 0.05
 
--- The rows, in the order they are read. `kind` is what the row *is*, which is
--- the whole of how a press on it is handled: a level is dragged and a choice is
--- stepped.
+-- The rows, in the order they are read, each on its tab (`TABS`). `kind` is
+-- what the row *is*, which is the whole of how a press on it is handled: a
+-- level is dragged and a choice is stepped.
 --
--- The two volumes first, loudest thing first -- and music ahead of sound because
--- it is the one thing on this page you can hear without doing anything, the track
--- being up from the frame the program read this file (src/sfx.lua). Which is also
--- why the music bar is the only control here that needs nothing played to
--- demonstrate it: it is playing already, and dragging it is heard while the finger
--- is down. Then the language, and then the four rows that are about the game as
--- you play it rather than about the program: which way up you hold it, where
--- your thumb goes, what the page says when you hit something, whether the phone
--- buzzes when something hits you, and what it asks you when it gives you
--- something.
+-- GENERAL is the two volumes, loudest thing first -- and music ahead of sound
+-- because it is the one thing on this page you can hear without doing anything,
+-- the track being up from the frame the program read this file (src/sfx.lua).
+-- Which is also why the music bar is the only control here that needs nothing
+-- played to demonstrate it: it is playing already, and dragging it is heard
+-- while the finger is down. Then the language, and what it asks you when it
+-- gives you something. DEVICE is the four rows about what it is played on, a
+-- phone's or a computer's and never both. COMFORT is what the page says when
+-- you hit something, whether a knock shakes it, and how fast things blink.
 --
 -- A choice row carries three functions and nothing else: the word to write
 -- between its arrows, the widest word it could ever write there, and what a step
@@ -199,13 +205,14 @@ local KEY_STEP = 0.05
 -- neither. The language's own name is the one word on this page that is never
 -- translated (src/i18n.lua).
 local ROWS = {
-    { key = "music", label = "MUSIC", kind = "level",
+    --- GENERAL ---------------------------------------------------------------
+    { key = "music", label = "MUSIC", kind = "level", tab = "general",
       get = function() return Sfx.music end,
       set = function(v) Sfx.music = v end },
-    { key = "sfx", label = "SOUND", kind = "level",
+    { key = "sfx", label = "SOUND", kind = "level", tab = "general",
       get = function() return Sfx.volume end,
       set = function(v) Sfx.volume = v end },
-    { key = "lang", label = "LANGUAGE", kind = "choice",
+    { key = "lang", label = "LANGUAGE", kind = "choice", tab = "general",
       text = function() return I18n.current().name end,
       widest = function()
           local w = 0
@@ -215,12 +222,41 @@ local ROWS = {
           return w
       end,
       step = function(dir) I18n.step(dir) end },
+    { key = "ask", label = "NEW DRAWINGS", kind = "choice", tab = "general",
+      text = function() return I18n.t(Design.ask and ASK or SKIP) end,
+      widest = function()
+          return math.max(Font.width(I18n.t(ASK)), Font.width(I18n.t(SKIP)))
+      end,
+      -- Two words is one step whichever way it is taken, so both arrows do the
+      -- same thing here. Which is not a reason to draw only one of them: an
+      -- arrow either side is what says the word between them is stepped, and a
+      -- row with one arrow on it would read as a row that only goes one way.
+      step = function() Design.ask = not Design.ask end },
+    -- DEV. What the book has opened, overridden (src/dev.lua) -- everything, or
+    -- nothing, over whatever the register actually says. Last on its tab because
+    -- it is the one row here that is not a setting: everything above it is a thing
+    -- a player chooses about the program, and this is a thing a dev does to the
+    -- game. Which is also why it carries `dev` and is not drawn until the gesture
+    -- has been done. It comes out at launch, and taking it out is this row, the
+    -- three calls to `Dev.opened` and the `unlocks` and `dev` lines in
+    -- src/options.lua.
+    { key = "unlocks", label = "UNLOCKS", kind = "choice", tab = "general", dev = true,
+      text = function() return I18n.t(UNLOCK_WORD[Dev.unlocks]) end,
+      widest = function() return listWidth(Dev.MODES, UNLOCK_WORD) end,
+      step = function(dir)
+          Dev.unlocks = stepped(Dev.MODES, Dev.unlocks, dir)
+          -- The pick is clamped to what the roster now says (`Characters.pick`),
+          -- so stepping down to NOTHING does not leave the studio standing on a
+          -- hero its own arrows will not step back to.
+          Characters.pick(Characters.current.key)
+      end },
+    --- DEVICE ----------------------------------------------------------------
     -- Which way up the phone holds the page, and the row above the stick because
     -- it is the larger fact about how the thing is held: how you are holding it
     -- decides where your spare thumb ends up, not the other way round. `phone`,
     -- like the stick and the vibration: a desktop window has no orientation to
     -- set, so a computer is shown its own SCREEN row instead.
-    { key = "screen", label = "SCREEN", kind = "choice", phone = true,
+    { key = "screen", label = "SCREEN", kind = "choice", tab = "device", phone = true,
       text = function() return I18n.t(SCREEN_WORD[Orient.mode]) end,
       widest = function() return listWidth(Orient.MODES, SCREEN_WORD) end,
       step = function(dir)
@@ -231,12 +267,48 @@ local ROWS = {
           -- back on.
           Orient.apply()
       end },
-    -- The computer's three, in the phone's three's places (src/display.lua):
+    -- Only a phone has a thumb stick. Shown on a phone whether or not it has
+    -- been touched yet: a row that came and went with `Input.usingTouch` would
+    -- be a page whose height changes under you the first time you touch the
+    -- screen, and the one fixed block is the whole reason this page can be
+    -- centred at all. What kind of device it is never changes under you.
+    { key = "stick", label = "STICK", kind = "choice", tab = "device", phone = true,
+      text = function() return I18n.t(SIDE_WORD[Input.stickSide]) end,
+      widest = function() return listWidth(Input.SIDES, SIDE_WORD) end,
+      step = function(dir)
+          Input.stickSide = stepped(Input.SIDES, Input.stickSide, dir)
+      end },
+    -- Whether a hit buzzes the phone (src/haptics.lua). Like the stick, a row
+    -- only a phone is shown. ON and OFF rather than a pair of verbs, unlike the
+    -- drawings row: the label names the thing rather than a refusal, so ON
+    -- reads straight.
+    { key = "haptics", label = "VIBRATION", kind = "choice", tab = "device", phone = true,
+      text = function() return I18n.t(Haptics.on and "ON" or "OFF") end,
+      widest = function()
+          return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
+      end,
+      step = function()
+          Haptics.on = not Haptics.on
+          -- Turned on where it is stepped, and felt: the only way to know what
+          -- ON means is to have it buzz, which is the bars' argument for being
+          -- heard while they are dragged.
+          Haptics.hit(0.5)
+      end },
+    -- The phone's battery saver (src/display.lua): thirty frames a second
+    -- rather than sixty. Last of the phone's, as FRAME CAP is last of the
+    -- computer's, since both are the same question about the same thing.
+    { key = "saver", label = "BATTERY SAVER", kind = "choice", tab = "device", phone = true,
+      text = function() return I18n.t(Display.saver and "ON" or "OFF") end,
+      widest = function()
+          return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
+      end,
+      step = function() Display.saver = not Display.saver end },
+    -- The computer's four, in the phone's four's places (src/display.lua):
     -- how the page sits on the screen, then the window's size, which is only
     -- read in a window but stepped either way so it is ready when F11 drops
-    -- out, then vsync. Each applied where it is stepped, for SCREEN's reason:
+    -- out, then vsync and the frame cap. Each applied where it is stepped, for SCREEN's reason:
     -- the only way to know whether WINDOW is what you wanted is to see it.
-    { key = "window", label = "SCREEN", kind = "choice", desktop = true,
+    { key = "window", label = "SCREEN", kind = "choice", tab = "device", desktop = true,
       text = function() return I18n.t(WINDOW_WORD[Display.window]) end,
       widest = function() return listWidth(Display.WINDOWS, WINDOW_WORD) end,
       step = function(dir)
@@ -245,7 +317,7 @@ local ROWS = {
       end },
     -- Figures rather than words, so never translated: 1280X720 is 1280X720 in
     -- every language this page speaks.
-    { key = "size", label = "WINDOW SIZE", kind = "choice", desktop = true,
+    { key = "size", label = "WINDOW SIZE", kind = "choice", tab = "device", desktop = true,
       text = function() return Display.size:upper() end,
       widest = function()
           local w = 0
@@ -258,7 +330,7 @@ local ROWS = {
           Display.size = stepped(Display.SIZES, Display.size, dir)
           Display.apply()
       end },
-    { key = "vsync", label = "VSYNC", kind = "choice", desktop = true,
+    { key = "vsync", label = "VSYNC", kind = "choice", tab = "device", desktop = true,
       text = function() return I18n.t(Display.vsync and "ON" or "OFF") end,
       widest = function()
           return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
@@ -267,78 +339,88 @@ local ROWS = {
           Display.vsync = not Display.vsync
           Display.apply()
       end },
-    -- Only a phone has a thumb stick. Shown on a phone whether or not it has
-    -- been touched yet: a row that came and went with `Input.usingTouch` would
-    -- be a page whose height changes under you the first time you touch the
-    -- screen, and the one fixed block is the whole reason this page can be
-    -- centred at all. What kind of device it is never changes under you.
-    { key = "stick", label = "STICK", kind = "choice", phone = true,
-      text = function() return I18n.t(SIDE_WORD[Input.stickSide]) end,
-      widest = function() return listWidth(Input.SIDES, SIDE_WORD) end,
-      step = function(dir)
-          Input.stickSide = stepped(Input.SIDES, Input.stickSide, dir)
-      end },
-    { key = "damage", label = "DAMAGE NUMBERS", kind = "choice",
+    -- Frames a second at most (src/display.lua). OFF, then the figures, which
+    -- are figures in every language and so are not looked up.
+    { key = "cap", label = "FRAME CAP", kind = "choice", tab = "device", desktop = true,
+      text = function()
+          return Display.cap == 0 and I18n.t("OFF") or tostring(Display.cap)
+      end,
+      widest = function()
+          local w = Font.width(I18n.t("OFF"))
+          for _, cap in ipairs(Display.CAPS) do
+              w = math.max(w, Font.width(tostring(cap)))
+          end
+          return w
+      end,
+      step = function(dir) Display.cap = stepped(Display.CAPS, Display.cap, dir) end },
+    --- COMFORT ---------------------------------------------------------------
+    -- How much a hit is said to you on the page, first because it is the one
+    -- of the three that is about clutter rather than about comfort as such:
+    -- the page is the thing you are meant to be reading.
+    { key = "damage", label = "DAMAGE NUMBERS", kind = "choice", tab = "comfort",
       text = function() return I18n.t(SHOW_WORD[Damage.show]) end,
       widest = function() return listWidth(Damage.MODES, SHOW_WORD) end,
       step = function(dir)
           Damage.show = stepped(Damage.MODES, Damage.show, dir)
       end },
-    -- Whether a hit buzzes the phone (src/haptics.lua). Under the damage row
-    -- because it is the other half of the same question -- how loudly a hit is
-    -- told to you -- and, like the stick, a row only a phone is shown. ON and OFF
-    -- rather than a pair of verbs, unlike the drawings row below it: the label
-    -- names the thing rather than a refusal, so ON reads straight.
-    { key = "haptics", label = "VIBRATION", kind = "choice", phone = true,
-      text = function() return I18n.t(Haptics.on and "ON" or "OFF") end,
+    -- Whether a knock moves the page (src/comfort.lua). Stepped to ON, it gives
+    -- one small knock so you can see what ON means -- the vibration row's
+    -- argument for buzzing when it is stepped.
+    { key = "shake", label = "SCREEN SHAKE", kind = "choice", tab = "comfort",
+      text = function() return I18n.t(Comfort.shake and "ON" or "OFF") end,
       widest = function()
           return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
       end,
       step = function()
-          Haptics.on = not Haptics.on
-          -- Turned on where it is stepped, and felt: the only way to know what
-          -- ON means is to have it buzz, which is the bars' argument for being
-          -- heard while they are dragged.
-          Haptics.hit(0.5)
+          Comfort.shake = not Comfort.shake
+          if Comfort.shake then Camera.knock(2) end
       end },
-    { key = "ask", label = "NEW DRAWINGS", kind = "choice",
-      text = function() return I18n.t(Design.ask and ASK or SKIP) end,
+    -- Every blink in the game held to two flashes a second (src/comfort.lua).
+    -- Worded as what it does rather than as a refusal, so ON reads straight.
+    { key = "calm", label = "REDUCE FLASHING", kind = "choice", tab = "comfort",
+      text = function() return I18n.t(Comfort.calm and "ON" or "OFF") end,
       widest = function()
-          return math.max(Font.width(I18n.t(ASK)), Font.width(I18n.t(SKIP)))
+          return math.max(Font.width(I18n.t("ON")), Font.width(I18n.t("OFF")))
       end,
-      -- Two words is one step whichever way it is taken, so both arrows do the
-      -- same thing here. Which is not a reason to draw only one of them: an
-      -- arrow either side is what says the word between them is stepped, and a
-      -- row with one arrow on it would read as a row that only goes one way.
-      step = function() Design.ask = not Design.ask end },
-    -- DEV. What the book has opened, overridden (src/dev.lua) -- everything, or
-    -- nothing, over whatever the register actually says. Last on the page because
-    -- it is the one row here that is not a setting: everything above it is a thing
-    -- a player chooses about the program, and this is a thing a dev does to the
-    -- game. Which is also why it carries `dev` and is not drawn until the gesture
-    -- has been done. It comes out at launch, and taking it out is this row, the
-    -- three calls to `Dev.opened` and the `unlocks` and `dev` lines in
-    -- src/options.lua.
-    { key = "unlocks", label = "UNLOCKS", kind = "choice", dev = true,
-      text = function() return I18n.t(UNLOCK_WORD[Dev.unlocks]) end,
-      widest = function() return listWidth(Dev.MODES, UNLOCK_WORD) end,
-      step = function(dir)
-          Dev.unlocks = stepped(Dev.MODES, Dev.unlocks, dir)
-          -- The pick is clamped to what the roster now says (`Characters.pick`),
-          -- so stepping down to NOTHING does not leave the studio standing on a
-          -- hero its own arrows will not step back to.
-          Characters.pick(Characters.current.key)
-      end },
+      step = function() Comfort.calm = not Comfort.calm end },
 }
 
--- The rows actually on the page. `ROWS` above is every row there is; this is the
--- ones that get drawn: the ones this kind of device can act on (`phone` rows on a
--- phone, `desktop` rows on a computer), and of those all but the dev row until
--- the gesture has been done. Rebuilt only when the answer changes rather than every frame, and
--- refreshed at the top of `layout` so everything measuring, hit-testing or
--- drawing a row this frame is looking at the same list.
-local rows = {}
-local shownDev = nil
+-- The tabs, in a strip under the heading: the timetable's tabs on their side,
+-- card filled with paper, slate when they are somewhere else to look and red on
+-- the one the page is open at -- red on a tab here means what it means on the
+-- timetable's lesson column, *this is where the book is open*. The open one also
+-- stands TAB_POP taller, down into the page, which is the timetable's pop turned
+-- through a right angle. A tab is pressed, never scribbled in, for this page's
+-- own rule: picking which settings to look at is not a question.
+--
+-- Every tab is as wide as the widest of their words in the language on screen,
+-- so the strip is three equal cards and none of them moves as the language is
+-- stepped under it. Which tab is open is kept for the life of the program, so
+-- coming back to the page lands where you left it.
+local TABS = {
+    { key = "general", label = "GENERAL" },
+    { key = "device", label = "DEVICE" },
+    { key = "comfort", label = "COMFORT" },
+}
+local TAB_PAD = 5          -- the edge of a tab to its word
+local TAB_H = 13
+local TAB_GAP = 2          -- one tab to the next
+local TAB_POP = 2
+
+local tab = 1
+
+-- The rows actually on the page. `ROWS` above is every row there is; `all` is
+-- the ones this kind of device can act on (`phone` rows on a phone, `desktop`
+-- rows on a computer), and of those all but the dev row until the gesture has
+-- been done; `rows` is those of them on the open tab, which is what gets drawn.
+-- `most` is the longest tab's count, which the block is laid out for whichever
+-- tab is open, so the heading, the tabs and the hint stand still as the tabs are
+-- changed. Columns are measured across `all` for the same reason. Rebuilt only
+-- when the answer changes rather than every frame, and refreshed at the top of
+-- `layout` so everything measuring, hit-testing or drawing a row this frame is
+-- looking at the same list.
+local all, rows, most = {}, {}, 0
+local shownDev, shownTab = nil, nil
 
 -- Whether a row belongs on this kind of device. Fixed for the life of the
 -- program, so only the dev row ever changes the list.
@@ -350,12 +432,30 @@ end
 
 local function refresh()
     local want = Dev.showing()
-    if want == shownDev then return end
-    shownDev = want
+    if want == shownDev and tab == shownTab then return end
+    shownDev, shownTab = want, tab
 
-    rows = {}
+    all, rows = {}, {}
+    local count = {}
     for _, row in ipairs(ROWS) do
-        if (want or not row.dev) and here(row) then rows[#rows + 1] = row end
+        if (want or not row.dev) and here(row) then
+            all[#all + 1] = row
+            count[row.tab] = (count[row.tab] or 0) + 1
+            if row.tab == TABS[tab].key then rows[#rows + 1] = row end
+        end
+    end
+
+    most = 0
+    for _, n in pairs(count) do most = math.max(most, n) end
+end
+
+local function tabOf(key)
+    for _, row in ipairs(ROWS) do
+        if row.key == key then
+            for i, t in ipairs(TABS) do
+                if t.key == row.tab then return i end
+            end
+        end
     end
 end
 
@@ -396,6 +496,8 @@ function Settings:enter(focus)
     -- any other.
     Input.stickEnabled = false
 
+    -- The row asked for is on whichever tab it is on, so the page opens there.
+    if focus and tabOf(focus) then tab = tabOf(focus) end
     refresh()
     self.coach = nil
     local at = focus and rowIndex(focus)
@@ -407,11 +509,12 @@ end
 
 --- layout --------------------------------------------------------------------
 
--- Every label, measured at the widest of them, so the bars line up in one column
--- and none of them moves as the language changes the words in front of them.
+-- Every label on every tab, measured at the widest of them, so the bars line up
+-- in one column, none of them moves as the language changes the words in front
+-- of them, and the column stays put as the tabs are changed.
 local function labelWidth()
     local w = 0
-    for _, row in ipairs(rows) do
+    for _, row in ipairs(all) do
         w = math.max(w, Font.width(I18n.t(row.label)))
     end
     return w
@@ -419,11 +522,11 @@ end
 
 -- The widest word any stepped row can hold, so the arrows stay where they are as
 -- the word between them is stepped -- the library's own rule for its footer, read
--- across both rows rather than down one, so the two pairs of arrows line up with
--- each other as well.
+-- across every row on every tab, so the arrows line up with each other and do not
+-- jump when the tab is changed.
 local function choiceWidth()
     local w = 0
-    for _, row in ipairs(rows) do
+    for _, row in ipairs(all) do
         if row.kind == "choice" then w = math.max(w, row.widest()) end
     end
     return w
@@ -435,9 +538,11 @@ local function valueWidth()
     return Font.width("100")
 end
 
--- One fixed block, centred in the safe area. There is nothing here whose height
--- the content decides -- eight rows are eight rows in every language -- so
--- unlike the library this page has something worth centring.
+-- One fixed block, centred in the safe area: the heading, the tabs, the longest
+-- tab's worth of rows and the hint. There is nothing here whose height the
+-- content decides -- the longest tab is as long in every language and on every
+-- tab -- so unlike the library this page has something worth centring, and a
+-- shorter tab leaves its spare rows empty at the bottom rather than moving up.
 function Settings:layout(game)
     self.game = game
     refresh()
@@ -465,6 +570,15 @@ function Settings:layout(game)
     lay.controlCx = lay.controlX + math.floor(lay.controlW / 2)
     lay.valueX = lay.controlX + lay.controlW + VALUE_GAP
 
+    -- The strip of tabs, three equal cards centred under the heading.
+    lay.tabW = 0
+    for _, t in ipairs(TABS) do
+        lay.tabW = math.max(lay.tabW, Font.width(I18n.t(t.label)) + TAB_PAD * 2)
+    end
+    local stripW = #TABS * lay.tabW + (#TABS - 1) * TAB_GAP
+    lay.tabX = math.floor(lay.cx - stripW / 2)
+    local tabsH = TAB_H + TAB_POP + TABS_GAP
+
     local headH = Font.height * HEAD_SCALE
     -- One line under the rows, and only what to do: everything else about this
     -- page is heard rather than read.
@@ -484,26 +598,34 @@ function Settings:layout(game)
     -- separate rows rather than as a paragraph. It costs nothing until it is
     -- needed: every shape and row count that ships clears the check and keeps
     -- the gap the page was drawn with.
-    local gaps = #rows - 1
-    local fixed = headH + HEAD_GAP + #rows * lay.rowH + HINT_GAP + hintH
+    local gaps = most - 1
+    local fixed = headH + HEAD_GAP + tabsH + most * lay.rowH + HINT_GAP + hintH
 
     lay.rowGap = ROW_GAP
     if gaps > 0 and fixed + gaps * ROW_GAP > room then
         lay.rowGap = math.max(1, math.floor((room - fixed) / gaps))
     end
 
-    local rowsH = #rows * lay.rowH + gaps * lay.rowGap
-    local total = headH + HEAD_GAP + rowsH + HINT_GAP + hintH
+    local rowsH = most * lay.rowH + gaps * lay.rowGap
+    local total = headH + HEAD_GAP + tabsH + rowsH + HINT_GAP + hintH
     local top = math.floor(ins.t + (game.vh - ins.t - ins.b - total) / 2)
 
     top = math.max(top, topMin)
 
     lay.head = top
-    lay.rowTop = top + headH + HEAD_GAP
+    lay.tabY = top + headH + HEAD_GAP
+    lay.rowTop = lay.tabY + tabsH
     lay.hint = lay.rowTop + rowsH + HINT_GAP
 
     self.lay = lay
     return lay
+end
+
+-- One tab's card. The open one stands TAB_POP taller, down towards its rows.
+function Settings:tabBox(i)
+    local lay = self.lay
+    local x = lay.tabX + (i - 1) * (lay.tabW + TAB_GAP)
+    return x, lay.tabY, lay.tabW, TAB_H + (i == tab and TAB_POP or 0)
 end
 
 function Settings:rowY(i)
@@ -575,6 +697,34 @@ function Settings:arrowAt(x, y)
             end
         end
     end
+end
+
+-- Which tab a point is on, padded like everything else here.
+function Settings:tabAt(x, y)
+    if not self.lay then return nil end
+
+    local padX, padY = pad()
+    -- Half the gap between two cards each, so a press between them is not lost.
+    padX = math.min(padX, math.floor(TAB_GAP / 2))
+    for i = 1, #TABS do
+        local tx, ty, tw, th = self:tabBox(i)
+        if x >= tx - padX and x <= tx + tw + padX
+            and y >= ty - padY and y <= ty + th + padY then
+            return i
+        end
+    end
+end
+
+-- Open another tab. The keyboard goes to its first row, and a bar in hand is let
+-- go of: it was on the tab you just left.
+function Settings:openTab(i)
+    if i == tab then return end
+    if self.dragging then self:landLevel(self.dragging) end
+    self.dragging = nil
+    tab = i
+    self.row = 1
+    refresh()
+    Sfx.play("transition")
 end
 
 function Settings:backAt(x, y)
@@ -689,13 +839,14 @@ end
 -- Something pressed rather than drawn on, for the cursor (Game:drawPointer):
 -- everything `Settings:press` acts on, and a bar already in hand.
 function Settings:hot(x, y)
-    return self.dragging or self:backAt(x, y) or self:arrowAt(x, y)
-        or self:barAt(x, y) or self:headAt(x, y)
+    return self.dragging or self:backAt(x, y) or self:tabAt(x, y)
+        or self:arrowAt(x, y) or self:barAt(x, y) or self:headAt(x, y)
 end
 
 function Settings:mark(x, y)
     if self.dragging then return false end
-    if self:barAt(x, y) or self:arrowAt(x, y) or self:backAt(x, y) then
+    if self:barAt(x, y) or self:arrowAt(x, y) or self:backAt(x, y)
+        or self:tabAt(x, y) then
         return false
     end
     self.marks:add(x, y)
@@ -712,6 +863,12 @@ function Settings:press(x, y)
 
     if self:backAt(x, y) then
         self.back = true
+        return
+    end
+
+    local t = self:tabAt(x, y)
+    if t then
+        self:openTab(t)
         return
     end
 
@@ -779,13 +936,21 @@ function Settings:update(dt, game)
 end
 
 -- Up and down walk the rows, which on a keyboard is how a list of settings is
--- read; left and right move whatever the row on is. Backspace is the corner
--- button, exactly as it is on the timetable and in the library.
+-- read; left and right move whatever the row on is. Tab (shift+tab back) and Q
+-- and E change the tab, the keys a game's menus change tabs with. Backspace is
+-- the corner button, exactly as it is on the timetable and in the library.
 function Settings:keypressed(key)
     self.coach = nil
 
     if key == "backspace" then
         self.back = true
+        return
+    end
+
+    local turn = (key == "e" and 1) or (key == "q" and -1)
+        or (key == "tab" and (love.keyboard.isDown("lshift", "rshift") and -1 or 1))
+    if turn then
+        self:openTab((tab - 1 + turn) % #TABS + 1)
         return
     end
 
@@ -871,9 +1036,33 @@ function Settings:drawArrow(i, dir)
     Sprites.icons.chevron:draw(x + ARROW / 2, y + ARROW / 2, dir > 0)
 end
 
+-- What to do on the tab that is open: a tab with no bar on it has nothing to
+-- drag, and a hint that said so would be a hint about some other tab.
 function Settings:hint()
-    if Input.usingTouch then return "DRAG A BAR TO SET IT" end
-    return "DRAG A BAR OR USE THE ARROWS"
+    local bars = false
+    for _, row in ipairs(rows) do
+        if row.kind == "level" then bars = true end
+    end
+    if Input.usingTouch then
+        return bars and "DRAG A BAR TO SET IT" or "TAP AN ARROW TO SET IT"
+    end
+    return bars and "DRAG A BAR OR USE THE ARROWS" or "USE THE ARROWS"
+end
+
+-- One tab: a paper card, its border written on in the timetable's hand, and the
+-- word in the middle of it, red on the open tab and slate on the others. Out
+-- past the overprint pass with the bars, for the timetable's reason: a card is
+-- opaque, and paper paired with the ruling under it would read as a hole.
+function Settings:drawTab(i)
+    local x, y, w, h = self:tabBox(i)
+    local color = i == tab and Palette.red or Palette.slate
+
+    love.graphics.setColor(Palette.paper)
+    love.graphics.rectangle("fill", x, y, w, h)
+    Scribble.drawBox({ x = x, y = y, w = w, h = h }, 1, color, 20 + i * 3, 0)
+
+    Scribble.printBig(I18n.t(TABS[i].label), x + w / 2,
+        y + math.floor((TAB_H - Font.height) / 2), 1, color, { seed = 70 + i })
 end
 
 function Settings:draw(game)
@@ -931,6 +1120,7 @@ function Settings:draw(game)
             self:drawArrow(i, 1)
         end
     end
+    for i = 1, #TABS do self:drawTab(i) end
     Hud.drawCorner(game, "back", false)
 
     -- The hand, last of all and over the arrow it is pressing: it is a picture

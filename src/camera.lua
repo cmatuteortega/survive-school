@@ -1,4 +1,5 @@
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Camera = {}
 
@@ -41,8 +42,10 @@ function Camera.settle(dt)
     if Camera.shakeT <= 0 then Camera.shakeMag = 0 end
 end
 
+-- With SCREEN SHAKE off (src/comfort.lua) the knock still runs its time and
+-- the page stays where it is.
 local function knocked()
-    if Camera.shakeT <= 0 then return 0, 0 end
+    if Camera.shakeT <= 0 or not Comfort.shake then return 0, 0 end
     local a = Camera.shakeMag * (Camera.shakeT / Camera.shakeLen)
     local e = Camera.shakeLen - Camera.shakeT
     return math.floor(a * math.cos(e * SHAKE_X) + 0.5),

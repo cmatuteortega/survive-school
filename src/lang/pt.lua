@@ -59,6 +59,15 @@ return {
     ["WINDOW"] = "JANELA",
     ["WINDOW SIZE"] = "TAMANHO JANELA",
     ["VSYNC"] = "VSYNC",
+    ["GENERAL"] = "GERAL",
+    ["DEVICE"] = "APARELHO",
+    ["COMFORT"] = "CONFORTO",
+    ["BATTERY SAVER"] = "POUPAR BATERIA",
+    ["FRAME CAP"] = "LIMITE FPS",
+    ["SCREEN SHAKE"] = "TREMOR",
+    ["REDUCE FLASHING"] = "MENOS FLASHES",
+    ["USE THE ARROWS"] = "USE AS SETAS",
+    ["TAP AN ARROW TO SET IT"] = "TOQUE NUMA SETA",
 
     --- the timetable ----------------------------------------------------------
 

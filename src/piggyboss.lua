@@ -52,6 +52,7 @@ local Pickup = require("src.pickup")
 local Piggy = require("src.piggy")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local PiggyBoss = {}
 PiggyBoss.__index = PiggyBoss
@@ -509,7 +510,7 @@ function PiggyBoss:drawGround(time)
         end
     end
     if self.called then
-        local on = math.floor(time * 10) % 2 == 0
+        local on = math.floor(time * Comfort.rate(10)) % 2 == 0
         for _, p in ipairs(self.called) do
             if not p.dead then
                 love.graphics.setColor(on and Palette.red or Palette.blush)

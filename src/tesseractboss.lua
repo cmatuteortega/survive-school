@@ -54,6 +54,7 @@ local Font = require("src.font")
 local Tesseract = require("src.tesseract")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local TesseractBoss = {}
 TesseractBoss.__index = TesseractBoss
@@ -669,7 +670,7 @@ end
 function TesseractBoss:drawGround(time)
     local e = self.e
     if not e then return end
-    local on = floor(time * 10) % 2 == 0
+    local on = floor(time * Comfort.rate(10)) % 2 == 0
 
     local s = self.flip
     if s then

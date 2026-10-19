@@ -178,7 +178,19 @@ function love.visible(visible)
     end
 end
 
+-- The frame cap the settings ask for (src/display.lua): what is left of the
+-- frame's share of the second, slept, the way underroot caps its frames.
+local frameAt = 0
+local function cap()
+    local fps = Display.fps()
+    if Capture.on or fps <= 0 then return end
+    local wait = frameAt + 1 / fps - love.timer.getTime()
+    if wait > 0 then love.timer.sleep(wait) end
+    frameAt = love.timer.getTime()
+end
+
 function love.update(dt)
+    cap()
     if Capture.on then
         dt = Capture.dt()
         Capture.update()

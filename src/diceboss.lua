@@ -57,6 +57,7 @@ local Font = require("src.font")
 local Dice = require("src.dice")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local DiceBoss = {}
 DiceBoss.__index = DiceBoss
@@ -606,7 +607,7 @@ end
 
 -- The colour of a tell: slate, blinking red over its last third of a second.
 local function tellColour(s, time)
-    if s.t < 0.35 and floor(time * 10) % 2 == 0 then return Palette.red end
+    if s.t < 0.35 and floor(time * Comfort.rate(10)) % 2 == 0 then return Palette.red end
     return Palette.slate
 end
 
@@ -638,12 +639,12 @@ function DiceBoss:drawGround(time)
     if self.state == "wind" and self.aim then
         local th = self.def.throw
         local len = pick(th.speed, self.phase) * pick(th.time, self.phase) / 2
-        love.graphics.setColor(floor(time * 10) % 2 == 0 and Palette.red or Palette.slate)
+        love.graphics.setColor(floor(time * Comfort.rate(10)) % 2 == 0 and Palette.red or Palette.slate)
         dashes(e.x, e.y, self.aim, len, time * 30)
     end
 
     if self.mark then
-        love.graphics.setColor(floor(time * 8) % 2 == 0 and Palette.red or Palette.slate)
+        love.graphics.setColor(floor(time * Comfort.rate(8)) % 2 == 0 and Palette.red or Palette.slate)
         dottedRing(self.mark.x, self.mark.y, self.def.recast.shock, floor(time * 6))
         love.graphics.setColor(Palette.graphite)
         local f = self.sub == "aim" and 1 - math.max(0, self.t) / self.def.recast.aim or 1

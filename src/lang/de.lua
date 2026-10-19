@@ -60,6 +60,15 @@ return {
     ["WINDOW"] = "FENSTER",
     ["WINDOW SIZE"] = "FENSTERGROSSE",
     ["VSYNC"] = "VSYNC",
+    ["GENERAL"] = "ALLGEMEIN",
+    ["DEVICE"] = "GERÄT",
+    ["COMFORT"] = "KOMFORT",
+    ["BATTERY SAVER"] = "AKKU SPAREN",
+    ["FRAME CAP"] = "FPS-LIMIT",
+    ["SCREEN SHAKE"] = "WACKELN",
+    ["REDUCE FLASHING"] = "WENIGER BLITZE",
+    ["USE THE ARROWS"] = "PFEILE NUTZEN",
+    ["TAP AN ARROW TO SET IT"] = "TIPP EINEN PFEIL",
 
     --- the timetable ----------------------------------------------------------
 

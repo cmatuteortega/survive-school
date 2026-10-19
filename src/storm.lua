@@ -8,6 +8,7 @@ local Palette = require("src.palette")
 local Sprites = require("src.sprites")
 local pixelart = require("src.pixelart")
 local util = require("src.util")
+local Comfort = require("src.comfort")
 
 local Storm = {}
 Storm.__index = Storm
@@ -291,7 +292,7 @@ function Storm:step(c, dt, game, left, top, w, h)
 
     if c.state == "gather" then
         c.wait = c.wait - dt
-        c.blink = c.blink + dt / FILL
+        c.blink = c.blink + dt / Comfort.period(FILL)
         if c.wait <= 0 then
             self:strike(c, game)
             c.state, c.wait, c.blink = "strike", STRIKE, 0
@@ -299,7 +300,7 @@ function Storm:step(c, dt, game, left, top, w, h)
 
     elseif c.state == "strike" then
         c.wait = c.wait - dt
-        c.blink = c.blink + dt / FLICKER
+        c.blink = c.blink + dt / Comfort.period(FLICKER)
         if c.wait <= 0 then
             -- On to somebody else if the line bought more than one bolt.
             c.bolts = c.bolts - 1
