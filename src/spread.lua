@@ -81,24 +81,17 @@
 -- than a whole one, because with one leaf showing there is no back of the sheet
 -- to land on -- what is under it is already where you are going.
 --
--- **The drag and the pen share the page.** Everything here is drawn on, so every
--- press has to be read as either a line or a turn, and the reading has to be over
--- in the first few pixels or the page stops answering the pen.
---
--- A press within GRAB of the outer edge of a leaf is a turn on the frame it lands,
--- no threshold at all: that is where a hand reaches for a page, and it is the one
--- strip of these screens with nothing printed on it. A press anywhere else is
--- **undecided**, and stays undecided for at most SLIP pixels of travel or HOLD
--- seconds, whichever comes first -- sideways and it is a turn, anything else and
--- it is a line, and a finger that has sat still for a tenth of a second is a line
--- too. While it is undecided the pen lays nothing, and that is the whole of what
--- the gesture costs: the first five pixels of a stroke, on three screens whose own
--- headers say the ink on them is ink and fades.
---
--- The bias is deliberate and it is towards the *line*. A page turn is a fast
--- gesture and a drawn line usually is not, so the two thresholds sort them almost
--- by themselves; and where they do not, a slow drag across the page draws on it
--- and there are two arrows and two page edges that will still turn it.
+-- **Nothing here is drawn on.** These are the three screens of the notebook
+-- that ask nothing -- nothing to answer, nothing to fill in -- so the pencil is
+-- put down on them and the pointer is a hand throughout (each screen's `hot`
+-- answers yes everywhere). They used to share the page between the drag and the
+-- pen, and every press had to be read as a line or a turn in its first few
+-- pixels; a slow drag across the page drew on it instead of turning it, which is
+-- the one thing a hand on a book never means. With the pen gone there is nothing
+-- to tell apart: a press within GRAB of the outer edge of a leaf is a turn on the
+-- frame it lands, and a press anywhere else is a turn the moment it has gone SLIP
+-- pixels sideways, whichever way it set off. SLIP is there only so that a tap on
+-- a button that wobbles a pixel is still a tap.
 
 local Palette = require("src.palette")
 local Sfx = require("src.sfx")
@@ -128,12 +121,9 @@ local OUTER = 10        -- ... and the margin down the other side of each leaf,
 local GRAB = 20         -- the outer strip of a leaf that turns the page the
                         -- moment it is touched, with no threshold at all -- the
                         -- edge your hand already goes for
-local SLIP = 5          -- ... and how far a finger that landed anywhere else has
+local SLIP = 3          -- ... and how far a finger that landed anywhere else has
                         -- to travel, sideways, before it is read as a turn
-                        -- instead of as a line
-local HOLD = 0.12       -- ... or how long it may sit there before it is one
-                        -- anyway. A tap lays a dot on these pages and a dot is
-                        -- not a gesture, so it must not be waited on
+                        -- rather than as a tap
 local BEND = 0.95       -- how far the sheet bows over its length at the middle
                         -- of a full turn, in radians. Past about 1.2 the far end
                         -- folds back over the near one hard enough to read as a
@@ -302,7 +292,6 @@ function Spread.new()
         held = false,   -- a finger is on the page and it may yet be a turn
         ax = 0, ay = 0, -- where it came down
         lx = 0,         -- where it was last frame, for the flick
-        wait = 0,       -- ... and how long it has been undecided
         speed = 0,
         count = 1,
         onTurn = nil,   -- the screen's, if it has anything to put down
@@ -409,12 +398,6 @@ function Book:turning()
     return self.to ~= nil
 end
 
--- True while a finger is on a page that might be going somewhere: the screen's
--- pen must lay no ink and its buttons must swallow nothing.
-function Book:eating()
-    return self.held or self.to ~= nil
-end
-
 -- The section the screen should be laying out. It is `at` throughout a turn --
 -- `to` only becomes `at` when the sheet lands -- so nothing a screen measures
 -- moves under it while the page is moving.
@@ -422,9 +405,7 @@ function Book:section()
     return self.at
 end
 
--- The turn begins. Nothing already drawn is rewound: the few stamps a threshold
--- crossing has laid are ink on a page that fades, which is what all the ink on
--- these screens is.
+-- The turn begins.
 function Book:begin(dir, x)
     if self.count < 2 then return end
     self.dir = dir
@@ -473,7 +454,6 @@ function Book:grab(x, y, blocked)
     self.held = true
     self.ax, self.ay, self.lx = x, y, x
     self.speed = 0
-    self.wait = 0
     self.dir = 0
 
     -- Which edge decides which way: the outer edge of the recto pulls forward,
@@ -486,21 +466,14 @@ function Book:grab(x, y, blocked)
     end
 end
 
--- The finger moving, while it is still undecided: sideways past the threshold and
--- it is a turn, anything else that far and it is a line and the pointer is handed
--- back to the pen. A stroke drawn straight down the page crosses SLIP vertically
--- in no time, which is exactly the case the second test is for.
-function Book:decide(dt, x, y)
-    local dx, dy = x - self.ax, y - self.ay
-
-    if math.abs(dx) >= SLIP and math.abs(dx) > math.abs(dy) then
+-- The finger moving, while it is still undecided: sideways past the threshold
+-- and it is a turn, whichever way it is going. There is no pen to hand the
+-- pointer back to, so a press that wanders up or down first is still held, and
+-- turns the page the moment it heads sideways.
+function Book:decide(x)
+    local dx = x - self.ax
+    if math.abs(dx) >= SLIP then
         self:begin(dx < 0 and 1 or -1, x)
-        return
-    end
-
-    self.wait = self.wait + dt
-    if dx * dx + dy * dy >= SLIP * SLIP or self.wait >= HOLD then
-        self.held = false
     end
 end
 
@@ -527,22 +500,10 @@ function Book:letGo()
     self.home = not (self.p > 0.5 or self.speed * self.dir > FLICK)
 end
 
--- Whether a press here would be a hand on the page rather than a pen on it, for
--- the cursor (Game:drawPointer): a page already in hand, or the outer strip of a
--- leaf, where `Book:grab` starts the turn on the spot. The rest of the leaf only
--- becomes a turn once a stroke has gone sideways, and until then it is a page to
--- draw on, so it keeps the pencil.
-function Book:hot(x, y)
-    if self:eating() then return true end
-    local lay = self.lay
-    if self.count < 2 or not lay or y < lay.top or y > lay.bottom then return false end
-    return lay.x + lay.w - x <= GRAB or x - lay.x <= GRAB
-end
-
--- One call a frame, ahead of the screen's pen, so that the frame a stroke turns
--- into a turn is a frame the pen lays nothing. `down`, `x` and `y` are the
--- pointer as the screen already has it (past its own stale guard), and `blocked`
--- says the press landed on furniture.
+-- One call a frame, ahead of the screen's own press, so that a press landing on
+-- the edge strip starts the turn before anything under it is pressed. `down`,
+-- `x` and `y` are the pointer as the screen already has it (past its own stale
+-- guard), and `blocked` says the press landed on furniture.
 function Book:track(dt, down, x, y, blocked)
     if down and not self.down then
         self:grab(x, y, blocked)
@@ -556,7 +517,7 @@ function Book:track(dt, down, x, y, blocked)
         self.lx = x
 
         if self.dir == 0 then
-            self:decide(dt, x, y)
+            self:decide(x)
         else
             self:drag(x)
         end
@@ -783,7 +744,7 @@ function Book:draw(game, page)
     buffers(game.vw, game.vh)
 
     -- Two spreads, composited whole. Drawn every frame rather than once at the
-    -- grab: these pages have ink fading off them and lettering that wobbles, and
+    -- grab: these pages have lettering that wobbles and bosses that turn, and
     -- a page that froze for the third of a second a turn takes would be the one
     -- moment in the book where the paper stopped breathing.
     --

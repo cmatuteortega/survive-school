@@ -3163,20 +3163,24 @@ returns and stay put. That split already existed for a rendering reason (see
 **Draw layering**: a box filled in `Palette.paper` has to go out past the pass or
 it reads as a transparency), and the page turn is what made it load-bearing.
 
-**The gesture.** Everything here is drawn on, so every press is read as a line or
-a turn and the reading is over in the first few pixels. Within `GRAB` of a leaf's
-outer edge it is a turn on the frame it lands -- that is where a hand reaches for
-a page and the one strip of these screens with nothing printed on it -- and which
-edge decides which way. Anywhere else it is undecided for at most `SLIP` pixels of
-travel or `HOLD` seconds: sideways and it is a turn, anything else and it is a
-line. While it is undecided the pen lays nothing, which is what the gesture costs.
-The bias is towards the line, deliberately: a page turn is fast and a drawn line
-usually is not, and where the two are confusable there are still two page edges
-(and `←`/`→` on a keyboard). The `<` `>` footer arrows are gone: the drag is the
-one way a finger turns these pages. `Book:eating()` is what a screen's `mark` and `press` ask.
+**The gesture.** Nothing on these three screens is drawn on: the pencil is put
+down, the pointer is the hand everywhere (each screen's `hot` answers true), and
+there is no pen and no fading ink. They used to share the page between the pen
+and the drag, reading each press as a line or a turn in its first few pixels, and
+a slow drag across the page drew on it instead of turning it. Now every drag is a
+turn. Within `GRAB` of a leaf's outer edge it is a turn on the frame it lands,
+and which edge decides which way; anywhere else it is a turn once it has gone
+`SLIP` (3) pixels sideways, which is only there so a tap that wobbles is still a
+tap. Furniture (the corner button, the canteen's boxes, the library's toggle) is
+pressed rather than dragged and the book will not take the page from it; the
+library's names are *not* furniture to the book -- they cover most of the verso
+-- so a press on one opens it and a drag from it still turns the page. The
+`<` `>` footer arrows are gone: the drag is the one way a finger turns these
+pages (and `←`/`→` on a keyboard). A screen's `press` fires on the press edge and
+asks `Book:turning()`.
 
-`Book:track` is called once a frame **ahead of the pen**, so the frame a stroke
-becomes a turn is a frame the pen lays nothing. Let go past halfway, or fast
+`Book:track` is called once a frame **ahead of the press**, so a press on the edge
+strip is a page lifted rather than anything under it pressed. Let go past halfway, or fast
 enough to be a flick, and the turn finishes itself; short of both it runs `p` back
 to 0 and the sheet is drawn coming home. `Book:at` -- the section every screen
 reads -- only moves when the leaf **lands**, so nothing a screen measures moves
@@ -3196,9 +3200,8 @@ this the catalogue is only learnable by being dealt it.
 Nothing here is a `Scribble` box, because a box is a thing you cannot take back
 and there is nothing here to take back. Everything is *pressed* — a name, an
 arrow, the corner button — which is the timetable's tab rule applied to a screen
-where looking is all there is. Ink that lands anywhere else is still ink and still
-fades (`Scribble.newMarks`), and a mark on a name, an arrow or the corner button is
-dropped exactly as the timetable drops one on a tab.
+where looking is all there is. Nothing is drawn on it either: a drag anywhere is
+a page turned (see **The book**).
 
 **A section is a spread** (see **The book**): the shelf on the verso and the
 entry it opens on the recto, which is what a reference book has always done with
@@ -7798,12 +7801,13 @@ and are all the same 11x11 glyph.
   page is cut to the widest thing that can *ever* stand in it across **every**
   section, never the one showing, or turning to it moves the page under the reader.
 - **A fourth screen read as a book:** one `Spread.new()` on the screen, `Book:fit`
-  in its layout, `Book:track` in its update **ahead of the pen**, and its draw cut
-  in two -- a `drawPage(game, section)` holding one whole overprint pass and
-  nothing that does not turn, called through `Book:draw`, and everything else
-  after it. Three things it owes beyond that: a `furniture(x, y)` predicate so the
-  book does not take a press meant for a button, a `book:eating()` guard at the top
-  of `mark` and `press`, and a layout that asks `Book:leaf(1)`/`leaf(2)` for its
+  in its layout, `Book:track` in its update **ahead of its press edge**, and its
+  draw cut in two -- a `drawPage(game, section)` holding one whole overprint pass
+  and nothing that does not turn, called through `Book:draw`, and everything else
+  after it. Things it owes beyond that: no pen (a book's page is not drawn on, and
+  its `hot` answers true so the pointer is the hand throughout), a
+  `furniture(x, y)` predicate so the book does not take a press meant for a
+  button, a `book:turning()` guard at the top of `press`, and a layout that asks `Book:leaf(1)`/`leaf(2)` for its
   two halves and stacks them when `Book:spread()` is false. Anything live on the
   page it is leaving hangs off `Book.onTurn`.
 - **Something the canteen sells:** a hero is a row in `Characters.list` with a

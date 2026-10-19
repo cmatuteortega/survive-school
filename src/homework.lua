@@ -8,8 +8,8 @@
 -- opened. See src/challenges.lua for why those are two different questions and
 -- why a register of maxima can only ever ask the first.
 --
--- Nothing is answered here, so nothing is scribbled: the boxes are drawn, and
--- stray ink fades. Done is ink, undone graphite, and a standing demand is red --
+-- Nothing is answered here, so nothing is scribbled or drawn on: the boxes are
+-- drawn, the pointer is a hand, and a drag is a page turned. Done is ink, undone graphite, and a standing demand is red --
 -- which is the library's own pair of colours for its own pair of states, because
 -- it is the same fact twice.
 --
@@ -105,15 +105,14 @@ function Homework:enter()
     Challenges.refresh()
 
     self.seed = love.math.random() * 997
-    self.marks = Scribble.newMarks(self.seed)
 
-    -- A pointer already down from the tab that opened this page presses and draws
-    -- nothing until it is lifted.
+    -- A pointer already down from the tab that opened this page presses nothing
+    -- until it is lifted.
     self.stale = Input.pointerDown
-    self.pen = Scribble.newPen()
+    self.down = false
     self.book:rest()
 
-    -- Nothing to walk, and the stick's corner must be scribbleable like the rest.
+    -- Nothing to walk, and the stick's corner must turn the page like the rest.
     Input.stickEnabled = false
 end
 
@@ -281,37 +280,20 @@ function Homework:step(dir)
     self.book:turn(dir)
 end
 
--- Furniture: the corner button, and nothing else. It is one question
--- rather than two because both of the things that ask it want the same answer --
--- the pen must not draw here, and the book must not take the page here.
+-- Furniture: the corner button, and nothing else -- the one thing the book must
+-- not take the page from.
 function Homework:furniture(x, y)
     return self:backAt(x, y)
 end
 
--- The corner button swallows whatever crosses it rather than being drawn on: a
--- press on it was taken as a press rather than as
--- the start of a line. Answers whether the stamp became ink, which is what the
--- pen's swish is fired off (src/scribble.lua) -- a swallowed stamp was never a
--- line, so it must not sound like one.
---
--- A finger turning a page swallows its stamps for the same reason and answers
--- the same way: it is a hand on the paper rather than a nib on it, and a swish
--- fired for it would be the book saying a line was drawn where a page was turned.
--- Something pressed or dragged rather than drawn on, for the cursor
--- (Game:drawPointer): the furniture, or the book's own edges.
-function Homework:hot(x, y)
-    return self.book:hot(x, y) or self:furniture(x, y)
-end
-
-function Homework:mark(x, y)
-    if self.book:eating() then return false end
-    if self:furniture(x, y) then return false end
-    self.marks:add(x, y)
+-- Nothing on this page is drawn on, so the pointer is a hand everywhere
+-- (Game:drawPointer): every press is a press or a page turned (src/spread.lua).
+function Homework:hot()
     return true
 end
 
 function Homework:press(x, y)
-    if self.book:eating() then return end
+    if self.book:turning() then return end
 
     if self:backAt(x, y) then
         self.back = true
@@ -324,7 +306,6 @@ end
 function Homework:update(dt, game)
     self:layout(game)
     self.t = self.t + dt
-    self.marks:update(dt)
 
     if self.back then return "back" end
 
@@ -334,15 +315,13 @@ function Homework:update(dt, game)
         down = false
     end
 
-    -- The book first, so that the frame a stroke turns into a turn is a frame
-    -- the pen lays nothing: `mark` and `press` both ask it whether the finger is
-    -- on the page or on a page (src/spread.lua).
+    -- The book first, so that a press on a leaf's edge strip is a page turned
+    -- rather than anything under it pressed (src/spread.lua).
     self.book:track(dt, down, Input.pointerX, Input.pointerY,
         self:furniture(Input.pointerX, Input.pointerY))
 
-    self.pen:track(dt, down, Input.pointerX, Input.pointerY,
-        function(mx, my) return self:mark(mx, my) end,
-        function(px, py) self:press(px, py) end)
+    if down and not self.down then self:press(Input.pointerX, Input.pointerY) end
+    self.down = down
 
     if self.back then return "back" end
 end
@@ -461,7 +440,6 @@ function Homework:drawPage(game, section)
     -- The gutter first, so everything else is printed over it rather than under
     -- it: it is the shadow the fold casts on the paper, not on the list.
     self.book:drawCrease()
-    self.marks:draw(0)
 
     -- The list, down the verso and on down the recto, and a row that would run off
     -- the foot of the page is not drawn rather than being drawn half. Every

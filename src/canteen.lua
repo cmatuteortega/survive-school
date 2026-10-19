@@ -86,7 +86,8 @@
 -- that turns under a sideways drag that was the one gesture here that could do
 -- either -- a scribble across a box was as likely to turn the leaf as to buy. So a
 -- box that can be bought is furniture now: the book will not take the page from a
--- finger that lands on it, and ink that crosses it is swallowed rather than counted.
+-- finger that lands on it. And nothing else here is drawn on any more either --
+-- the pointer is a hand and every other drag turns the page (src/spread.lua).
 -- A row with nothing left to sell, or nothing in the purse to buy it with, has no
 -- box drawn at all and a finger that lands where one would be is on the page.
 --
@@ -369,12 +370,11 @@ function Canteen:enter()
     self.boughtT = 0
 
     self.seed = love.math.random() * 997
-    self.marks = Scribble.newMarks(self.seed)
 
     -- A pointer still down from the tab that opened this page is not this page's
-    -- to read: it presses nothing and draws nothing until it is lifted.
+    -- to read: it presses nothing until it is lifted.
     self.stale = Input.pointerDown
-    self.pen = Scribble.newPen()
+    self.down = false
     self.book:rest()
 
     -- One unlabelled box per row of the counter -- the row is the label, the way a
@@ -403,7 +403,7 @@ function Canteen:enter()
     self.book.onTurn = function() self:leaving() end
 
     -- Nothing to walk here, and the corner the stick lives in is page like any
-    -- other: you have to be able to scribble anywhere.
+    -- other: a drag there has to turn the page like a drag anywhere else.
     Input.stickEnabled = false
 end
 
@@ -755,41 +755,23 @@ function Canteen:boxAt(x, y)
     return nil
 end
 
--- Furniture: the corner button and every box that can be answered. One question
--- rather than two, because both of the things that ask it want the same answer --
--- the pen must not draw here, and the book must not take the page here. Which is
--- the whole of what keeps a purchase from turning the page: a finger that lands on
--- a box is pressing it, whichever way it slides off.
+-- Furniture: the corner button and every box that can be answered, which the
+-- book must not take the page from. That is the whole of what keeps a purchase
+-- from turning the page: a finger that lands on a box is pressing it, whichever
+-- way it slides off.
 function Canteen:furniture(x, y)
     return self:backAt(x, y) or self:boxAt(x, y) ~= nil
 end
 
--- Something pressed or dragged rather than drawn on, for the cursor
--- (Game:drawPointer): the furniture, or the book's own edges.
-function Canteen:hot(x, y)
-    return self.book:hot(x, y) or self:furniture(x, y)
-end
-
-function Canteen:mark(x, y)
-    -- A finger turning a page is a hand on the paper rather than a nib on it, so
-    -- it swallows its stamps the way every other piece of furniture does -- and
-    -- for the extra reason that a scribble does something here: a drag across the
-    -- counter that filled a box on its way out would buy a thing you were leaving.
-    if self.book:eating() then return false end
-
-    -- And furniture swallows what crosses it rather than being drawn on: a press
-    -- there was taken as a press rather than as the start of a line. Answers
-    -- whether the stamp became ink, which is what the pen's swish is fired off
-    -- (src/scribble.lua): a swallowed stamp was never a line, so it must not
-    -- sound like one.
-    if self:furniture(x, y) then return false end
-
-    self.marks:add(x, y)
+-- Nothing on this page is drawn on -- a box is filled by a tap, not by a
+-- scribble -- so the pointer is a hand everywhere (Game:drawPointer): every
+-- press is a press or a page turned (src/spread.lua).
+function Canteen:hot()
     return true
 end
 
 function Canteen:press(x, y)
-    if self.book:eating() then return end
+    if self.book:turning() then return end
 
     if self:backAt(x, y) then
         self.back = true
@@ -827,7 +809,6 @@ function Canteen:update(dt, game)
 
     self:layout(game)
     self.t = self.t + dt
-    self.marks:update(dt)
 
     if self.back then return "back" end
 
@@ -849,8 +830,8 @@ function Canteen:update(dt, game)
         down = false
     end
 
-    -- The book first, so that the frame a stroke turns into a turn is a frame the
-    -- pen lays nothing and the box it was crossing is not filled in.
+    -- The book first, so that a press on a leaf's edge strip is a page turned
+    -- rather than anything under it pressed.
     self.book:track(dt, down, Input.pointerX, Input.pointerY,
         self:furniture(Input.pointerX, Input.pointerY))
 
@@ -859,9 +840,8 @@ function Canteen:update(dt, game)
     local filled = self.choice:update(dt)
     if filled then self:buy(filled) end
 
-    self.pen:track(dt, down, Input.pointerX, Input.pointerY,
-        function(mx, my) return self:mark(mx, my) end,
-        function(px, py) self:press(px, py) end)
+    if down and not self.down then self:press(Input.pointerX, Input.pointerY) end
+    self.down = down
 
     if self.back then return "back" end
 end
@@ -1009,7 +989,6 @@ function Canteen:drawPage(game, at)
     -- The gutter first, so everything else prints over it rather than under it:
     -- it is the shadow the fold casts on the paper, not on the counter.
     self.book:drawCrease()
-    self.marks:draw(0)
 
     for i, row in ipairs(rows) do
         self:drawRow(i, row)

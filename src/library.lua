@@ -14,9 +14,9 @@
 -- on this page you could take back: you press a name to read it, you drag the
 -- page to turn to another section, and you press the corner to close it. That is
 -- the same rule the timetable's tabs are drawn along -- choosing what to *look*
--- at is not a question -- applied to a screen where looking is all there is. Ink
--- that lands anywhere else is still just ink and still fades off the page, since
--- the page is a page.
+-- at is not a question -- applied to a screen where looking is all there is.
+-- Nothing is drawn on it either: the pointer is a hand, and a drag anywhere is a
+-- page turned (src/spread.lua).
 --
 -- Four things arrange it:
 --
@@ -513,12 +513,11 @@ function Library:enter()
     self.wrappedLang = nil -- ... and the language it was broken in
 
     self.seed = love.math.random() * 997
-    self.marks = Scribble.newMarks(self.seed)
 
     -- A pointer still down from the tab that opened this screen is not this
-    -- screen's to read: it presses nothing and draws nothing until it is lifted.
+    -- screen's to read: it presses nothing until it is lifted.
     self.stale = Input.pointerDown
-    self.pen = Scribble.newPen()
+    self.down = false
     self.book:rest()
 
     -- A page starting to move is this screen putting down what was in its hand:
@@ -953,33 +952,18 @@ function Library:plateAt(x, y)
     end
 end
 
--- Ink that misses everything is ink on the page and fades off it. A name, the
--- toggle and the corner button all swallow whatever crosses them rather than being
--- drawn on: a press on any of them was taken as a press rather than as the start
--- of a line, and the timetable's tabs already work this way.
--- Answers whether the stamp became ink, for the pen's swish (src/scribble.lua):
--- a name, the toggle and the corner button all swallow what crosses them, and a
--- pointer dragged across the shelf is laying no line to sound.
--- Furniture: every rectangle on this screen that is pressed rather than drawn on.
--- One question rather than four, because both of the things that ask it want the
--- same answer -- the pen must not draw here, and the book must not take the page
--- here.
+-- Furniture the book must not take the page from: the corner button and the
+-- toggle, both small and both pressed rather than dragged. The names on the
+-- shelf are left out on purpose -- they cover most of the verso, and a drag that
+-- happened to start on one has to turn the page like a drag anywhere else; the
+-- press that landed there has already opened the name.
 function Library:furniture(x, y)
-    return self:plateAt(x, y) ~= nil or self:backAt(x, y) or self:evoAt(x, y)
+    return self:backAt(x, y) or self:evoAt(x, y)
 end
 
--- Something pressed or dragged rather than drawn on, for the cursor
--- (Game:drawPointer): the furniture, or the book's own edges.
-function Library:hot(x, y)
-    return self.book:hot(x, y) or self:furniture(x, y)
-end
-
-function Library:mark(x, y)
-    -- A finger turning a page is a hand on the paper rather than a nib on it, so
-    -- it swallows its stamps the way the shelf and the footer do.
-    if self.book:eating() then return false end
-    if self:furniture(x, y) then return false end
-    self.marks:add(x, y)
+-- Nothing on this screen is drawn on, so the pointer is a hand everywhere
+-- (Game:drawPointer): every press is a press or a page turned (src/spread.lua).
+function Library:hot()
     return true
 end
 
@@ -988,7 +972,7 @@ end
 -- corner button gets first refusal for the timetable's reason -- it is the one
 -- thing on the page that is not part of what you came to read.
 function Library:press(x, y)
-    if self.book:eating() then return end
+    if self.book:turning() then return end
 
     if self:backAt(x, y) then
         self.back = true
@@ -1019,7 +1003,6 @@ end
 function Library:update(dt, game)
     self:layout(game)
     self.t = self.t + dt
-    self.marks:update(dt)
 
     if self.back then return "back" end
 
@@ -1035,14 +1018,13 @@ function Library:update(dt, game)
         down = false
     end
 
-    -- The book first, so that the frame a stroke turns into a turn is a frame the
-    -- pen lays nothing and the name it was crossing is not opened.
+    -- The book first, so that a press on a leaf's edge strip is a page turned
+    -- rather than a name opened under it.
     self.book:track(dt, down, Input.pointerX, Input.pointerY,
         self:furniture(Input.pointerX, Input.pointerY))
 
-    self.pen:track(dt, down, Input.pointerX, Input.pointerY,
-        function(mx, my) return self:mark(mx, my) end,
-        function(px, py) self:press(px, py) end)
+    if down and not self.down then self:press(Input.pointerX, Input.pointerY) end
+    self.down = down
 
     if self.back then return "back" end
 end
@@ -1433,7 +1415,6 @@ function Library:drawPage(game, at)
     -- The gutter first, so everything else prints over it rather than under it: it
     -- is the shadow the fold casts on the paper, not on the shelf.
     self.book:drawCrease()
-    self.marks:draw(0)
 
     self:drawShelf(lay, at, here)
     self:drawEntry(lay, at, here)
