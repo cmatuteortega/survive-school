@@ -155,9 +155,10 @@ is about angles.
 by `pixelart.newSprite`. Off-palette art asserts at load. Round tips past ~9px
 across come from `pixelart.newDisc(radius)`.
 
-**The canvas is not 320x180.** Zoom is picked off the *short* window edge and
-the canvas is made as many game pixels as it takes to cover it — 320x180 on
-16:9, 400x180 on a 20:9 phone. Nothing is letterboxed or stretched; a wider
+**The canvas is not 320x180.** Zoom is picked off the *short* window edge (180
+game pixels on a phone, 216 on a computer, and never so much that the long edge
+drops under 320) and the canvas is made as many game pixels as it takes to cover
+it — 320x180 on a 16:9 phone, 400x180 on a 20:9 one, 384x216 on a 1080p monitor. Nothing is letterboxed or stretched; a wider
 screen shows more page. Anything positioned against a screen edge reads
 `Game.vw/vh` and the safe insets (`game.inset.l/t/r/b`), never a hard-coded 320
 or 180.
