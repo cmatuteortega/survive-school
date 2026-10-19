@@ -2,7 +2,8 @@
 -- whole number, so a game pixel is always an exact block of screen pixels. The
 -- canvas is not a fixed 320x180: zoom is picked off the SHORT window edge and
 -- the canvas made as many game pixels as it takes to cover the window (320x180
--- on 16:9, 400x180 on a 20:9 phone, 180x400 upright). Nothing is letterboxed or
+-- on 16:9, 400x180 on a 20:9 phone, 180x400 upright; a computer aims a little
+-- taller, see `designH`). Nothing is letterboxed or
 -- stretched, so a phone may turn (src/orient.lua) and screens lay themselves
 -- out against `Game.vw/vh`.
 
@@ -14,6 +15,8 @@ local Palette = require("src.palette")
 local Sfx = require("src.sfx")
 
 local BASE_H = 180  -- design height, in game pixels
+local BASE_W = 320  -- ... and the long edge no screen is laid out narrower than
+local DESK_H = 216  -- the short edge a computer aims for instead
 
 local canvas
 local vw, vh = 320, 180
@@ -62,12 +65,29 @@ local function safeInsets()
            math.max(0, math.ceil(vh - (top + sh / scale)))
 end
 
+-- 180 game pixels down the short edge is the size everything was drawn at, for
+-- a phone in the hand. A laptop is a picture several times the size at much the
+-- same distance, and 180 there made every word and card loom -- a TV across the
+-- room was the one computer screen it looked right on. So a computer takes the
+-- zoom off a fifth more page; the dev take (src/capture.lua) is a phone page
+-- however it is filmed, so it keeps the phone's.
+local function designH()
+    if isMobile() or Capture.on then return BASE_H end
+    return DESK_H
+end
+
 local function fitToWindow()
     local w, h = love.graphics.getDimensions()
 
     -- Whole-number zoom off the SHORT edge, never below the design height: a
-    -- bigger screen gets more page, not smaller pixels.
-    scale = math.max(1, math.floor(math.min(w, h) / BASE_H))
+    -- bigger screen gets more page, not smaller pixels. And never so much that
+    -- the LONG edge falls short of 320: off the short edge alone a 16:10 laptop
+    -- (1440x900 at 5x) was handed a 288x180 page, narrower than anything here
+    -- was laid out for, and the draft stacked its cards down it as if the
+    -- laptop were a phone held upright (src/levelup.lua).
+    local short, long = math.min(w, h), math.max(w, h)
+    scale = math.max(1, math.min(math.floor(short / designH()),
+                                 math.floor(long / BASE_W)))
 
     -- Enough game pixels to cover the window; the leftover fraction is split
     -- between opposite edges, so the canvas always reaches every corner.

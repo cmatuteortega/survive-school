@@ -8700,7 +8700,10 @@ and by the decoys (three, then four, then five).
 The game takes the whole screen and fills it, whatever shape it is. The scale
 is a whole number picked from the short edge of the screen, and the canvas is
 then made exactly as many game pixels as it takes to cover the window at that
-scale — 320x180 on a 16:9 window, 400x180 on a 20:9 phone. Nothing is stretched
+scale — 320x180 on a 16:9 phone, 400x180 on a 20:9 one. (A computer aims for
+216 game pixels down the short edge instead of 180, because a laptop is a far
+bigger picture held at much the same distance and 180 made it loom; and no screen
+is ever handed a long edge under 320.) Nothing is stretched
 and nothing is letterboxed: a wider screen simply shows more page. Rotating the
 device rebuilds the canvas at the new shape mid-run.
 

@@ -376,7 +376,12 @@ which is how an enraged arrival is drawn (**Fury**).
 
 **The canvas is not 320x180.** The zoom is picked off the *short* edge of the
 window and the canvas is then made exactly as many game pixels as it takes to
-cover it — 320x180 on 16:9, 400x180 on a 20:9 phone. Nothing is letterboxed or
+cover it — 320x180 on a 16:9 phone, 400x180 on a 20:9 one. A computer aims for
+216 down the short edge rather than 180 (`DESK_H` in `main.lua`): a laptop is a
+far bigger picture than a phone at much the same distance, and at 180 everything
+on it loomed. Either way the zoom is capped so the *long* edge never falls under
+320: off the short edge alone a 16:10 laptop (1440x900 at 5x) was handed a 288x180
+page and the draft stacked its cards as if the laptop were a phone held upright. Nothing is letterboxed or
 stretched; a wider screen shows more page. Anything positioned against a screen
 edge reads `Game.vw/vh` and the safe insets (`game.inset.l/t/r/b`), never a
 hard-coded 320 or 180.
