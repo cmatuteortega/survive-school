@@ -15,8 +15,10 @@
 --
 -- Fullscreen is the desktop kind ("desktop", the screen's own resolution) for
 -- conf.lua's reason: a mode change would have the zoom picked off a size the
--- monitor is pretending to be. The window sizes are the three 16:9 sizes a
--- 180-pixel page lands on at a whole zoom (x4, x5, x6), clamped to the screen.
+-- monitor is pretending to be. The window sizes are the three common 16:9
+-- windows, clamped to the screen; main.lua's zoom (aimed at 216 down a
+-- computer's short edge) makes them a 427x240, 400x225 and 384x216 page at x3,
+-- x4 and x5, so a bigger window is bigger pixels and about the same page.
 
 local Display = {}
 

@@ -488,8 +488,10 @@ phone's orientation row, because it is the same question asked of a different
 thing, how the page sits on the glass — and `F11` / `alt+enter` steps it too, so
 the row always says what the screen is doing and the next launch opens the way
 the last one was left. `WINDOW SIZE` steps `1280X720` → `1600X900` →
-`1920X1080`, the three 16:9 windows a 180-pixel page fills at a whole zoom (x4,
-x5, x6), clamped to the screen; it is only read in a window, but it can be
+`1920X1080`, the three common 16:9 windows, clamped to the screen — at the
+desktop's zoom (aimed at 216 pixels down the short edge) they are a 427x240,
+400x225 and 384x216 page at x3, x4 and x5, so a bigger window is bigger pixels
+and much the same page; it is only read in a window, but it can be
 stepped in fullscreen so it is ready when you drop out. `VSYNC` is `ON` or
 `OFF`, and `FRAME CAP` steps `OFF` → `30` → `60` → `120`, the most frames a
 second it draws (vsync, when it is on, is a cap of its own). All four are applied where they are stepped, for the reason the volumes
